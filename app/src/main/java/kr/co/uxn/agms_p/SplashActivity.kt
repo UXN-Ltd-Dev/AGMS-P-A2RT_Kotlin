@@ -10,7 +10,7 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-import kr.co.uxn.agms_p.databinding.ActivitySplashBinding
+// import kr.co.uxn.agms_p.databinding.ActivitySplashBinding
 
 class SplashActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

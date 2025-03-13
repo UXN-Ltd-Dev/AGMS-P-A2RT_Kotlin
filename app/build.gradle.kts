@@ -27,8 +27,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
         buildConfigField( "String", "kakao_native_app_key", properties.getProperty("kakao_native_app_key"))
         resValue("string","kakao_oauth_host", properties.getProperty("kakao_oauth_host"))
+        buildConfigField( "String", "google_web_client_id", properties.getProperty("google_web_client_id"))
     }
 
     buildTypes {
@@ -41,11 +43,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "1.8"
     }
     buildFeatures {
         compose = true
@@ -69,6 +71,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.googleid)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -83,8 +86,14 @@ dependencies {
     // 카카오 API
     implementation("com.kakao.sdk:v2-all:2.20.6") // 전체 모듈 설치, 2.11.0 버전부터 지원
     implementation("com.kakao.sdk:v2-user:2.20.6") // 카카오 로그인 API 모듈
+    // 구글 API
+    implementation ("androidx.credentials:credentials:1.3.0")
+    implementation ("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation ("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+
     // navigation
     implementation("androidx.navigation:navigation-compose:2.8.8")
     // splashapi
     implementation("androidx.core:core-splashscreen:1.0.1")
+
 }
