@@ -10,10 +10,15 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import kr.co.uxn.agms_p.ui.components.login.LoginPasswordScreen
 import kr.co.uxn.agms_p.ui.theme.AGMSPTheme
 import kr.co.uxn.agms_p.ui.components.login.LoginScreen
+import kr.co.uxn.agms_p.ui.components.ready.SettingPermissionScreen
+import kr.co.uxn.agms_p.ui.components.ready.SettingScreen
+import kr.co.uxn.agms_p.ui.components.ready.EnterInfoScreen
 import kr.co.uxn.agms_p.ui.components.splash.SplashScreen
 import kr.co.uxn.agms_p.ui.viewmodel.LoginViewModel
+import java.net.URLDecoder
 
 class MainActivity : ComponentActivity() {
     private val loginViewModel: LoginViewModel by viewModels()
@@ -42,16 +47,24 @@ class MainActivity : ComponentActivity() {
                 LoginScreen(loginViewModel, navController)
             }
 
-//            navController.navigate("Office") {
-//                popUpTo("Home") {
-//                    inclusive = true
-//                }
-//            }
+            composable("LoginPassword/{email}") { backStackEntry ->
+                val email = backStackEntry.arguments?.getString("email")?.let {
+                    URLDecoder.decode(it, "UTF-8")
+                } ?: ""
+                LoginPasswordScreen(email, navController)
+            }
 
-//            composable("Argument/{userId}") { backStackEntry ->
-//                val userId = backStackEntry.arguments?.get("userId")
-//                Text("userID는 $userId")
-//            }
+            composable("SettingScreen") { backStackEntry ->
+                SettingScreen(navController)
+            }
+
+            composable("SettingPermissionScreen") { backStackEntry ->
+                SettingPermissionScreen(navController)
+            }
+
+            composable("EnterInfoScreen") { backStackEntry ->
+                EnterInfoScreen(navController)
+            }
         }
     }
 }

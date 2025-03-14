@@ -31,6 +31,7 @@ android {
         buildConfigField( "String", "kakao_native_app_key", properties.getProperty("kakao_native_app_key"))
         resValue("string","kakao_oauth_host", properties.getProperty("kakao_oauth_host"))
         buildConfigField( "String", "google_web_client_id", properties.getProperty("google_web_client_id"))
+        buildConfigField( "String", "base_url", properties.getProperty("base_url"))
     }
 
     buildTypes {
@@ -86,6 +87,7 @@ dependencies {
     // 카카오 API
     implementation("com.kakao.sdk:v2-all:2.20.6") // 전체 모듈 설치, 2.11.0 버전부터 지원
     implementation("com.kakao.sdk:v2-user:2.20.6") // 카카오 로그인 API 모듈
+    implementation("com.kakao.sdk:v2-auth:2.20.6") // 인증 관련 SDK 추가
     // 구글 API
     implementation ("androidx.credentials:credentials:1.3.0")
     implementation ("androidx.credentials:credentials-play-services-auth:1.3.0")
@@ -95,5 +97,17 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.8.8")
     // splashapi
     implementation("androidx.core:core-splashscreen:1.0.1")
+
+    // Retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    // okhttp3
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
+
+    // GSON
+    implementation("com.google.code.gson:gson:2.10.1")
+    // Scalar
+    implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
 
 }

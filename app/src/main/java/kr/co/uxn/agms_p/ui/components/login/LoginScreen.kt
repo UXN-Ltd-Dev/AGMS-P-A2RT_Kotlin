@@ -3,6 +3,7 @@ package kr.co.uxn.agms_p.ui.components.login
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -26,29 +27,33 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.api.RetrofitClient.retrofitMachine
 import kr.co.uxn.agms_p.ui.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
-
     val isLoggedIn = viewModel.isLoggedIn.collectAsState()
-
     val userInfo = viewModel.userInfo.collectAsState()
     val context = LocalContext.current
 //    val isLoggedIn by remember { viewModel.isLoggedIn.collectAsState() }
-
     val loginStatusInfoTitle = if (isLoggedIn.value) "로그인 상태" else "로그아웃 상태"
-
     val email = remember {mutableStateOf("")}
+    val focusManager = LocalFocusManager.current
 
     Surface(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = { focusManager.clearFocus() })  // 🔹 터치 시 키보드 숨기기
+            }
     ) {
         Column(
             modifier = Modifier
@@ -114,6 +119,21 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                         style = androidx.compose.ui.text.TextStyle(fontSize = 15.sp)
                     )
                 }
+            }
+            Button(
+                onClick = {
+                    navController.navigate("LoginPassword/${email.value}")
+                }
+            ) {
+                Text("계속")
+            }
+
+            Button(
+                onClick = {
+                    viewModel.testRetrofit()
+                }
+            ) {
+                Text("api테스트")
             }
         }
     }
