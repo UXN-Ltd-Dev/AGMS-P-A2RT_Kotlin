@@ -23,7 +23,7 @@ fun EnterInfoScreen(navController: NavController) {
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                Text("ㅎ허")
+                Text("값 세팅")
             }
         }
     }

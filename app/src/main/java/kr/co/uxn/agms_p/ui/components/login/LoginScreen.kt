@@ -1,10 +1,16 @@
 package kr.co.uxn.agms_p.ui.components.login
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -12,20 +18,29 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -34,19 +49,25 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import kotlinx.coroutines.delay
 import kr.co.uxn.agms_p.R
-import kr.co.uxn.agms_p.api.RetrofitClient.retrofitMachine
 import kr.co.uxn.agms_p.ui.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
-    val isLoggedIn = viewModel.isLoggedIn.collectAsState()
-    val userInfo = viewModel.userInfo.collectAsState()
     val context = LocalContext.current
-//    val isLoggedIn by remember { viewModel.isLoggedIn.collectAsState() }
-    val loginStatusInfoTitle = if (isLoggedIn.value) "로그인 상태" else "로그아웃 상태"
-    val email = remember {mutableStateOf("")}
+    val email = remember { mutableStateOf("") }
+    val pwd = remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
+
+    val systemUiController = rememberSystemUiController()
+    LaunchedEffect(key1 = Unit) {
+        systemUiController.setSystemBarsColor(
+            color = Color.Transparent,
+            darkIcons = true // 상태바 아이콘을 밝게 (흰색)
+        )
+    }
 
     Surface(
         modifier = Modifier
@@ -60,80 +81,213 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                modifier = Modifier.size(150.dp),
-                painter = painterResource(R.drawable.uxn_logo),
-                contentDescription = "로고"
-            )
-            Text(text = "로그인을 위해 이메일을 입력하세요.")
-            TextField(
-                value = email.value,
-                onValueChange = { email.value = it },
-                placeholder = { Text("이메일 주소") }
-            )
-            Text(
-                text = "계속 진행하려면 유엑스엔의 개인정보 처리방침 및 \n이용약관에 동의하게 됩니다.",
-                fontSize = 12.sp
-            )
-            Text("간편 로그인")
-            // 카카오 로그인 버튼
-            Image(
-                painter = painterResource(id = R.drawable.kakao_login_large_wide),
-                contentDescription = "카카오 로그인",
+            Surface(
                 modifier = Modifier
-                    .size(width = 300.dp, height = 50.dp)
-                    .clickable {
-                        viewModel.kakaoLogin(context)
-                    }
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            // 구글 로그인 버튼
-            Button(
-                onClick = {
-                    viewModel.googleLogin(context)
-                },
-                modifier = Modifier
-                    .size(width = 300.dp, height = 50.dp)
-                    .shadow(8.dp, shape = RoundedCornerShape(7.dp)),
-                shape = RoundedCornerShape(7.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = Color.Black
-                ),
-                border = BorderStroke(0.1.dp, Color.Gray),
-                contentPadding = PaddingValues(0.dp)
+                    .padding(horizontal = 40.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically, // 세로 중앙 정렬
-                    horizontalArrangement = Arrangement.Start, // 왼쪽 정렬
-                    modifier = Modifier.fillMaxWidth()
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Spacer(modifier = Modifier.size(40.dp))
+                    // UXN로고
                     Image(
-                        painter = painterResource(id = R.drawable.android_light_rd_na),
-                        contentDescription = "구글 로그인",
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(150.dp),
+                        painter = painterResource(R.drawable.always_icon),
+                        contentDescription = "로고"
                     )
-                    Spacer(modifier = Modifier.size(80.dp))
+                    // 로그인을 위해 이메일을 입력하세요.
                     Text(
-                        text = "구글 로그인",
-                        style = androidx.compose.ui.text.TextStyle(fontSize = 15.sp)
+                        text = "이메일",
+                        color = Color.Gray,
+                        fontSize = 14.sp,
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+                    // 이메일 주소
+                    BasicTextField(
+                        value = email.value,
+                        onValueChange = { email.value = it },
+                        decorationBox = { innerTextField ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(30.dp)
+                                    .drawBehind {
+                                        val strokeWidth = 3.dp.toPx() // 선 두께 설정
+                                        val y = size.height - strokeWidth / 2 // 선을 하단에 위치
+                                        drawLine(
+                                            color = Color(0xFFEEEEEF),
+//                                            color = Color.Gray,
+                                            start = Offset(0f, y),
+                                            end = Offset(size.width, y),
+                                            strokeWidth = strokeWidth
+                                        )
+                                    }
+                                    .padding(start = 5.dp, end = 40.dp),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                if (email.value.isEmpty()) {
+                                    Text(
+                                        text = "이메일 주소를 입력해 주세요.",
+                                        color = Color.Gray,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        },
+                    )
+                    Spacer(modifier = Modifier.size(10.dp))
+                    Text(
+                        text = "비밀번호",
+                        color = Color.Gray,
+                        fontSize = 14.sp,
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+                    // 비밀 번호
+                    BasicTextField(
+                        value = pwd.value,
+                        onValueChange = { pwd.value = it },
+                        decorationBox = { innerTextField ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(30.dp)
+                                    .drawBehind {
+                                        val strokeWidth = 3.dp.toPx() // 선 두께 설정
+                                        val y = size.height - strokeWidth / 2 // 선을 하단에 위치
+                                        drawLine(
+                                            color = Color(0xFFEEEEEF),
+//                                            color = Color.Gray,
+                                            start = Offset(0f, y),
+                                            end = Offset(size.width, y),
+                                            strokeWidth = strokeWidth
+                                        )
+                                    }
+                                    .padding(start = 5.dp, end = 40.dp),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                if (pwd.value.isEmpty()) {
+                                    Text(
+                                        text = "비밀번호를 입력해 주세요.",
+                                        color = Color.Gray,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        },
                     )
                 }
             }
-            Button(
-                onClick = {
-                    navController.navigate("LoginPassword/${email.value}")
-                }
+            Spacer(modifier = Modifier.size(10.dp))
+
+            // 회원가입, 비밀번호 찾기
+            Row(
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(end = 40.dp)
             ) {
-                Text("계속")
+                Text(
+                    text = "회원가입",
+                    fontSize = 14.sp
+                )
+                Spacer(modifier = Modifier.size(17.dp))
+                Text(
+                    text = "비밀번호 찾기",
+                    fontSize = 14.sp
+                )
+            }
+            Spacer(modifier = Modifier.size(30.dp))
+
+            // 이메일 로그인 버튼
+            Box(
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .clickable {
+                        if (email.value != "" && pwd.value != "") {
+                            navController.navigate("LoginPassword/${email.value}")
+                        } else {
+                            Toast.makeText(context, "이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.email_login_high),
+                    contentDescription = "메일 로그인 배경",
+                    modifier = Modifier
+                        .size(width = 300.dp, height = 50.dp)
+                )
+                Row() {
+                    Spacer(Modifier.size(20.dp))
+                    Image(
+                        painter = painterResource(id = R.drawable.email_icon_high),
+                        contentDescription = "메일 아이콘",
+                        modifier = Modifier
+                            .size(width = 22.dp, height = 22.dp)
+                    )
+                }
             }
 
-            Button(
-                onClick = {
-                    viewModel.testRetrofit()
-                }
+            Spacer(modifier = Modifier.size(50.dp))
+
+            // 간편 로그인
+            Text("또는")
+
+            Spacer(modifier = Modifier.size(50.dp))
+
+            // 구글 로그인 버튼
+            Box(
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .clickable {
+                        viewModel.googleLogin(context)
+                    },
+                contentAlignment = Alignment.CenterStart
             ) {
-                Text("api테스트")
+                Image(
+                    painter = painterResource(id = R.drawable.google_login_high),
+                    contentDescription = "구글 로그인 배경",
+                    modifier = Modifier
+                        .size(width = 300.dp, height = 50.dp)
+                )
+                Row() {
+                    Spacer(Modifier.size(20.dp))
+                    Image(
+                        painter = painterResource(id = R.drawable.google_icon),
+                        contentDescription = "구글 아이콘",
+                        modifier = Modifier
+                            .size(width = 22.dp, height = 22.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 카카오 로그인 버튼
+            Box(
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .clickable {
+                        viewModel.kakaoLogin(context)
+                    },
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.kakao_icon_high),
+                    contentDescription = "카카오 로그인 배경",
+                    modifier = Modifier
+                        .size(width = 300.dp, height = 50.dp)
+                )
+                Row() {
+                    Spacer(Modifier.size(20.dp))
+                    Image(
+                        painter = painterResource(id = R.drawable.kakao_login_icon),
+                        contentDescription = "카카오 아이콘",
+                        modifier = Modifier
+                            .size(width = 22.dp, height = 22.dp)
+                    )
+                }
             }
         }
     }

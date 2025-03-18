@@ -18,10 +18,12 @@ import kr.co.uxn.agms_p.ui.components.ready.SettingScreen
 import kr.co.uxn.agms_p.ui.components.ready.EnterInfoScreen
 import kr.co.uxn.agms_p.ui.components.splash.SplashScreen
 import kr.co.uxn.agms_p.ui.viewmodel.LoginViewModel
+import kr.co.uxn.agms_p.ui.viewmodel.RegisterViewModel
 import java.net.URLDecoder
 
 class MainActivity : ComponentActivity() {
     private val loginViewModel: LoginViewModel by viewModels()
+    private val registerViewModel: RegisterViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -40,7 +42,7 @@ class MainActivity : ComponentActivity() {
         // `navController`, `Home`, `modifier`를 전달 합시다.
         NavHost(navController, "Splash", modifier = modifier) {
             composable("Splash") {
-                SplashScreen(navController)
+                SplashScreen(navController, activity = this@MainActivity)
             }
 
             composable("Login") {
@@ -59,7 +61,7 @@ class MainActivity : ComponentActivity() {
             }
 
             composable("SettingPermissionScreen") { backStackEntry ->
-                SettingPermissionScreen(navController)
+                SettingPermissionScreen(navController, registerViewModel, this@MainActivity)
             }
 
             composable("EnterInfoScreen") { backStackEntry ->

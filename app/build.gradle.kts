@@ -110,4 +110,12 @@ dependencies {
     // Scalar
     implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
 
+    // Normal
+    implementation("io.github.ParkSangGwon:tedpermission-normal:3.4.2")
+
+    // Coroutine
+    implementation("io.github.ParkSangGwon:tedpermission-coroutine:3.4.2")
+
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
+
 }
