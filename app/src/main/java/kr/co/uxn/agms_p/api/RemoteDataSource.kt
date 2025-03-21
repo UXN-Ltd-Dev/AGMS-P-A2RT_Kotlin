@@ -1,12 +1,12 @@
 package kr.co.uxn.agms_p.api
 
 
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestKakaoAccessCode
+import kr.co.uxn.agms_p.api.model.responseDTO.ResponseKakaoAccessCode
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
-import retrofit2.Call
 import retrofit2.Response
-import retrofit2.http.Path
 
 interface RemoteDataSource {
 //    @POST("/data_collect/insert_device")
@@ -15,5 +15,6 @@ interface RemoteDataSource {
     suspend fun testRetrofit() : Response<String>
 
     @POST("/api/oauth/mobile/kakao")
-    suspend fun sendAccessCode(@Body accessCode: RequestKCode) : Response<ResponseKCode>
+    suspend fun sendKakaoAccessCode(@Body accessCode: RequestKakaoAccessCode) : Response<ResponseKakaoAccessCode>
+
 }

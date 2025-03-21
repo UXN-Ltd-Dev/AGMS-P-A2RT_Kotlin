@@ -1,18 +1,11 @@
 package kr.co.uxn.agms_p.ui.components.login
 
 import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,36 +14,31 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import kotlinx.coroutines.delay
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.ui.viewmodel.LoginViewModel
 
@@ -60,6 +48,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
     val email = remember { mutableStateOf("") }
     val pwd = remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     val systemUiController = rememberSystemUiController()
     LaunchedEffect(key1 = Unit) {
@@ -102,21 +91,28 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                         fontSize = 14.sp,
                         modifier = Modifier.align(Alignment.Start)
                     )
+
                     // 이메일 주소
                     BasicTextField(
                         value = email.value,
                         onValueChange = { email.value = it },
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = {
+                            keyboardController?.hide()
+                        }),
                         decorationBox = { innerTextField ->
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(30.dp)
+//                                    .focusRequester(focusRequester) // 포커스 요청
+//                                    .onFocusChanged { isFocused = !isFocused } // 포커스 감지
                                     .drawBehind {
                                         val strokeWidth = 3.dp.toPx() // 선 두께 설정
                                         val y = size.height - strokeWidth / 2 // 선을 하단에 위치
                                         drawLine(
                                             color = Color(0xFFEEEEEF),
-//                                            color = Color.Gray,
+//                                            color = if (isFocused) Color.Gray else Color.Blue,
                                             start = Offset(0f, y),
                                             end = Offset(size.width, y),
                                             strokeWidth = strokeWidth
@@ -147,6 +143,11 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     BasicTextField(
                         value = pwd.value,
                         onValueChange = { pwd.value = it },
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = {
+                            keyboardController?.hide()
+                        }),
                         decorationBox = { innerTextField ->
                             Box(
                                 modifier = Modifier
@@ -189,12 +190,19 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
             ) {
                 Text(
                     text = "회원가입",
-                    fontSize = 14.sp
-                )
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .clickable {
+                            navController.navigate("SignUpAgreeScreen1")
+                        }
+                    )
                 Spacer(modifier = Modifier.size(17.dp))
                 Text(
                     text = "비밀번호 찾기",
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    modifier = Modifier.clickable {
+                        navController.navigate("GuideScreen1")
+                    }
                 )
             }
             Spacer(modifier = Modifier.size(30.dp))
@@ -261,6 +269,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     )
                 }
             }
+
 
             Spacer(modifier = Modifier.height(10.dp))
 

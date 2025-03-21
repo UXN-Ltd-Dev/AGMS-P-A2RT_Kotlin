@@ -23,7 +23,7 @@ fun SplashScreen(navController: NavHostController, activity: Activity) {
             color = Color(0xFF385DAB),
             darkIcons = false // 상태바 아이콘을 밝게 (흰색)
         )
-        delay(3000)
+        delay(500)
         // 애니메이션 후 네비게이션
         navController.navigate("Login")
     }

@@ -7,16 +7,11 @@
         <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="s">
             @android:color/transparent
         </item>
-        <item name="windowSplashScreenAnimationDuration">500</item>
+        <item name="windowSplashScreenAnimationDuration">200</item>
     </style>
     <!-- Base application theme. -->
     <style name="Base.Theme.AGMSP" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
-
-        <!-- 상태바를 투명하게 설정 -->
-<!--        <item name="android:windowTranslucentStatus">true</item>-->
-<!--        <item name="android:windowDrawsSystemBarBackgrounds">false</item>-->
-<!--        <item name="android:statusBarColor">@android:color/transparent</item>-->
     </style>
 </resources>

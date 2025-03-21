@@ -26,15 +26,9 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.kakao.sdk.auth.AuthCodeClient
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.BuildConfig
-import kr.co.uxn.agms_p.api.RequestKCode
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestKakaoAccessCode
 import kr.co.uxn.agms_p.api.RetrofitClient.retrofitMachine
-import kr.co.uxn.agms_p.ui.viewmodel.LoginViewModel.Companion.TAG
-import retrofit2.Call
-import retrofit2.Response
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
@@ -253,7 +247,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     fun sendAccessCode(accessCode: String) {
         viewModelScope.launch {
             try {
-                val response = retrofitMachine.sendAccessCode(RequestKCode(accessCode))
+                val response = retrofitMachine.sendKakaoAccessCode(RequestKakaoAccessCode(accessCode))
+
                 if (response.isSuccessful) {
                     Log.d("TAG", "서버 응답: ${response.body()}")
                 } else {
