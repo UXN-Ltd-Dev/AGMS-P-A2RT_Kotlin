@@ -2,12 +2,9 @@ package kr.co.uxn.agms_p.api.model.requestDTO
 
 import com.google.gson.annotations.SerializedName
 
-data class RequestSignUpNormal(
-    @SerializedName("email")
-    val email: String,
-
-    @SerializedName("pwd")
-    val pwd: String,
+data class RequestSignUpGoogle(
+    @SerializedName("user_identity")
+    val userIdentity: String,
 
     @SerializedName("name")
     val name: String,

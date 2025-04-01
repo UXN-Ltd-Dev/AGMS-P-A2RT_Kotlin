@@ -1,10 +1,10 @@
 package kr.co.uxn.agms_p.ui.components.ready
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,15 +14,28 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,21 +43,21 @@ import androidx.navigation.NavController
 import kr.co.uxn.agms_p.R
 
 @Composable
-fun GuideScreen6(navController: NavController) {
+fun ScanFailScreen(navController: NavController) {
+    val context = LocalContext.current
     Surface(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(40.dp)
-                    .align(Alignment.Start)
-                    .padding(start = 30.dp)
+                    .height(80.dp)
+                    .padding(start = 30.dp, top = 38.dp),
             ) {
                 // 백 버튼
                 Image(
@@ -57,44 +70,37 @@ fun GuideScreen6(navController: NavController) {
                         }
                 )
             }
-            // Always 로고
-            Image(
-                modifier = Modifier.size(130.dp, 50.dp),
-                painter = painterResource(R.drawable.always_icon),
-                contentDescription = "로고"
-            )
 
-            // 사용 설명
-            Text(
-                text = "사용 설명",
-                fontSize = 33.sp,
-                color = Color(0xFF385DAB)
-            )
-
-            Spacer(modifier = Modifier.size(20.dp))
-
-            // 이미지
-            Image(
-                painter = painterResource(R.drawable.guide_illustration6),
-                contentDescription = "가이드 일러스트6",
-                modifier = Modifier.size(230.dp, 300.dp)
-            )
-
-            Spacer(modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.size(30.dp))
 
             Text(
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
-                text = "손가락으로 트랜스미터 주위에\n" +
-                        "있는 점착패드 주변을 눌러 점착패드\n" +
-                        "피부에 잘 붙도록 합니다.",
-                fontSize = 20.sp,
+                text = "블루투스 연결에\n실패하였습니다.",
+                fontSize = 25.sp,
+                fontWeight = FontWeight.Bold,
             )
 
-            Spacer(modifier = Modifier.size(30.dp))
+            Spacer(modifier = Modifier.size(50.dp))
+
+            Image(
+                modifier = Modifier.size(250.dp),
+                painter = painterResource(R.drawable.ble_scan_fail),
+                contentDescription = "BLE 스캔 실패"
+            )
+
+            Spacer(modifier = Modifier.size(50.dp))
+
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = "다시 연결하기 전 블루투스 신호와\n기기 번호를 확인해주세요.",
+                fontSize = 18.sp,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.size(40.dp))
 
             // 다음 버튼
-
             Button(
                 onClick = {
                     navController.navigate("RegisterDeviceScreen")
@@ -105,7 +111,7 @@ fun GuideScreen6(navController: NavController) {
                         color = Color(0xFF385DAB),
                         shape = RoundedCornerShape(10.dp)
                     )
-                    .align(Alignment.CenterHorizontally)
+//                    .align(Alignment.CenterHorizontally)
             ) {
                 Text(
                     text = "다음",

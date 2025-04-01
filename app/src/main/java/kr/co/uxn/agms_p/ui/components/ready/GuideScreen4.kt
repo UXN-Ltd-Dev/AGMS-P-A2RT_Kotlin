@@ -85,9 +85,9 @@ fun GuideScreen4(navController: NavController) {
             Text(
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
-                text = "어플리케이터를 들어올려 몸에서\n" +
-                        "분리합니다. 트랜스미터가 피부에\n" +
-                        "붙어 있는지 확인합니다.",
+                text = "어플리케이터를 본체 위에\n" +
+                        "손바닥을 대고 소리가 날때까지\n" +
+                        "끝까지 누릅니다.",
                 fontSize = 20.sp,
             )
 

@@ -1,3 +1,4 @@
+import com.google.gson.annotations.SerializedName
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -44,17 +45,18 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
     buildFeatures {
         compose = true
         buildConfig = true
         viewBinding = true
     }
+
 }
 
 dependencies {
@@ -117,5 +119,17 @@ dependencies {
     implementation("io.github.ParkSangGwon:tedpermission-coroutine:3.4.2")
 
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
+
+    // numberpicker
+    implementation ("com.chargemap.compose:numberpicker:1.0.3")
+
+    // datastore
+    implementation ("androidx.datastore:datastore-preferences:1.1.4")
+
+    // timeber
+    implementation ("com.jakewharton.timber:timber:5.0.1")
+
+    // 아이디토큰 해독
+//    implementation("com.google.api-client:google-api-client:2.2.0")
 
 }

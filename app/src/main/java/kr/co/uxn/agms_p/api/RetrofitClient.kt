@@ -1,6 +1,8 @@
 package kr.co.uxn.agms_p.api
 
 import kr.co.uxn.agms_p.BuildConfig
+import kr.co.uxn.agms_p.api.token.TokenAuthenticator
+import kr.co.uxn.agms_p.api.token.TokenInterceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -17,6 +19,8 @@ object RetrofitClient {
                     level = HttpLoggingInterceptor.Level.BODY
                 }
             )
+//            .addInterceptor(TokenInterceptor())
+//            .authenticator(TokenAuthenticator())
             .build()
     }
 

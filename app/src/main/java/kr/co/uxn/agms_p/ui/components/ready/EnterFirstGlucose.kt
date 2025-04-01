@@ -1,0 +1,167 @@
+package kr.co.uxn.agms_p.ui.components.ready
+
+import android.widget.Toast
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.api.RetrofitClient.retrofitMachine
+
+@Composable
+fun EnterFirstGlucose(navController: NavController) {
+    val context = LocalContext.current
+    val glucoseDataFromUser = remember { mutableStateOf("")}
+    val hint = remember { mutableStateOf("")}
+    val focusManager = LocalFocusManager.current
+    // 터치 시, 힌트를 지우기 위한 용도
+    val interactionSource = remember { MutableInteractionSource() }
+    val coroutineScope = rememberCoroutineScope()
+
+    Surface(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = { focusManager.clearFocus() })  // 🔹 터치 시 키보드 숨기기
+            }
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Spacer(modifier = Modifier.size(70.dp))
+
+            Image(
+                modifier = Modifier.size(200.dp, 240.dp),
+                painter = painterResource(R.drawable.enter_glucose_illustration),
+                contentDescription = "혈당 입력 일러스트"
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            OutlinedTextField(
+                value = glucoseDataFromUser.value,
+                onValueChange = { glucoseDataFromUser.value = it },
+                modifier = Modifier
+                    .size(250.dp, 60.dp)
+                    .onFocusChanged { focusState ->  // focusObserver 사용
+                        if (focusState.isFocused) {
+                            hint.value = "" // 포커스가 들어가면 힌트를 비웁니다
+                        } else if (glucoseDataFromUser.value.isEmpty()) {
+                            hint.value = "혈당을 입력해주세요." // 포커스를 잃고 입력값이 비어있다면 힌트를 다시 보여줍니다.
+                        }
+                    },
+                textStyle = TextStyle(
+                    textAlign = TextAlign.Center,
+                    fontSize = 20.sp
+                ),
+                singleLine = true,
+                placeholder = {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = hint.value,
+                        textAlign = TextAlign.Center,
+                        color = Color.Gray,
+                        fontSize = 18.sp
+                    )
+                },
+                interactionSource = interactionSource, // 터치 이벤트 감지
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Done,
+                    keyboardType = KeyboardType.Number
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { focusManager.clearFocus() }
+                )
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                text = "자가측정혈당수치를\n입력해주세요.",
+                fontSize = 23.sp,
+                color = Color(0xFF385DAB)
+            )
+
+            Spacer(modifier = Modifier.size(10.dp))
+
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                text = "초기 설정을 위해\n공복 혈당이 필요합니다.",
+                fontSize = 15.sp,
+                color = Color.Gray
+            )
+
+            Spacer(modifier = Modifier.size(70.dp))
+
+            // 완료 버튼
+            Button(
+                onClick = {
+                    if (glucoseDataFromUser.value != "") {
+                        // TODO : 서버에 혈당데이터 전송, 화면이동
+                        coroutineScope.launch(Dispatchers.IO) {
+//                            retrofitMachine.
+                        }
+
+                        navController.navigate("HomeScreen")
+                    } else {
+                        Toast.makeText(context, "혈당을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                modifier = Modifier
+                    .size(280.dp, 50.dp)
+                    .background(
+                        color = Color(0xFF385DAB),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+//                    .align(Alignment.CenterHorizontally)
+            ) {
+                Text(
+                    text = "완료",
+                    color = Color.White,
+                    fontSize = 15.sp
+                )
+            }
+
+        }
+    }
+}

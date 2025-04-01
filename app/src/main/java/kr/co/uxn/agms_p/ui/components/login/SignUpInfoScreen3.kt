@@ -1,6 +1,8 @@
 package kr.co.uxn.agms_p.ui.components.login
 
+import android.content.Context.MODE_PRIVATE
 import android.util.Log
+import android.widget.NumberPicker
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -43,24 +45,40 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.edit
 import androidx.navigation.NavController
+import com.chargemap.compose.numberpicker.NumberPicker
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.invoke
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kr.co.uxn.agms_p.api.RetrofitClient.retrofitMachine
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignInNormal
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignUpNormal
+import kr.co.uxn.agms_p.api.token.TokenManager
+import kr.co.uxn.agms_p.ui.viewmodel.LoginViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String) {
+fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String, loginViewModel: LoginViewModel) {
     val context = LocalContext.current
 
     var expandedForSex by remember { mutableStateOf(false) }
     var expandedForDiabetesType by remember { mutableStateOf(false) }
 
+    val name = remember { mutableStateOf("") }
     val sex = remember { mutableStateOf("") }
+//    val age = remember { mutableStateOf(-1) }
     val age = remember { mutableStateOf("") }
     val height = remember { mutableStateOf("") }
     val weight = remember { mutableStateOf("") }
@@ -87,20 +105,7 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String) 
                 .padding(horizontal = 30.dp),
 //            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.size(40.dp))
-
-            // 백 버튼
-//            Image(
-//                painter = painterResource(R.drawable.back_icon),
-//                contentDescription = "백 버튼",
-//                modifier = Modifier
-//                    .size(40.dp)
-//                    .align(Alignment.Start)
-//                    .clickable {
-//                    navController.popBackStack()
-//                }
-//            )
-            Spacer(modifier = Modifier.size(50.dp))
+            Spacer(modifier = Modifier.size(90.dp))
 
             // 내 정보를 입력하세요.
             Text(
@@ -126,14 +131,77 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String) 
 
             Spacer(modifier = Modifier.size(20.dp))
 
+            // 1. 이름
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(start = 50.dp)
+            ) {
+                Text(text = "이름")
+                Spacer(modifier = Modifier.size(60.dp, 27.dp))
 
-            // 1. 성별
+                Box(
+                    modifier = Modifier
+                        .width(120.dp)
+                        .drawBehind {
+                            val strokeWidth = 1.dp.toPx()  // 선 굵기
+                            val y = size.height - strokeWidth / 2
+                            drawLine(
+                                color = Color.Gray, // 원하는 색상
+                                start = Offset(0f, y),
+                                end = Offset(size.width, y),
+                                strokeWidth = strokeWidth
+                            )
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    BasicTextField(
+                        value = name.value,
+                        onValueChange = { name.value = it },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(onDone = {
+                            keyboardController?.hide()
+                        }),
+                        decorationBox = { innerTextField ->
+                            Box(
+                                modifier = Modifier
+                                    .width(120.dp)
+                                    .height(27.dp)
+                                    .drawBehind {
+                                        val strokeWidth = 0.dp.toPx() // 선 두께 설정
+                                        val y = size.height - strokeWidth / 2 // 선을 하단에 위치
+                                        drawLine(
+                                            color = Color.White,
+                                            start = Offset(0f, y),
+                                            end = Offset(size.width, y),
+                                            strokeWidth = strokeWidth
+                                        )
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                innerTextField()
+                            }
+                        },
+                        textStyle = TextStyle(
+                            fontSize = 16.sp,
+                            textAlign = TextAlign.Center
+                        ),
+                        singleLine = true
+                    )
+                }
+            }
+
+
+            // 2. 성별
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 50.dp)
             ) {
                 Text(text = "성별")
-                Spacer(modifier = Modifier.size(60.dp, 30.dp))
+                Spacer(modifier = Modifier.size(60.dp, 27.dp))
                 var expanded by remember { mutableStateOf(false) }
                 Box(
                     modifier = Modifier
@@ -197,14 +265,13 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String) 
             }
 
 
-
-            // 2. 연령
+            // 3. 연령
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 50.dp)
             ) {
                 Text(text = "연령")
-                Spacer(modifier = Modifier.size(60.dp, 30.dp))
+                Spacer(modifier = Modifier.size(60.dp, 27.dp))
 
                 Box(
                     modifier = Modifier
@@ -221,7 +288,6 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String) 
                         },
                     contentAlignment = Alignment.Center
                 ) {
-
                     BasicTextField(
                         value = age.value,
                         onValueChange = { age.value = it },
@@ -235,8 +301,8 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String) 
                         decorationBox = { innerTextField ->
                             Box(
                                 modifier = Modifier
-                                    .width(80.dp)
-                                    .height(30.dp)
+                                    .width(120.dp)
+                                    .height(27.dp)
                                     .drawBehind {
                                         val strokeWidth = 0.dp.toPx() // 선 두께 설정
                                         val y = size.height - strokeWidth / 2 // 선을 하단에 위치
@@ -246,24 +312,38 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String) 
                                             end = Offset(size.width, y),
                                             strokeWidth = strokeWidth
                                         )
-                                    }
-                                    .padding(start = 30.dp),
+                                    },
                                 contentAlignment = Alignment.Center
                             ) {
                                 innerTextField()
                             }
                         },
+                        textStyle = TextStyle(
+                            fontSize = 16.sp,
+                            textAlign = TextAlign.Center
+                        ),
+                        singleLine = true
                     )
+
+//                    NumberPicker(
+//                        value = age.value,
+//                        range = 13 .. 120,
+//                        onValueChange = {
+//                            age.value = it
+//                        },
+//                        dividersColor = Color(0xFF828282)
+//                    )
+
                 }
             }
 
-            // 3. 신장
+            // 4. 신장
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 50.dp)
             ) {
                 Text(text = "신장")
-                Spacer(modifier = Modifier.size(60.dp, 30.dp))
+                Spacer(modifier = Modifier.size(60.dp, 27.dp))
                 Box(
                     modifier = Modifier
                         .width(120.dp)
@@ -279,7 +359,6 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String) 
                         },
                     contentAlignment = Alignment.Center
                 ) {
-
                     BasicTextField(
                         value = height.value,
                         onValueChange = { height.value = it },
@@ -293,8 +372,8 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String) 
                         decorationBox = { innerTextField ->
                             Box(
                                 modifier = Modifier
-                                    .width(80.dp)
-                                    .height(30.dp)
+                                    .width(120.dp)
+                                    .height(27.dp)
                                     .drawBehind {
                                         val strokeWidth = 0.dp.toPx() // 선 두께 설정
                                         val y = size.height - strokeWidth / 2 // 선을 하단에 위치
@@ -304,25 +383,30 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String) 
                                             end = Offset(size.width, y),
                                             strokeWidth = strokeWidth
                                         )
-                                    }
-                                    .padding(start = 30.dp),
+                                    },
                                 contentAlignment = Alignment.Center
                             ) {
                                 innerTextField()
                             }
                         },
+                        textStyle = TextStyle(
+                            fontSize = 16.sp,
+                            textAlign = TextAlign.Center
+                        ),
+                        singleLine = true
                     )
                 }
-
             }
 
-            // 4. 체중
+
+            // 5. 체중
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 50.dp)
             ) {
                 Text(text = "체중")
-                Spacer(modifier = Modifier.size(60.dp, 30.dp))
+                Spacer(modifier = Modifier.size(60.dp, 27.dp))
+
                 Box(
                     modifier = Modifier
                         .width(120.dp)
@@ -338,7 +422,6 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String) 
                         },
                     contentAlignment = Alignment.Center
                 ) {
-
                     BasicTextField(
                         value = weight.value,
                         onValueChange = { weight.value = it },
@@ -352,8 +435,8 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String) 
                         decorationBox = { innerTextField ->
                             Box(
                                 modifier = Modifier
-                                    .width(80.dp)
-                                    .height(30.dp)
+                                    .width(120.dp)
+                                    .height(27.dp)
                                     .drawBehind {
                                         val strokeWidth = 0.dp.toPx() // 선 두께 설정
                                         val y = size.height - strokeWidth / 2 // 선을 하단에 위치
@@ -363,18 +446,22 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String) 
                                             end = Offset(size.width, y),
                                             strokeWidth = strokeWidth
                                         )
-                                    }
-                                    .padding(start = 30.dp),
+                                    },
                                 contentAlignment = Alignment.Center
                             ) {
                                 innerTextField()
                             }
                         },
+                        textStyle = TextStyle(
+                            fontSize = 16.sp,
+                            textAlign = TextAlign.Center
+                        ),
+                        singleLine = true
                     )
                 }
             }
 
-            // 5. 당뇨 정보
+            // 6. 당뇨 정보
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 50.dp)
@@ -386,7 +473,7 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String) 
                 // 당뇨 전단계
                 // LADA(Latent Autoimmune Diabetes in Adults)
                 // 정상
-                Spacer(modifier = Modifier.size(30.dp))
+                Spacer(modifier = Modifier.size(27.dp))
                 Box(
                     modifier = Modifier
                         .width(120.dp)
@@ -419,11 +506,7 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String) 
                 ) {
                     // First section
                     DropdownMenuItem(
-                        text = {
-                            Text(
-                                text = "정상",
-                            )
-                        },
+                        text = { Text(text = "정상") },
                         onClick = {
                             diabetesType.value = "정상"
                             expandedForDiabetesType = !expandedForDiabetesType
@@ -483,7 +566,7 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String) 
                     },
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
-            ){
+            ) {
                 Checkbox(
                     checked = checked.value,
                     onCheckedChange = { checked.value = it }, // 바꼈을 때, 처리할 곳
@@ -497,13 +580,16 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String) 
                 )
             }
 
-            Spacer(modifier = Modifier.size(30.dp))
+            Spacer(modifier = Modifier.size(21.dp))
 
             // 확인 버튼
             Button(
                 onClick = {
+                    // TODO : int로 변환해야할 체중, 신장, 나이는 string값이 포함되면 runtimeError가 발생한다.
+                    // TODO : Picker로 바꿔야 하나.?
                     if (sex.value == "") {
                         Toast.makeText(context, "성별을 선택해 주세요.", Toast.LENGTH_SHORT).show()
+//                    } else if (age.value == -1) {
                     } else if (age.value == "") {
                         Toast.makeText(context, "나이를 입력해 주세요.", Toast.LENGTH_SHORT).show()
                     } else if (height.value == "") {
@@ -515,9 +601,169 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String) 
                     } else if (checked.value == false) {
                         Toast.makeText(context, "개인정보 처리방침 및 이용약관에 동의해주세요.", Toast.LENGTH_SHORT).show()
                     } else {
-                        navController.navigate("SettingPermissionScreen")
                         // TODO : 서버에 가입정보 전달
-                        // TODO : 가입에 성공하면 로그인 시도
+                        // TODO : 가입에 성공하면 로그인 API로 로그인 시도
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val diabetesTypeCode: Int =
+                                when (diabetesType.value) {
+                                    "제1형 당뇨병" -> 0
+                                    "제2형 당뇨병" -> 1
+                                    "임신성 당뇨병" -> 2
+                                    "당뇨 전단계" -> 3
+                                    "LADA" -> 4
+                                    "정상" -> 5
+                                    else -> throw IllegalArgumentException("Unknown diabetes type")
+                                }
+
+                            val sexCode: Int =
+                                when (sex.value) {
+                                    "선택 안함" -> 0
+                                    "남성" -> 1
+                                    "여성" -> 2
+                                    else -> throw IllegalArgumentException("Unknown diabetes type")
+                                }
+
+                            val requestDto = RequestSignUpNormal(
+                                email = email,
+                                pwd = pwd,
+                                name = name.value,
+                                sex = sexCode,
+                                age = age.value.toInt(),
+                                height = height.value.toInt(),
+                                weight = weight.value.toInt(),
+                                diabetesType = diabetesTypeCode
+                            )
+
+                            // 이메일 인증 받았다는 전제하에
+                            // 서버에 회원가입 신청
+                            if (loginViewModel.signUpType == 1) {
+                                // 카카오
+                                try {
+                                    val result = retrofitMachine.sendKakaoSignUp(requestDto)
+                                    if (result.isSuccessful) {
+                                        Log.d("TAG", "서버 응답: ${result.body()}")
+                                        val resultBody = result.body()
+
+                                        if (resultBody != null) {
+                                            if (resultBody.isJoined == false) {
+                                                Log.d("TAG", "회원 가입 성공")
+                                                // TODO: 로그인 시도
+                                                val login = retrofitMachine.loginNormal(signInInfo = RequestSignInNormal(email, pwd))
+                                                val loginResult = login.body()
+                                                if (login.isSuccessful) {
+                                                    if(loginResult != null) {
+                                                        Log.d("TAG", "로그인 성공")
+
+                                                        // 토큰 저장
+                                                        TokenManager.deleteAccessToken()
+                                                        TokenManager.saveAccessToken(loginResult.accessToken)
+                                                        TokenManager.saveRefreshToken(loginResult.refreshToken)
+
+                                                        // 화면 이동
+                                                        withContext(Dispatchers.Main) {
+                                                            Log.d("DTO", requestDto.toString())
+                                                            navController.navigate("SettingPermissionScreen")
+                                                        }
+                                                    }
+                                                } else {
+                                                    Log.d("TAG", "로그인 실패")
+                                                    withContext(Dispatchers.Main) {
+                                                        Toast.makeText(context, "네트워크 연결 오류, 잠시 후 시도해주세요.", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                }
+                                            } else {
+//                                            Log.d("TAG", "서버 응답: ${result.body()}")
+                                                Log.d("TAG", "회원 가입 실패")
+                                            }
+                                        }
+                                    } else {
+                                        Log.e("TAG", "API 실패: ${result.errorBody()?.string()}")
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("TAG", "네트워크 오류 발생: ${e.message}")
+                                }
+
+
+
+                                } else if (loginViewModel.signUpType == 2) {
+
+                            } else {
+                                try {
+                                    val result = retrofitMachine.sendUxnSignUp(requestDto)
+                                    if (result.isSuccessful) {
+                                        Log.d("TAG", "서버 응답: ${result.body()}")
+                                        val resultBody = result.body()
+
+                                        if (resultBody != null) {
+                                            if (resultBody.isJoined == false) {
+                                                Log.d("TAG", "회원 가입 성공")
+                                                // TODO: 로그인 시도
+
+                                                // 로그인이 성공적으로 되었을 때
+//                                            if (loginResult != null) {
+//                                                if (loginResult.isJoined) {
+//                                                    val sharedPreferences = context.getSharedPreferences("UserInfo", MODE_PRIVATE)
+//                                                    sharedPreferences.edit() {
+//                                                        putString("name", loginResult.name)
+//                                                        putInt("uuid", loginResult.uuid)
+//                                                        putString(
+//                                                            "accessToken",
+//                                                            loginResult.accessToken
+//                                                        )
+//                                                        putString(
+//                                                            "refreshToken",
+//                                                            loginResult.refreshToken
+//                                                        )
+//
+//                                                    }
+//                                                    val getAllSharedPreferences = sharedPreferences.all
+//                                                    Log.e("TSET", "SharedPrference에 유저 로그인정보 입력 완료, 담긴 데이터는 : ${getAllSharedPreferences.toString()}")
+//
+//                                                    // 세팅화면으로 이동
+//                                                    navController.navigate("SettingPermissionScreen")
+//                                                }
+//                                            }
+
+
+
+
+                                                val login = retrofitMachine.loginNormal(signInInfo = RequestSignInNormal(email, pwd))
+                                                val loginResult = login.body()
+                                                if (login.isSuccessful) {
+                                                    if(loginResult != null) {
+                                                        Log.d("TAG", "로그인 성공")
+
+                                                        // 토큰 저장
+                                                        TokenManager.deleteAccessToken()
+                                                        TokenManager.saveAccessToken(loginResult.accessToken)
+                                                        TokenManager.saveRefreshToken(loginResult.refreshToken)
+
+                                                        // 화면 이동
+                                                        withContext(Dispatchers.Main) {
+                                                            Log.d("DTO", requestDto.toString())
+                                                            navController.navigate("SettingPermissionScreen")
+                                                        }
+                                                    }
+                                                } else {
+                                                    Log.d("TAG", "로그인 실패")
+                                                    withContext(Dispatchers.Main) {
+                                                        Toast.makeText(context, "네트워크 연결 오류, 잠시 후 시도해주세요.", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                }
+                                            } else {
+//                                            Log.d("TAG", "서버 응답: ${result.body()}")
+                                                Log.d("TAG", "회원 가입 실패")
+                                            }
+                                        }
+                                    } else {
+                                        Log.e("TAG", "API 실패: ${result.errorBody()?.string()}")
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("TAG", "네트워크 오류 발생: ${e.message}")
+                                }
+                            }
+
+                        }
                     }
                 },
                 modifier = Modifier

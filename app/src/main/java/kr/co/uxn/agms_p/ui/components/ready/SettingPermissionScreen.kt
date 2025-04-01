@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -21,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,10 +37,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import kr.co.uxn.agms_p.R
-import kr.co.uxn.agms_p.ui.viewmodel.RegisterViewModel
+import kr.co.uxn.agms_p.ui.viewmodel.PermissionViewModel
 
 @Composable
-fun SettingPermissionScreen(navController: NavController, viewModel: RegisterViewModel, activity: Activity) {
+fun SettingPermissionScreen(navController: NavController, viewModel: PermissionViewModel, activity: Activity) {
 //    var timerWhenScan: Timer? = null
     val context = LocalContext.current
     val activityContext = context as Activity

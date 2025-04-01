@@ -1,5 +1,8 @@
 package kr.co.uxn.agms_p.ui.components.login
 
+import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -39,8 +42,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.api.RetrofitClient.retrofitMachine
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignInNormal
 import kr.co.uxn.agms_p.ui.viewmodel.LoginViewModel
+import androidx.core.content.edit
+import kotlinx.coroutines.withContext
+import kr.co.uxn.agms_p.api.token.TokenManager
 
 @Composable
 fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
@@ -58,6 +69,10 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
         )
     }
 
+//    fun validateEmail(email: String) {
+//        if (email.length >= 8 &&)
+//    }
+
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -65,6 +80,8 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                 detectTapGestures(onTap = { focusManager.clearFocus() })  // 🔹 터치 시 키보드 숨기기
             }
     ) {
+
+        // email: abc@gmail.com, pwd: 1234
         Column(
             modifier = Modifier
                 .fillMaxSize(),
@@ -201,19 +218,61 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     text = "비밀번호 찾기",
                     fontSize = 14.sp,
                     modifier = Modifier.clickable {
-                        navController.navigate("GuideScreen1")
+//                        navController.navigate("GuideScreen1") // 기존
+                        navController.navigate("ScanDeviceScreen") // 테스트
+//                        navController.navigate("HomeScreen") // 테스트2
+//                        navController.navigate("") // 테스트3
+                        Toast.makeText(context, "기능 개발중입니다. \n홈페이지를 이용해주세요.", Toast.LENGTH_SHORT).show()
                     }
                 )
             }
             Spacer(modifier = Modifier.size(30.dp))
 
             // 이메일 로그인 버튼
+            // 이메일로 시작하기
             Box(
                 modifier = Modifier
                     .wrapContentWidth()
                     .clickable {
                         if (email.value != "" && pwd.value != "") {
-                            navController.navigate("LoginPassword/${email.value}")
+//                            navController.navigate("LoginPassword/${email.value}")
+                            CoroutineScope(Dispatchers.IO).launch {
+                                try {
+                                    // 로그인
+                                    val login =
+                                        retrofitMachine.loginNormal(signInInfo = RequestSignInNormal(email.value, pwd.value))
+                                    if (login.isSuccessful) {
+                                        val loginResult = login.body()
+                                        // 로그인이 성공적으로 되었을 때
+                                        if (loginResult != null) {
+                                             if (!loginResult.isJoined) {
+                                                 Log.e("login","로그인 결과 : ${loginResult.toString()}")
+//                                                 val sharedPreferences = context.getSharedPreferences("UserInfo", MODE_PRIVATE)
+//                                                 sharedPreferences.edit() {
+//                                                     putString("name", loginResult.name)
+//                                                     putInt("uuid", loginResult.uuid)
+//                                                 }
+//                                                 val getAllSharedPreferences = sharedPreferences.all
+//                                                 Log.e("TSET", "SharedPrference에 유저 로그인정보 입력 완료, 담긴 데이터는 : ${getAllSharedPreferences.toString()}")
+//
+                                                 // 토큰 저장
+                                                 TokenManager.deleteAccessToken()
+                                                 TokenManager.saveAccessToken(loginResult.accessToken)
+                                                 TokenManager.saveRefreshToken(loginResult.refreshToken)
+
+                                                 // 세팅화면으로 이동
+                                                 withContext(Dispatchers.Main) {
+                                                     navController.navigate("SettingPermissionScreen")
+                                                 }
+                                             }
+                                        }
+                                    } else {
+                                        Log.e("TEST", "API통신 실패 : ${login.errorBody()?.string()}")
+                                    }
+                                } catch (exception: Exception) {
+                                    Log.e("TEST", "네트워크 에러 : ${exception.message}")
+                                }
+                            }
                         } else {
                             Toast.makeText(context, "이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
                         }

@@ -6,9 +6,8 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kr.co.uxn.agms_p.User
 
-class RegisterViewModel(application: Application) : AndroidViewModel(application) {
+class PermissionViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
         const val TAG = "RegisterViewModel"
     }
