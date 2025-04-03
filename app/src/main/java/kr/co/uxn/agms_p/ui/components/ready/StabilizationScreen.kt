@@ -44,6 +44,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import kr.co.uxn.agms_p.R
@@ -56,6 +58,7 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
 //    val totalTime = 120 * 60 * 1000L // 120분을 밀리초로 변환
     val totalTime = 1 * 60 * 1000L // 테스트를 위해 1분 설정
     val remainingTime = remember { mutableStateOf(totalTime) }
+    val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(Unit) {
 
         // 서비스 실행 이벤트 발행
@@ -72,6 +75,11 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
 
             override fun onFinish() {
                 // 타이머가 끝나면 다음 화면으로 이동
+                if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                    navController.navigate("StabilizationCompleteScreen")
+                } else {
+                    Log.e("NAVIGATION", "Navigation skipped - lifecycle not ready")
+                }
                 navController.navigate("StabilizationCompleteScreen") // "nextScreen"을 다음 화면의 route로 변경
             }
         }

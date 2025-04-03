@@ -1,5 +1,6 @@
 package kr.co.uxn.agms_p.ui.components.ready
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -24,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
@@ -41,7 +43,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 
 @Composable
 fun RegisterDeviceScreen(navController: NavController) {
@@ -49,6 +55,7 @@ fun RegisterDeviceScreen(navController: NavController) {
     val deviceNumber = remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val coroutineScope = rememberCoroutineScope()
 
     // 터치 시, 힌트를 지우기 위한 용도
     val interactionSource = remember { MutableInteractionSource() }
@@ -86,7 +93,8 @@ fun RegisterDeviceScreen(navController: NavController) {
             Spacer(modifier = Modifier.size(50.dp))
 
             Text(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .clickable {
                         navController.navigate("StabilizationScreen")
                     },
@@ -156,9 +164,34 @@ fun RegisterDeviceScreen(navController: NavController) {
             Button(
                 onClick = {
                     if (deviceNumber.value != "") {
-                        navController.navigate("ScanDeviceScreen")
+
+                        try {
+                            coroutineScope.launch(Dispatchers.IO) {
+                                val result = tokenRetrofit.getDeviceMac(deviceNumber.value)
+                                if (result.isSuccessful) {
+                                    val resultBody = result.body()
+                                    if (resultBody != null) {
+                                        if (resultBody.isExists) {
+                                            val mac = resultBody.deviceMac
+                                            withContext(Dispatchers.Main) {
+                                                navController.navigate("ScanDeviceScreen/$mac")
+                                                Toast.makeText(context, "테스트 : 조회된 mac은  \n$mac 입니다.", Toast.LENGTH_SHORT).show()
+                                            }
+
+                                        }
+                                    }
+                                } else {
+                                    Log.e("TAG", "API 에러 : ${result.errorBody()}")
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(context, "시리얼 넘버를 다시 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Log.e("TAG","네트워크 에러 : $e")
+                        }
                     } else {
-                        Toast.makeText(context, "기기 번호를 입력해 주세요.",Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "시리얼 넘버를 입력해 주세요.", Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier

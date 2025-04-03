@@ -44,7 +44,7 @@ import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 
 @Composable
-fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel) {
+fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, mac: String) {
     val context = LocalContext.current
     val data by bleViewModel.isFindDevice.collectAsState()
     val bleManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -80,7 +80,7 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel) {
     }
 
     suspend fun teraRups() {
-        delay(1000 * 10)
+        delay(1000 * 60)
         Log.e("teraRups", "teraRups called!")
         if (!bleViewModel.isFindDevice.value) {
             navController.navigate("ScanFailScreen")
@@ -98,9 +98,10 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel) {
 
     LaunchedEffect(key1 = Unit) {
         var mScanFilter = mutableListOf<ScanFilter>()
+        Log.e("TAG", "스캔에 쓰일 Mac : $mac")
         val scanFilter = ScanFilter
                 .Builder()
-                .setDeviceAddress("60:C0:BF:ED:21:1F")
+                .setDeviceAddress(mac)
                 .build()
 
         mScanFilter.add(scanFilter)

@@ -52,9 +52,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
-import kr.co.uxn.agms_p.api.RetrofitClient.retrofitMachine
+import kr.co.uxn.agms_p.api.RetrofitClient.emptyRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEmailVerificationCode
-import kr.co.uxn.agms_p.api.model.requestDTO.RequestKakaoAccessCode
 
 @Composable
 fun SignUpCheckScreen2(navController: NavController) {
@@ -153,37 +152,37 @@ fun SignUpCheckScreen2(navController: NavController) {
                     Log.e("TAG", "isEmailVerified : ${isEmailVerified.value}")
                     // 인증완료 테스트를 위한 코드 끝
 
-                    CoroutineScope(Dispatchers.IO).launch {
-                        try {
-                            val result = retrofitMachine.sendVerificationCode(
-                                RequestEmailVerificationCode(email = email.value)
-                            )
-                            if (result.isSuccessful) {
-                                Log.d("TAG", "서버 응답: ${result.body()}")
-                                val resultBody = result.body()
-                                if (resultBody != null) {
-                                    if(resultBody.isDuplicated) {
-                                        withContext(Dispatchers.Main) {
-                                            Toast.makeText(context, "이미 가입된 이메일입니다.", Toast.LENGTH_SHORT).show()
-                                        }
-                                    }
-                                    // 중복되지 않았다면 진행바 실행 및 인증번호 전송
-                                    else { // isDuplicated = false
-                                        withContext(Dispatchers.Main) {
-                                            Toast.makeText(context, "인증번호가 전송되었습니다.", Toast.LENGTH_SHORT).show()
-                                            verificationCode.value = resultBody.authenticationCode.toString()
-                                        }
-                                    }
-                                } else {
-                                    Log.e("TAG", "서버 응답이 null 입니다.")
-                                }
-                            } else {
-                                Log.e("TAG", "API 실패: ${result.errorBody()?.string()}")
-                            }
-                        } catch (e: Exception) {
-                            Log.e("TAG", "네트워크 오류 발생: ${e.message}")
-                        }
-                    }
+//                    CoroutineScope(Dispatchers.IO).launch {
+//                        try {
+//                            val result = emptyRetrofit.sendVerificationCode(
+//                                RequestEmailVerificationCode(email = email.value)
+//                            )
+//                            if (result.isSuccessful) {
+//                                Log.d("TAG", "서버 응답: ${result.body()}")
+//                                val resultBody = result.body()
+//                                if (resultBody != null) {
+//                                    if(resultBody.isDuplicated) {
+//                                        withContext(Dispatchers.Main) {
+//                                            Toast.makeText(context, "이미 가입된 이메일입니다.", Toast.LENGTH_SHORT).show()
+//                                        }
+//                                    }
+//                                    // 중복되지 않았다면 진행바 실행 및 인증번호 전송
+//                                    else { // isDuplicated = false
+//                                        withContext(Dispatchers.Main) {
+//                                            Toast.makeText(context, "인증번호가 전송되었습니다.", Toast.LENGTH_SHORT).show()
+//                                            verificationCode.value = resultBody.authenticationCode.toString()
+//                                        }
+//                                    }
+//                                } else {
+//                                    Log.e("TAG", "서버 응답이 null 입니다.")
+//                                }
+//                            } else {
+//                                Log.e("TAG", "API 실패: ${result.errorBody()?.string()}")
+//                            }
+//                        } catch (e: Exception) {
+//                            Log.e("TAG", "네트워크 오류 발생: ${e.message}")
+//                        }
+//                    }
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF385DAB) // 배경색 설정

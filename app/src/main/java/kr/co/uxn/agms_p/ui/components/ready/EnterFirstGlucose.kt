@@ -1,5 +1,6 @@
 package kr.co.uxn.agms_p.ui.components.ready
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -37,17 +38,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
-import kr.co.uxn.agms_p.api.RetrofitClient.retrofitMachine
+import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestEventData
+import kr.co.uxn.agms_p.api.token.TokenManager
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun EnterFirstGlucose(navController: NavController) {
     val context = LocalContext.current
-    val glucoseDataFromUser = remember { mutableStateOf("")}
-    val hint = remember { mutableStateOf("")}
+    val glucoseDataFromUser = remember { mutableStateOf("") }
+    val hint = remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
     // 터치 시, 힌트를 지우기 위한 용도
     val interactionSource = remember { MutableInteractionSource() }
@@ -139,10 +145,45 @@ fun EnterFirstGlucose(navController: NavController) {
                     if (glucoseDataFromUser.value != "") {
                         // TODO : 서버에 혈당데이터 전송, 화면이동
                         coroutineScope.launch(Dispatchers.IO) {
-//                            retrofitMachine.
+                            val userId = TokenManager.getUserId().first()
+                            Log.e("TEST", "userId : $userId")
+                            try {
+                                val createdAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                                Log.e("TEST", "createdAt : $createdAt")
+                                val upload = tokenRetrofit.uploadEvent(
+                                    RequestEventData(
+                                        userId = userId!!,
+                                        createdAt = createdAt,
+                                        eventTypeCode = 1308,
+                                        content = glucoseDataFromUser.value
+                                    )
+                                )
+                                Log.e("TEST", "uploadbody : ${upload.body().toString()}")
+                                if (upload.isSuccessful) {
+                                    val uploadBody = upload.body()
+                                    if (uploadBody != null) {
+                                        if (uploadBody.isSuccess) {
+                                            withContext(Dispatchers.Main) {
+                                                Log.e("TEST", "${uploadBody.toString()}")
+                                                navController.navigate("MainScreen")
+                                                Toast.makeText(context, "업로드 성공", Toast.LENGTH_SHORT).show()
+                                            }
+                                        } else {
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(context, "업로드 실패", Toast.LENGTH_SHORT).show()
+                                                Log.e("TEST", "업로드 실패")
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    Log.e("TEST", "API 에러 : ${upload.errorBody() }")
+                                }
+
+                            } catch (e: Exception) {
+                                Log.e("TEST", "네트워크 에러 : $e")
+                            }
                         }
 
-                        navController.navigate("HomeScreen")
                     } else {
                         Toast.makeText(context, "혈당을 입력해주세요.", Toast.LENGTH_SHORT).show()
                     }

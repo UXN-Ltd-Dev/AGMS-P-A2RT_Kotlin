@@ -1,8 +1,7 @@
 package kr.co.uxn.agms_p.ui.components.login
 
-import android.content.Context.MODE_PRIVATE
+import android.annotation.SuppressLint
 import android.util.Log
-import android.widget.NumberPicker
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -53,24 +52,29 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.edit
 import androidx.navigation.NavController
-import com.chargemap.compose.numberpicker.NumberPicker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.invoke
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kr.co.uxn.agms_p.api.RetrofitClient.retrofitMachine
+import kr.co.uxn.agms_p.api.RetrofitClient.emptyRetrofit
+import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignInNormal
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignUpNormal
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignUpOauthDetail
 import kr.co.uxn.agms_p.api.token.TokenManager
 import kr.co.uxn.agms_p.ui.viewmodel.LoginViewModel
 
 
+@SuppressLint("LogNotTimber")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String, loginViewModel: LoginViewModel) {
+fun SignUpInfoScreen3(
+    navController: NavController,
+    email: String,
+    pwd: String,
+    loginViewModel: LoginViewModel
+) {
     val context = LocalContext.current
 
     var expandedForSex by remember { mutableStateOf(false) }
@@ -589,7 +593,6 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String, 
                     // TODO : Picker로 바꿔야 하나.?
                     if (sex.value == "") {
                         Toast.makeText(context, "성별을 선택해 주세요.", Toast.LENGTH_SHORT).show()
-//                    } else if (age.value == -1) {
                     } else if (age.value == "") {
                         Toast.makeText(context, "나이를 입력해 주세요.", Toast.LENGTH_SHORT).show()
                     } else if (height.value == "") {
@@ -599,31 +602,32 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String, 
                     } else if (diabetesType.value == "") {
                         Toast.makeText(context, "당뇨 정보를 입력해 주세요.", Toast.LENGTH_SHORT).show()
                     } else if (checked.value == false) {
-                        Toast.makeText(context, "개인정보 처리방침 및 이용약관에 동의해주세요.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "개인정보 처리방침 및 이용약관에 동의해주세요.", Toast.LENGTH_SHORT)
+                            .show()
                     } else {
                         // TODO : 서버에 가입정보 전달
                         // TODO : 가입에 성공하면 로그인 API로 로그인 시도
                         CoroutineScope(Dispatchers.IO).launch {
                             val diabetesTypeCode: Int =
                                 when (diabetesType.value) {
-                                    "제1형 당뇨병" -> 0
-                                    "제2형 당뇨병" -> 1
-                                    "임신성 당뇨병" -> 2
-                                    "당뇨 전단계" -> 3
-                                    "LADA" -> 4
-                                    "정상" -> 5
+                                    "제1형 당뇨병" -> 1701
+                                    "제2형 당뇨병" -> 1702
+                                    "임신성 당뇨병" -> 1703
+                                    "당뇨 전단계" -> 1704
+                                    "LADA" -> 1705
+                                    "정상" -> 1706
                                     else -> throw IllegalArgumentException("Unknown diabetes type")
                                 }
 
                             val sexCode: Int =
                                 when (sex.value) {
-                                    "선택 안함" -> 0
-                                    "남성" -> 1
-                                    "여성" -> 2
+                                    "남성" -> 1601
+                                    "여성" -> 1602
+                                    "선택 안함" -> 1603
                                     else -> throw IllegalArgumentException("Unknown diabetes type")
                                 }
 
-                            val requestDto = RequestSignUpNormal(
+                            val requestSignUpNormal = RequestSignUpNormal(
                                 email = email,
                                 pwd = pwd,
                                 name = name.value,
@@ -634,24 +638,95 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String, 
                                 diabetesType = diabetesTypeCode
                             )
 
+                            val requestSignUpOauthDetail = RequestSignUpOauthDetail(
+                                userId = loginViewModel.userIdTest,
+                                email = email,
+                                name = name.value,
+                                sex = sexCode,
+                                age = age.value.toInt(),
+                                height = height.value.toInt(),
+                                weight = weight.value.toInt(),
+                                diabetesType = diabetesTypeCode
+                            )
+
                             // 이메일 인증 받았다는 전제하에
                             // 서버에 회원가입 신청
-                            if (loginViewModel.signUpType == 1) {
-                                // 카카오
+
+                            Log.e("TEST", "loginType = ${loginViewModel.signUpType}")
+                            if (loginViewModel.signUpType == 1801 || loginViewModel.signUpType == 1802) {
+                                // 간편로그인 회원가입 및 로그인
                                 try {
-                                    val result = retrofitMachine.sendKakaoSignUp(requestDto)
+                                    // oAuth 상세 정보입력
+                                    val result =
+                                        tokenRetrofit.oAuthSaveDetailInfo(requestSignUpOauthDetail)
+                                    withContext(Dispatchers.Main) {
+                                        Log.d(
+                                            "TEST",
+                                            "oAuthSaveDetailInfo requestDto : ${requestSignUpOauthDetail.toString()}"
+                                        )
+                                    }
+                                    if (result.isSuccessful) {
+                                        val resultBody = result.body()
+                                        if (resultBody != null) {
+                                            if (resultBody.isSuccess) {
+
+                                                // 토큰 저장 테스트
+                                                val verifyAccessToken =
+                                                    TokenManager.getAccessToken()
+                                                val verifyRefreshToken =
+                                                    TokenManager.getRefreshToken()
+                                                withContext(Dispatchers.Main) {
+                                                    Log.d(
+                                                        "TEST",
+                                                        "oAuthSaveDetailInfo responseBody: $resultBody"
+                                                    )
+
+                                                    Log.d(
+                                                        "TEST",
+                                                        "oAuthSaveDetailInfo responseBody: $resultBody"
+                                                    )
+                                                    Log.d(
+                                                        "TEST",
+                                                        "TokenManager | accessToken : $verifyAccessToken\nrefreshToken : $verifyRefreshToken"
+                                                    )
+                                                    navController.navigate("SettingPermissionScreen")
+                                                }
+                                            } else {
+                                                withContext(Dispatchers.Main) {
+                                                    Log.d(
+                                                        "TEST", "디테일 정보 입력 실패"
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        Log.e("TAG", "API 실패: ${result.errorBody()?.string()}")
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("TAG", "네트워크 오류 발생: ${e.message}")
+                                }
+                            } else {
+                                // 일반
+                                try {
+                                    // 회원가입
+                                    val result = emptyRetrofit.uxnSignUp(requestSignUpNormal)
                                     if (result.isSuccessful) {
                                         Log.d("TAG", "서버 응답: ${result.body()}")
                                         val resultBody = result.body()
-
                                         if (resultBody != null) {
-                                            if (resultBody.isJoined == false) {
+                                            if (!resultBody.isJoined) {
                                                 Log.d("TAG", "회원 가입 성공")
                                                 // TODO: 로그인 시도
-                                                val login = retrofitMachine.loginNormal(signInInfo = RequestSignInNormal(email, pwd))
-                                                val loginResult = login.body()
+                                                val login =
+                                                    emptyRetrofit.uxnLogin(
+                                                        signInInfo = RequestSignInNormal(
+                                                            email,
+                                                            pwd
+                                                        )
+                                                    )
                                                 if (login.isSuccessful) {
-                                                    if(loginResult != null) {
+                                                    val loginResult = login.body()
+                                                    if (loginResult != null) {
                                                         Log.d("TAG", "로그인 성공")
 
                                                         // 토큰 저장
@@ -661,18 +736,24 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String, 
 
                                                         // 화면 이동
                                                         withContext(Dispatchers.Main) {
-                                                            Log.d("DTO", requestDto.toString())
+                                                            Log.d(
+                                                                "DTO",
+                                                                requestSignUpNormal.toString()
+                                                            )
                                                             navController.navigate("SettingPermissionScreen")
                                                         }
                                                     }
                                                 } else {
                                                     Log.d("TAG", "로그인 실패")
                                                     withContext(Dispatchers.Main) {
-                                                        Toast.makeText(context, "네트워크 연결 오류, 잠시 후 시도해주세요.", Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(
+                                                            context,
+                                                            "네트워크 연결 오류, 잠시 후 시도해주세요.",
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
                                                     }
                                                 }
                                             } else {
-//                                            Log.d("TAG", "서버 응답: ${result.body()}")
                                                 Log.d("TAG", "회원 가입 실패")
                                             }
                                         }
@@ -682,24 +763,30 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String, 
                                 } catch (e: Exception) {
                                     Log.e("TAG", "네트워크 오류 발생: ${e.message}")
                                 }
+                            }
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .size(280.dp, 50.dp)
+                    .background(
+                        color = Color(0xFF385DAB),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    .align(Alignment.CenterHorizontally)
+            ) {
+                Text(
+                    text = "확인",
+                    color = Color.White,
+                    fontSize = 15.sp
+                )
+            }
+        }
+    }
+}
 
 
-
-                                } else if (loginViewModel.signUpType == 2) {
-
-                            } else {
-                                try {
-                                    val result = retrofitMachine.sendUxnSignUp(requestDto)
-                                    if (result.isSuccessful) {
-                                        Log.d("TAG", "서버 응답: ${result.body()}")
-                                        val resultBody = result.body()
-
-                                        if (resultBody != null) {
-                                            if (resultBody.isJoined == false) {
-                                                Log.d("TAG", "회원 가입 성공")
-                                                // TODO: 로그인 시도
-
-                                                // 로그인이 성공적으로 되었을 때
+// 로그인이 성공적으로 되었을 때
 //                                            if (loginResult != null) {
 //                                                if (loginResult.isJoined) {
 //                                                    val sharedPreferences = context.getSharedPreferences("UserInfo", MODE_PRIVATE)
@@ -723,63 +810,3 @@ fun SignUpInfoScreen3(navController: NavController, email: String, pwd: String, 
 //                                                    navController.navigate("SettingPermissionScreen")
 //                                                }
 //                                            }
-
-
-
-
-                                                val login = retrofitMachine.loginNormal(signInInfo = RequestSignInNormal(email, pwd))
-                                                val loginResult = login.body()
-                                                if (login.isSuccessful) {
-                                                    if(loginResult != null) {
-                                                        Log.d("TAG", "로그인 성공")
-
-                                                        // 토큰 저장
-                                                        TokenManager.deleteAccessToken()
-                                                        TokenManager.saveAccessToken(loginResult.accessToken)
-                                                        TokenManager.saveRefreshToken(loginResult.refreshToken)
-
-                                                        // 화면 이동
-                                                        withContext(Dispatchers.Main) {
-                                                            Log.d("DTO", requestDto.toString())
-                                                            navController.navigate("SettingPermissionScreen")
-                                                        }
-                                                    }
-                                                } else {
-                                                    Log.d("TAG", "로그인 실패")
-                                                    withContext(Dispatchers.Main) {
-                                                        Toast.makeText(context, "네트워크 연결 오류, 잠시 후 시도해주세요.", Toast.LENGTH_SHORT).show()
-                                                    }
-                                                }
-                                            } else {
-//                                            Log.d("TAG", "서버 응답: ${result.body()}")
-                                                Log.d("TAG", "회원 가입 실패")
-                                            }
-                                        }
-                                    } else {
-                                        Log.e("TAG", "API 실패: ${result.errorBody()?.string()}")
-                                    }
-                                } catch (e: Exception) {
-                                    Log.e("TAG", "네트워크 오류 발생: ${e.message}")
-                                }
-                            }
-
-                        }
-                    }
-                },
-                modifier = Modifier
-                    .size(280.dp, 50.dp)
-                    .background(
-                        color = Color(0xFF385DAB),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                    .align(Alignment.CenterHorizontally)
-            ) {
-                Text(
-                    text = "확인",
-                    color = Color.White,
-                    fontSize = 15.sp
-                )
-            }
-        }
-    }
-}

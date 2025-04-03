@@ -21,11 +21,12 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.kakao.sdk.auth.AuthCodeClient
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.BuildConfig
-import kr.co.uxn.agms_p.api.model.requestDTO.RequestKakaoAccessCode
-import kr.co.uxn.agms_p.api.RetrofitClient.retrofitMachine
-import kr.co.uxn.agms_p.api.model.requestDTO.RequestGoogleIdToken
+import kr.co.uxn.agms_p.api.RetrofitClient.emptyRetrofit
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestOAuthSignUpAndLogin
+import kr.co.uxn.agms_p.api.token.TokenManager
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
@@ -37,12 +38,15 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     val isLoggedIn = MutableStateFlow<Boolean>(false)
     val userInfo = MutableStateFlow<User>(User(0, "test", "test", "test"))
-    var userIdentity = ""
+    var userIdTest = -1
     var signUpType = -1
 
     private val _navigationEvent = MutableStateFlow<LoginNavigationEvent?>(null)
     val navigationEvent = _navigationEvent
 
+    fun updateUserId(userId: Int) {
+        this@LoginViewModel.userIdTest = userId
+    }
 
     fun kakaoLogin(activityContext: Context) {
         viewModelScope.launch {
@@ -50,9 +54,24 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun apiTest() {
+        viewModelScope.launch {
+            try {
+                val result = emptyRetrofit.testRetrofit()
+                if(result.isSuccessful) {
+                    val resultBody = result.body()
+                    if (resultBody != null) {
+                        Log.e(TAG, "apiTest : $resultBody")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "네트워크 에러 : $e")
+            }
+        }
+    }
+
     @SuppressLint("LogNotTimber")
     fun googleLogin(activityContext: Context) {
-//        viewModelScope.launch(Dispatchers.IO) {
         viewModelScope.launch() {
             val googleWebClientId = BuildConfig.google_web_client_id
             Log.e(TAG, "webClientId : $googleWebClientId ")
@@ -96,7 +115,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                 val username = credential.id
                 val password = credential.password
             }
-//            // GoogleIdToken credential
+            // GoogleIdToken credential
             is CustomCredential -> {
                 if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                     try {
@@ -111,23 +130,9 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                         val name = googleIdTokenCredential.displayName
                         val pictureUri = googleIdTokenCredential.profilePictureUri
 
-
                         Log.e(TAG, "idToken : $idToken\nphone : $phoneNumber\nemail : $email\nname : $name\npictureUri : $pictureUri")
-
-                        // idToken 해독
-//                        val verifier = GoogleIdTokenVerifier.Builder(GoogleNetHttpTransport.newTrustedTransport(), GsonFactory())
-//                                                .setAudience(listOf(BuildConfig.google_web_client_id))
-//                                                .build()
-//
-//                        val verifiedIdToken = verifier.verify(idToken) ?: throw Exception("Google IdToken이 유효하지 않아 회원 정보를 가져올 수 없습니다.")
-//                        // 토큰에 존재하는 이메일 정보
-//                        val email2 = verifiedIdToken.payload.email
-//                        Log.e("TAG", "해독된 email2 : $email2")
-
-                        // 서버에 토큰전송
-                        isMemberCheck(idToken, 2)
-
-//                        sendGoogleIdToken(idToken)
+                        // 회원 여부 체크
+                        isMemberCheckAndLogin(idToken, 1801)
 
                     } catch (e: GoogleIdTokenParsingException) {
                         Log.e(TAG, "Received an invalid google id token response", e)
@@ -150,8 +155,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             AuthCodeClient.instance.authorizeWithKakaoTalk(activityContext) { authCode, error ->
                 val accessCode = authCode.toString()
                 Log.e(TAG, "카카오 인가코드 : $authCode")
-                isMemberCheck(accessCode, 1)
-//                sendKakaoAccessCode(accessCode)
+                isMemberCheckAndLogin(accessCode, 1802)
             }
         } else {
             // 카카오계정으로 로그인
@@ -160,195 +164,77 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                 val accessCode = authCode.toString()
                 Log.e(TAG, "카카오 인가코드 : $authCode")
 
-//                sendKakaoAccessCode(accessCode)
-                isMemberCheck(accessCode, 1)
+                isMemberCheckAndLogin(accessCode, 1802)
 
             }
         }
     }
 
-//    @SuppressLint("LogNotTimber")
-//    fun sendKakaoAccessCode(accessCode: String) {
-//        viewModelScope.launch(Dispatchers.IO) {
-//            try {
-//                val response =
-//                    retrofitMachine.sendKakaoAccessCode(RequestKakaoAccessCode(accessCode))
-//                if (response.isSuccessful) {
-//                    val responseBody = response.body()
-//                    if (responseBody != null) {
-//
-//                        if (responseBody.isSignUp) {
-//                            // 회원가입이 되어있으면, 세팅 화면으로 보내는 이벤트 처리.
-//                            _navigationEvent.value =
-//                                LoginNavigationEvent.NavigateToSettingPermission("세팅화면으로 이동")
-//                        } else {
-//                            // 회원가입이 안되어있으면, 회원가입 화면으로 보내는 이벤트 처리
-//                            _navigationEvent.value =
-//                                LoginNavigationEvent.NavigateToSignUp("회원가입화면으로 이동")
-//                        }
-//                        withContext(Dispatchers.Main) {
-//                            Log.d("TAG", "서버 응답: $responseBody")
-//                        }
-//                    }
-//                } else {
-//                    withContext(Dispatchers.Main) {
-//                        Log.e("TAG", "API 실패: ${response.errorBody()?.string()}")
-//                    }
-//                }
-//            } catch (e: Exception) {
-//                withContext(Dispatchers.Main) {
-//                    Log.e("TAG", "네트워크 오류 발생: ${e.message}")
-//                }
-//            }
-//        }
-//    }
 
     @SuppressLint("LogNotTimber")
-    fun sendKakaoAccessCode(accessCode: String) {
+    fun isMemberCheckAndLogin(authenticationCode: String, type: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // 로그인 타입 : 카카오(1)
-                val response = retrofitMachine.userCheck(accessCode, 1)
+                // 로그인 타입 : 구글(1801)
+                // 로그인 타입 : 카카오(1802)
+                val response = emptyRetrofit.oAuthSignUpAndLogin(RequestOAuthSignUpAndLogin(authenticationCode, type))
                 if (response.isSuccessful) {
                     val responseBody = response.body()
-                    if (responseBody != null) {
-                        if (responseBody.isUserExist) {
-                            // 회원가입이 되어있으면, 세팅 화면으로 보내는 이벤트 처리.
-                            _navigationEvent.value =
-                                LoginNavigationEvent.NavigateToSettingPermission("세팅화면으로 이동")
-                        } else {
-                            // 회원가입이 안되어있으면, 회원가입 화면으로 보내는 이벤트 처리
-                            _navigationEvent.value =
-                                LoginNavigationEvent.NavigateToSignUp("회원가입화면으로 이동")
-                            userIdentity = responseBody.userIdentity
-                        }
-                        withContext(Dispatchers.Main) {
-                            Log.d("TAG", "서버 응답: $responseBody")
-                        }
-                    }
-                } else {
                     withContext(Dispatchers.Main) {
-                        Log.e("TAG", "API 실패: ${response.errorBody()?.string()}")
+                        Log.d("TEST", "oAuthSignUpAndLogin responseBody: $responseBody")
                     }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Log.e("TAG", "네트워크 오류 발생: ${e.message}")
-                }
-            }
-        }
-    }
-
-    @SuppressLint("LogNotTimber")
-    fun isMemberCheck(authenticationCode: String, type: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                // 로그인 타입 : 카카오(1)
-                // 로그인 타입 : 구글(2)
-                val response = retrofitMachine.userCheck(authenticationCode, type)
-                if (response.isSuccessful) {
-                    val responseBody = response.body()
                     if (responseBody != null) {
-                        if (responseBody.isUserExist) {
-                            // 회원가입이 되어있으면, 세팅 화면으로 보내는 이벤트 처리.
-                            _navigationEvent.value =
-                                LoginNavigationEvent.NavigateToSettingPermission("세팅화면으로 이동")
-                        } else {
-                            // 회원가입이 안되어있으면, 회원가입 화면으로 보내는 이벤트 처리
-                            _navigationEvent.value =
-                                LoginNavigationEvent.NavigateToSignUp("회원가입화면으로 이동")
-                            userIdentity = responseBody.userIdentity
+                        if (responseBody.isSignUp) {
+                            // isSignUp 이 true 일 경우, 회원 가입
+                            // 회원 아님, 회원 가입 화면으로 보내는 이벤트 처리
+                            // 및 일단 토큰을 받는다.
+                            val accessToken = responseBody.accessToken
+                            val refreshToken = responseBody.refreshToken
+
+                            val userId = responseBody.userId
+                            Log.d("TEST", "responseBody.userId: $userId")
+                            // 토큰 저장
+                            TokenManager.deleteAccessToken()
+                            TokenManager.deleteUserId()
+                            TokenManager.saveAccessToken(accessToken)
+                            TokenManager.saveRefreshToken(refreshToken)
+                            TokenManager.saveUserId(userId)
+                            // 토큰 저장 테스트
+                            val verifyAccessToken = TokenManager.getAccessToken().first()
+                            val verifyRefreshToken = TokenManager.getRefreshToken().first()
+                            val verifyUserId = TokenManager.getUserId().first()
+                            withContext(Dispatchers.Main) {
+                                Log.d("TEST", "TokenManager | accessToken : $verifyAccessToken\nrefreshToken : $verifyRefreshToken\nuserId : $verifyUserId")
+                            }
+                            // 회원가입 화면으로 이동
+                            _navigationEvent.value = LoginNavigationEvent.NavigateToSignUp(userId)
                             signUpType = type
-                        }
-                        withContext(Dispatchers.Main) {
-                            Log.d("TAG", "서버 응답: $responseBody")
+
+                        } else {
+                            // isSignUp 이 false 일 경우, 로그인
+                            val accessToken = responseBody.accessToken
+                            val refreshToken = responseBody.refreshToken
+                            val userId = responseBody.userId
+                            // 토큰 저장
+                            TokenManager.deleteAccessToken()
+                            TokenManager.deleteUserId()
+                            TokenManager.saveAccessToken(accessToken)
+                            TokenManager.saveRefreshToken(refreshToken)
+                            TokenManager.saveUserId(userId)
+                            // 토큰 저장 테스트
+                            val verifyAccessToken = TokenManager.getAccessToken().first()
+                            val verifyRefreshToken = TokenManager.getRefreshToken().first()
+                            val verifyUserId = TokenManager.getUserId().first()
+                            withContext(Dispatchers.Main) {
+                                Log.d("TEST", "TokenManager | accessToken : $verifyAccessToken\nrefreshToken : $verifyRefreshToken\nuserId : $verifyUserId")
+                            }
+                            // 세팅화면으로 이동
+                            _navigationEvent.value = LoginNavigationEvent.NavigateToSettingPermission("세팅 화면으로 이동")
                         }
                     }
                 } else {
                     withContext(Dispatchers.Main) {
                         Log.e("TAG", "API 실패: ${response.errorBody()?.string()}")
-                    }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Log.e("TAG", "네트워크 오류 발생: ${e.message}")
-                }
-            }
-        }
-    }
-
-
-
-
-//    @SuppressLint("LogNotTimber")
-//    fun sendGoogleIdToken(idToken: String) {
-//        viewModelScope.launch(Dispatchers.IO) {
-//            try {
-//                val result =
-//                    retrofitMachine.sendGoogleIdToken(RequestGoogleIdToken(idToken = idToken))
-//                if (result.isSuccessful) {
-//                    val resultBody = result.body()
-//                    withContext(Dispatchers.Main) {
-//                        Log.e("TAG", "API 성공: ${resultBody.toString()}")
-//                    }
-//                    if (resultBody != null) {
-//                        // 회원가입 테스트 성공 여부
-//                        if (resultBody.isSignup) {
-//                            // 회원가입이 되어있으면, 세팅 화면으로 보내는 이벤트 처리.
-//                            _navigationEvent.value =
-//                                LoginNavigationEvent.NavigateToSettingPermission("세팅화면으로 이동")
-//                        } else {
-//                            // 회원가입이 안되어있으면, 회원가입 화면으로 보내는 이벤트 처리
-//                            _navigationEvent.value =
-//                                LoginNavigationEvent.NavigateToSignUp("회원가입화면으로 이동")
-//                        }
-//                        withContext(Dispatchers.Main) {
-//                            Log.d("TAG", "서버 응답: $resultBody")
-//                        }
-//                    }
-//                } else {
-//                    withContext(Dispatchers.Main) {
-//                        Log.e("TAG", "API 실패: ${result.errorBody()?.string()}")
-//                    }
-//                }
-//            } catch (e: Exception) {
-//                withContext(Dispatchers.Main) {
-//                    Log.e("TAG", "네트워크 오류 발생: ${e.message}")
-//                }
-//            }
-//        }
-//    }
-
-    @SuppressLint("LogNotTimber")
-    fun sendGoogleIdToken(idToken: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                // 로그인 타입 : 구글(2)
-                val result =
-                    retrofitMachine.userCheck(idToken, 2)
-                if (result.isSuccessful) {
-                    val resultBody = result.body()
-                    withContext(Dispatchers.Main) {
-                        Log.e("TAG", "API 성공: ${resultBody.toString()}")
-                    }
-                    if (resultBody != null) {
-                        // 회원가입 테스트 성공 여부
-                        if (resultBody.isUserExist) {
-                            // 회원가입이 되어있으면, 세팅 화면으로 보내는 이벤트 처리.
-                            _navigationEvent.value =
-                                LoginNavigationEvent.NavigateToSettingPermission("세팅화면으로 이동")
-                        } else {
-                            // 회원가입이 안되어있으면, 회원가입 화면으로 보내는 이벤트 처리
-                            _navigationEvent.value =
-                                LoginNavigationEvent.NavigateToSignUp("회원가입화면으로 이동")
-                        }
-                        withContext(Dispatchers.Main) {
-                            Log.d("TAG", "서버 응답: $resultBody")
-                        }
-                    }
-                } else {
-                    withContext(Dispatchers.Main) {
-                        Log.e("TAG", "API 실패: ${result.errorBody()?.string()}")
                     }
                 }
             } catch (e: Exception) {
@@ -366,5 +252,5 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
 sealed class LoginNavigationEvent {
     data class NavigateToSettingPermission(val test: String) : LoginNavigationEvent()
-    data class NavigateToSignUp(val test: String) : LoginNavigationEvent()
+    data class NavigateToSignUp(val userId: Int) : LoginNavigationEvent()
 }

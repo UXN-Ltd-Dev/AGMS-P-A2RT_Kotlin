@@ -1,7 +1,5 @@
 package kr.co.uxn.agms_p.ui.components.login
 
-import android.content.Context.MODE_PRIVATE
-import android.content.SharedPreferences
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -46,10 +44,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kr.co.uxn.agms_p.R
-import kr.co.uxn.agms_p.api.RetrofitClient.retrofitMachine
+import kr.co.uxn.agms_p.api.RetrofitClient.emptyRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignInNormal
 import kr.co.uxn.agms_p.ui.viewmodel.LoginViewModel
-import androidx.core.content.edit
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.api.token.TokenManager
 
@@ -218,11 +215,14 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     text = "비밀번호 찾기",
                     fontSize = 14.sp,
                     modifier = Modifier.clickable {
+
+//                        viewModel.apiTest()
+
 //                        navController.navigate("GuideScreen1") // 기존
-                        navController.navigate("ScanDeviceScreen") // 테스트
-//                        navController.navigate("HomeScreen") // 테스트2
-//                        navController.navigate("") // 테스트3
-                        Toast.makeText(context, "기능 개발중입니다. \n홈페이지를 이용해주세요.", Toast.LENGTH_SHORT).show()
+                        navController.navigate("EnterFirstGlucose") // 혈당입력 화면
+                        navController.navigate("MainScreen") // 메인화면
+//                        Toast.makeText(context, "기능 개발중입니다. \n홈페이지를 이용해주세요.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Ohayo, I'm ScreenJumper.\nWhere do you want to go?", Toast.LENGTH_SHORT).show()
                     }
                 )
             }
@@ -240,20 +240,12 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                 try {
                                     // 로그인
                                     val login =
-                                        retrofitMachine.loginNormal(signInInfo = RequestSignInNormal(email.value, pwd.value))
+                                        emptyRetrofit.uxnLogin(signInInfo = RequestSignInNormal(email.value, pwd.value))
                                     if (login.isSuccessful) {
                                         val loginResult = login.body()
                                         // 로그인이 성공적으로 되었을 때
                                         if (loginResult != null) {
-                                             if (!loginResult.isJoined) {
                                                  Log.e("login","로그인 결과 : ${loginResult.toString()}")
-//                                                 val sharedPreferences = context.getSharedPreferences("UserInfo", MODE_PRIVATE)
-//                                                 sharedPreferences.edit() {
-//                                                     putString("name", loginResult.name)
-//                                                     putInt("uuid", loginResult.uuid)
-//                                                 }
-//                                                 val getAllSharedPreferences = sharedPreferences.all
-//                                                 Log.e("TSET", "SharedPrference에 유저 로그인정보 입력 완료, 담긴 데이터는 : ${getAllSharedPreferences.toString()}")
 //
                                                  // 토큰 저장
                                                  TokenManager.deleteAccessToken()
@@ -264,7 +256,6 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                                  withContext(Dispatchers.Main) {
                                                      navController.navigate("SettingPermissionScreen")
                                                  }
-                                             }
                                         }
                                     } else {
                                         Log.e("TEST", "API통신 실패 : ${login.errorBody()?.string()}")

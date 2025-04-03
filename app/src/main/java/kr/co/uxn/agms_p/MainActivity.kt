@@ -1,7 +1,6 @@
 package kr.co.uxn.agms_p
 
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -18,7 +17,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kr.co.uxn.agms_p.ble.AlwaysService
 import kr.co.uxn.agms_p.ui.theme.AGMSPTheme
@@ -26,7 +24,7 @@ import kr.co.uxn.agms_p.ui.components.login.LoginScreen
 import kr.co.uxn.agms_p.ui.components.login.SignUpAgreeScreen1
 import kr.co.uxn.agms_p.ui.components.login.SignUpCheckScreen2
 import kr.co.uxn.agms_p.ui.components.login.SignUpInfoScreen3
-import kr.co.uxn.agms_p.ui.components.main.HomeScreen
+import kr.co.uxn.agms_p.ui.components.main.MainScreen
 import kr.co.uxn.agms_p.ui.components.ready.StabilizationCompleteScreen
 import kr.co.uxn.agms_p.ui.components.ready.EnterFirstGlucose
 import kr.co.uxn.agms_p.ui.components.ready.SettingPermissionScreen
@@ -60,6 +58,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        // 서비스 실행 이벤트 처리
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 bleViewModel.events.collect { event ->
@@ -81,7 +80,6 @@ class MainActivity : ComponentActivity() {
         modifier: Modifier = Modifier,
         navController: NavHostController = rememberNavController()
     ) {
-
         LaunchedEffect(Unit) {
             AuthEventNotifier.refreshTokenExpired.collect {
                 Log.e("토큰", "토큰 만료됨.")
@@ -90,26 +88,22 @@ class MainActivity : ComponentActivity() {
         }
 
         LaunchedEffect(Unit) {
-            /**
-             * 관 측
-             */
             loginViewModel.navigationEvent.collect { event ->
                 when (event) {
                     is LoginNavigationEvent.NavigateToSettingPermission -> {
-                        navController.navigate("SettingPermissionScreen") {
-//                            popUpTo("Login") { inclusive = true }
-                        }
+                        navController.navigate("SettingPermissionScreen")
                         loginViewModel.clearNavigationEvent()
                     }
 
                     is LoginNavigationEvent.NavigateToSignUp -> {
-                        navController.navigate("SignUpAgreeScreen1") {
-//                            popUpTo("Login") { inclusive = true }
-                        }
+                        navController.navigate("SignUpAgreeScreen1")
+                        Log.e("TAG", "event로 받은 userId: ${event.userId}")
+                        loginViewModel.updateUserId(event.userId)
                         loginViewModel.clearNavigationEvent()
                     }
+                    null -> {
 
-                    null -> {}
+                    }
                 }
             }
         }
@@ -172,8 +166,9 @@ class MainActivity : ComponentActivity() {
                 RegisterDeviceScreen(navController)
             }
 
-            composable("ScanDeviceScreen") {
-                ScanDeviceScreen(navController, bleViewModel)
+            composable("ScanDeviceScreen/{mac}") { backStackEntry ->
+                val mac = backStackEntry.arguments?.getString("mac").toString()
+                ScanDeviceScreen(navController, bleViewModel, mac)
             }
 
             composable("ScanFailScreen") {
@@ -192,8 +187,8 @@ class MainActivity : ComponentActivity() {
                 EnterFirstGlucose(navController)
             }
 
-            composable("HomeScreen") { backStackEntry ->
-                HomeScreen(navController)
+            composable("MainScreen") { backStackEntry ->
+                MainScreen(navController)
             }
         }
     }

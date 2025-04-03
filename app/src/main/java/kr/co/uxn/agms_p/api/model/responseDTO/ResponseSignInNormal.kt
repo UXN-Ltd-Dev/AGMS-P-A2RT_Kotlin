@@ -9,12 +9,15 @@ data class ResponseSignInNormal(
     @SerializedName("refresh_token")
     val refreshToken: String,
 
-    @SerializedName("uuid")
-    val uuid: Int,
+    @SerializedName("email")
+    val email: String,
 
     @SerializedName("name")
     val name: String,
 
-    @SerializedName("is_joined")
-    val isJoined: Boolean
+    @SerializedName("result_code")
+    val resultCode: Int,
+
+    @SerializedName("id")
+    val id: Int
 )
