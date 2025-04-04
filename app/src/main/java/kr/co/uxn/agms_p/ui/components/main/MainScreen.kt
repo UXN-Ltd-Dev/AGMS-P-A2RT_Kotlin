@@ -111,7 +111,6 @@ fun MainScreen(navController: NavController) {
     ) { paddingValues ->
         ContentScreen(paddingValues = paddingValues, selectedIndex, navController)
     }
-
 }
 
 @Composable

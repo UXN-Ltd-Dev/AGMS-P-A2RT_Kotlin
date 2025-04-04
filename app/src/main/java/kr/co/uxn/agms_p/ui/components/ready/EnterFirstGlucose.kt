@@ -154,7 +154,7 @@ fun EnterFirstGlucose(navController: NavController) {
                                     RequestEventData(
                                         userId = userId!!,
                                         createdAt = createdAt,
-                                        eventTypeCode = 1308,
+                                        eventTypeCode = 1403,
                                         content = glucoseDataFromUser.value
                                     )
                                 )
@@ -186,6 +186,7 @@ fun EnterFirstGlucose(navController: NavController) {
 
                     } else {
                         Toast.makeText(context, "혈당을 입력해주세요.", Toast.LENGTH_SHORT).show()
+
                     }
                 },
                 modifier = Modifier

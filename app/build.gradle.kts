@@ -6,6 +6,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("kotlin-parcelize")
+    id("kotlin-kapt")
 }
 
 val propertiesFile = rootProject.file("server.properties")
@@ -132,4 +134,6 @@ dependencies {
     // 아이디토큰 해독
 //    implementation("com.google.api-client:google-api-client:2.2.0")
 
+    // rottie
+    implementation ("com.airbnb.android:lottie-compose:6.1.0")
 }

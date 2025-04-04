@@ -64,7 +64,7 @@ fun EventScreen(navController: NavController, paddingValues: PaddingValues) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(text = "식사와 운동, 인슐린 주입")
-                Text(text = "등")
+                Text(text = " 등")
             }
             Row(
 
@@ -79,26 +79,9 @@ fun EventScreen(navController: NavController, paddingValues: PaddingValues) {
                         contentColor = Color.White // 텍스트 색
                     ),
                 ) {
-                    Text(text="입력")
+                    Text(text = "입력")
                 }
             }
-
-        }
-
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp)
-                .padding(10.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White, // 카드 배경색 설정
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 10.dp
-            )
-        ) {
 
         }
 
@@ -115,8 +98,50 @@ fun EventScreen(navController: NavController, paddingValues: PaddingValues) {
                 defaultElevation = 10.dp
             )
         ) {
+            Text(
+                text = "혈당값 입력"
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "최소")
+                Text(text = " 1일 1회")
+            }
+            Row(
+
+            ){
+                Text(
+                    text = "공복혈당을 입력하세요"
+                )
+                Button(
+                    onClick = { /*TODO*/ },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF6200EE), // 버튼 배경색
+                        contentColor = Color.White // 텍스트 색
+                    ),
+                ) {
+                    Text(text = "입력")
+                }
+            }
+        }
+
+
+        Spacer(modifier = Modifier.height(30.dp))
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp)
+                .padding(10.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White, // 카드 배경색 설정
+            ),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 10.dp
+            )
+        ) {
             Row(){
-                Text(text = "센서 정보")
+                Text(text = "최근 활동")
 
             }
         }

@@ -219,10 +219,10 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
 //                        viewModel.apiTest()
 
 //                        navController.navigate("GuideScreen1") // 기존
-                        navController.navigate("EnterFirstGlucose") // 혈당입력 화면
-                        navController.navigate("MainScreen") // 메인화면
+//                        navController.navigate("EnterFirstGlucose") // 혈당입력 화면
+//                        navController.navigate("MainScreen") // 메인화면
+                        navController.navigate("ScanFailScreen") // 스캔 실패 화면
 //                        Toast.makeText(context, "기능 개발중입니다. \n홈페이지를 이용해주세요.", Toast.LENGTH_SHORT).show()
-                        Toast.makeText(context, "Ohayo, I'm ScreenJumper.\nWhere do you want to go?", Toast.LENGTH_SHORT).show()
                     }
                 )
             }

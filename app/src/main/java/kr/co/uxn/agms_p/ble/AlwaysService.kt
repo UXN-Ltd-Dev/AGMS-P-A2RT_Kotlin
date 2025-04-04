@@ -59,10 +59,7 @@ class AlwaysService() : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("SERVICE", "Service onStartCommand() call!")
 
-        val testPeriod = intent?.getStringExtra("testPeriod")
-        testPeriod?.let {
-            Log.d("TEST", "인텐트로 받아 온 test주기는 $testPeriod 분 입니다.")
-        }
+        val device = intent?.getParcelableExtra<Device>("device")
         // 노티 채널 생성
         createNotificationChannel()
 
@@ -88,25 +85,15 @@ class AlwaysService() : Service() {
             )
         }
 
-        // BleManager로부터 뷰모델 값 받아오기
-//        val bleState = bleManager.getBleState()
-//        Log.e("FROMVIEWMODEL", "ble 상태는 : $bleState")
-//
-//        val rssi = bleManager.getRssi()
-//        Log.e("FROMVIEWMODEL", "장치명 : ${rssi?.deviceName}, rssi : ${rssi?.rssi}")
-//
-//        val isShow = bleManager.getIsShow()
-//        Log.e("FROMVIEWMODEL", "isShow는 : $isShow")
-
 
         timerForNoti = Timer()
         timerForNoti?.schedule(object: TimerTask() {
             override fun run() {
                 val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
                     .setOngoing(true)
-                    .setContentTitle("AGMS 실행 중")
+                    .setContentTitle("Always가 작동 중입니다.")
 //            .setContentTitle("연결된 장치 : ${rssi?.deviceName}   ${rssi?.rssi}\n연결 상태 : ${bleState}")
-                    .setContentText("포그라운드 서비스가 작동 중 입니다.")
+//                    .setContentText("포그라운드 서비스가 작동 중 입니다.")
                     .setSmallIcon(R.mipmap.ic_launcher_round)
                     .setContentIntent(pendingIntent)
                     .setSilent(true)
@@ -115,99 +102,6 @@ class AlwaysService() : Service() {
             }
 
         }, 0 , 1000)
-//        timerForNoti?.schedule(object: TimerTask() {
-//            override fun run() {
-//                val bleState = bleManager.getBleState()
-//                val rssi = bleManager.getRssi()
-//                val data = bleManager.getData()
-//                val isShow = bleManager.getIsShow()
-//                val deviceName = intent?.getStringExtra("deviceName")
-//
-//                Log.d("FROMVIEWMODEL", "ble 상태는 : $bleState")
-//                if (bleState == "connected") {
-//                    if (rssi == null) {
-//                        val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
-//                            .setOngoing(true)
-//                            .setContentTitle("연결 상태 : 연결됨!")
-//                            .setContentText("포그라운드 서비스가 작동 중 입니다.")
-//                            .setSmallIcon(R.mipmap.ic_launcher_round)
-//                            .setContentIntent(pendingIntent)
-//                            .setSilent(true)
-//                            .build()
-//
-//                        NotificationManagerCompat.from(baseContext).notify(NOTI_ID, notification)
-//                    } else {
-//                        if (data == null || data.deviceName != deviceName) {
-//                            val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
-//                                .setOngoing(true)
-//                                .setContentTitle("$deviceName")
-//                                .setContentText(
-//                                    "데이터를 불러오는 중 입니다.\n"
-//                                )
-//                                .setStyle(
-//                                    NotificationCompat.BigTextStyle().bigText(
-//                                        "데이터를 불러오는 중 입니다.\n" +
-//                                                "신호 : ${rssi.rssi}\n" +
-//                                                "연결 상태 : 연결됨!\n"
-//                                    )
-//                                )
-//                                .setSmallIcon(R.mipmap.ic_launcher_round)
-//                                .setContentIntent(pendingIntent)
-//                                .setSilent(true)
-//                                .build()
-//
-//                            NotificationManagerCompat.from(baseContext).notify(NOTI_ID, notification)
-//                        } else if (data.deviceName == deviceName) { // isShow가 true이면!
-//                            val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
-//                                .setOngoing(true)
-//                                .setContentTitle("${data.deviceName}")
-//                                .setContentText("weo1 : ${data.weo1}, weo2 : ${data.weo2}")
-//                                .setStyle(
-//                                    NotificationCompat.BigTextStyle().bigText(
-//                                                "weo1 : ${data.weo1}, weo2 : ${data.weo2}\n" +
-//                                                "신호 : ${rssi.rssi}, 온도 : ${data.temperature}\n" +
-//                                                "포그라운드 서비스가 작동 중 입니다."
-//                                    )
-//                                )
-//                                .setSmallIcon(R.mipmap.ic_launcher_round)
-//                                .setContentIntent(pendingIntent)
-//                                .setSilent(true)
-//                                .build()
-//
-//                            NotificationManagerCompat.from(baseContext).notify(NOTI_ID, notification)
-//                        }
-//                    }
-//                } else if (bleState == "connecting") {
-//                    val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
-//                        .setOngoing(true)
-//                        .setContentTitle("${deviceName}")
-//                        .setContentText("연결 상태 : 연결 중..")
-//                        .setStyle(
-//                            NotificationCompat.BigTextStyle().bigText(
-//                                "연결 상태 : 연결 중..\n" +
-//                                        "포그라운드 서비스가 작동 중 입니다."
-//                            )
-//                        )
-//                        .setSmallIcon(R.mipmap.ic_launcher_round)
-//                        .setContentIntent(pendingIntent)
-//                        .setSilent(true)
-//                        .build()
-//
-//                    NotificationManagerCompat.from(baseContext).notify(NOTI_ID, notification)
-//                } else if (bleState == "disconnected") {
-//                    val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
-//                        .setOngoing(true)
-//                        .setContentTitle("연결 상태 : 끊어짐")
-//                        .setContentText("포그라운드 서비스가 작동 중 입니다.")
-//                        .setSmallIcon(R.mipmap.ic_launcher_round)
-//                        .setContentIntent(pendingIntent)
-//                        .setSilent(true)
-//                        .build()
-//
-//                    NotificationManagerCompat.from(baseContext).notify(NOTI_ID, notification)
-//                }
-//            }
-//        }, 0, 1000)
 
         // 노티 생성 및 설정
         val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
@@ -227,11 +121,13 @@ class AlwaysService() : Service() {
 //        val device = bleManager.getDevice()
         isServiceRunning = true
 
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//            mGatt = device.device?.connectGatt(baseContext, false, bleManager, BluetoothDevice.TRANSPORT_LE)
-//        } else {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            mGatt = device.connectGatt(baseContext, false, bleManager, BluetoothDevice.TRANSPORT_LE)
+//            device?.device?.connectGatt(baseContext, false, bleManager, BluetoothDevice.TRANSPORT_LE)
+        } else {
 //            mGatt = device.device?.connectGatt(baseContext, false, bleManager)
-//        }
+//            device?.device?.connectGatt(baseContext, false, bleManager)
+        }
         return START_STICKY
     }
 

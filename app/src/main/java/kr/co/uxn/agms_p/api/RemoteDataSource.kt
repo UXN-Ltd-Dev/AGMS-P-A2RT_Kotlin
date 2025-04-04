@@ -48,7 +48,5 @@ interface RemoteDataSource {
     // 기기정보로 MAC 가져오기
     @GET("/api/device/check")
     suspend fun getDeviceMac(@Query("serial_number") serialNumber: String) : Response<ResponseDeviceMac>
-
-
-
 }
+

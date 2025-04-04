@@ -37,6 +37,7 @@ import kr.co.uxn.agms_p.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController, paddingValues: PaddingValues) {
+        // 혈당 표시 카드
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -45,7 +46,7 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
+                    .height(130.dp)
                     .padding(10.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
@@ -95,6 +96,7 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues) {
             }
 
 
+            // 그래프 표시 카드
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -111,10 +113,11 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues) {
 
             }
 
+            // 센서 정 표시 카드
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
+                    .height(130.dp)
                     .padding(10.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(

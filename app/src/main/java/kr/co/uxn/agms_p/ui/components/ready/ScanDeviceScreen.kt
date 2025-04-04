@@ -38,13 +38,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.ble.Device
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 
 @Composable
 fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, mac: String) {
+    // 로티 애니메이션
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.scanning_lottie))
+    val progress by animateLottieCompositionAsState(
+        composition,
+        iterations = LottieConstants.IterateForever,
+        isPlaying = true,
+        speed = 0.2f
+    )
+
+
     val context = LocalContext.current
     val data by bleViewModel.isFindDevice.collectAsState()
     val bleManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -57,6 +73,7 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
             val rssi = result?.rssi
             Log.d("SCAN", "mac : ${deviceInfo?.address}, id : ${deviceInfo?.name}, rssi : ${rssi}")
             bleViewModel.updateIsFindDevice(true)
+            bleViewModel.insertDevice(Device(mac, deviceInfo))
             // 성공시, 안정화 화면으로 이동
             navController.navigate("StabilizationScreen")
             // TODO : 스캔 종료 로직 필요
@@ -80,7 +97,8 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
     }
 
     suspend fun teraRups() {
-        delay(1000 * 60)
+//        delay(1000 * 60 * 1) // 1분
+        delay(1000 * 60 * 1 / 60 * 10) // 초
         Log.e("teraRups", "teraRups called!")
         if (!bleViewModel.isFindDevice.value) {
             navController.navigate("ScanFailScreen")
@@ -160,7 +178,7 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
                 )
             }
 
-            Spacer(modifier = Modifier.size(50.dp))
+            Spacer(modifier = Modifier.size(80.dp))
 
             Text(
                 modifier = Modifier.fillMaxWidth(),
@@ -173,13 +191,18 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
 
             Spacer(modifier = Modifier.size(50.dp))
 
-            Image(
-                modifier = Modifier.size(250.dp),
-                painter = painterResource(R.drawable.ble_scanning),
-                contentDescription = "스캔 중"
-            )
+            // 로티 애니메이션
+            Box(
+                modifier = Modifier.size(210.dp)
+            ) {
+                LottieAnimation(
+                    composition = composition,
+                    progress = { progress },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
 
-            Spacer(modifier = Modifier.size(50.dp))
+            Spacer(modifier = Modifier.size(100.dp))
 
             Text(
                 text = "최소 3분 정도 소요됩니다",

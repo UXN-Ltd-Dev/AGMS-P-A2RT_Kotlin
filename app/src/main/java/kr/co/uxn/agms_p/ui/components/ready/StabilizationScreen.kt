@@ -27,6 +27,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -47,6 +48,11 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import kotlinx.coroutines.delay
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.ble.AlwaysService
@@ -54,6 +60,15 @@ import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 
 @Composable
 fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel) {
+    // 로티 애니메이션
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.reading_guy_lottie))
+    val progress by animateLottieCompositionAsState(
+        composition,
+        iterations = LottieConstants.IterateForever,
+        isPlaying = true,
+        speed = 0.8f
+    )
+
     val context = LocalContext.current
 //    val totalTime = 120 * 60 * 1000L // 120분을 밀리초로 변환
     val totalTime = 1 * 60 * 1000L // 테스트를 위해 1분 설정
@@ -67,6 +82,8 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
 
         // 서비스 종료 이벤트 발행
         //  bleViewModel.emit("STOP_SERVICE")
+        Log.e("TEST", "ble뷰모델로부터 갖고 온 device 테스트 : deviceMac :${bleViewModel.device.value.deviceMac}\ndevice객체 : ${bleViewModel.device.value.device}")
+        val device  = bleViewModel.device.value.device
 
         val countDownTimer = object : CountDownTimer(remainingTime.value, 60 * 1000) {
             override fun onTick(millisUntilFinished: Long) {
@@ -96,7 +113,7 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Spacer(modifier = Modifier.size(200.dp))
+            Spacer(modifier = Modifier.size(180.dp))
 
             Text(
                 modifier = Modifier.fillMaxWidth(),
@@ -151,6 +168,18 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
                 contentDescription = "120분 소요",
                 modifier = Modifier.size(width = 90.dp, 30.dp)
             )
+
+            Spacer(modifier = Modifier.height(30.dp))
+            // 로티 애니메이션
+            Box(
+                modifier = Modifier.size(100.dp)
+            ) {
+                LottieAnimation(
+                    composition = composition,
+                    progress = { progress },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         }
     }
 }

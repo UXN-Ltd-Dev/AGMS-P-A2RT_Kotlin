@@ -21,6 +21,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -40,11 +41,26 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import kr.co.uxn.agms_p.R
 
 @Composable
 fun ScanFailScreen(navController: NavController) {
     val context = LocalContext.current
+
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.scan_fail_lottie))
+    val progress by animateLottieCompositionAsState(
+        composition,
+        iterations = LottieConstants.IterateForever,
+        isPlaying = true,
+        speed = 0.3f
+    )
+
+
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -83,11 +99,24 @@ fun ScanFailScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.size(50.dp))
 
-            Image(
-                modifier = Modifier.size(250.dp),
-                painter = painterResource(R.drawable.ble_scan_fail),
-                contentDescription = "BLE 스캔 실패"
-            )
+//            Image(
+//                modifier = Modifier.size(250.dp),
+//                painter = painterResource(R.drawable.ble_scan_fail),
+//                contentDescription = "BLE 스캔 실패"
+//            )
+
+
+
+            Box(
+                modifier = Modifier.size(200.dp)
+            ) {
+                LottieAnimation(
+                    composition = composition,
+                    progress = { progress },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
 
             Spacer(modifier = Modifier.size(50.dp))
 
@@ -98,7 +127,7 @@ fun ScanFailScreen(navController: NavController) {
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.size(40.dp))
+            Spacer(modifier = Modifier.size(80.dp))
 
             // 다음 버튼
             Button(
