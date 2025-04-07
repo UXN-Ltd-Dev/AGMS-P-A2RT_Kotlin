@@ -9,12 +9,12 @@ import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
 import android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.navigation.NavController
 import kr.co.uxn.agms_p.MainActivity
 import kr.co.uxn.agms_p.R
 import java.util.Timer
@@ -24,7 +24,7 @@ class AlwaysService() : Service() {
     companion object{
         var isServiceRunning = false
     }
-//    lateinit var bleManager: BleManager
+    lateinit var bleManager: BleManager
     lateinit var pendingIntent: PendingIntent
 
     private var timerForNoti: Timer? = null
@@ -59,7 +59,12 @@ class AlwaysService() : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("SERVICE", "Service onStartCommand() call!")
 
+
         val device = intent?.getParcelableExtra<Device>("device")
+        val userId = intent?.getIntExtra("userId", -1)
+        Log.e("SERVICE", "onStartCommnad에서 인텐트로 받은 userId는 : $userId")
+        val mac = device?.deviceMac.toString()
+        bleManager = BleManager.getInstance(baseContext, mac, userId!!)
         // 노티 채널 생성
         createNotificationChannel()
 
@@ -114,19 +119,16 @@ class AlwaysService() : Service() {
             .setSilent(true)
             .build()
 
-        startForeground(NOTI_ID, notification)
-//        startForeground(NOTI_ID, notification, FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
+//        startForeground(NOTI_ID, notification)
+        startForeground(NOTI_ID, notification, FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
 
         // 블루투스 연결
-//        val device = bleManager.getDevice()
         isServiceRunning = true
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//            mGatt = device.connectGatt(baseContext, false, bleManager, BluetoothDevice.TRANSPORT_LE)
-//            device?.device?.connectGatt(baseContext, false, bleManager, BluetoothDevice.TRANSPORT_LE)
+            device?.device?.connectGatt(baseContext, false, bleManager, BluetoothDevice.TRANSPORT_LE)
         } else {
-//            mGatt = device.device?.connectGatt(baseContext, false, bleManager)
-//            device?.device?.connectGatt(baseContext, false, bleManager)
+            device?.device?.connectGatt(baseContext, false, bleManager)
         }
         return START_STICKY
     }

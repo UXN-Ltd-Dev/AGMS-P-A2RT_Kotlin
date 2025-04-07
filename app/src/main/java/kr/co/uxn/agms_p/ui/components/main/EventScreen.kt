@@ -26,6 +26,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -57,31 +58,60 @@ fun EventScreen(navController: NavController, paddingValues: PaddingValues) {
                 defaultElevation = 10.dp
             )
         ) {
-            Text(
-                text = "생활 등록"
-            )
+            Spacer(modifier = Modifier.height(10.dp))
+
+
             Row(
                 modifier = Modifier.fillMaxWidth()
+                    .padding(horizontal = 20.dp)
             ) {
-                Text(text = "식사와 운동, 인슐린 주입")
-                Text(text = " 등")
-            }
-            Row(
+                Text(text = "생활 등록")
 
-            ){
-                Text(
-                    text = "일상 활동을 기록하세요"
-                )
-                Button(
-                    onClick = { /*TODO*/ },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF6200EE), // 버튼 배경색
-                        contentColor = Color.White // 텍스트 색
-                    ),
-                ) {
-                    Text(text = "입력")
-                }
             }
+
+
+            Surface(
+                modifier = Modifier.fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                color = Color.Transparent
+            ) {
+                Text(
+                    text = "일상 활동을 기록하세요",
+                    color = Color(0xFF828282)
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Image(
+                    modifier = Modifier.size(55.dp, 35.dp),
+                    painter = painterResource(R.drawable.enter_icon),
+                    contentDescription = "입력 아이콘"
+                )
+            }
+//            Row(
+//                modifier = Modifier.fillMaxWidth()
+//                    .padding(horizontal = 20.dp)
+//            ) {
+//                Text(text = "식사와 운동, 인슐린 주입")
+//                Text(
+//                    text = " 등",
+//                    color = Color(0xFF828282)
+//                )
+//            }
+//            Row(
+//                modifier = Modifier.fillMaxWidth()
+//                    .padding(horizontal = 20.dp),
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                Text(
+//                    text = "일상 활동을 기록하세요",
+//                    color = Color(0xFF828282)
+//                )
+//                Spacer(modifier = Modifier.weight(1f))
+//                Image(
+//                    modifier = Modifier.size(55.dp, 35.dp),
+//                    painter = painterResource(R.drawable.enter_icon),
+//                    contentDescription = "입력 아이콘"
+//                )
+//            }
 
         }
 

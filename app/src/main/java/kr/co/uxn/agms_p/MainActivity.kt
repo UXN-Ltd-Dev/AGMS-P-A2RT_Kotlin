@@ -17,7 +17,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kr.co.uxn.agms_p.api.token.TokenManager
 import kr.co.uxn.agms_p.ble.AlwaysService
 import kr.co.uxn.agms_p.ui.theme.AGMSPTheme
 import kr.co.uxn.agms_p.ui.components.login.LoginScreen
@@ -64,8 +66,11 @@ class MainActivity : ComponentActivity() {
                 bleViewModel.events.collect { event ->
                     // 안전하게 수집됨! onStop 되면 자동 중단
                     val device = bleViewModel.device.value
+                    val userId = TokenManager.getUserId().first()
+                    Log.e("TEST", "불러온 userId : $userId")
                     val serviceIntent = Intent(this@MainActivity, AlwaysService::class.java).apply {
                         putExtra("device", device)
+                        putExtra("userId", userId)
                     }
                     if (event == "START_SERVICE") {
                         ContextCompat.startForegroundService(this@MainActivity, serviceIntent)

@@ -15,8 +15,6 @@ class BleViewModel(application: Application) : AndroidViewModel(application) {
         const val TAG = "BleViewModel"
     }
 
-    private val respository = (application as AlwaysApplication).bleRepository
-
     private val _isFindDevice = MutableStateFlow(false)
     val isFindDevice = _isFindDevice.asStateFlow()
 

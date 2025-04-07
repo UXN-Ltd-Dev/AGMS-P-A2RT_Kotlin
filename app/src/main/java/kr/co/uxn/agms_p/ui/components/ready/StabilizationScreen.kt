@@ -70,8 +70,13 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
     )
 
     val context = LocalContext.current
+    /**
+     * 안정화 남은 시간 설정 코드
+     */
+
 //    val totalTime = 120 * 60 * 1000L // 120분을 밀리초로 변환
-    val totalTime = 1 * 60 * 1000L // 테스트를 위해 1분 설정
+//    val totalTime = 1 * 60 * 1000L // 테스트를 위해 1분 설정
+    val totalTime = 1 * 10 * 1000L // 테스트를 위해 초단위 설정
     val remainingTime = remember { mutableStateOf(totalTime) }
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(Unit) {
@@ -85,7 +90,8 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
         Log.e("TEST", "ble뷰모델로부터 갖고 온 device 테스트 : deviceMac :${bleViewModel.device.value.deviceMac}\ndevice객체 : ${bleViewModel.device.value.device}")
         val device  = bleViewModel.device.value.device
 
-        val countDownTimer = object : CountDownTimer(remainingTime.value, 60 * 1000) {
+
+        val countDownTimer = object : CountDownTimer(remainingTime.value, 1000 * 60 * 1) {
             override fun onTick(millisUntilFinished: Long) {
                 remainingTime.value = millisUntilFinished
             }

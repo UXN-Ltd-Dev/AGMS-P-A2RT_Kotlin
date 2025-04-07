@@ -93,6 +93,7 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
             navController.navigate("ScanFailScreen")
             // TODO : 스캔 종료 로직 필요
 //                bluetoothAdapter.bluetoothLeScanner.stopScan(this)
+
         }
     }
 
