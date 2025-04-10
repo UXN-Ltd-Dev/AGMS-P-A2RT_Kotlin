@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.content.Context
+import android.content.Intent
 import android.icu.text.DecimalFormat
 import android.os.Build
 import android.os.Build.VERSION_CODES.TIRAMISU
@@ -21,6 +22,7 @@ import androidx.annotation.RequiresApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kr.co.uxn.agms_p.BleConnectionState
 import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.room.UserValue
 import java.lang.reflect.Method
@@ -37,7 +39,12 @@ import java.util.UUID
 import kotlin.math.roundToInt
 
 @SuppressLint("MissingPermission")
-class BleManager(val context: Context, val mac: String, val userId: Int) : BluetoothGattCallback() {
+class BleManager(
+    val context: Context,
+    val mac: String,
+    val userId: Int,
+    val applicationContext: Context
+) : BluetoothGattCallback() {
 
     companion object {
         @Volatile
@@ -48,9 +55,16 @@ class BleManager(val context: Context, val mac: String, val userId: Int) : Bluet
         const val serviceUuidT21 = "e093f3b5-00a3-a9e5-9eca-40016e0edc24"
 
 
-        fun getInstance(context: Context, mac: String, userId: Int): BleManager {
+        fun getInstance(
+            context: Context,
+            mac: String,
+            userId: Int,
+            applicationContext: Context
+        ): BleManager {
             return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: BleManager(context, mac, userId).also { INSTANCE = it }
+                INSTANCE ?: BleManager(context, mac, userId, applicationContext).also {
+                    INSTANCE = it
+                }
             }
         }
 
@@ -62,8 +76,6 @@ class BleManager(val context: Context, val mac: String, val userId: Int) : Bluet
     }
 
 
-
-
     private var timerWhenConnected: Timer? = null
     private var timerTaskForConnected: TimerTask? = null
 
@@ -71,35 +83,13 @@ class BleManager(val context: Context, val mac: String, val userId: Int) : Bluet
     lateinit var bufferWeo2: String
 
 
-    lateinit var fragmentContext: Context
-    lateinit var bluetoothDevice: BluetoothDevice
-    lateinit var bluetoothManager: BluetoothManager
-    lateinit var bluetoothAdpater: BluetoothAdapter
+//    lateinit var bluetoothDevice: BluetoothDevice
+//    lateinit var bluetoothManager: BluetoothManager
+//    lateinit var bluetoothAdpater: BluetoothAdapter
 
 
-        val disconnectHandler = Handler(Looper.getMainLooper())
-        val reconnectHandler = Handler(Looper.getMainLooper())
-
-
-//    fun setContext(context: Context) {
-//        fragmentContext = context
-//    }
-//
-//    fun getRssi(): Rssi? {
-//        return viewModel.rssi.value
-//    }
-//
-//    fun getBleState(): String? {
-//        return viewModel.bleState.value
-//    }
-//
-//    fun getData(): ProtocolData? {
-//        return viewModel.data.value
-//    }
-//
-//    fun getIsShow(): Boolean? {
-//        return viewModel.isShow.value
-//    }
+    val disconnectHandler = Handler(Looper.getMainLooper())
+    val reconnectHandler = Handler(Looper.getMainLooper())
 
 
     override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
@@ -109,6 +99,9 @@ class BleManager(val context: Context, val mac: String, val userId: Int) : Bluet
         when (newState) {
             BluetoothProfile.STATE_CONNECTED -> {
                 Log.e("gatt", "gatt connected!")
+
+                // BleBridge에 상태 연결완료 전송
+                BleBridge.updateState(BleConnectionState.CONNECTED)
                 // afterChange값 불러오기 (sharedpreference)
 //                val prefAfterChange = context.getSharedPreferences("afterChange", Context.MODE_PRIVATE)
 //                val afterChange = prefAfterChange.getBoolean("afterChange", false)
@@ -158,14 +151,17 @@ class BleManager(val context: Context, val mac: String, val userId: Int) : Bluet
 //                    Log.d("gatt", "latestConnectedDevice : $latestConnectedDevice")
 
 
-            // 항상 true가 나오는건 아니다.
-            // 따라서 false일 경우 다시 connect하는 로직 추후에 작성할 것
+                // 항상 true가 나오는건 아니다.
+                // 따라서 false일 경우 다시 connect하는 로직 추후에 작성할 것
 
             }
 
 
             BluetoothProfile.STATE_DISCONNECTED -> {
                 Log.e("gatt", "gatt disconnected!!!")
+
+                // BleBridege에 Disconnected 상태 전송
+                BleBridge.updateState(BleConnectionState.DISCONNECTED)
 
                 // afterChange pref 변수 불러오기
                 val prefAfterChange =
@@ -176,14 +172,7 @@ class BleManager(val context: Context, val mac: String, val userId: Int) : Bluet
                     context.getSharedPreferences("isChange", Context.MODE_PRIVATE)
                 var isChange = sharedPreferences.getBoolean("isChange", true)
 
-                Log.d(
-                    TEST,
-                    "BleManager Disconnected에서, isChange : $isChange, afterChange : $afterChange"
-                )
                 CoroutineScope(Dispatchers.Main).launch {
-                    // 끊겼을 경우 아래코드 주석 처리하면 데이터 안사라짐
-//                    viewModel.updateIsShow(false)
-//                    viewModel.updateBleState("disconnected")
                     Toast.makeText(context, "gatt 연결 끊어짐!", Toast.LENGTH_SHORT).show()
                 }
 
@@ -191,11 +180,11 @@ class BleManager(val context: Context, val mac: String, val userId: Int) : Bluet
                 Log.d(TEST, "BLE 매니저에서 isChange 상태 : $isChange")
 
 
+
                 reconnectHandler.postDelayed({
+                    // BleBridege에 Connecting 상태 전송
+                    BleBridge.updateState(BleConnectionState.CONNECTING)
                     reconnect(gatt, mac)
-//                    CoroutineScope(Dispatchers.Main).launch {
-//                        viewModel.updateBleState("connecting")
-//                    }
                 }, 3000) // 일반 모드일 때, 재연결 3초 뒤에 실행
 
 //                if (!isChange) {
@@ -230,7 +219,7 @@ class BleManager(val context: Context, val mac: String, val userId: Int) : Bluet
 //                        }
 //                    }
 //                }
-                }
+            }
 
 
             BluetoothProfile.STATE_CONNECTING -> {
@@ -429,24 +418,23 @@ class BleManager(val context: Context, val mac: String, val userId: Int) : Bluet
 
     @SuppressLint("MissingPermission")
     private fun reconnect(gatt: BluetoothGatt?, address: String) {
-//        gatt?.close()
-//        refreshDeviceCache(gatt)
+        gatt?.close()
+        refreshDeviceCache(gatt)
 
         // 스캔 방식
 //        mGatt = gatt?.device?.connectGatt(context, false, this)
         // 논스캔 방식
-        bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        bluetoothAdpater = bluetoothManager.adapter
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val bluetoothManager =
+            context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        val bluetoothAdpater = bluetoothManager.adapter
+        val bluetoothDevice = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Log.e(TEST, "======BLE Remote 연결 안드로이드 13 이상 시작========")
-            bluetoothDevice =
-                bluetoothAdpater.getRemoteLeDevice(address, BluetoothDevice.ADDRESS_TYPE_PUBLIC)
+            bluetoothAdpater.getRemoteLeDevice(address, BluetoothDevice.ADDRESS_TYPE_PUBLIC)
         } else {
             Log.e(TEST, "======BLE Remote 연결 안드로이드 10~12 시작========")
-            bluetoothDevice = bluetoothAdpater.getRemoteDevice(address)
+            bluetoothAdpater.getRemoteDevice(address)
         }
 
-//        mGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             bluetoothDevice.connectGatt(context, false, this, BluetoothDevice.TRANSPORT_LE)
         } else {
@@ -616,7 +604,16 @@ class BleManager(val context: Context, val mac: String, val userId: Int) : Bluet
             .atZone(ZoneId.of("Asia/Seoul"))
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
-        saveData.add(UserValue(userId = userId, userValueId = 1306, value = battery.toDouble(), valueType = 1300, createdAt = createdAt, createdAtLong = lastTime))
+        saveData.add(
+            UserValue(
+                userId = userId,
+                userValueId = 1306,
+                value = battery.toDouble(),
+                valueType = 1300,
+                createdAt = createdAt,
+                createdAtLong = lastTime
+            )
+        )
 
 
         Log.d(TEST, "battery : $battery")
@@ -625,7 +622,16 @@ class BleManager(val context: Context, val mac: String, val userId: Int) : Bluet
         val temperature =
             java.lang.Byte.toUnsignedInt(data[16]) + (java.lang.Byte.toUnsignedInt(data[17]) / 100.0f * 100).roundToInt() / 100.0
 
-        saveData.add(UserValue(userId = userId, userValueId = 1307, value = temperature, valueType = 1300, createdAt = createdAt, createdAtLong = lastTime))
+        saveData.add(
+            UserValue(
+                userId = userId,
+                userValueId = 1307,
+                value = temperature,
+                valueType = 1300,
+                createdAt = createdAt,
+                createdAtLong = lastTime
+            )
+        )
 
 
         Log.d(TEST, "temperature : $temperature")
@@ -657,8 +663,10 @@ class BleManager(val context: Context, val mac: String, val userId: Int) : Bluet
 //            Log.e(TEST, "AE Address : " + nAHigh + " : " + nAMiddle + " : " + nALow)
             val time: Long = startTime + (1000 * 10 * i)
 
-            val weCurrent: Double = convertToCurrentDataDouble(data[nWHigh], data[nWMiddle], data[nWLow])
-            val aeCurrent: Double = convertToCurrentDataDouble(data[nAHigh], data[nAMiddle], data[nALow])
+            val weCurrent: Double =
+                convertToCurrentDataDouble(data[nWHigh], data[nWMiddle], data[nWLow])
+            val aeCurrent: Double =
+                convertToCurrentDataDouble(data[nAHigh], data[nAMiddle], data[nALow])
 
             Log.e(TEST, "WE_Current " + i + ": " + weCurrent)
             Log.e(TEST, "AE_Current " + i + ": " + aeCurrent)
@@ -667,8 +675,26 @@ class BleManager(val context: Context, val mac: String, val userId: Int) : Bluet
                 .atZone(ZoneId.of("Asia/Seoul"))
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
-            saveData.add(UserValue(userId = userId, userValueId = 1301, value = weCurrent, valueType = 1300, createdAt = convertedTime, createdAtLong = time))
-            saveData.add(UserValue(userId = userId, userValueId = 1303, value = weCurrent, valueType = 1300, createdAt = convertedTime, createdAtLong = time))
+            saveData.add(
+                UserValue(
+                    userId = userId,
+                    userValueId = 1301,
+                    value = weCurrent,
+                    valueType = 1300,
+                    createdAt = convertedTime,
+                    createdAtLong = time
+                )
+            )
+            saveData.add(
+                UserValue(
+                    userId = userId,
+                    userValueId = 1303,
+                    value = weCurrent,
+                    valueType = 1300,
+                    createdAt = convertedTime,
+                    createdAtLong = time
+                )
+            )
         }
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -798,4 +824,5 @@ class BleManager(val context: Context, val mac: String, val userId: Int) : Bluet
             Log.d(TEST, "기존 버전 write")
         }
     }
+
 }

@@ -99,7 +99,7 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
 
     suspend fun teraRups() {
 //        delay(1000 * 60 * 1) // 1분
-        delay(1000 * 60 * 1 / 60 * 10) // 초
+        delay(1000 * 60 * 1 / 60 * 10) // 10초
         Log.e("teraRups", "teraRups called!")
         if (!bleViewModel.isFindDevice.value) {
             navController.navigate("ScanFailScreen")

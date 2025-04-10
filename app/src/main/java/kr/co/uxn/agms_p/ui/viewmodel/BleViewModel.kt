@@ -3,11 +3,18 @@ package kr.co.uxn.agms_p.ui.viewmodel
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kr.co.uxn.agms_p.AlwaysApplication
+import kr.co.uxn.agms_p.BleConnectionState
+import kr.co.uxn.agms_p.ble.BleBridge
 import kr.co.uxn.agms_p.ble.Device
 
 class BleViewModel(application: Application) : AndroidViewModel(application) {
@@ -24,8 +31,22 @@ class BleViewModel(application: Application) : AndroidViewModel(application) {
     private val _device = MutableStateFlow<Device>(Device())
     val device = _device.asStateFlow()
 
+    private val _bleConnectStatusEvent = MutableSharedFlow<String>(replay = 0)
+    val bleConnectStatusEvent = _events.asSharedFlow()
+
+    val bleState: StateFlow<BleConnectionState> = BleBridge.bleState
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = BleConnectionState.DISCONNECTED
+        )
+
     suspend fun emit(event: String) {
         _events.emit(event)
+    }
+
+    suspend fun emitBleState(event: String) {
+        _bleConnectStatusEvent.emit(event)
     }
 
     fun updateIsFindDevice(value: Boolean) {
@@ -37,6 +58,8 @@ class BleViewModel(application: Application) : AndroidViewModel(application) {
         _device.value = device
         Log.e(TAG, "뷰모델에 저장된 device 값 : ${_device.value}")
     }
+
+
 }
 
 

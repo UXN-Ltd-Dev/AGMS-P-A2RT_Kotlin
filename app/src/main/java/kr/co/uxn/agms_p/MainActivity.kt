@@ -205,7 +205,7 @@ class MainActivity : ComponentActivity() {
             }
 
             composable("MainScreen") { backStackEntry ->
-                MainScreen(navController, homeViewModel)
+                MainScreen(navController, homeViewModel, bleViewModel)
             }
         }
     }

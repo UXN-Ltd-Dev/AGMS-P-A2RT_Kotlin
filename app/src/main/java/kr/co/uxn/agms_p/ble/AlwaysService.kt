@@ -49,6 +49,8 @@ class AlwaysService() : Service() {
     val NOTI_CHANNEL_NAME: String = "FOREGROUND"
     val NOTI_ID: Int = 94
 
+
+
     override fun onBind(p0: Intent?): IBinder? {
         return null
     }
@@ -84,7 +86,7 @@ class AlwaysService() : Service() {
         val userId = intent?.getIntExtra("userId", -1)
         Log.e("SERVICE", "onStartCommnad에서 인텐트로 받은 userId는 : $userId")
         val mac = device?.deviceMac.toString()
-        bleManager = BleManager.getInstance(baseContext, mac, userId!!)
+        bleManager = BleManager.getInstance(baseContext, mac, userId!!, applicationContext)
         // 노티 채널 생성
         createNotificationChannel()
 

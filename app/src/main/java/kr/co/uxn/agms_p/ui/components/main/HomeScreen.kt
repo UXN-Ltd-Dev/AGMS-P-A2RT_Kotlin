@@ -179,9 +179,6 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues, homeV
                 modifier = Modifier.size(350.dp, 200.dp)
                     .padding(horizontal = 20.dp)
             )
-
-
-
         }
 
         // 센서 정보 표시 카드

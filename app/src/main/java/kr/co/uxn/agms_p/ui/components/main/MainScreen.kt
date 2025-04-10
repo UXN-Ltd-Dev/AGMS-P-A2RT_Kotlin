@@ -1,5 +1,11 @@
 package kr.co.uxn.agms_p.ui.components.main
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -19,22 +25,30 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import kr.co.uxn.agms_p.BleConnectionState
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavController, homeViewModel: HomeViewModel) {
+fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleViewModel: BleViewModel) {
+    val context = LocalContext.current
+
+    val contextApplication = LocalContext.current.applicationContext
 
     val navItemList = listOf(
         NavItem(icon = painterResource(id = R.drawable.home_icon), selectedIcon = painterResource(id = R.drawable.home_selected), label = "홈"),
@@ -43,6 +57,39 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel) {
     )
 
     var selectedIndex by remember { mutableStateOf(0) }
+
+
+    val bleState by bleViewModel.bleState.collectAsState()
+
+    val blePainter = when (bleState) {
+        BleConnectionState.CONNECTED -> R.drawable.ble_connected
+        BleConnectionState.DISCONNECTED -> R.drawable.ble_disconnected
+        BleConnectionState.CONNECTING -> R.drawable.ble_connecting
+    }
+
+//    DisposableEffect(Unit) {
+//        Log.e("BLE_TEST", "BroadcastReceiver 등록됨") // ← 추가!
+//        val receiver = object : BroadcastReceiver() {
+//            override fun onReceive(ctx: Context?, intent: Intent?) {
+//                Log.d("BLE_TEST", "Broadcast 수신됨!") // ← 추가!
+//                if (intent?.action == "BLE_CONNECTION_STATE") {
+//                    val stateName = intent.getStringExtra("state")
+//                    Log.e("TEST", "stateName : $stateName")
+//                    bleState = BleConnectionState.valueOf(stateName ?: "DISCONNECTED")
+//                }
+//            }
+//        }
+//        contextApplication.registerReceiver(
+//            receiver,
+//            IntentFilter("BLE_CONNECTION_STATE"),
+//            "kr.co.uxn.agms_p.permission.BLE_BROADCAST", // ← 요거 빠졌던 거!
+//            null,
+//            Context.RECEIVER_NOT_EXPORTED
+//        )
+//        onDispose {
+//            contextApplication.unregisterReceiver(receiver)
+//        }
+//    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -60,8 +107,8 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel) {
                 },
                 actions = {
                     Image(
-                        painter = painterResource(id = R.drawable.ble_connected),
-                        contentDescription = "ble 연결완료 아이콘",
+                        painter = painterResource(blePainter),
+                        contentDescription = "ble 연결상태 아이콘",
                         modifier = Modifier.size(80.dp, 40.dp)
 //                            .padding(end = 10.dp)
                     )
