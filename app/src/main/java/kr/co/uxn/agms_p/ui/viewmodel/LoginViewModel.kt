@@ -14,19 +14,18 @@ import androidx.credentials.GetCredentialRequest.Builder
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
-import androidx.credentials.PasswordCredential
-import androidx.credentials.PublicKeyCredential
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.kakao.sdk.auth.AuthCodeClient
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.BuildConfig
 import kr.co.uxn.agms_p.api.RetrofitClient.emptyRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestOAuthSignUpAndLogin
-import kr.co.uxn.agms_p.api.token.TokenManager
+import kr.co.uxn.agms_p.api.token.DataStoreManager
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
@@ -43,6 +42,14 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _navigationEvent = MutableStateFlow<LoginNavigationEvent?>(null)
     val navigationEvent = _navigationEvent
+
+    // 로딩 인디케이터를 위한 변수
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
+    fun updateIsLoading(isLoading: Boolean) {
+        _isLoading.value = isLoading
+    }
 
     fun updateUserId(userId: Int) {
         this@LoginViewModel.userIdTest = userId
@@ -93,6 +100,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                 handleGoogleLogin(result)
             } catch (e: Exception) {
                 Log.e(TAG, "구글로그인 실패 : $e")
+                updateIsLoading(false)
             }
         }
     }
@@ -102,19 +110,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun handleGoogleLogin(result: GetCredentialResponse) {
         val credential = result.credential
         when (credential) {
-            // Passkey credential
-            is PublicKeyCredential -> {
-                // Share responseJson such as a GetCredentialResponse on your server to
-                // validate and authenticate
-                val responseJson = credential.authenticationResponseJson
-                Log.e("TAG", "responseJson: $responseJson")
-            }
-            // Password credential
-            is PasswordCredential -> {
-                // Send ID and password to your server to validate and authenticate.
-                val username = credential.id
-                val password = credential.password
-            }
             // GoogleIdToken credential
             is CustomCredential -> {
                 if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
@@ -160,12 +155,9 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         } else {
             // 카카오계정으로 로그인
             AuthCodeClient.instance.authorizeWithKakaoAccount(activityContext) { authCode, error ->
-
                 val accessCode = authCode.toString()
                 Log.e(TAG, "카카오 인가코드 : $authCode")
-
                 isMemberCheckAndLogin(accessCode, 1802)
-
             }
         }
     }
@@ -190,25 +182,28 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                             // 및 일단 토큰을 받는다.
                             val accessToken = responseBody.accessToken
                             val refreshToken = responseBody.refreshToken
+                            val oAuthEmail = responseBody.email
+                            Log.d("TEST", "responseBody.email: $oAuthEmail")
 
                             val userId = responseBody.userId
                             Log.d("TEST", "responseBody.userId: $userId")
                             // 토큰 저장
-                            TokenManager.deleteAccessToken()
-                            TokenManager.deleteUserId()
-                            TokenManager.saveAccessToken(accessToken)
-                            TokenManager.saveRefreshToken(refreshToken)
-                            TokenManager.saveUserId(userId)
+                            DataStoreManager.deleteAccessToken()
+                            DataStoreManager.deleteUserId()
+                            DataStoreManager.saveAccessToken(accessToken)
+                            DataStoreManager.saveRefreshToken(refreshToken)
+                            DataStoreManager.saveUserId(userId)
                             // 토큰 저장 테스트
-                            val verifyAccessToken = TokenManager.getAccessToken().first()
-                            val verifyRefreshToken = TokenManager.getRefreshToken().first()
-                            val verifyUserId = TokenManager.getUserId().first()
+                            val verifyAccessToken = DataStoreManager.getAccessToken().first()
+                            val verifyRefreshToken = DataStoreManager.getRefreshToken().first()
+                            val verifyUserId = DataStoreManager.getUserId().first()
                             withContext(Dispatchers.Main) {
                                 Log.d("TEST", "TokenManager | accessToken : $verifyAccessToken\nrefreshToken : $verifyRefreshToken\nuserId : $verifyUserId")
+                                updateIsLoading(false)
                             }
                             // 회원가입 화면으로 이동
-                            _navigationEvent.value = LoginNavigationEvent.NavigateToSignUp(userId)
-                            signUpType = type
+                            _navigationEvent.value = LoginNavigationEvent.NavigateToSignUp(userId, type.toString(), oAuthEmail)
+//                            signUpType = type
 
                         } else {
                             // isSignUp 이 false 일 경우, 로그인
@@ -216,30 +211,33 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                             val refreshToken = responseBody.refreshToken
                             val userId = responseBody.userId
                             // 토큰 저장
-                            TokenManager.deleteAccessToken()
-                            TokenManager.deleteUserId()
-                            TokenManager.saveAccessToken(accessToken)
-                            TokenManager.saveRefreshToken(refreshToken)
-                            TokenManager.saveUserId(userId)
+                            DataStoreManager.deleteAccessToken()
+                            DataStoreManager.deleteUserId()
+                            DataStoreManager.saveAccessToken(accessToken)
+                            DataStoreManager.saveRefreshToken(refreshToken)
+                            DataStoreManager.saveUserId(userId)
                             // 토큰 저장 테스트
-                            val verifyAccessToken = TokenManager.getAccessToken().first()
-                            val verifyRefreshToken = TokenManager.getRefreshToken().first()
-                            val verifyUserId = TokenManager.getUserId().first()
+                            val verifyAccessToken = DataStoreManager.getAccessToken().first()
+                            val verifyRefreshToken = DataStoreManager.getRefreshToken().first()
+                            val verifyUserId = DataStoreManager.getUserId().first()
                             withContext(Dispatchers.Main) {
                                 Log.d("TEST", "TokenManager | accessToken : $verifyAccessToken\nrefreshToken : $verifyRefreshToken\nuserId : $verifyUserId")
+                                updateIsLoading(false)
                             }
-                            // 세팅화면으로 이동
+                            // 세팅 화면으로 이동
                             _navigationEvent.value = LoginNavigationEvent.NavigateToSettingPermission("세팅 화면으로 이동")
                         }
                     }
                 } else {
                     withContext(Dispatchers.Main) {
                         Log.e("TAG", "API 실패: ${response.errorBody()?.string()}")
+                        updateIsLoading(false)
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Log.e("TAG", "네트워크 오류 발생: ${e.message}")
+                    updateIsLoading(false)
                 }
             }
         }
@@ -252,5 +250,5 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
 sealed class LoginNavigationEvent {
     data class NavigateToSettingPermission(val test: String) : LoginNavigationEvent()
-    data class NavigateToSignUp(val userId: Int) : LoginNavigationEvent()
+    data class NavigateToSignUp(val userId: Int, val type: String, val oAuthEmail: String) : LoginNavigationEvent()
 }

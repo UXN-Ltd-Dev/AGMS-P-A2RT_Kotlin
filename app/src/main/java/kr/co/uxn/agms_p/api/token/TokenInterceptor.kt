@@ -1,5 +1,6 @@
 package kr.co.uxn.agms_p.api.token
 
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -10,11 +11,8 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
-import okhttp3.ResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
-import timber.log.Timber
 import java.net.HttpURLConnection.HTTP_OK
-import java.util.Timer
 
 class TokenInterceptor() : Interceptor {
     companion object {
@@ -22,10 +20,10 @@ class TokenInterceptor() : Interceptor {
     }
     override fun intercept(chain: Interceptor.Chain): Response {
         val token: String = runBlocking {
-            TokenManager.getAccessToken().first()
+            DataStoreManager.getAccessToken().first()
         } ?: return errorResponse(chain.request())
 
-        Timber.e("TokenManager.getAcceesToken : ${token}")
+        Log.e("TEST","DataStoreManager.getAcceesToken : ${token}")
 
 
         // 새로 받아온 토큰이 있으면 저장하는 로직
@@ -34,18 +32,18 @@ class TokenInterceptor() : Interceptor {
         val response = chain.proceed(request)
         if (response.code == HTTP_OK) {
             val newAccessToken: String = response.header("AUTHORIZATION", null) ?: return response
-            Timber.d("new Access Token = ${newAccessToken}")
+            Log.e("TEST","new Access Token = ${newAccessToken}")
 
             CoroutineScope(Dispatchers.IO).launch {
-                val existedAccessToken = TokenManager.getAccessToken().first()
+                val existedAccessToken = DataStoreManager.getAccessToken().first()
                 if (existedAccessToken != newAccessToken) {
-                    TokenManager.deleteAccessToken()
-                    TokenManager.saveAccessToken(newAccessToken)
-                    Timber.d("newAccessToken = ${newAccessToken}\nExistedAccessToken = ${existedAccessToken}")
+                    DataStoreManager.deleteAccessToken()
+                    DataStoreManager.saveAccessToken(newAccessToken)
+                    Log.e("TEST","newAccessToken = ${newAccessToken}\nExistedAccessToken = ${existedAccessToken}")
                 }
             }
         } else {
-            Timber.e("${response.code} : ${response.request} \n ${response.message}")
+            Log.e("TEST","${response.code} : ${response.request} \n ${response.message}")
         }
 
         return response

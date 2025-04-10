@@ -19,7 +19,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kr.co.uxn.agms_p.api.token.TokenManager
+import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.AlwaysService
 import kr.co.uxn.agms_p.ui.theme.AGMSPTheme
 import kr.co.uxn.agms_p.ui.components.login.LoginScreen
@@ -43,6 +43,7 @@ import kr.co.uxn.agms_p.ui.components.ready.StabilizationScreen
 import kr.co.uxn.agms_p.ui.components.splash.SplashScreen
 import kr.co.uxn.agms_p.ui.viewmodel.AuthEventNotifier
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
+import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.LoginNavigationEvent
 import kr.co.uxn.agms_p.ui.viewmodel.LoginViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.PermissionViewModel
@@ -52,6 +53,7 @@ class MainActivity : ComponentActivity() {
     private val loginViewModel: LoginViewModel by viewModels()
     private val permissionViewModel: PermissionViewModel by viewModels()
     private val bleViewModel: BleViewModel by viewModels()
+    private val homeViewModel: HomeViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -66,7 +68,7 @@ class MainActivity : ComponentActivity() {
                 bleViewModel.events.collect { event ->
                     // 안전하게 수집됨! onStop 되면 자동 중단
                     val device = bleViewModel.device.value
-                    val userId = TokenManager.getUserId().first()
+                    val userId = DataStoreManager.getUserId().first()
                     Log.e("TEST", "불러온 userId : $userId")
                     val serviceIntent = Intent(this@MainActivity, AlwaysService::class.java).apply {
                         putExtra("device", device)
@@ -104,8 +106,10 @@ class MainActivity : ComponentActivity() {
                     }
 
                     is LoginNavigationEvent.NavigateToSignUp -> {
-                        navController.navigate("SignUpAgreeScreen1")
+                        navController.navigate("SignUpAgreeScreen1/${event.type}/${event.oAuthEmail}")
                         Log.e("TAG", "event로 받은 userId: ${event.userId}")
+                        Log.e("TAG", "event로 받은 type: ${event.type}")
+                        Log.e("TAG", "event로 받은 oAuthEmail: ${event.oAuthEmail}")
                         loginViewModel.updateUserId(event.userId)
                         loginViewModel.clearNavigationEvent()
                     }
@@ -117,6 +121,7 @@ class MainActivity : ComponentActivity() {
         }
 
 
+
         NavHost(navController, "Splash", modifier = modifier) {
             composable("Splash") {
                 SplashScreen(navController, activity = this@MainActivity)
@@ -126,12 +131,16 @@ class MainActivity : ComponentActivity() {
                 LoginScreen(loginViewModel, navController)
             }
 
-            composable("SignUpAgreeScreen1") {
-                SignUpAgreeScreen1(navController)
+            composable("SignUpAgreeScreen1/{type}/{email}") {backStackEntry ->
+                val type = backStackEntry.arguments?.getString("type")?.toIntOrNull() ?: -1
+                val oAuthEmail = backStackEntry.arguments?.getString("email").toString()
+                SignUpAgreeScreen1(navController, type, oAuthEmail)
             }
 
-            composable("SignUpCheckScreen2") {
-                SignUpCheckScreen2(navController)
+            composable("SignUpCheckScreen2/{type}/{email}") {backStackEntry ->
+                val type = backStackEntry.arguments?.getString("type")?.toIntOrNull() ?: -1
+                val oAuthEmail = backStackEntry.arguments?.getString("email").toString()
+                SignUpCheckScreen2(navController, type, oAuthEmail)
             }
 
             composable("SignUpInfoScreen3/{email}/{pwd}") { backStackEntry ->
@@ -196,7 +205,7 @@ class MainActivity : ComponentActivity() {
             }
 
             composable("MainScreen") { backStackEntry ->
-                MainScreen(navController)
+                MainScreen(navController, homeViewModel)
             }
         }
     }

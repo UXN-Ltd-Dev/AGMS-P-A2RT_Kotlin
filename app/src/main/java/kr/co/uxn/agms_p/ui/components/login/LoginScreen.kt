@@ -22,6 +22,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -48,7 +50,7 @@ import kr.co.uxn.agms_p.api.RetrofitClient.emptyRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignInNormal
 import kr.co.uxn.agms_p.ui.viewmodel.LoginViewModel
 import kotlinx.coroutines.withContext
-import kr.co.uxn.agms_p.api.token.TokenManager
+import kr.co.uxn.agms_p.api.token.DataStoreManager
 
 @Composable
 fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
@@ -57,6 +59,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
     val pwd = remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val isLoading by viewModel.isLoading.collectAsState()
 
     val systemUiController = rememberSystemUiController()
     LaunchedEffect(key1 = Unit) {
@@ -64,6 +67,10 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
             color = Color.Transparent,
             darkIcons = true // 상태바 아이콘을 밝게 (흰색)
         )
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.updateIsLoading(false)
     }
 
 //    fun validateEmail(email: String) {
@@ -104,6 +111,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                         color = Color.Gray,
                         fontSize = 14.sp,
                         modifier = Modifier.align(Alignment.Start)
+                            .padding(start = 5.dp)
                     )
 
                     // 이메일 주소
@@ -152,6 +160,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                         color = Color.Gray,
                         fontSize = 14.sp,
                         modifier = Modifier.align(Alignment.Start)
+                            .padding(start = 5.dp)
                     )
                     // 비밀 번호
                     BasicTextField(
@@ -206,9 +215,8 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     text = "회원가입",
                     fontSize = 14.sp,
                     modifier = Modifier
-                        .clickable {
-                            navController.navigate("SignUpAgreeScreen1")
-                        }
+                        // 1803 : uxn 회원가입
+                        .clickable { navController.navigate("SignUpAgreeScreen1/${1803}/${"uxn signup"}") }
                     )
                 Spacer(modifier = Modifier.size(17.dp))
                 Text(
@@ -228,8 +236,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
             }
             Spacer(modifier = Modifier.size(30.dp))
 
-            // 이메일 로그인 버튼
-            // 이메일로 시작하기
+            // 이메일로 시작하기 버튼
             Box(
                 modifier = Modifier
                     .wrapContentWidth()
@@ -244,13 +251,14 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                     if (login.isSuccessful) {
                                         val loginResult = login.body()
                                         // 로그인이 성공적으로 되었을 때
+
                                         if (loginResult != null) {
                                                  Log.e("login","로그인 결과 : ${loginResult.toString()}")
 //
                                                  // 토큰 저장
-                                                 TokenManager.deleteAccessToken()
-                                                 TokenManager.saveAccessToken(loginResult.accessToken)
-                                                 TokenManager.saveRefreshToken(loginResult.refreshToken)
+                                                 DataStoreManager.deleteAccessToken()
+                                                 DataStoreManager.saveAccessToken(loginResult.accessToken)
+                                                 DataStoreManager.saveRefreshToken(loginResult.refreshToken)
 
                                                  // 세팅화면으로 이동
                                                  withContext(Dispatchers.Main) {
@@ -262,6 +270,9 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                     }
                                 } catch (exception: Exception) {
                                     Log.e("TEST", "네트워크 에러 : ${exception.message}")
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(context, "계정 정보가 올바르지 않습니다.", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             }
                         } else {
@@ -290,9 +301,22 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
             Spacer(modifier = Modifier.size(50.dp))
 
             // 간편 로그인
-            Text("또는")
+            if (!isLoading) {
+                Text("또는")
 
-            Spacer(modifier = Modifier.size(50.dp))
+                Spacer(modifier = Modifier.size(50.dp))
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    androidx.compose.material3.CircularProgressIndicator()
+                }
+                Spacer(modifier = Modifier.size(30.dp))
+            }
+
 
             // 구글 로그인 버튼
             Box(
@@ -300,6 +324,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     .wrapContentWidth()
                     .clickable {
                         viewModel.googleLogin(context)
+                        viewModel.updateIsLoading(true)
                     },
                 contentAlignment = Alignment.CenterStart
             ) {
@@ -320,7 +345,6 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                 }
             }
 
-
             Spacer(modifier = Modifier.height(10.dp))
 
             // 카카오 로그인 버튼
@@ -329,6 +353,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     .wrapContentWidth()
                     .clickable {
                         viewModel.kakaoLogin(context)
+                        viewModel.updateIsLoading(true)
                     },
                 contentAlignment = Alignment.CenterStart
             ) {

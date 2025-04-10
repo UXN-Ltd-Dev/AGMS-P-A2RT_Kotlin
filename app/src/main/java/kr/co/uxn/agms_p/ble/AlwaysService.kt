@@ -15,8 +15,16 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kr.co.uxn.agms_p.AlwaysApplication
 import kr.co.uxn.agms_p.MainActivity
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.room.AppDatabase
 import java.util.Timer
 import java.util.TimerTask
 
@@ -26,6 +34,13 @@ class AlwaysService() : Service() {
     }
     lateinit var bleManager: BleManager
     lateinit var pendingIntent: PendingIntent
+
+    private val localDbRepository  by lazy {
+        AppDatabase.getInstance(baseContext)
+    }
+    private val serviceJob = SupervisorJob()
+    private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
+
 
     private var timerForNoti: Timer? = null
     private var timerTaskForNoti: TimerTask? = null
@@ -53,12 +68,17 @@ class AlwaysService() : Service() {
         NotificationManagerCompat.from(baseContext).cancel(NOTI_ID)
         timerForNoti?.cancel()
         timerForNoti = null
+
+        // 서비스안의 코루틴 제거
+        serviceJob.cancel()
     }
 
     @SuppressLint("MissingPermission")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
         Log.d("SERVICE", "Service onStartCommand() call!")
-
+        localDbRepository.toString()
+        Log.d("SERVICE", "Service onStartCommand() localDbRepository  : ${localDbRepository}!")
 
         val device = intent?.getParcelableExtra<Device>("device")
         val userId = intent?.getIntExtra("userId", -1)
@@ -119,6 +139,7 @@ class AlwaysService() : Service() {
             .setSilent(true)
             .build()
 
+        // startForeground 실행
 //        startForeground(NOTI_ID, notification)
         startForeground(NOTI_ID, notification, FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
 
@@ -130,6 +151,18 @@ class AlwaysService() : Service() {
         } else {
             device?.device?.connectGatt(baseContext, false, bleManager)
         }
+
+        // 워커 실행
+        (application as AlwaysApplication).uploadWorkRequest()
+
+        // 포그라운드에서 반복실행
+        serviceScope.launch {
+            while (isActive) {
+                Log.d("SERVICE", "Coroutine 루프에서 반복 실행 중: ${System.currentTimeMillis()}")
+                delay(1000 * 60 * 1)
+            }
+        }
+
         return START_STICKY
     }
 

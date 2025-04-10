@@ -1,13 +1,8 @@
 package kr.co.uxn.agms_p.ui.components.ready
 
-import android.content.Intent
-import android.os.Build
 import android.os.CountDownTimer
 import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,13 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,19 +21,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
@@ -53,10 +36,12 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kr.co.uxn.agms_p.R
-import kr.co.uxn.agms_p.ble.AlwaysService
+import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 @Composable
 fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel) {
@@ -70,6 +55,7 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
     )
 
     val context = LocalContext.current
+
     /**
      * 안정화 남은 시간 설정 코드
      */
@@ -87,8 +73,11 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
 
         // 서비스 종료 이벤트 발행
         //  bleViewModel.emit("STOP_SERVICE")
-        Log.e("TEST", "ble뷰모델로부터 갖고 온 device 테스트 : deviceMac :${bleViewModel.device.value.deviceMac}\ndevice객체 : ${bleViewModel.device.value.device}")
-        val device  = bleViewModel.device.value.device
+        Log.e(
+            "TEST",
+            "ble뷰모델로부터 갖고 온 device 테스트 : deviceMac :${bleViewModel.device.value.deviceMac}\ndevice객체 : ${bleViewModel.device.value.device}"
+        )
+        val device = bleViewModel.device.value.device
 
 
         val countDownTimer = object : CountDownTimer(remainingTime.value, 1000 * 60 * 1) {
@@ -107,6 +96,41 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
             }
         }
         countDownTimer.start()
+    }
+
+    LaunchedEffect(Unit) {
+        // 1. 시작 시간 설정
+        val zoneId = ZoneId.of("Asia/Seoul")
+        val startTime = LocalDateTime.now().atZone(zoneId)
+            .toInstant().toEpochMilli()
+
+        DataStoreManager.deleteStartTime()
+        DataStoreManager.saveStartTime(startTime)
+
+        // check
+        val startTimeFromDS = DataStoreManager.getStartTime().first() ?: 0
+        Log.e("TEST", "startTimeFromDS : $startTimeFromDS")
+
+        // 2. 측정 시간 설정
+        val measurementTime: Long = 1000 * 60 * 60 * 24 * 10 // 측정일 10일
+
+        DataStoreManager.deleteMeasurementTime()
+        DataStoreManager.saveMeasurementTime(measurementTime)
+
+        // check
+        val measurementTimeFromDS = DataStoreManager.getMeasurementTime().first() ?: 0
+        Log.e("TEST", "measurementTimeForDs : ${measurementTimeFromDS}")
+
+        // 3. 종료 시간 설정
+        val endTime = startTime + measurementTime
+
+        DataStoreManager.deleteEndTime()
+        DataStoreManager.saveEndTime(endTime)
+
+        // check
+        val endTimeFromDS = DataStoreManager.getEndTime().first() ?: 0
+        Log.e("TEST", "endTimeFromDS : $endTimeFromDS")
+
     }
 
 

@@ -30,10 +30,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavController) {
+fun MainScreen(navController: NavController, homeViewModel: HomeViewModel) {
 
     val navItemList = listOf(
         NavItem(icon = painterResource(id = R.drawable.home_icon), selectedIcon = painterResource(id = R.drawable.home_selected), label = "홈"),
@@ -109,14 +110,14 @@ fun MainScreen(navController: NavController) {
             }
         }
     ) { paddingValues ->
-        ContentScreen(paddingValues = paddingValues, selectedIndex, navController)
+        ContentScreen(paddingValues = paddingValues, selectedIndex, navController, homeViewModel)
     }
 }
 
 @Composable
-fun ContentScreen(paddingValues: PaddingValues, selectedIndex: Int, navController: NavController) {
+fun ContentScreen(paddingValues: PaddingValues, selectedIndex: Int, navController: NavController, homeViewModel: HomeViewModel) {
     when(selectedIndex) {
-        0 -> HomeScreen(navController, paddingValues)
+        0 -> HomeScreen(navController, paddingValues, homeViewModel)
         1 -> EventScreen(navController, paddingValues)
         2 -> SettingScreen(navController, paddingValues)
     }

@@ -616,7 +616,7 @@ class BleManager(val context: Context, val mac: String, val userId: Int) : Bluet
             .atZone(ZoneId.of("Asia/Seoul"))
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
-        saveData.add(UserValue(userId = userId, userValueId = 1306, value = battery.toDouble(), valueType = 1300, createdAt = createdAt))
+        saveData.add(UserValue(userId = userId, userValueId = 1306, value = battery.toDouble(), valueType = 1300, createdAt = createdAt, createdAtLong = lastTime))
 
 
         Log.d(TEST, "battery : $battery")
@@ -625,7 +625,7 @@ class BleManager(val context: Context, val mac: String, val userId: Int) : Bluet
         val temperature =
             java.lang.Byte.toUnsignedInt(data[16]) + (java.lang.Byte.toUnsignedInt(data[17]) / 100.0f * 100).roundToInt() / 100.0
 
-        saveData.add(UserValue(userId = userId, userValueId = 1307, value = temperature, valueType = 1300, createdAt = createdAt))
+        saveData.add(UserValue(userId = userId, userValueId = 1307, value = temperature, valueType = 1300, createdAt = createdAt, createdAtLong = lastTime))
 
 
         Log.d(TEST, "temperature : $temperature")
@@ -643,33 +643,32 @@ class BleManager(val context: Context, val mac: String, val userId: Int) : Bluet
 //        val weo2 = convertToCurrentDataDouble(we2a, we2b, we2c)
 
         val findBufferWeoCount: Int = (data.size - 18) / 6
-        Log.d("test", "findBufferWeoCount : $findBufferWeoCount")
-        Log.d("test", "nDataLength : $nDataLength")
+        Log.d(TEST, "findBufferWeoCount : $findBufferWeoCount")
+        Log.d(TEST, "nDataLength : $nDataLength")
         for (i in 0 until findBufferWeoCount) {
             val nWHigh: Int = 18 + i * 6
             val nWMiddle: Int = 19 + i * 6
             val nWLow: Int = 20 + i * 6
-            Log.e(TEST, "WE Address : $nWHigh : $nWMiddle : $nWLow")
+//            Log.e(TEST, "WE Address : $nWHigh : $nWMiddle : $nWLow")
 
             val nAHigh: Int = 21 + i * 6
             val nAMiddle: Int = 22 + i * 6
             val nALow: Int = 23 + i * 6
-            Log.e(TEST, "AE Address : " + nAHigh + " : " + nAMiddle + " : " + nALow)
+//            Log.e(TEST, "AE Address : " + nAHigh + " : " + nAMiddle + " : " + nALow)
             val time: Long = startTime + (1000 * 10 * i)
 
             val weCurrent: Double = convertToCurrentDataDouble(data[nWHigh], data[nWMiddle], data[nWLow])
             val aeCurrent: Double = convertToCurrentDataDouble(data[nAHigh], data[nAMiddle], data[nALow])
 
-            Log.e(TEST, "we_current " + i + ": " + weCurrent)
-            Log.e(TEST, "ae_current " + i + ": " + aeCurrent)
+            Log.e(TEST, "WE_Current " + i + ": " + weCurrent)
+            Log.e(TEST, "AE_Current " + i + ": " + aeCurrent)
 
             val convertedTime = Instant.ofEpochMilli(time)
                 .atZone(ZoneId.of("Asia/Seoul"))
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
-
-            saveData.add(UserValue(userId = userId, userValueId = 1301, value = weCurrent, valueType = 1300, createdAt = convertedTime))
-            saveData.add(UserValue(userId = userId, userValueId = 1303, value = weCurrent, valueType = 1300, createdAt = convertedTime))
+            saveData.add(UserValue(userId = userId, userValueId = 1301, value = weCurrent, valueType = 1300, createdAt = convertedTime, createdAtLong = time))
+            saveData.add(UserValue(userId = userId, userValueId = 1303, value = weCurrent, valueType = 1300, createdAt = convertedTime, createdAtLong = time))
         }
 
         CoroutineScope(Dispatchers.IO).launch {

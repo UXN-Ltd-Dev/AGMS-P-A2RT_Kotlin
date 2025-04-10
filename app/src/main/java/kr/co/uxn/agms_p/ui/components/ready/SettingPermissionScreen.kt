@@ -180,7 +180,7 @@ fun SettingPermissionScreen(navController: NavController, viewModel: PermissionV
                 }
             }
 
-            Spacer(modifier = Modifier.size(170.dp))
+            Spacer(modifier = Modifier.size(140.dp))
 
             // 확인 버튼
             Button(

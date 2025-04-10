@@ -29,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -41,7 +42,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -49,14 +52,16 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.emptyRetrofit
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestEmailCode
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEmailVerificationCode
 
 @Composable
-fun SignUpCheckScreen2(navController: NavController) {
+fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: String) {
     val context = LocalContext.current
     val email = remember { mutableStateOf("") }
     val verificationCode = remember { mutableStateOf("") }
@@ -66,6 +71,25 @@ fun SignUpCheckScreen2(navController: NavController) {
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    // 인증번호 관련 변수
+    val timerSeconds = remember { mutableStateOf(0) }
+    val isTimerRunning = remember { mutableStateOf(false) }
+    val timerKey = remember { mutableStateOf(0) } // 트리거 역할
+    val emailCodeId = remember { mutableStateOf(0) }
+
+    LaunchedEffect(timerKey.value) {
+        if (isTimerRunning.value) {
+            timerSeconds.value = 300 // 5분 설정
+//            timerSeconds.value = 60 // 1분 설정
+            while (timerSeconds.value > 0) {
+                delay(1000)
+                timerSeconds.value -= 1
+            }
+            isTimerRunning.value = false
+        }
+    }
+
 
     Surface(
         modifier = Modifier
@@ -100,99 +124,192 @@ fun SignUpCheckScreen2(navController: NavController) {
                 text = "이메일",
                 fontSize = 14.sp,
                 modifier = Modifier.align(Alignment.Start)
+                    .padding(start = 5.dp)
             )
 
-            BasicTextField(
-                value = email.value,
-                onValueChange = { email.value = it },
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = {
-                    keyboardController?.hide()
-                }),
-                decorationBox = { innerTextField ->
+            // uxn 회원 가입
+            if (type == 1803) {
+                BasicTextField(
+                    value = email.value,
+                    onValueChange = { email.value = it },
+                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
+                        keyboardController?.hide()
+                    }),
+                    decorationBox = { innerTextField ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(30.dp)
+                                .drawBehind {
+                                    val strokeWidth = 3.dp.toPx() // 선 두께 설정
+                                    val y = size.height - strokeWidth / 2 // 선을 하단에 위치
+                                    drawLine(
+                                        color = Color(0xFFEEEEEF),
+                                        start = Offset(0f, y),
+                                        end = Offset(size.width, y),
+                                        strokeWidth = strokeWidth
+                                    )
+                                }
+                                .padding(start = 5.dp, end = 40.dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            if (email.value.isEmpty()) {
+                                Text(
+                                    text = "이메일 주소를 입력해 주세요.",
+                                    color = Color.Gray,
+                                    fontSize = 13.sp
+                                )
+                            }
+                            innerTextField()
+                        }
+                    },
+                )
+            // 구글 회원 가입
+            } else if(type == 1801) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .drawBehind {
+                            val strokeWidth = 3.dp.toPx()  // 선 굵기
+                            val y = size.height - strokeWidth / 2
+                            drawLine(
+                                color = Color(0xFFEEEEEF), // 원하는 색상
+                                start = Offset(0f, y),
+                                end = Offset(size.width, y),
+                                strokeWidth = strokeWidth
+                            )
+                        }
+                        .padding(start = 5.dp, end = 40.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    email.value = oAuthEmail
+                    Text(
+                        text = email.value,
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    )
+                }
+            } else {
+                // 카카오 회원 가입
+                if(email.value.contains("@")) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(30.dp)
                             .drawBehind {
-                                val strokeWidth = 3.dp.toPx() // 선 두께 설정
-                                val y = size.height - strokeWidth / 2 // 선을 하단에 위치
+                                val strokeWidth = 3.dp.toPx()  // 선 굵기
+                                val y = size.height - strokeWidth / 2
                                 drawLine(
-                                    color = Color(0xFFEEEEEF),
+                                    color = Color(0xFFEEEEEF), // 원하는 색상
                                     start = Offset(0f, y),
                                     end = Offset(size.width, y),
                                     strokeWidth = strokeWidth
                                 )
                             }
                             .padding(start = 5.dp, end = 40.dp),
-                        contentAlignment = Alignment.CenterStart
+                        contentAlignment = Alignment.Center
                     ) {
-                        if (email.value.isEmpty()) {
-                            Text(
-                                text = "이메일 주소를 입력해 주세요.",
-                                color = Color.Gray,
-                                fontSize = 13.sp
-                            )
-                        }
-                        innerTextField()
+                        email.value = oAuthEmail
+                        Text(
+                            text = email.value,
+                            modifier = Modifier.align(Alignment.CenterStart)
+                        )
                     }
-                },
-            )
+                } else {
+                    BasicTextField(
+                        value = email.value,
+                        onValueChange = { email.value = it },
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = {
+                            keyboardController?.hide()
+                        }),
+                        decorationBox = { innerTextField ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(30.dp)
+                                    .drawBehind {
+                                        val strokeWidth = 3.dp.toPx() // 선 두께 설정
+                                        val y = size.height - strokeWidth / 2 // 선을 하단에 위치
+                                        drawLine(
+                                            color = Color(0xFFEEEEEF),
+                                            start = Offset(0f, y),
+                                            end = Offset(size.width, y),
+                                            strokeWidth = strokeWidth
+                                        )
+                                    }
+                                    .padding(start = 5.dp, end = 40.dp),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                if (email.value.isEmpty()) {
+                                    Text(
+                                        text = "이메일 주소를 입력해 주세요.",
+                                        color = Color.Gray,
+                                        fontSize = 13.sp
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        },
+                    )
+                }
+            }
+
             Spacer(Modifier.size(10.dp))
 
-            // 인증번호 전송 버튼
+            // 이메일 인증하기 버튼
             Button(
                 shape = RoundedCornerShape(10.dp),
                 onClick = {
-                    // TODO : 서버에 인증번호 요청
-                    // 만약 이메일이 중복되면, 중복되었다는 토스트 메시지
 
-                    // 인증완료 테스트를 위한 코드
-                    isEmailVerified.value = !isEmailVerified.value
-                    Log.e("TAG", "isEmailVerified : ${isEmailVerified.value}")
-                    // 인증완료 테스트를 위한 코드 끝
+                    // 이메일 인증하기 타이머 초기화 코드
+                    timerKey.value++
+                    isTimerRunning.value = true
 
-//                    CoroutineScope(Dispatchers.IO).launch {
-//                        try {
-//                            val result = emptyRetrofit.sendVerificationCode(
-//                                RequestEmailVerificationCode(email = email.value)
-//                            )
-//                            if (result.isSuccessful) {
-//                                Log.d("TAG", "서버 응답: ${result.body()}")
-//                                val resultBody = result.body()
-//                                if (resultBody != null) {
-//                                    if(resultBody.isDuplicated) {
-//                                        withContext(Dispatchers.Main) {
-//                                            Toast.makeText(context, "이미 가입된 이메일입니다.", Toast.LENGTH_SHORT).show()
-//                                        }
-//                                    }
-//                                    // 중복되지 않았다면 진행바 실행 및 인증번호 전송
-//                                    else { // isDuplicated = false
-//                                        withContext(Dispatchers.Main) {
-//                                            Toast.makeText(context, "인증번호가 전송되었습니다.", Toast.LENGTH_SHORT).show()
-//                                            verificationCode.value = resultBody.authenticationCode.toString()
-//                                        }
-//                                    }
-//                                } else {
-//                                    Log.e("TAG", "서버 응답이 null 입니다.")
-//                                }
-//                            } else {
-//                                Log.e("TAG", "API 실패: ${result.errorBody()?.string()}")
-//                            }
-//                        } catch (e: Exception) {
-//                            Log.e("TAG", "네트워크 오류 발생: ${e.message}")
-//                        }
-//                    }
+                    // 인증번호 입력란 초기화
+                    verificationCode.value = ""
+
+                    // 서버에 이메일 인증하기 요청
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val result = emptyRetrofit.requestVerficationCode(email.value)
+                            if (result.isSuccessful) {
+                                Log.d("TAG", "인증하기 서버 응답: ${result.body()}")
+                                val resultBody = result.body()
+                                if (resultBody != null) {
+                                    if(resultBody.isDuplicated) {
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(context, "이미 가입된 이메일입니다.", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } else { // isDuplicated = false
+                                        // 인증번호 전송
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(context, "인증번호가 전송되었습니다.\n메일을 확인해주세요.", Toast.LENGTH_SHORT).show()
+                                            // email_code_id 저장
+                                            emailCodeId.value = resultBody.emailCodeId
+                                        }
+                                        Log.e("TAG", "emailCodeId : ${emailCodeId.value}")
+                                    }
+                                } else {
+                                    Log.e("TAG", "서버 응답이 null 입니다.")
+                                }
+                            } else {
+                                Log.e("TAG", "API 실패: ${result.errorBody()?.string()}")
+                            }
+                        } catch (e: Exception) {
+                            Log.e("TAG", "네트워크 오류 발생: ${e.message}")
+                        }
+                    }
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF385DAB) // 배경색 설정
                 ),
                 modifier = Modifier
                     .align(Alignment.End)
-                    .size(120.dp, 35.dp)
+                    .size(120.dp, 35.dp),
+                enabled = !isEmailVerified.value,
             ) {
                 Text(
-                    text = "인증번호 전송",
+                    text = "이메일 인증",
                     fontSize = 12.sp,
                     textAlign = TextAlign.Center
                 )
@@ -209,6 +326,7 @@ fun SignUpCheckScreen2(navController: NavController) {
                     text = "이메일 인증번호",
                     fontSize = 14.sp,
                     modifier = Modifier.align(Alignment.CenterVertically)
+                        .padding(start = 5.dp)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 if (isEmailVerified.value) {
@@ -232,7 +350,10 @@ fun SignUpCheckScreen2(navController: NavController) {
             BasicTextField(
                 value = verificationCode.value,
                 onValueChange = { verificationCode.value = it },
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done
+                ),
                 keyboardActions = KeyboardActions(onDone = {
                     keyboardController?.hide()
                 }),
@@ -265,15 +386,95 @@ fun SignUpCheckScreen2(navController: NavController) {
                     }
                 },
             )
-            Spacer(Modifier.size(20.dp))
+            Spacer(Modifier.size(10.dp))
 
+            // 인증번호 전송 버튼
 
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (isTimerRunning.value) {
+                        val minutes = timerSeconds.value / 60
+                        val seconds = timerSeconds.value % 60
+                        // 타이머
+                        Text(
+                            text = String.format("%02d:%02d", minutes, seconds),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                    }
+
+                    Button(
+                        shape = RoundedCornerShape(10.dp),
+                        onClick = {
+                            // 실제 이메일 인증 로직 처리
+//                            isTimerRunning.value = true
+                            isEmailVerified.value = false
+                            Log.e("TAG", "이메일 인증 시작, 타이머 시작됨.")
+
+                            // 서버 통신 시작
+                            CoroutineScope(Dispatchers.IO).launch {
+                                try {
+                                    val result = emptyRetrofit.checkVerificationCode(
+                                        RequestEmailCode(emailCodeId = emailCodeId.value, emailCode = verificationCode.value)
+                                    )
+                                    if (result.isSuccessful) {
+                                        val resultBody = result.body()
+                                        Log.d("TEST", "인증번호 result body : ${resultBody}")
+                                        if (resultBody != null && resultBody.isSuccess) {
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(context, "인증코드 일치", Toast.LENGTH_SHORT).show()
+
+                                                // ✅ 타이머 강제 종료
+                                                isTimerRunning.value = false
+                                                timerSeconds.value = 0
+
+                                                // 인증완료 테스트를 위한 코드
+                                                isEmailVerified.value = true
+                                                Log.e("TAG", "isEmailVerified : ${isEmailVerified.value}")
+                                            }
+                                        } else {
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(context, "인증 실패", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("API", "네트워크 오류: ${e.message}")
+                                }
+                            }
+
+                        },
+                        enabled = isTimerRunning.value,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF385DAB)
+                        ),
+                        modifier = Modifier.size(120.dp, 35.dp)
+                    ) {
+                        Text(
+                            text = "인증번호 전송",
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             // 비밀번호
             Text(
                 text = "비밀번호",
                 fontSize = 14.sp,
                 modifier = Modifier.align(Alignment.Start)
+                    .padding(start = 5.dp)
             )
             BasicTextField(
                 value = pwd1.value,
@@ -330,6 +531,7 @@ fun SignUpCheckScreen2(navController: NavController) {
                 text = "비밀번호 확인",
                 fontSize = 14.sp,
                 modifier = Modifier.align(Alignment.Start)
+                    .padding(start = 5.dp)
             )
 
             BasicTextField(
@@ -371,7 +573,7 @@ fun SignUpCheckScreen2(navController: NavController) {
             )
 
             // 다음 버튼
-            Spacer(modifier = Modifier.size(110.dp))
+            Spacer(modifier = Modifier.size(80.dp))
             Button(
                 onClick = {
                     if (email.value.isEmpty()) {

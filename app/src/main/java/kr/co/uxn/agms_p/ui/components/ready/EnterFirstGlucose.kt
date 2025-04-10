@@ -45,7 +45,7 @@ import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEventData
-import kr.co.uxn.agms_p.api.token.TokenManager
+import kr.co.uxn.agms_p.api.token.DataStoreManager
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -145,7 +145,7 @@ fun EnterFirstGlucose(navController: NavController) {
                     if (glucoseDataFromUser.value != "") {
                         // TODO : 서버에 혈당데이터 전송, 화면이동
                         coroutineScope.launch(Dispatchers.IO) {
-                            val userId = TokenManager.getUserId().first()
+                            val userId = DataStoreManager.getUserId().first()
                             Log.e("TEST", "userId : $userId")
                             try {
                                 val createdAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
@@ -166,7 +166,7 @@ fun EnterFirstGlucose(navController: NavController) {
                                             withContext(Dispatchers.Main) {
                                                 Log.e("TEST", "${uploadBody.toString()}")
                                                 navController.navigate("MainScreen")
-                                                Toast.makeText(context, "업로드 성공", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, "혈당 업로드 성공", Toast.LENGTH_SHORT).show()
                                             }
                                         } else {
                                             withContext(Dispatchers.Main) {

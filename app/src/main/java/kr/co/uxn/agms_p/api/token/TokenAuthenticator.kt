@@ -12,7 +12,7 @@ import okhttp3.Request
 class TokenAuthenticator() : Authenticator {
     override fun authenticate(route: Route?, response: Response): Request? {
         val refreshToken = runBlocking {
-            TokenManager.getRefreshToken().first()
+            DataStoreManager.getRefreshToken().first()
         }
 
         if (response.message == "REFRESH_TOKEN_EXPIRED") {

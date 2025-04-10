@@ -9,6 +9,9 @@ data class ResponseSignUpOauthAndLogin(
     @SerializedName("user_id")
     val userId: Int,
 
+    @SerializedName("email")
+    val email: String,
+
     @SerializedName("message")
     val message: String,
 

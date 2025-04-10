@@ -62,7 +62,7 @@ import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignInNormal
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignUpNormal
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignUpOauthDetail
-import kr.co.uxn.agms_p.api.token.TokenManager
+import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ui.viewmodel.LoginViewModel
 
 
@@ -672,9 +672,9 @@ fun SignUpInfoScreen3(
 
                                                 // 토큰 저장 테스트
                                                 val verifyAccessToken =
-                                                    TokenManager.getAccessToken()
+                                                    DataStoreManager.getAccessToken()
                                                 val verifyRefreshToken =
-                                                    TokenManager.getRefreshToken()
+                                                    DataStoreManager.getRefreshToken()
                                                 withContext(Dispatchers.Main) {
                                                     Log.d(
                                                         "TEST",
@@ -730,9 +730,9 @@ fun SignUpInfoScreen3(
                                                         Log.d("TAG", "로그인 성공")
 
                                                         // 토큰 저장
-                                                        TokenManager.deleteAccessToken()
-                                                        TokenManager.saveAccessToken(loginResult.accessToken)
-                                                        TokenManager.saveRefreshToken(loginResult.refreshToken)
+                                                        DataStoreManager.deleteAccessToken()
+                                                        DataStoreManager.saveAccessToken(loginResult.accessToken)
+                                                        DataStoreManager.saveRefreshToken(loginResult.refreshToken)
 
                                                         // 화면 이동
                                                         withContext(Dispatchers.Main) {

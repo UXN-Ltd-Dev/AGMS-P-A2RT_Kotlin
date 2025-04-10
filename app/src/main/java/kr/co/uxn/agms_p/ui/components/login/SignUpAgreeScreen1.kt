@@ -31,7 +31,7 @@ import androidx.navigation.NavController
 import kr.co.uxn.agms_p.R
 
 @Composable
-fun SignUpAgreeScreen1(navController: NavController) {
+fun SignUpAgreeScreen1(navController: NavController, type: Int, oAuthEmail: String) {
     val context = LocalContext.current
     val allChecked = remember { mutableStateOf(false) }
     val checked1 = remember { mutableStateOf(false) }
@@ -216,8 +216,8 @@ fun SignUpAgreeScreen1(navController: NavController) {
 
             Button(
                 onClick = {
-                    if(checked1.value == true && checked2.value == true && checked3.value == true) {
-                        navController.navigate("SignUpCheckScreen2")
+                    if (checked1.value == true && checked2.value == true && checked3.value == true) {
+                        navController.navigate("SignUpCheckScreen2/${type}/${oAuthEmail}")
                     } else {
                         Toast.makeText(context, "필수 동의 항목에 동의해주세요.", Toast.LENGTH_SHORT).show()
                     }

@@ -1,17 +1,20 @@
 package kr.co.uxn.agms_p.api
 
 
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestEmailCode
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEventData
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignInNormal
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignUpNormal
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestOAuthSignUpAndLogin
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignUpOauthDetail
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDeviceMac
+import kr.co.uxn.agms_p.api.model.responseDTO.ResponseEmailCode
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseEventData
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseSignInNormal
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseSignUpNormal
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseSignUpOauthAndLogin
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseSignUpOauthDetail
+import kr.co.uxn.agms_p.api.model.responseDTO.ResponseVerificationCode
 import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.Response
@@ -48,5 +51,16 @@ interface RemoteDataSource {
     // 기기정보로 MAC 가져오기
     @GET("/api/device/check")
     suspend fun getDeviceMac(@Query("serial_number") serialNumber: String) : Response<ResponseDeviceMac>
+
+    // 서버에 마지막시간 구하기
+    suspend fun getLastTime()
+
+    // 이메일 인증번호 요청
+    @GET("/api/email/simple")
+    suspend fun requestVerficationCode(@Query("email") email: String) : Response<ResponseVerificationCode>
+
+    // 이메일 인증번호 확인
+    @POST("/api/email/code/check")
+    suspend fun checkVerificationCode(@Body emailCode: RequestEmailCode) : Response<ResponseEmailCode>
 }
 

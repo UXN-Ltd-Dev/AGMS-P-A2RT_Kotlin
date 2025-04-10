@@ -129,8 +129,8 @@ dependencies {
     // datastore
     implementation ("androidx.datastore:datastore-preferences:1.1.4")
 
-    // timeber
-    implementation ("com.jakewharton.timber:timber:5.0.1")
+    // timber
+//    implementation ("com.jakewharton.timber:timber:5.0.1")
 
     // rottie
     implementation ("com.airbnb.android:lottie-compose:6.1.0")
@@ -145,4 +145,13 @@ dependencies {
     // To use Kotlin annotation processing tool (kapt)
 //    kapt("androidx.room:room-compiler:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
+
+    // workManager
+    val workVersion = "2.10.0"
+    implementation ("androidx.work:work-runtime-ktx:${workVersion}")
+
+    // vico
+//    implementation("com.patrykandpatrick.vico:compose:2.1.2")
+    // vico for m3
+    implementation("com.patrykandpatrick.vico:compose-m3:2.1.2")
 }
