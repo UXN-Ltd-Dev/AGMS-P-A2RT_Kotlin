@@ -19,5 +19,5 @@ data class ResponseSignInNormal(
     val resultCode: Int,
 
     @SerializedName("id")
-    val id: Int
+    val userId: Int
 )

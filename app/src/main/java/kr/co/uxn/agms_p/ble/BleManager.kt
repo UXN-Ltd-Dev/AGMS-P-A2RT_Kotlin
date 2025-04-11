@@ -1,7 +1,6 @@
 package kr.co.uxn.agms_p.ble
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
@@ -10,7 +9,6 @@ import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.content.Context
-import android.content.Intent
 import android.icu.text.DecimalFormat
 import android.os.Build
 import android.os.Build.VERSION_CODES.TIRAMISU
@@ -26,13 +24,11 @@ import kr.co.uxn.agms_p.BleConnectionState
 import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.room.UserValue
 import java.lang.reflect.Method
-import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
-import java.util.Locale
 import java.util.Timer
 import java.util.TimerTask
 import java.util.UUID
@@ -548,6 +544,8 @@ class BleManager(
         val min = data[12].toInt()
         val sec = data[13].toInt()
 
+        var lastWeo1 = 0.0
+
         Log.d(TEST, "time : 20${year}년 ${month}월 ${day}일 ${hour}시 ${min}분 ${sec}초")
 
         val cal = Calendar.getInstance().apply {
@@ -622,6 +620,8 @@ class BleManager(
         val temperature =
             java.lang.Byte.toUnsignedInt(data[16]) + (java.lang.Byte.toUnsignedInt(data[17]) / 100.0f * 100).roundToInt() / 100.0
 
+        BleBridge.updateTemperature(temperature)
+
         saveData.add(
             UserValue(
                 userId = userId,
@@ -695,7 +695,12 @@ class BleManager(
                     createdAtLong = time
                 )
             )
+            if (i == findBufferWeoCount - 1) {
+                lastWeo1 = weCurrent
+            }
         }
+
+        BleBridge.updateWeo1(lastWeo1)
 
         CoroutineScope(Dispatchers.IO).launch {
             AppDatabase.getInstance(context)?.dataDao()?.insert(saveData)

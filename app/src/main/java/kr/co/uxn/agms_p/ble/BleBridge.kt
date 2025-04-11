@@ -9,8 +9,22 @@ object BleBridge {
     private val _bleState = MutableStateFlow(BleConnectionState.DISCONNECTED)
     val bleState: StateFlow<BleConnectionState> = _bleState
 
+    private val _weo1 = MutableStateFlow<Double>(0.0)
+    val weo1: StateFlow<Double> = _weo1
+
+    private val _temperature = MutableStateFlow<Double>(0.0)
+    val temperature: StateFlow<Double> = _temperature
+
     fun updateState(state: BleConnectionState) {
         _bleState.value = state
         Log.e("TEST", "ble브릿지의 bleState : $state")
+    }
+
+    fun updateWeo1(value: Double) {
+        _weo1.value = value
+    }
+
+    fun updateTemperature(value: Double) {
+        _temperature.value = value
     }
 }

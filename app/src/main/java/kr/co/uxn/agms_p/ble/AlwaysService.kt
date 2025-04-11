@@ -15,27 +15,35 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.work.ListenableWorker.Result
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kr.co.uxn.agms_p.AlwaysApplication
 import kr.co.uxn.agms_p.MainActivity
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestDataValue
+import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.room.AppDatabase
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Timer
 import java.util.TimerTask
 
 class AlwaysService() : Service() {
-    companion object{
+    companion object {
         var isServiceRunning = false
     }
+
     lateinit var bleManager: BleManager
     lateinit var pendingIntent: PendingIntent
 
-    private val localDbRepository  by lazy {
+    private val localDbRepository by lazy {
         AppDatabase.getInstance(baseContext)
     }
     private val serviceJob = SupervisorJob()
@@ -48,7 +56,6 @@ class AlwaysService() : Service() {
     val NOTI_CHANNEL_ID: String = "NOTI_CHANNEL"
     val NOTI_CHANNEL_NAME: String = "FOREGROUND"
     val NOTI_ID: Int = 94
-
 
 
     override fun onBind(p0: Intent?): IBinder? {
@@ -114,7 +121,7 @@ class AlwaysService() : Service() {
 
 
         timerForNoti = Timer()
-        timerForNoti?.schedule(object: TimerTask() {
+        timerForNoti?.schedule(object : TimerTask() {
             override fun run() {
                 val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
                     .setOngoing(true)
@@ -128,7 +135,7 @@ class AlwaysService() : Service() {
                 NotificationManagerCompat.from(baseContext).notify(NOTI_ID, notification)
             }
 
-        }, 0 , 1000)
+        }, 0, 1000)
 
         // 노티 생성 및 설정
         val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
@@ -149,7 +156,12 @@ class AlwaysService() : Service() {
         isServiceRunning = true
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            device?.device?.connectGatt(baseContext, false, bleManager, BluetoothDevice.TRANSPORT_LE)
+            device?.device?.connectGatt(
+                baseContext,
+                false,
+                bleManager,
+                BluetoothDevice.TRANSPORT_LE
+            )
         } else {
             device?.device?.connectGatt(baseContext, false, bleManager)
         }
@@ -161,16 +173,48 @@ class AlwaysService() : Service() {
         serviceScope.launch {
             while (isActive) {
                 Log.d("SERVICE", "Coroutine 루프에서 반복 실행 중: ${System.currentTimeMillis()}")
+
+                try {
+                    Log.e("SERVICE", "서비스 내 코루틴 실행")
+                    val userId = DataStoreManager.getUserId().first() ?: -1
+                    val lastTime = tokenRetrofit.getLastTime(userId)
+                    if (lastTime.isSuccessful) {
+                        val lastTimeBody = lastTime.body()
+                        if (lastTimeBody != null) {
+                            Log.e("SERVICE", "서비스 코루틴에서 호출한 lastTime : ${lastTimeBody.toString()}")
+
+                            val userId = DataStoreManager.getUserId().first() ?: -1
+                            val createdAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                            val sendData = tokenRetrofit.sendData(
+                                listOf(RequestDataValue(userId = userId, createdAt = createdAt, valueType = 1301, value = 12.00),
+                                    )
+                            )
+                            if (sendData.isSuccessful) {
+                                val sendDataBody = sendData.body()
+                                if (sendDataBody != null) {
+                                    Log.e("TEST", "SendDataBody : ${sendDataBody.toString()}")
+                                }
+                            }
+                        }
+                    } else {
+                        Log.e("TEST", "API통신 실패 : ${lastTime.errorBody()?.string()}")
+                    }
+                } catch (e: Exception) {
+                    Log.e("SERVICE", "서비스 코루틴 에러 발생 : ${e.message}")
+                }
                 delay(1000 * 60 * 1)
             }
         }
-
         return START_STICKY
     }
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) { // 코드 O : API 26, 안드로이드 8
-            val serviceChannel = NotificationChannel(NOTI_CHANNEL_ID, NOTI_CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT)
+            val serviceChannel = NotificationChannel(
+                NOTI_CHANNEL_ID,
+                NOTI_CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(serviceChannel)
         }

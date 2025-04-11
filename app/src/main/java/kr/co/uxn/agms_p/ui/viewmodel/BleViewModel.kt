@@ -41,12 +41,24 @@ class BleViewModel(application: Application) : AndroidViewModel(application) {
             initialValue = BleConnectionState.DISCONNECTED
         )
 
+    val weo1: StateFlow<Double> = BleBridge.weo1
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0.0
+        )
+
+    val temperature: StateFlow<Double> = BleBridge.temperature
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0.0
+        )
+
+
+
     suspend fun emit(event: String) {
         _events.emit(event)
-    }
-
-    suspend fun emitBleState(event: String) {
-        _bleConnectStatusEvent.emit(event)
     }
 
     fun updateIsFindDevice(value: Boolean) {

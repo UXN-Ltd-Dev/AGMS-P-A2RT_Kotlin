@@ -260,6 +260,10 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                                  DataStoreManager.saveAccessToken(loginResult.accessToken)
                                                  DataStoreManager.saveRefreshToken(loginResult.refreshToken)
 
+                                                // userId 저장
+                                                DataStoreManager.deleteUserId()
+                                                DataStoreManager.saveUserId(loginResult.userId)
+
                                                  // 세팅화면으로 이동
                                                  withContext(Dispatchers.Main) {
                                                      navController.navigate("SettingPermissionScreen")

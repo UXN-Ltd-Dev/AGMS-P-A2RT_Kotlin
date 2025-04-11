@@ -48,8 +48,6 @@ import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
 fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleViewModel: BleViewModel) {
     val context = LocalContext.current
 
-    val contextApplication = LocalContext.current.applicationContext
-
     val navItemList = listOf(
         NavItem(icon = painterResource(id = R.drawable.home_icon), selectedIcon = painterResource(id = R.drawable.home_selected), label = "홈"),
         NavItem(icon = painterResource(id = R.drawable.event_icon), selectedIcon = painterResource(id = R.drawable.event_selected), label = "이벤트"),
@@ -58,7 +56,6 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
 
     var selectedIndex by remember { mutableStateOf(0) }
 
-
     val bleState by bleViewModel.bleState.collectAsState()
 
     val blePainter = when (bleState) {
@@ -66,30 +63,6 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
         BleConnectionState.DISCONNECTED -> R.drawable.ble_disconnected
         BleConnectionState.CONNECTING -> R.drawable.ble_connecting
     }
-
-//    DisposableEffect(Unit) {
-//        Log.e("BLE_TEST", "BroadcastReceiver 등록됨") // ← 추가!
-//        val receiver = object : BroadcastReceiver() {
-//            override fun onReceive(ctx: Context?, intent: Intent?) {
-//                Log.d("BLE_TEST", "Broadcast 수신됨!") // ← 추가!
-//                if (intent?.action == "BLE_CONNECTION_STATE") {
-//                    val stateName = intent.getStringExtra("state")
-//                    Log.e("TEST", "stateName : $stateName")
-//                    bleState = BleConnectionState.valueOf(stateName ?: "DISCONNECTED")
-//                }
-//            }
-//        }
-//        contextApplication.registerReceiver(
-//            receiver,
-//            IntentFilter("BLE_CONNECTION_STATE"),
-//            "kr.co.uxn.agms_p.permission.BLE_BROADCAST", // ← 요거 빠졌던 거!
-//            null,
-//            Context.RECEIVER_NOT_EXPORTED
-//        )
-//        onDispose {
-//            contextApplication.unregisterReceiver(receiver)
-//        }
-//    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -157,14 +130,14 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
             }
         }
     ) { paddingValues ->
-        ContentScreen(paddingValues = paddingValues, selectedIndex, navController, homeViewModel)
+        ContentScreen(paddingValues = paddingValues, selectedIndex, navController, homeViewModel, bleViewModel)
     }
 }
 
 @Composable
-fun ContentScreen(paddingValues: PaddingValues, selectedIndex: Int, navController: NavController, homeViewModel: HomeViewModel) {
+fun ContentScreen(paddingValues: PaddingValues, selectedIndex: Int, navController: NavController, homeViewModel: HomeViewModel, bleViewModel: BleViewModel) {
     when(selectedIndex) {
-        0 -> HomeScreen(navController, paddingValues, homeViewModel)
+        0 -> HomeScreen(navController, paddingValues, homeViewModel, bleViewModel)
         1 -> EventScreen(navController, paddingValues)
         2 -> SettingScreen(navController, paddingValues)
     }

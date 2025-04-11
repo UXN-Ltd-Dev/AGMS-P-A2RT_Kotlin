@@ -734,6 +734,10 @@ fun SignUpInfoScreen3(
                                                         DataStoreManager.saveAccessToken(loginResult.accessToken)
                                                         DataStoreManager.saveRefreshToken(loginResult.refreshToken)
 
+                                                        // userId 저장
+                                                        DataStoreManager.deleteUserId()
+                                                        DataStoreManager.saveUserId(loginResult.userId)
+
                                                         // 화면 이동
                                                         withContext(Dispatchers.Main) {
                                                             Log.d(

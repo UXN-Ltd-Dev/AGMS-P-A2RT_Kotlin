@@ -7,7 +7,6 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("kotlin-parcelize")
-//    id("kotlin-kapt")
     id("com.google.devtools.ksp")
 }
 
@@ -32,11 +31,20 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField( "String", "kakao_native_app_key", properties.getProperty("kakao_native_app_key"))
-        resValue("string","kakao_oauth_host", properties.getProperty("kakao_oauth_host"))
-        buildConfigField( "String", "google_web_client_id", properties.getProperty("google_web_client_id"))
-        buildConfigField( "String", "base_url", properties.getProperty("base_url"))
+        buildConfigField(
+            "String",
+            "kakao_native_app_key",
+            properties.getProperty("kakao_native_app_key")
+        )
+        resValue("string", "kakao_oauth_host", properties.getProperty("kakao_oauth_host"))
+        buildConfigField(
+            "String",
+            "google_web_client_id",
+            properties.getProperty("google_web_client_id")
+        )
+        buildConfigField("String", "base_url", properties.getProperty("base_url"))
     }
+
 
     buildTypes {
         release {
@@ -94,9 +102,9 @@ dependencies {
     implementation("com.kakao.sdk:v2-user:2.20.6") // 카카오 로그인 API 모듈
     implementation("com.kakao.sdk:v2-auth:2.20.6") // 인증 관련 SDK 추가
     // 구글 API
-    implementation ("androidx.credentials:credentials:1.3.0")
-    implementation ("androidx.credentials:credentials-play-services-auth:1.3.0")
-    implementation ("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
     // navigation
     implementation("androidx.navigation:navigation-compose:2.8.8")
@@ -124,16 +132,16 @@ dependencies {
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
 
     // numberpicker
-    implementation ("com.chargemap.compose:numberpicker:1.0.3")
+    implementation("com.chargemap.compose:numberpicker:1.0.3")
 
     // datastore
-    implementation ("androidx.datastore:datastore-preferences:1.1.4")
+    implementation("androidx.datastore:datastore-preferences:1.1.4")
 
     // timber
 //    implementation ("com.jakewharton.timber:timber:5.0.1")
 
     // rottie
-    implementation ("com.airbnb.android:lottie-compose:6.1.0")
+    implementation("com.airbnb.android:lottie-compose:6.1.0")
 
     // room
     val roomVersion = "2.6.1"
@@ -148,10 +156,11 @@ dependencies {
 
     // workManager
     val workVersion = "2.10.0"
-    implementation ("androidx.work:work-runtime-ktx:${workVersion}")
+    implementation("androidx.work:work-runtime-ktx:${workVersion}")
 
     // vico
 //    implementation("com.patrykandpatrick.vico:compose:2.1.2")
     // vico for m3
     implementation("com.patrykandpatrick.vico:compose-m3:2.1.2")
+
 }

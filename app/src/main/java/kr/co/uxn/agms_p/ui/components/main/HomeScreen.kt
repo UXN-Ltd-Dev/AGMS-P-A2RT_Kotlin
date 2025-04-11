@@ -43,14 +43,18 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController, paddingValues: PaddingValues, homeViewModel: HomeViewModel) {
+fun HomeScreen(navController: NavController, paddingValues: PaddingValues, homeViewModel: HomeViewModel, bleViewModel: BleViewModel) {
     val context = LocalContext.current
     val day by homeViewModel.day.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    val weo1 by bleViewModel.weo1.collectAsState()
+    val temperature by bleViewModel.temperature.collectAsState()
 
     // 시연용 타이머
     LaunchedEffect(Unit) {
@@ -126,7 +130,9 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues, homeV
             ) {
                 Spacer(modifier = Modifier.width(18.dp))
                 Text(
-                    text = "110",
+//                    text = "110",
+                    text = "${weo1}",
+//                    text = "${temperature}",
                     color = Color.White,
                     fontSize = 45.sp,
                     fontWeight = FontWeight.Bold

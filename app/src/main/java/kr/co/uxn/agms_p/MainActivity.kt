@@ -26,6 +26,8 @@ import kr.co.uxn.agms_p.ui.components.login.LoginScreen
 import kr.co.uxn.agms_p.ui.components.login.SignUpAgreeScreen1
 import kr.co.uxn.agms_p.ui.components.login.SignUpCheckScreen2
 import kr.co.uxn.agms_p.ui.components.login.SignUpInfoScreen3
+import kr.co.uxn.agms_p.ui.components.main.ActivityRegisterScreen
+import kr.co.uxn.agms_p.ui.components.main.GlucoseRegisterScreen
 import kr.co.uxn.agms_p.ui.components.main.MainScreen
 import kr.co.uxn.agms_p.ui.components.ready.StabilizationCompleteScreen
 import kr.co.uxn.agms_p.ui.components.ready.EnterFirstGlucose
@@ -206,6 +208,14 @@ class MainActivity : ComponentActivity() {
 
             composable("MainScreen") { backStackEntry ->
                 MainScreen(navController, homeViewModel, bleViewModel)
+            }
+
+            composable("GlucoseRegisterScreen") { backStackEntry ->
+                GlucoseRegisterScreen(navController)
+            }
+
+            composable("ActivityRegisterScreen") { backStackEntry ->
+                ActivityRegisterScreen(navController)
             }
         }
     }
