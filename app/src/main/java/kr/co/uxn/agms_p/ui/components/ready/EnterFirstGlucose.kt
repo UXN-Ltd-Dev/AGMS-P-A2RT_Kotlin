@@ -4,8 +4,10 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -137,73 +139,70 @@ fun EnterFirstGlucose(navController: NavController) {
                 color = Color.Gray
             )
 
-            Spacer(modifier = Modifier.size(70.dp))
+            Spacer(modifier = Modifier.height(100.dp))
 
             // 완료 버튼
-            Button(
-                onClick = {
-                    if (glucoseDataFromUser.value != "") {
-                        // TODO : 서버에 혈당데이터 전송, 화면이동
-                        coroutineScope.launch(Dispatchers.IO) {
-                            val userId = DataStoreManager.getUserId().first()
-                            Log.e("TEST", "userId : $userId")
-                            try {
-                                val createdAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                                Log.e("TEST", "createdAt : $createdAt")
-                                val upload = tokenRetrofit.uploadEvent(
-                                    RequestEventData(
-                                        userId = userId!!,
-                                        createdAt = createdAt,
-                                        eventTypeCode = 1403,
-                                        content = glucoseDataFromUser.value
-                                    )
-                                )
-                                Log.e("TEST", "uploadbody : ${upload.body().toString()}")
-                                if (upload.isSuccessful) {
-                                    val uploadBody = upload.body()
-                                    if (uploadBody != null) {
-                                        if (uploadBody.isSuccess) {
-                                            withContext(Dispatchers.Main) {
-                                                Log.e("TEST", "${uploadBody.toString()}")
-                                                navController.navigate("MainScreen")
-                                                Toast.makeText(context, "혈당 업로드 성공", Toast.LENGTH_SHORT).show()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.btn_complete),
+                    contentDescription = "완료 버튼",
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .clickable {
+                            if (glucoseDataFromUser.value != "") {
+                                // TODO : 서버에 혈당데이터 전송, 화면이동
+                                coroutineScope.launch(Dispatchers.IO) {
+                                    val userId = DataStoreManager.getUserId().first()
+                                    Log.e("TEST", "userId : $userId")
+                                    try {
+                                        val createdAt = LocalDateTime.now()
+                                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                                        Log.e("TEST", "createdAt : $createdAt")
+                                        val upload = tokenRetrofit.uploadEvent(
+                                            RequestEventData(
+                                                userId = userId!!,
+                                                createdAt = createdAt,
+                                                eventTypeCode = 1403,
+                                                content = glucoseDataFromUser.value
+                                            )
+                                        )
+                                        Log.e("TEST", "uploadbody : ${upload.body().toString()}")
+                                        if (upload.isSuccessful) {
+                                            val uploadBody = upload.body()
+                                            if (uploadBody != null) {
+                                                if (uploadBody.isSuccess) {
+                                                    withContext(Dispatchers.Main) {
+                                                        Log.e("TEST", "${uploadBody.toString()}")
+                                                        navController.navigate("MainScreen/${0}")
+                                                    }
+                                                }
                                             }
                                         } else {
-                                            withContext(Dispatchers.Main) {
-                                                Toast.makeText(context, "업로드 실패", Toast.LENGTH_SHORT).show()
-                                                Log.e("TEST", "업로드 실패")
-                                            }
+                                            Log.e("TEST", "API 에러 : ${upload.errorBody()}")
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e("TEST", "네트워크 에러 : $e")
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(
+                                                context,
+                                                "네트워크를 확인해주세요.",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            Log.e("TEST", "업로드 실패")
                                         }
                                     }
-                                } else {
-                                    Log.e("TEST", "API 에러 : ${upload.errorBody() }")
                                 }
 
-                            } catch (e: Exception) {
-                                Log.e("TEST", "네트워크 에러 : $e")
+                            } else {
+                                Toast.makeText(context, "혈당을 입력해주세요.", Toast.LENGTH_SHORT).show()
                             }
                         }
-
-                    } else {
-                        Toast.makeText(context, "혈당을 입력해주세요.", Toast.LENGTH_SHORT).show()
-
-                    }
-                },
-                modifier = Modifier
-                    .size(280.dp, 50.dp)
-                    .background(
-                        color = Color(0xFF385DAB),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-//                    .align(Alignment.CenterHorizontally)
-            ) {
-                Text(
-                    text = "완료",
-                    color = Color.White,
-                    fontSize = 15.sp
                 )
             }
-
         }
     }
 }

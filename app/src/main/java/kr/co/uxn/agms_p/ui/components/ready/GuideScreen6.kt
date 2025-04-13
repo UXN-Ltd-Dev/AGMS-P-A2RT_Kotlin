@@ -91,26 +91,21 @@ fun GuideScreen6(navController: NavController) {
                 fontSize = 20.sp,
             )
 
-            Spacer(modifier = Modifier.size(30.dp))
+            Spacer(modifier = Modifier.size(32.dp))
 
             // 다음 버튼
-
-            Button(
-                onClick = {
-                    navController.navigate("RegisterDeviceScreen")
-                },
+            Box(
                 modifier = Modifier
-                    .size(280.dp, 50.dp)
-                    .background(
-                        color = Color(0xFF385DAB),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                    .align(Alignment.CenterHorizontally)
+                    .fillMaxWidth()
+                    .height(50.dp)
             ) {
-                Text(
-                    text = "다음",
-                    color = Color.White,
-                    fontSize = 15.sp
+                Image(
+                    painter = painterResource(R.drawable.btn_next),
+                    contentDescription = "다음 버튼",
+                    modifier = Modifier.align(Alignment.Center)
+                        .clickable {
+                            navController.navigate("RegisterDeviceScreen")
+                        }
                 )
             }
         }

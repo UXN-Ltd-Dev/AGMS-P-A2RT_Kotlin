@@ -5,10 +5,13 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -212,29 +215,25 @@ fun SignUpAgreeScreen1(navController: NavController, type: Int, oAuthEmail: Stri
                 )
             }
 
-            Spacer(modifier = Modifier.size(200.dp))
+            Spacer(modifier = Modifier.size(210.dp))
 
-            Button(
-                onClick = {
-                    if (checked1.value == true && checked2.value == true && checked3.value == true) {
-                        navController.navigate("SignUpCheckScreen2/${type}/${oAuthEmail}")
-                    } else {
-                        Toast.makeText(context, "필수 동의 항목에 동의해주세요.", Toast.LENGTH_SHORT).show()
-                    }
-                },
+            Box(
                 modifier = Modifier
-                    .size(280.dp, 50.dp)
-                    .background(
-                    color = Color(0xFF385DAB),
-                    shape = RoundedCornerShape(10.dp)
-                    )
-                    .align(Alignment.CenterHorizontally)
+                    .fillMaxWidth()
+                    .height(50.dp)
             ) {
-               Text(
-                   text = "다음",
-                   color = Color.White,
-                   fontSize = 15.sp
-               )
+                Image(
+                    painter = painterResource(R.drawable.btn_next),
+                    contentDescription = "다음 버튼",
+                    modifier = Modifier.align(Alignment.Center)
+                        .clickable {
+                            if (checked1.value == true && checked2.value == true && checked3.value == true) {
+                                navController.navigate("SignUpCheckScreen2/${type}/${oAuthEmail}")
+                            } else {
+                                Toast.makeText(context, "필수 동의 항목에 동의해주세요.", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                )
             }
         }
     }

@@ -1,6 +1,9 @@
 package kr.co.uxn.agms_p.ui.components.ready
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,10 +18,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import kr.co.uxn.agms_p.R
 
 @Composable
 fun StabilizationCompleteScreen(navController: NavController) {
@@ -54,29 +59,23 @@ fun StabilizationCompleteScreen(navController: NavController) {
             )
 
 
-            Spacer(modifier = Modifier.size(250.dp))
-
+            Spacer(modifier = Modifier.height(260.dp))
 
             // 다음 버튼
-            Button(
-                onClick = {
-                    navController.navigate("EnterFirstGlucose")
-                },
+            Box(
                 modifier = Modifier
-                    .size(280.dp, 50.dp)
-                    .background(
-                        color = Color(0xFF385DAB),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-//                    .align(Alignment.CenterHorizontally)
+                    .fillMaxWidth()
+                    .height(50.dp)
             ) {
-                Text(
-                    text = "다음",
-                    color = Color.White,
-                    fontSize = 15.sp
+                Image(
+                    painter = painterResource(R.drawable.btn_next),
+                    contentDescription = "다음 버튼",
+                    modifier = Modifier.align(Alignment.Center)
+                        .clickable {
+                            navController.navigate("EnterFirstGlucose")
+                        }
                 )
             }
-
         }
     }
 }

@@ -101,7 +101,7 @@ fun RegisterDeviceScreen(navController: NavController) {
                 textAlign = TextAlign.Center,
                 text = "블루투스 연결을 위해\n기기 번호를 입력해주세요.",
                 fontSize = 25.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Medium
             )
 
             Spacer(modifier = Modifier.size(15.dp))
@@ -158,53 +158,48 @@ fun RegisterDeviceScreen(navController: NavController) {
                 )
             )
 
-            Spacer(modifier = Modifier.size(50.dp))
+            Spacer(modifier = Modifier.height(54.dp))
 
             // 다음 버튼
-            Button(
-                onClick = {
-                    if (deviceNumber.value != "") {
-
-                        try {
-                            coroutineScope.launch(Dispatchers.IO) {
-                                val result = tokenRetrofit.getDeviceMac(deviceNumber.value)
-                                if (result.isSuccessful) {
-                                    val resultBody = result.body()
-                                    if (resultBody != null) {
-                                        if (resultBody.isExists) {
-                                            val mac = resultBody.deviceMac
-                                            withContext(Dispatchers.Main) {
-                                                navController.navigate("ScanDeviceScreen/$mac")
-                                                Toast.makeText(context, "테스트 : 조회된 mac은\n$mac 입니다.", Toast.LENGTH_SHORT).show()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.btn_next),
+                    contentDescription = "다음 버튼",
+                    modifier = Modifier.align(Alignment.Center)
+                        .clickable {
+                            if (deviceNumber.value != "") {
+                                try {
+                                    coroutineScope.launch(Dispatchers.IO) {
+                                        val result = tokenRetrofit.getDeviceMac(deviceNumber.value)
+                                        if (result.isSuccessful) {
+                                            val resultBody = result.body()
+                                            if (resultBody != null) {
+                                                if (resultBody.isExists) {
+                                                    val mac = resultBody.deviceMac
+                                                    withContext(Dispatchers.Main) {
+                                                        navController.navigate("ScanDeviceScreen/$mac")
+                                                        Toast.makeText(context, "테스트 : 조회된 mac은\n$mac 입니다.", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                }
                                             }
-
+                                        } else {
+                                            Log.e("TAG", "API 에러 : ${result.errorBody()}")
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(context, "시리얼 넘버를 다시 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                                            }
                                         }
                                     }
-                                } else {
-                                    Log.e("TAG", "API 에러 : ${result.errorBody()}")
-                                    withContext(Dispatchers.Main) {
-                                        Toast.makeText(context, "시리얼 넘버를 다시 확인해 주세요.", Toast.LENGTH_SHORT).show()
-                                    }
+                                } catch (e: Exception) {
+                                    Log.e("TAG","네트워크 에러 : $e")
                                 }
+                            } else {
+                                Toast.makeText(context, "시리얼 넘버를 입력해 주세요.", Toast.LENGTH_SHORT).show()
                             }
-                        } catch (e: Exception) {
-                            Log.e("TAG","네트워크 에러 : $e")
                         }
-                    } else {
-                        Toast.makeText(context, "시리얼 넘버를 입력해 주세요.", Toast.LENGTH_SHORT).show()
-                    }
-                },
-                modifier = Modifier
-                    .size(280.dp, 50.dp)
-                    .background(
-                        shape = RoundedCornerShape(10.dp),
-                        color = Color(0xFF385DAB)
-                    )
-            ) {
-                Text(
-                    text = "다음",
-                    color = Color.White,
-                    fontSize = 15.sp
                 )
             }
         }

@@ -260,45 +260,50 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
             Button(
                 shape = RoundedCornerShape(10.dp),
                 onClick = {
+                    if (email.value != "" && email.value.contains("@")) {
+                        // 이메일 인증하기 타이머 초기화 코드
+                        timerKey.value++
+                        isTimerRunning.value = true
 
-                    // 이메일 인증하기 타이머 초기화 코드
-                    timerKey.value++
-                    isTimerRunning.value = true
+                        // 인증번호 입력란 초기화
+                        verificationCode.value = ""
 
-                    // 인증번호 입력란 초기화
-                    verificationCode.value = ""
-
-                    // 서버에 이메일 인증하기 요청
-                    CoroutineScope(Dispatchers.IO).launch {
-                        try {
-                            val result = emptyRetrofit.requestVerficationCode(email.value)
-                            if (result.isSuccessful) {
-                                Log.d("TAG", "인증하기 서버 응답: ${result.body()}")
-                                val resultBody = result.body()
-                                if (resultBody != null) {
-                                    if(resultBody.isDuplicated) {
-                                        withContext(Dispatchers.Main) {
-                                            Toast.makeText(context, "이미 가입된 이메일입니다.", Toast.LENGTH_SHORT).show()
+                        // 서버에 이메일 인증하기 요청
+                        CoroutineScope(Dispatchers.IO).launch {
+                            try {
+                                val result = emptyRetrofit.requestVerficationCode(email.value)
+                                if (result.isSuccessful) {
+                                    Log.d("TAG", "인증하기 서버 응답: ${result.body()}")
+                                    val resultBody = result.body()
+                                    if (resultBody != null) {
+                                        if(resultBody.isDuplicated) {
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(context, "이미 가입된 이메일입니다.", Toast.LENGTH_SHORT).show()
+                                            }
+                                        } else { // isDuplicated = false
+                                            // 인증번호 전송
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(context, "인증번호가 전송되었습니다.\n메일을 확인해주세요.", Toast.LENGTH_SHORT).show()
+                                                // email_code_id 저장
+                                                emailCodeId.value = resultBody.emailCodeId
+                                            }
+                                            Log.e("TAG", "emailCodeId : ${emailCodeId.value}")
                                         }
-                                    } else { // isDuplicated = false
-                                        // 인증번호 전송
-                                        withContext(Dispatchers.Main) {
-                                            Toast.makeText(context, "인증번호가 전송되었습니다.\n메일을 확인해주세요.", Toast.LENGTH_SHORT).show()
-                                            // email_code_id 저장
-                                            emailCodeId.value = resultBody.emailCodeId
-                                        }
-                                        Log.e("TAG", "emailCodeId : ${emailCodeId.value}")
+                                    } else {
+                                        Log.e("TAG", "서버 응답이 null 입니다.")
                                     }
                                 } else {
-                                    Log.e("TAG", "서버 응답이 null 입니다.")
+                                    Log.e("TAG", "API 실패: ${result.errorBody()?.string()}")
                                 }
-                            } else {
-                                Log.e("TAG", "API 실패: ${result.errorBody()?.string()}")
+                            } catch (e: Exception) {
+                                Log.e("TAG", "네트워크 오류 발생: ${e.message}")
                             }
-                        } catch (e: Exception) {
-                            Log.e("TAG", "네트워크 오류 발생: ${e.message}")
                         }
+
+                    } else {
+                        Toast.makeText(context, "올바른 이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
                     }
+
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF385DAB) // 배경색 설정
@@ -573,38 +578,36 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
             )
 
             // 다음 버튼
-            Spacer(modifier = Modifier.size(80.dp))
-            Button(
-                onClick = {
-                    if (email.value.isEmpty()) {
-                        Toast.makeText(context, "이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
-                    } else if (pwd1.value.isEmpty()) {
-                        Toast.makeText(context, "비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show()
-                    } else if (pwd2.value.isEmpty()) {
-                        Toast.makeText(context, "비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show()
-                    } else if (pwd1.value != pwd2.value) {
-                        Toast.makeText(context, "비밀번호가 일치하지 않습니다.\n다시 시도해보세요.", Toast.LENGTH_SHORT).show()
-                    } else if (!isEmailVerified.value) {
-                        Toast.makeText(context, "이메일 인증을 해주세요.", Toast.LENGTH_SHORT).show()
-                    } else {
-                        // 인증 성공시
-                        navController.navigate("SignUpInfoScreen3/${email.value}/${pwd1.value}")
-                    }
-                },
+            Spacer(modifier = Modifier.height(78.dp))
+
+            Box(
                 modifier = Modifier
-                    .size(280.dp, 50.dp)
-                    .background(
-                        color = Color(0xFF385DAB),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                    .align(Alignment.CenterHorizontally),
+                    .fillMaxWidth()
+                    .height(50.dp)
             ) {
-                Text(
-                    text = "다음",
-                    color = Color.White,
-                    fontSize = 15.sp
+                Image(
+                    painter = painterResource(R.drawable.btn_next),
+                    contentDescription = "다음 버튼",
+                    modifier = Modifier.align(Alignment.Center)
+                        .clickable {
+                            if (email.value.isEmpty()) {
+                                Toast.makeText(context, "이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                            } else if (pwd1.value.isEmpty()) {
+                                Toast.makeText(context, "비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                            } else if (pwd2.value.isEmpty()) {
+                                Toast.makeText(context, "비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                            } else if (pwd1.value != pwd2.value) {
+                                Toast.makeText(context, "비밀번호가 일치하지 않습니다.\n다시 시도해보세요.", Toast.LENGTH_SHORT).show()
+                            } else if (!isEmailVerified.value) {
+                                Toast.makeText(context, "이메일 인증을 해주세요.", Toast.LENGTH_SHORT).show()
+                            } else {
+                                // 인증 성공시
+                                navController.navigate("SignUpInfoScreen3/${email.value}/${pwd1.value}")
+                            }
+                        }
                 )
             }
+
         }
     }
 }

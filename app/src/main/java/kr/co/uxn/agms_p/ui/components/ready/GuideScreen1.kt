@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -101,28 +102,23 @@ fun GuideScreen1(navController: NavController) {
                 color = Color.Gray
             )
 
-            Spacer(modifier = Modifier.size(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // 다음 버튼
-            Button(
-                onClick = {
-                    navController.navigate("GuideScreen2")
-                },
+            Box(
                 modifier = Modifier
-                    .size(280.dp, 50.dp)
-                    .background(
-                        color = Color(0xFF385DAB),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                    .align(Alignment.CenterHorizontally)
+                    .fillMaxWidth()
+                    .height(50.dp)
             ) {
-                Text(
-                    text = "다음",
-                    color = Color.White,
-                    fontSize = 15.sp
+                Image(
+                    painter = painterResource(R.drawable.btn_next),
+                    contentDescription = "다음 버튼",
+                    modifier = Modifier.align(Alignment.Center)
+                        .clickable {
+                            navController.navigate("GuideScreen2")
+                        }
                 )
             }
         }
     }
-
 }

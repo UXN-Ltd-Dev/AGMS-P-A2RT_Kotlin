@@ -200,8 +200,9 @@ class MainActivity : ComponentActivity() {
                 EnterFirstGlucose(navController)
             }
 
-            composable("MainScreen") { backStackEntry ->
-                MainScreen(navController, homeViewModel, bleViewModel)
+            composable("MainScreen/{startIndex}") { backStackEntry ->
+                val startIndex = backStackEntry.arguments?.getString("startIndex")?.toInt() ?: 0
+                MainScreen(navController, homeViewModel, bleViewModel, startIndex)
             }
 
             composable("GlucoseRegisterScreen") { backStackEntry ->

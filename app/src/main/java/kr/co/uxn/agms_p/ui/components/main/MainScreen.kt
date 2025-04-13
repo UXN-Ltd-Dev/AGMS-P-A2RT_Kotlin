@@ -45,7 +45,7 @@ import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleViewModel: BleViewModel) {
+fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleViewModel: BleViewModel, startIndex: Int= 0) {
     val context = LocalContext.current
 
     val navItemList = listOf(
@@ -54,7 +54,7 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
         NavItem(icon = painterResource(id = R.drawable.setting_icon), selectedIcon = painterResource(id = R.drawable.settings_selected), label = "설정")
     )
 
-    var selectedIndex by remember { mutableStateOf(0) }
+    var selectedIndex by remember { mutableStateOf(startIndex) }
 
     val bleState by bleViewModel.bleState.collectAsState()
 

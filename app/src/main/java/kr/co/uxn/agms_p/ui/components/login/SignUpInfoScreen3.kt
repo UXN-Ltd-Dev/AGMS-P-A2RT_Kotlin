@@ -3,6 +3,7 @@ package kr.co.uxn.agms_p.ui.components.login
 import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -44,6 +45,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -57,6 +59,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.emptyRetrofit
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignInNormal
@@ -558,7 +561,8 @@ fun SignUpInfoScreen3(
                     )
                 }
             }
-            Spacer(modifier = Modifier.size(100.dp))
+
+            Spacer(modifier = Modifier.height(93.dp))
 
             // 개인정보 처리방침 및..
             Row(
@@ -584,236 +588,227 @@ fun SignUpInfoScreen3(
                 )
             }
 
-            Spacer(modifier = Modifier.size(21.dp))
+            Spacer(modifier = Modifier.height(21.dp))
 
             // 확인 버튼
-            Button(
-                onClick = {
-                    // TODO : int로 변환해야할 체중, 신장, 나이는 string값이 포함되면 runtimeError가 발생한다.
-                    // TODO : Picker로 바꿔야 하나.?
-                    if (sex.value == "") {
-                        Toast.makeText(context, "성별을 선택해 주세요.", Toast.LENGTH_SHORT).show()
-                    } else if (age.value == "") {
-                        Toast.makeText(context, "나이를 입력해 주세요.", Toast.LENGTH_SHORT).show()
-                    } else if (height.value == "") {
-                        Toast.makeText(context, "신장을 입력해 주세요.", Toast.LENGTH_SHORT).show()
-                    } else if (weight.value == "") {
-                        Toast.makeText(context, "체중을 입력해 주세요.", Toast.LENGTH_SHORT).show()
-                    } else if (diabetesType.value == "") {
-                        Toast.makeText(context, "당뇨 정보를 입력해 주세요.", Toast.LENGTH_SHORT).show()
-                    } else if (checked.value == false) {
-                        Toast.makeText(context, "개인정보 처리방침 및 이용약관에 동의해주세요.", Toast.LENGTH_SHORT)
-                            .show()
-                    } else {
-                        // TODO : 서버에 가입정보 전달
-                        // TODO : 가입에 성공하면 로그인 API로 로그인 시도
-                        CoroutineScope(Dispatchers.IO).launch {
-                            val diabetesTypeCode: Int =
-                                when (diabetesType.value) {
-                                    "제1형 당뇨병" -> 1701
-                                    "제2형 당뇨병" -> 1702
-                                    "임신성 당뇨병" -> 1703
-                                    "당뇨 전단계" -> 1704
-                                    "LADA" -> 1705
-                                    "정상" -> 1706
-                                    else -> throw IllegalArgumentException("Unknown diabetes type")
-                                }
-
-                            val sexCode: Int =
-                                when (sex.value) {
-                                    "남성" -> 1601
-                                    "여성" -> 1602
-                                    "선택 안함" -> 1603
-                                    else -> throw IllegalArgumentException("Unknown diabetes type")
-                                }
-
-                            val requestSignUpNormal = RequestSignUpNormal(
-                                email = email,
-                                pwd = pwd,
-                                name = name.value,
-                                sex = sexCode,
-                                age = age.value.toInt(),
-                                height = height.value.toInt(),
-                                weight = weight.value.toInt(),
-                                diabetesType = diabetesTypeCode
-                            )
-
-                            val requestSignUpOauthDetail = RequestSignUpOauthDetail(
-                                userId = loginViewModel.userIdTest,
-                                email = email,
-                                name = name.value,
-                                sex = sexCode,
-                                age = age.value.toInt(),
-                                height = height.value.toInt(),
-                                weight = weight.value.toInt(),
-                                diabetesType = diabetesTypeCode
-                            )
-
-                            // 이메일 인증 받았다는 전제하에
-                            // 서버에 회원가입 신청
-
-                            Log.e("TEST", "loginType = ${loginViewModel.signUpType}")
-                            if (loginViewModel.signUpType == 1801 || loginViewModel.signUpType == 1802) {
-                                // 간편로그인 회원가입 및 로그인
-                                try {
-                                    // oAuth 상세 정보입력
-                                    val result =
-                                        tokenRetrofit.oAuthSaveDetailInfo(requestSignUpOauthDetail)
-                                    withContext(Dispatchers.Main) {
-                                        Log.d(
-                                            "TEST",
-                                            "oAuthSaveDetailInfo requestDto : ${requestSignUpOauthDetail.toString()}"
-                                        )
-                                    }
-                                    if (result.isSuccessful) {
-                                        val resultBody = result.body()
-                                        if (resultBody != null) {
-                                            if (resultBody.isSuccess) {
-
-                                                // 토큰 저장 테스트
-                                                val verifyAccessToken =
-                                                    DataStoreManager.getAccessToken()
-                                                val verifyRefreshToken =
-                                                    DataStoreManager.getRefreshToken()
-                                                withContext(Dispatchers.Main) {
-                                                    Log.d(
-                                                        "TEST",
-                                                        "oAuthSaveDetailInfo responseBody: $resultBody"
-                                                    )
-
-                                                    Log.d(
-                                                        "TEST",
-                                                        "oAuthSaveDetailInfo responseBody: $resultBody"
-                                                    )
-                                                    Log.d(
-                                                        "TEST",
-                                                        "TokenManager | accessToken : $verifyAccessToken\nrefreshToken : $verifyRefreshToken"
-                                                    )
-                                                    navController.navigate("SettingPermissionScreen")
-                                                }
-                                            } else {
-                                                withContext(Dispatchers.Main) {
-                                                    Log.d(
-                                                        "TEST", "디테일 정보 입력 실패"
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        Log.e("TAG", "API 실패: ${result.errorBody()?.string()}")
-                                    }
-                                } catch (e: Exception) {
-                                    Log.e("TAG", "네트워크 오류 발생: ${e.message}")
-                                }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.btn_confirm),
+                    contentDescription = "확인 버튼",
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .clickable {
+                            // TODO : int로 변환해야할 체중, 신장, 나이는 string값이 포함되면 runtimeError가 발생한다.
+                            // TODO : Picker로 바꿔야 하나.?
+                            if (sex.value == "") {
+                                Toast.makeText(context, "성별을 선택해 주세요.", Toast.LENGTH_SHORT).show()
+                            } else if (age.value == "") {
+                                Toast.makeText(context, "나이를 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                            } else if (height.value == "") {
+                                Toast.makeText(context, "신장을 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                            } else if (weight.value == "") {
+                                Toast.makeText(context, "체중을 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                            } else if (diabetesType.value == "") {
+                                Toast.makeText(context, "당뇨 정보를 입력해 주세요.", Toast.LENGTH_SHORT)
+                                    .show()
+                            } else if (checked.value == false) {
+                                Toast.makeText(
+                                    context,
+                                    "개인정보 처리방침 및 이용약관에 동의해주세요.",
+                                    Toast.LENGTH_SHORT
+                                )
+                                    .show()
                             } else {
-                                // 일반
-                                try {
-                                    // 회원가입
-                                    val result = emptyRetrofit.uxnSignUp(requestSignUpNormal)
-                                    if (result.isSuccessful) {
-                                        Log.d("TAG", "서버 응답: ${result.body()}")
-                                        val resultBody = result.body()
-                                        if (resultBody != null) {
-                                            if (!resultBody.isJoined) {
-                                                Log.d("TAG", "회원 가입 성공")
-                                                // TODO: 로그인 시도
-                                                val login =
-                                                    emptyRetrofit.uxnLogin(
-                                                        signInInfo = RequestSignInNormal(
-                                                            email,
-                                                            pwd
-                                                        )
-                                                    )
-                                                if (login.isSuccessful) {
-                                                    val loginResult = login.body()
-                                                    if (loginResult != null) {
-                                                        Log.d("TAG", "로그인 성공")
+                                // TODO : 서버에 가입정보 전달
+                                // TODO : 가입에 성공하면 로그인 API로 로그인 시도
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    val diabetesTypeCode: Int =
+                                        when (diabetesType.value) {
+                                            "제1형 당뇨병" -> 1701
+                                            "제2형 당뇨병" -> 1702
+                                            "임신성 당뇨병" -> 1703
+                                            "당뇨 전단계" -> 1704
+                                            "LADA" -> 1705
+                                            "정상" -> 1706
+                                            else -> throw IllegalArgumentException("Unknown diabetes type")
+                                        }
 
-                                                        // 토큰 저장
-                                                        DataStoreManager.deleteAccessToken()
-                                                        DataStoreManager.saveAccessToken(loginResult.accessToken)
-                                                        DataStoreManager.saveRefreshToken(loginResult.refreshToken)
+                                    val sexCode: Int =
+                                        when (sex.value) {
+                                            "남성" -> 1601
+                                            "여성" -> 1602
+                                            "선택 안함" -> 1603
+                                            else -> throw IllegalArgumentException("Unknown diabetes type")
+                                        }
 
-                                                        // userId 저장
-                                                        DataStoreManager.deleteUserId()
-                                                        DataStoreManager.saveUserId(loginResult.userId)
+                                    val requestSignUpNormal = RequestSignUpNormal(
+                                        email = email,
+                                        pwd = pwd,
+                                        name = name.value,
+                                        sex = sexCode,
+                                        age = age.value.toInt(),
+                                        height = height.value.toInt(),
+                                        weight = weight.value.toInt(),
+                                        diabetesType = diabetesTypeCode
+                                    )
 
-                                                        // mac 정리
-                                                        DataStoreManager.deleteDeviceMac()
+                                    val requestSignUpOauthDetail = RequestSignUpOauthDetail(
+                                        userId = loginViewModel.userIdTest,
+                                        email = email,
+                                        name = name.value,
+                                        sex = sexCode,
+                                        age = age.value.toInt(),
+                                        height = height.value.toInt(),
+                                        weight = weight.value.toInt(),
+                                        diabetesType = diabetesTypeCode
+                                    )
 
-                                                        // 화면 이동
+                                    // 이메일 인증 받았다는 전제하에
+                                    // 서버에 회원가입 신청
+
+                                    Log.e("TEST", "loginType = ${loginViewModel.signUpType}")
+                                    if (loginViewModel.signUpType == 1801 || loginViewModel.signUpType == 1802) {
+                                        // 간편로그인 회원가입 및 로그인
+                                        try {
+                                            // oAuth 상세 정보입력
+                                            val result =
+                                                tokenRetrofit.oAuthSaveDetailInfo(
+                                                    requestSignUpOauthDetail
+                                                )
+                                            withContext(Dispatchers.Main) {
+                                                Log.d(
+                                                    "TEST",
+                                                    "oAuthSaveDetailInfo requestDto : ${requestSignUpOauthDetail.toString()}"
+                                                )
+                                            }
+                                            if (result.isSuccessful) {
+                                                val resultBody = result.body()
+                                                if (resultBody != null) {
+                                                    if (resultBody.isSuccess) {
+
+                                                        // 토큰 저장 테스트
+                                                        val verifyAccessToken =
+                                                            DataStoreManager.getAccessToken()
+                                                        val verifyRefreshToken =
+                                                            DataStoreManager.getRefreshToken()
                                                         withContext(Dispatchers.Main) {
                                                             Log.d(
-                                                                "DTO",
-                                                                requestSignUpNormal.toString()
+                                                                "TEST",
+                                                                "oAuthSaveDetailInfo responseBody: $resultBody"
+                                                            )
+
+                                                            Log.d(
+                                                                "TEST",
+                                                                "oAuthSaveDetailInfo responseBody: $resultBody"
+                                                            )
+                                                            Log.d(
+                                                                "TEST",
+                                                                "TokenManager | accessToken : $verifyAccessToken\nrefreshToken : $verifyRefreshToken"
                                                             )
                                                             navController.navigate("SettingPermissionScreen")
                                                         }
-                                                    }
-                                                } else {
-                                                    Log.d("TAG", "로그인 실패")
-                                                    withContext(Dispatchers.Main) {
-                                                        Toast.makeText(
-                                                            context,
-                                                            "네트워크 연결 오류, 잠시 후 시도해주세요.",
-                                                            Toast.LENGTH_SHORT
-                                                        ).show()
+                                                    } else {
+                                                        withContext(Dispatchers.Main) {
+                                                            Log.d(
+                                                                "TEST", "디테일 정보 입력 실패"
+                                                            )
+                                                        }
                                                     }
                                                 }
                                             } else {
-                                                Log.d("TAG", "회원 가입 실패")
+                                                Log.e(
+                                                    "TAG",
+                                                    "API 실패: ${result.errorBody()?.string()}"
+                                                )
                                             }
+                                        } catch (e: Exception) {
+                                            Log.e("TAG", "네트워크 오류 발생: ${e.message}")
                                         }
                                     } else {
-                                        Log.e("TAG", "API 실패: ${result.errorBody()?.string()}")
+                                        // 일반
+                                        try {
+                                            // 회원가입
+                                            val result =
+                                                emptyRetrofit.uxnSignUp(requestSignUpNormal)
+                                            if (result.isSuccessful) {
+                                                Log.d("TAG", "서버 응답: ${result.body()}")
+                                                val resultBody = result.body()
+                                                if (resultBody != null) {
+                                                    if (!resultBody.isJoined) {
+                                                        Log.d("TAG", "회원 가입 성공")
+                                                        // TODO: 로그인 시도
+                                                        val login =
+                                                            emptyRetrofit.uxnLogin(
+                                                                signInInfo = RequestSignInNormal(
+                                                                    email,
+                                                                    pwd
+                                                                )
+                                                            )
+                                                        if (login.isSuccessful) {
+                                                            val loginResult = login.body()
+                                                            if (loginResult != null) {
+                                                                Log.d("TAG", "로그인 성공")
+
+                                                                // 토큰 저장
+                                                                DataStoreManager.deleteAccessToken()
+                                                                DataStoreManager.saveAccessToken(
+                                                                    loginResult.accessToken
+                                                                )
+                                                                DataStoreManager.saveRefreshToken(
+                                                                    loginResult.refreshToken
+                                                                )
+
+                                                                // userId 저장
+                                                                DataStoreManager.deleteUserId()
+                                                                DataStoreManager.saveUserId(
+                                                                    loginResult.userId
+                                                                )
+
+                                                                // mac 정리
+                                                                DataStoreManager.deleteDeviceMac()
+
+                                                                // 화면 이동
+                                                                withContext(Dispatchers.Main) {
+                                                                    Log.d(
+                                                                        "DTO",
+                                                                        requestSignUpNormal.toString()
+                                                                    )
+                                                                    navController.navigate("SettingPermissionScreen")
+                                                                }
+                                                            }
+                                                        } else {
+                                                            Log.d("TAG", "로그인 실패")
+                                                            withContext(Dispatchers.Main) {
+                                                                Toast.makeText(
+                                                                    context,
+                                                                    "네트워크 연결 오류, 잠시 후 시도해주세요.",
+                                                                    Toast.LENGTH_SHORT
+                                                                ).show()
+                                                            }
+                                                        }
+                                                    } else {
+                                                        Log.d("TAG", "회원 가입 실패")
+                                                    }
+                                                }
+                                            } else {
+                                                Log.e(
+                                                    "TAG",
+                                                    "API 실패: ${result.errorBody()?.string()}"
+                                                )
+                                            }
+                                        } catch (e: Exception) {
+                                            Log.e("TAG", "네트워크 오류 발생: ${e.message}")
+                                        }
                                     }
-                                } catch (e: Exception) {
-                                    Log.e("TAG", "네트워크 오류 발생: ${e.message}")
                                 }
                             }
                         }
-                    }
-                },
-                modifier = Modifier
-                    .size(280.dp, 50.dp)
-                    .background(
-                        color = Color(0xFF385DAB),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                    .align(Alignment.CenterHorizontally)
-            ) {
-                Text(
-                    text = "확인",
-                    color = Color.White,
-                    fontSize = 15.sp
                 )
             }
         }
     }
 }
-
-
-// 로그인이 성공적으로 되었을 때
-//                                            if (loginResult != null) {
-//                                                if (loginResult.isJoined) {
-//                                                    val sharedPreferences = context.getSharedPreferences("UserInfo", MODE_PRIVATE)
-//                                                    sharedPreferences.edit() {
-//                                                        putString("name", loginResult.name)
-//                                                        putInt("uuid", loginResult.uuid)
-//                                                        putString(
-//                                                            "accessToken",
-//                                                            loginResult.accessToken
-//                                                        )
-//                                                        putString(
-//                                                            "refreshToken",
-//                                                            loginResult.refreshToken
-//                                                        )
-//
-//                                                    }
-//                                                    val getAllSharedPreferences = sharedPreferences.all
-//                                                    Log.e("TSET", "SharedPrference에 유저 로그인정보 입력 완료, 담긴 데이터는 : ${getAllSharedPreferences.toString()}")
-//
-//                                                    // 세팅화면으로 이동
-//                                                    navController.navigate("SettingPermissionScreen")
-//                                                }
-//                                            }

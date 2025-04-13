@@ -7,14 +7,19 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -35,12 +40,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.api.RetrofitClient.emptyRetrofit
+import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignInNormal
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignUpNormal
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignUpOauthDetail
+import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ui.viewmodel.PermissionViewModel
 
 @Composable
-fun SettingPermissionScreen(navController: NavController, viewModel: PermissionViewModel, activity: Activity) {
+fun SettingPermissionScreen(
+    navController: NavController,
+    viewModel: PermissionViewModel,
+    activity: Activity
+) {
 //    var timerWhenScan: Timer? = null
     val context = LocalContext.current
     val activityContext = context as Activity
@@ -93,7 +112,8 @@ fun SettingPermissionScreen(navController: NavController, viewModel: PermissionV
 
     Surface {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
                 .padding(horizontal = 40.dp),
             horizontalAlignment = Alignment.Start
         ) {
@@ -122,7 +142,7 @@ fun SettingPermissionScreen(navController: NavController, viewModel: PermissionV
                     contentDescription = "알림 권한"
                 )
                 Spacer(modifier = Modifier.width(15.dp))
-                Column(){
+                Column() {
                     Text(
                         text = "알림(필수)"
                     )
@@ -145,7 +165,7 @@ fun SettingPermissionScreen(navController: NavController, viewModel: PermissionV
                     contentDescription = "근처 기기 권한"
                 )
                 Spacer(modifier = Modifier.width(15.dp))
-                Column(){
+                Column() {
                     Text(
                         text = "근처 기기(필수)"
                     )
@@ -168,7 +188,7 @@ fun SettingPermissionScreen(navController: NavController, viewModel: PermissionV
                     contentDescription = "배터리 권한"
                 )
                 Spacer(modifier = Modifier.width(15.dp))
-                Column(){
+                Column() {
                     Text(
                         text = "배터리 사용화 최적화 중지(필수)"
                     )
@@ -183,30 +203,54 @@ fun SettingPermissionScreen(navController: NavController, viewModel: PermissionV
             Spacer(modifier = Modifier.size(140.dp))
 
             // 확인 버튼
-            Button(
-                onClick = {
-                    Log.e("PERMISSION", "isGrant : ${isGrant}")
-                    if (isGrant) {
-                        navController.navigate("GuideScreen1")
-                    } else {
-                        openAppSettings(activity)
-                        viewModel.changeGrantState(true)
-                    }
-                },
+            Box(
                 modifier = Modifier
-                    .size(280.dp, 50.dp)
-                    .background(
-                        color = Color(0xFF385DAB),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                    .align(Alignment.CenterHorizontally)
+                    .fillMaxWidth()
+                    .height(50.dp)
             ) {
-                Text(
-                    text = "확인",
-                    color = Color.White,
-                    fontSize = 15.sp
+                Image(
+                    painter = painterResource(R.drawable.btn_confirm),
+                    contentDescription = "확인 버튼",
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .clickable {
+                            Log.e("PERMISSION", "isGrant : ${isGrant}")
+                            if (isGrant) {
+                                navController.navigate("GuideScreen1")
+                            } else {
+                                openAppSettings(activity)
+                                viewModel.changeGrantState(true)
+                            }
+                        }
                 )
             }
+
+
+
+//            Button(
+//                onClick = {
+//                    Log.e("PERMISSION", "isGrant : ${isGrant}")
+//                    if (isGrant) {
+//                        navController.navigate("GuideScreen1")
+//                    } else {
+//                        openAppSettings(activity)
+//                        viewModel.changeGrantState(true)
+//                    }
+//                },
+//                modifier = Modifier
+//                    .size(280.dp, 50.dp)
+//                    .background(
+//                        color = Color(0xFF385DAB),
+//                        shape = RoundedCornerShape(10.dp)
+//                    )
+//                    .align(Alignment.CenterHorizontally)
+//            ) {
+//                Text(
+//                    text = "확인",
+//                    color = Color.White,
+//                    fontSize = 15.sp
+//                )
+//            }
         }
     }
 }
