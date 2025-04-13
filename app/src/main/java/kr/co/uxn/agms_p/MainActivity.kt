@@ -69,13 +69,7 @@ class MainActivity : ComponentActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 bleViewModel.events.collect { event ->
                     // 안전하게 수집됨! onStop 되면 자동 중단
-                    val device = bleViewModel.device.value
-                    val userId = DataStoreManager.getUserId().first()
-                    Log.e("TEST", "불러온 userId : $userId")
-                    val serviceIntent = Intent(this@MainActivity, AlwaysService::class.java).apply {
-                        putExtra("device", device)
-                        putExtra("userId", userId)
-                    }
+                    val serviceIntent = Intent(this@MainActivity, AlwaysService::class.java)
                     if (event == "START_SERVICE") {
                         ContextCompat.startForegroundService(this@MainActivity, serviceIntent)
                         Log.e("SERVICE", "메인액티비티 startForegroundService call!")

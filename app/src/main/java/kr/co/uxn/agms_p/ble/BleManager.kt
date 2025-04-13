@@ -79,6 +79,9 @@ class BleManager(
     lateinit var bufferWeo2: String
 
 
+    var mGatt: BluetoothGatt? = null
+
+
 //    lateinit var bluetoothDevice: BluetoothDevice
 //    lateinit var bluetoothManager: BluetoothManager
 //    lateinit var bluetoothAdpater: BluetoothAdapter
@@ -279,10 +282,10 @@ class BleManager(
                     Toast.LENGTH_SHORT
                 ).show()
 
-                val deviceName: String = gatt.device.name
-                Log.d(TEST, "디바이스네임 : $deviceName")
-                val deviceAddress: String = gatt.device.address
-                Log.d(TEST, "디바이스주소 : $deviceAddress")
+//                val deviceName: String = gatt.device.name
+//                Log.d(TEST, "디바이스네임 : $deviceName")
+//                val deviceAddress: String = gatt.device.address
+//                Log.d(TEST, "디바이스주소 : $deviceAddress")
 //                    viewModel.updateDeviceName(deviceName)
 //                viewModel.updateDeviceAddress(deviceAddress)
 
@@ -431,6 +434,7 @@ class BleManager(
             bluetoothAdpater.getRemoteDevice(address)
         }
 
+//        mGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             bluetoothDevice.connectGatt(context, false, this, BluetoothDevice.TRANSPORT_LE)
         } else {
@@ -504,9 +508,6 @@ class BleManager(
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun receiveDataAndInsert(data: ByteArray, deviceName: String?): Int {
-        // 카운트
-//        Log.d(TEST, "${count} 번째 불러온 데이터")
-//        count++
 
         // 리스트 생성
         val saveData: MutableList<UserValue> = mutableListOf<UserValue>()
@@ -637,16 +638,6 @@ class BleManager(
         Log.d(TEST, "temperature : $temperature")
 
         // weo1, weo2
-
-//        val we1a = data[18]
-//        val we1b = data[19]
-//        val we1c = data[20]
-//        val we2a = data[21]
-//        val we2b = data[22]
-//        val we2c = data[23]
-//
-//        val weo1 = convertToCurrentDataDouble(we1a, we1b, we1c)
-//        val weo2 = convertToCurrentDataDouble(we2a, we2b, we2c)
 
         val findBufferWeoCount: Int = (data.size - 18) / 6
         Log.d(TEST, "findBufferWeoCount : $findBufferWeoCount")

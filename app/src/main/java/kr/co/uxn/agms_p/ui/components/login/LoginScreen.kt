@@ -264,6 +264,9 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                                 DataStoreManager.deleteUserId()
                                                 DataStoreManager.saveUserId(loginResult.userId)
 
+                                                // mac 정리
+                                                DataStoreManager.deleteDeviceMac()
+
                                                  // 세팅화면으로 이동
                                                  withContext(Dispatchers.Main) {
                                                      navController.navigate("SettingPermissionScreen")

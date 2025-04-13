@@ -738,6 +738,9 @@ fun SignUpInfoScreen3(
                                                         DataStoreManager.deleteUserId()
                                                         DataStoreManager.saveUserId(loginResult.userId)
 
+                                                        // mac 정리
+                                                        DataStoreManager.deleteDeviceMac()
+
                                                         // 화면 이동
                                                         withContext(Dispatchers.Main) {
                                                             Log.d(

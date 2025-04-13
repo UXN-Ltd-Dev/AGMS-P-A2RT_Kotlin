@@ -161,6 +161,11 @@ dependencies {
     // vico
 //    implementation("com.patrykandpatrick.vico:compose:2.1.2")
     // vico for m3
-    implementation("com.patrykandpatrick.vico:compose-m3:2.1.2")
+//    implementation("com.patrykandpatrick.vico:compose-m3:2.1.2")
 
+    val vicoVersion = "1.11.1"
+    implementation("com.patrykandpatrick.vico:core:$vicoVersion")
+    implementation("com.patrykandpatrick.vico:compose:$vicoVersion")
+    implementation("com.patrykandpatrick.vico:compose-m2:$vicoVersion")
+    implementation("com.patrykandpatrick.vico:compose-m3:$vicoVersion")
 }

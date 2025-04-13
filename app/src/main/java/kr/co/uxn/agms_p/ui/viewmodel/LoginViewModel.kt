@@ -193,6 +193,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                             DataStoreManager.saveAccessToken(accessToken)
                             DataStoreManager.saveRefreshToken(refreshToken)
                             DataStoreManager.saveUserId(userId)
+                            // mac 정리
+                            DataStoreManager.deleteDeviceMac()
                             // 토큰 저장 테스트
                             val verifyAccessToken = DataStoreManager.getAccessToken().first()
                             val verifyRefreshToken = DataStoreManager.getRefreshToken().first()
@@ -216,6 +218,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                             DataStoreManager.saveAccessToken(accessToken)
                             DataStoreManager.saveRefreshToken(refreshToken)
                             DataStoreManager.saveUserId(userId)
+                            // mac 정리
+                            DataStoreManager.deleteDeviceMac()
                             // 토큰 저장 테스트
                             val verifyAccessToken = DataStoreManager.getAccessToken().first()
                             val verifyRefreshToken = DataStoreManager.getRefreshToken().first()

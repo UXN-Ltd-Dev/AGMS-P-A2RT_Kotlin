@@ -11,6 +11,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kr.co.uxn.agms_p.ble.Device
 
 object DataStoreManager {
     private lateinit var dataStore: DataStore<Preferences>
@@ -21,6 +22,7 @@ object DataStoreManager {
     private val START_TIME = longPreferencesKey("start_time")
     private val MEASUREMENT_TIME = longPreferencesKey("measurement_time")
     private val END_TIME = longPreferencesKey("end_time")
+    private val DEVICE_MAC = stringPreferencesKey("device_mac")
 
     fun init(context: Context) {
         dataStore = PreferenceDataStoreFactory.create {
@@ -52,6 +54,12 @@ object DataStoreManager {
         }
     }
 
+    fun getDeviceMac(): Flow<String?> {
+        return dataStore.data.map { prefs ->
+            prefs[DEVICE_MAC]
+        }
+    }
+
     fun getStartTime(): Flow<Long?> {
         return dataStore.data.map { prefs ->
             prefs[START_TIME]
@@ -79,6 +87,12 @@ object DataStoreManager {
     suspend fun saveUserId(userId: Int) {
         dataStore.edit { prefs ->
             prefs[USER_ID] = userId
+        }
+    }
+
+    suspend fun saveDeviceMac(deviceMac: String) {
+        dataStore.edit { prefs ->
+            prefs[DEVICE_MAC] = deviceMac
         }
     }
 
@@ -115,6 +129,12 @@ object DataStoreManager {
     suspend fun deleteUserId() {
         dataStore.edit { prefs ->
             prefs.remove(USER_ID)
+        }
+    }
+
+    suspend fun deleteDeviceMac() {
+        dataStore.edit { prefs ->
+            prefs.remove(DEVICE_MAC)
         }
     }
 

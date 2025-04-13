@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,9 +44,13 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.Device
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 
@@ -53,6 +58,7 @@ import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, mac: String) {
     // 로티 애니메이션
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.scanning_lottie))
+    val coroutineScope = rememberCoroutineScope()
     val progress by animateLottieCompositionAsState(
         composition,
         iterations = LottieConstants.IterateForever,
@@ -73,10 +79,16 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
             val rssi = result?.rssi
             Log.d("SCAN", "mac : ${deviceInfo?.address}, id : ${deviceInfo?.name}, rssi : ${rssi}")
             bleViewModel.updateIsFindDevice(true)
-            bleViewModel.insertDevice(Device(mac, deviceInfo))
+            DataStoreManager.getUserId()
+//            bleViewModel.insertDevice(Device(mac, deviceInfo))
+            coroutineScope.launch(Dispatchers.IO) {
+                DataStoreManager.deleteDeviceMac()
+                DataStoreManager.saveDeviceMac(mac)
+                val verifiedDeviceMac = DataStoreManager.getDeviceMac().first()
+                Log.e("TEST", "스캔화면에서 저장한 datastore 맥 주소 : ${verifiedDeviceMac}")
+            }
             // 성공시, 안정화 화면으로 이동
             navController.navigate("StabilizationScreen")
-            // TODO : 스캔 종료 로직 필요
         }
 
         override fun onBatchScanResults(results: MutableList<ScanResult>?) {
@@ -89,14 +101,10 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
             super.onScanFailed(errorCode)
             Log.d("SCAN", "onScanFailed..  errorCode : $errorCode")
 
-            // 실패시, 실패 화면으로 이동
-            navController.navigate("ScanFailScreen")
-            // TODO : 스캔 종료 로직 필요
-//                bluetoothAdapter.bluetoothLeScanner.stopScan(this)
-
         }
     }
 
+    // teraRups : 스캔 종료 로직 및, 스캔실패 화면으로 이동
     suspend fun teraRups() {
 //        delay(1000 * 60 * 1) // 1분
         delay(1000 * 60 * 1 / 60 * 10) // 10초
@@ -148,6 +156,7 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
             }
         }
 
+        // 스캔 종료 로직
         launch {
             teraRups()
         }

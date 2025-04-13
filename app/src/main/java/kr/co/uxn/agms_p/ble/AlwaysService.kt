@@ -6,29 +6,36 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothManager
+import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
 import android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.ListenableWorker.Result
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kr.co.uxn.agms_p.AlwaysApplication
 import kr.co.uxn.agms_p.MainActivity
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestDataValue
 import kr.co.uxn.agms_p.api.token.DataStoreManager
+import kr.co.uxn.agms_p.ble.BleManager.Companion.TEST
 import kr.co.uxn.agms_p.room.AppDatabase
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -48,7 +55,9 @@ class AlwaysService() : Service() {
     }
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
+    private var isDuplicatedJob: Job? = null
 
+    private val localBinder = LocalBinder()
 
     private var timerForNoti: Timer? = null
     private var timerTaskForNoti: TimerTask? = null
@@ -57,10 +66,8 @@ class AlwaysService() : Service() {
     val NOTI_CHANNEL_NAME: String = "FOREGROUND"
     val NOTI_ID: Int = 94
 
+//    var manager: NotificationManager? = null
 
-    override fun onBind(p0: Intent?): IBinder? {
-        return null
-    }
 
     override fun onCreate() {
         super.onCreate()
@@ -82,19 +89,30 @@ class AlwaysService() : Service() {
         serviceJob.cancel()
     }
 
+    override fun onBind(intent: Intent?): IBinder? {
+        return localBinder
+    }
+
     @SuppressLint("MissingPermission")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         Log.d("SERVICE", "Service onStartCommand() call!")
-        localDbRepository.toString()
         Log.d("SERVICE", "Service onStartCommand() localDbRepository  : ${localDbRepository}!")
 
-        val device = intent?.getParcelableExtra<Device>("device")
-        val userId = intent?.getIntExtra("userId", -1)
-        Log.e("SERVICE", "onStartCommnad에서 인텐트로 받은 userId는 : $userId")
-        val mac = device?.deviceMac.toString()
-        bleManager = BleManager.getInstance(baseContext, mac, userId!!, applicationContext)
-        // 노티 채널 생성
+        var deviceMac = ""
+        var userId = -1
+        runBlocking {
+            deviceMac = DataStoreManager.getDeviceMac().first().toString()
+            userId = DataStoreManager.getUserId().first() ?: -1
+        }
+
+        Log.e("SERVICE", "onStartCommnad에서 DS로부터 불러온 userId : $userId")
+        Log.e("SERVICE", "onStartCommnad에서 DS로부터 불러온 deviceMac : $deviceMac")
+
+        val mac = deviceMac
+        bleManager = BleManager.getInstance(baseContext, mac, userId, applicationContext)
+
+        // 1. 노티 채널 생성
         createNotificationChannel()
 
         // 노티 눌러서 이동할 화면 설정
@@ -119,29 +137,29 @@ class AlwaysService() : Service() {
             )
         }
 
-
-        timerForNoti = Timer()
-        timerForNoti?.schedule(object : TimerTask() {
-            override fun run() {
-                val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
-                    .setOngoing(true)
-                    .setContentTitle("Always가 작동 중입니다.")
-//            .setContentTitle("연결된 장치 : ${rssi?.deviceName}   ${rssi?.rssi}\n연결 상태 : ${bleState}")
-//                    .setContentText("포그라운드 서비스가 작동 중 입니다.")
-                    .setSmallIcon(R.mipmap.ic_launcher_round)
-                    .setContentIntent(pendingIntent)
-                    .setSilent(true)
-                    .build()
-                NotificationManagerCompat.from(baseContext).notify(NOTI_ID, notification)
-            }
-
-        }, 0, 1000)
+        // 2. 10초마다 노티 생성
+//        if (timerForNoti == null) {
+            timerForNoti = Timer()
+            timerForNoti?.schedule(object : TimerTask() {
+                override fun run() {
+                    val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
+                        .setOngoing(true)
+                        .setContentTitle("Always가 작동 중입니다.")
+                        .setSmallIcon(R.mipmap.ic_launcher_round)
+                        .setContentIntent(pendingIntent)
+                        .setSilent(true)
+                        .build()
+                    NotificationManagerCompat.from(baseContext).notify(NOTI_ID, notification)
+                }
+            }, 0, 1000 * 10) // 10초에 한번씩 노티 생성
+//        } else {
+//            Log.e("SERVICE", "노티 1초마다 생서이 실행중이므로 스킵")
+//        }
 
         // 노티 생성 및 설정
         val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
             .setOngoing(true)
             .setContentTitle("AGMS 실행 중")
-//            .setContentTitle("연결된 장치 : ${rssi?.deviceName}   ${rssi?.rssi}\n연결 상태 : ${bleState}")
             .setContentText("포그라운드 서비스가 작동 중 입니다.")
             .setSmallIcon(R.mipmap.ic_launcher_round)
             .setContentIntent(pendingIntent)
@@ -149,62 +167,142 @@ class AlwaysService() : Service() {
             .build()
 
         // startForeground 실행
-//        startForeground(NOTI_ID, notification)
         startForeground(NOTI_ID, notification, FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
 
-        // 블루투스 연결
         isServiceRunning = true
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            device?.device?.connectGatt(
-                baseContext,
-                false,
-                bleManager,
-                BluetoothDevice.TRANSPORT_LE
-            )
+        // 블루투스 연결
+
+        val bluetoothManager =
+            baseContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        val bluetoothAdpater = bluetoothManager.adapter
+        val bluetoothDevice = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Log.e(TEST, "======BLE Remote 연결 안드로이드 13 이상 시작========")
+            bluetoothAdpater.getRemoteLeDevice(mac, BluetoothDevice.ADDRESS_TYPE_PUBLIC)
         } else {
-            device?.device?.connectGatt(baseContext, false, bleManager)
+            Log.e(TEST, "======BLE Remote 연결 안드로이드 10~12 시작========")
+            bluetoothAdpater.getRemoteDevice(mac)
         }
 
+
+//        if (bleManager.mGatt == null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                bluetoothDevice.connectGatt(
+                    baseContext,
+                    false,
+                    bleManager,
+                    BluetoothDevice.TRANSPORT_LE
+                )
+            } else {
+                bluetoothDevice.connectGatt(baseContext, false, bleManager)
+            }
+//        } else {
+//            Log.e("SERIVCE", "이미 ble 연결이 되어있어서 스킵")
+//        }
+
+
         // 워커 실행
+        // 고유한 이름으로 ExistingPeriodicWorkPolicy.KEEP 되어있어서 중복실행 방지 됨.
         (application as AlwaysApplication).uploadWorkRequest()
 
         // 포그라운드에서 반복실행
-        serviceScope.launch {
-            while (isActive) {
-                Log.d("SERVICE", "Coroutine 루프에서 반복 실행 중: ${System.currentTimeMillis()}")
+//        if (isDuplicatedJob == null || isDuplicatedJob?.isActive == false) {
+            isDuplicatedJob = serviceScope.launch {
+                while (isActive) {
+                    Log.d("SERVICE", "Coroutine 루프에서 반복 실행 중: ${System.currentTimeMillis()}")
+                    val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+                    val wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "agms:loopWake")
 
-                try {
-                    Log.e("SERVICE", "서비스 내 코루틴 실행")
-                    val userId = DataStoreManager.getUserId().first() ?: -1
-                    val lastTime = tokenRetrofit.getLastTime(userId)
-                    if (lastTime.isSuccessful) {
-                        val lastTimeBody = lastTime.body()
-                        if (lastTimeBody != null) {
-                            Log.e("SERVICE", "서비스 코루틴에서 호출한 lastTime : ${lastTimeBody.toString()}")
+                    try {
+                        Log.e("SERVICE", "서비스 내 코루틴 실행")
 
-                            val userId = DataStoreManager.getUserId().first() ?: -1
-                            val createdAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                            val sendData = tokenRetrofit.sendData(
-                                listOf(RequestDataValue(userId = userId, createdAt = createdAt, valueType = 1301, value = 12.00),
+                        wl.acquire(1000 * 75) // 75초
+
+                        val userId = DataStoreManager.getUserId().first() ?: -1
+
+                        val lastTime = tokenRetrofit.getLastTime(userId)
+                        if (lastTime.isSuccessful) {
+                            val lastTimeBody = lastTime.body()
+                            if (lastTimeBody != null) {
+                                Log.e(
+                                    "SERVICE",
+                                    "서비스 코루틴에서 호출한 lastTime : ${lastTimeBody.toString()}"
+                                )
+
+                                val userId2 = DataStoreManager.getUserId().first() ?: -1
+                                val createdAt = LocalDateTime.now()
+                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+
+                                val sendData = tokenRetrofit.sendData(
+                                    listOf(
+                                        RequestDataValue(
+                                            userId = userId2,
+                                            createdAt = createdAt,
+                                            valueType = 1301,
+                                            value = 15.00
+                                        )
                                     )
+                                )
+                                if (sendData.isSuccessful) {
+                                    val sendDataBody = sendData.body()
+                                    if (sendDataBody != null) {
+                                        Log.e("TEST", "SendDataBody : ${sendDataBody.toString()}")
+                                    }
+                                } else {
+                                    Log.e(
+                                        "TEST",
+                                        "SendData API통신 실패 : ${sendData.errorBody()?.string()}"
+                                    )
+                                }
+                            }
+                        } else {
+                            Log.e(
+                                "TEST",
+                                "recent time API통신 실패 : ${lastTime.errorBody()?.string()}"
+                            )
+
+                            val userId2 = DataStoreManager.getUserId().first() ?: -1
+                            val createdAt = LocalDateTime.now()
+                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+
+                            val sendData = tokenRetrofit.sendData(
+                                listOf(
+                                    RequestDataValue(
+                                        userId = userId2,
+                                        createdAt = createdAt,
+                                        valueType = 1301,
+                                        value = 15.00
+                                    ),
+                                )
                             )
                             if (sendData.isSuccessful) {
                                 val sendDataBody = sendData.body()
                                 if (sendDataBody != null) {
                                     Log.e("TEST", "SendDataBody : ${sendDataBody.toString()}")
                                 }
+                            } else {
+                                Log.e(
+                                    "TEST",
+                                    "SendData API통신 실패 : ${sendData.errorBody()?.string()}"
+                                )
                             }
                         }
-                    } else {
-                        Log.e("TEST", "API통신 실패 : ${lastTime.errorBody()?.string()}")
+
+
+                        delay(1000 * 60 * 1)
+                    } catch (e: Exception) {
+                        Log.e("SERVICE", "서비스 코루틴 에러 발생 : ${e.message}")
+                    } finally {
+                        if (wl.isHeld) wl.release()
                     }
-                } catch (e: Exception) {
-                    Log.e("SERVICE", "서비스 코루틴 에러 발생 : ${e.message}")
+
                 }
-                delay(1000 * 60 * 1)
             }
-        }
+//        } else {
+//
+//            Log.e("SERVICE", "이미 서비스 코루틴이 실행중이므로 스킵")
+//        }
+
         return START_STICKY
     }
 
@@ -215,8 +313,14 @@ class AlwaysService() : Service() {
                 NOTI_CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_DEFAULT
             )
-            val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(serviceChannel)
+                val manager = getSystemService(NotificationManager::class.java)
+                manager?.createNotificationChannel(serviceChannel)
+
+                Log.e("SERVICE", "이미 노티 매니저가 생성되었으므로 스킵")
         }
     }
+    inner class LocalBinder : Binder() {
+        fun getService(): AlwaysService = this@AlwaysService
+    }
 }
+
