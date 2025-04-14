@@ -134,6 +134,6 @@ fun ContentScreen(paddingValues: PaddingValues, selectedIndex: Int, navControlle
     when(selectedIndex) {
         0 -> HomeScreen(navController, paddingValues, homeViewModel, bleViewModel)
         1 -> EventScreen(navController, paddingValues, eventScreenViewModel)
-        2 -> SettingScreen(navController, paddingValues)
+        2 -> SettingScreen(navController, paddingValues, bleViewModel)
     }
 }

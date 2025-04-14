@@ -53,6 +53,7 @@ class AlwaysService() : Service() {
     private val localDbRepository by lazy {
         AppDatabase.getInstance(baseContext)
     }
+
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
     private var isDuplicatedJob: Job? = null
@@ -87,6 +88,8 @@ class AlwaysService() : Service() {
 
         // 서비스안의 코루틴 제거
         serviceJob.cancel()
+        bleManager.reconnectHandler.removeCallbacksAndMessages(null)
+        bleManager.isReconnect = false
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -96,48 +99,56 @@ class AlwaysService() : Service() {
     @SuppressLint("MissingPermission")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-        Log.d("SERVICE", "Service onStartCommand() call!")
-        Log.d("SERVICE", "Service onStartCommand() localDbRepository  : ${localDbRepository}!")
-
-        var deviceMac = ""
-        var userId = -1
-        runBlocking {
-            deviceMac = DataStoreManager.getDeviceMac().first().toString()
-            userId = DataStoreManager.getUserId().first() ?: -1
-        }
-
-        Log.e("SERVICE", "onStartCommnad에서 DS로부터 불러온 userId : $userId")
-        Log.e("SERVICE", "onStartCommnad에서 DS로부터 불러온 deviceMac : $deviceMac")
-
-        val mac = deviceMac
-        bleManager = BleManager.getInstance(baseContext, mac, userId, applicationContext)
-
-        // 1. 노티 채널 생성
-        createNotificationChannel()
-
-        // 노티 눌러서 이동할 화면 설정
-        val notificationIntent = Intent(baseContext, MainActivity::class.java)
-        notificationIntent.flags = FLAG_ACTIVITY_SINGLE_TOP or FLAG_ACTIVITY_CLEAR_TOP
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // 안드로이드 11(API 레벨 30) 이상인 경우
-            pendingIntent = PendingIntent.getActivity(
-                baseContext,
-                0,
-                notificationIntent,
-                PendingIntent.FLAG_IMMUTABLE
-            )
+        if (intent?.action == "ACTION_STOP_SERVICE") {
+            Log.d("SERVICE", "Received ACTION_STOP_SERVICE, stopping service.")
+            stopForeground(true) // 포그라운드만 종료
+            stopSelf()
+            return START_NOT_STICKY
         } else {
-            // 안드로이드 11 이하인 경우
-            pendingIntent = PendingIntent.getActivity(
-                baseContext,
-                0,
-                notificationIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT
-            )
-        }
 
-        // 2. 10초마다 노티 생성
+
+            Log.d("SERVICE", "Service onStartCommand() call!")
+            Log.d("SERVICE", "Service onStartCommand() localDbRepository  : ${localDbRepository}!")
+
+            var deviceMac = ""
+            var userId = -1
+            runBlocking {
+                deviceMac = DataStoreManager.getDeviceMac().first().toString()
+                userId = DataStoreManager.getUserId().first() ?: -1
+            }
+
+            Log.e("SERVICE", "onStartCommnad에서 DS로부터 불러온 userId : $userId")
+            Log.e("SERVICE", "onStartCommnad에서 DS로부터 불러온 deviceMac : $deviceMac")
+
+            val mac = deviceMac
+            bleManager = BleManager.getInstance(baseContext, mac, userId, applicationContext)
+
+            // 1. 노티 채널 생성
+            createNotificationChannel()
+
+            // 노티 눌러서 이동할 화면 설정
+            val notificationIntent = Intent(baseContext, MainActivity::class.java)
+            notificationIntent.flags = FLAG_ACTIVITY_SINGLE_TOP or FLAG_ACTIVITY_CLEAR_TOP
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                // 안드로이드 11(API 레벨 30) 이상인 경우
+                pendingIntent = PendingIntent.getActivity(
+                    baseContext,
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_IMMUTABLE
+                )
+            } else {
+                // 안드로이드 11 이하인 경우
+                pendingIntent = PendingIntent.getActivity(
+                    baseContext,
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+                )
+            }
+
+            // 2. 10초마다 노티 생성
 //        if (timerForNoti == null) {
             timerForNoti = Timer()
             timerForNoti?.schedule(object : TimerTask() {
@@ -156,33 +167,33 @@ class AlwaysService() : Service() {
 //            Log.e("SERVICE", "노티 1초마다 생서이 실행중이므로 스킵")
 //        }
 
-        // 노티 생성 및 설정
-        val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
-            .setOngoing(true)
-            .setContentTitle("AGMS 실행 중")
-            .setContentText("포그라운드 서비스가 작동 중 입니다.")
-            .setSmallIcon(R.mipmap.ic_launcher_round)
-            .setContentIntent(pendingIntent)
-            .setSilent(true)
-            .build()
+            // 노티 생성 및 설정
+            val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
+                .setOngoing(true)
+                .setContentTitle("AGMS 실행 중")
+                .setContentText("포그라운드 서비스가 작동 중 입니다.")
+                .setSmallIcon(R.mipmap.ic_launcher_round)
+                .setContentIntent(pendingIntent)
+                .setSilent(true)
+                .build()
 
-        // startForeground 실행
-        startForeground(NOTI_ID, notification, FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
+            // startForeground 실행
+            startForeground(NOTI_ID, notification, FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
 
-        isServiceRunning = true
+            isServiceRunning = true
 
-        // 블루투스 연결
+            // 블루투스 연결
 
-        val bluetoothManager =
-            baseContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        val bluetoothAdpater = bluetoothManager.adapter
-        val bluetoothDevice = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Log.e(TEST, "======BLE Remote 연결 안드로이드 13 이상 시작========")
-            bluetoothAdpater.getRemoteLeDevice(mac, BluetoothDevice.ADDRESS_TYPE_PUBLIC)
-        } else {
-            Log.e(TEST, "======BLE Remote 연결 안드로이드 10~12 시작========")
-            bluetoothAdpater.getRemoteDevice(mac)
-        }
+            val bluetoothManager =
+                baseContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+            val bluetoothAdpater = bluetoothManager.adapter
+            val bluetoothDevice = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                Log.e(TEST, "======BLE Remote 연결 안드로이드 13 이상 시작========")
+                bluetoothAdpater.getRemoteLeDevice(mac, BluetoothDevice.ADDRESS_TYPE_PUBLIC)
+            } else {
+                Log.e(TEST, "======BLE Remote 연결 안드로이드 10~12 시작========")
+                bluetoothAdpater.getRemoteDevice(mac)
+            }
 
 
 //        if (bleManager.mGatt == null) {
@@ -201,11 +212,10 @@ class AlwaysService() : Service() {
 //        }
 
 
-        // 워커 실행
-        // 고유한 이름으로 ExistingPeriodicWorkPolicy.KEEP 되어있어서 중복실행 방지 됨.
-        (application as AlwaysApplication).uploadWorkRequest()
+            // 워커 실행
+//            (application as AlwaysApplication).uploadWorkRequest()
 
-        // 포그라운드에서 반복실행
+            // 포그라운드에서 반복실행
 //        if (isDuplicatedJob == null || isDuplicatedJob?.isActive == false) {
             isDuplicatedJob = serviceScope.launch {
                 while (isActive) {
@@ -303,7 +313,16 @@ class AlwaysService() : Service() {
 //            Log.e("SERVICE", "이미 서비스 코루틴이 실행중이므로 스킵")
 //        }
 
-        return START_STICKY
+
+//        if (intent?.action == "ACTION_STOP_SERVICE") {
+//            Log.e("TEST", "서비스 내 intent action : ${intent?.action}")
+//            stopForeground(true) // 포그라운드만 종료
+//            stopSelf()
+//        }
+//
+
+            return START_STICKY
+        }
     }
 
     private fun createNotificationChannel() {
@@ -313,12 +332,13 @@ class AlwaysService() : Service() {
                 NOTI_CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_DEFAULT
             )
-                val manager = getSystemService(NotificationManager::class.java)
-                manager?.createNotificationChannel(serviceChannel)
+            val manager = getSystemService(NotificationManager::class.java)
+            manager?.createNotificationChannel(serviceChannel)
 
-                Log.e("SERVICE", "이미 노티 매니저가 생성되었으므로 스킵")
+            Log.e("SERVICE", "이미 노티 매니저가 생성되었으므로 스킵")
         }
     }
+
     inner class LocalBinder : Binder() {
         fun getService(): AlwaysService = this@AlwaysService
     }

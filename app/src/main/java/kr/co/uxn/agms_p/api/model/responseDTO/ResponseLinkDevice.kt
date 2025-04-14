@@ -6,11 +6,11 @@ data class ResponseLinkDevice(
     @SerializedName("device_id")
     val deviceId: Int,
 
-    @SerializedName("is_success")
-    val isSuccess: Boolean,
-
     @SerializedName("message")
     val message: String,
+
+    @SerializedName("is_success")
+    val isSuccess: Boolean,
 
     @SerializedName("start_date")
     val startDate: String

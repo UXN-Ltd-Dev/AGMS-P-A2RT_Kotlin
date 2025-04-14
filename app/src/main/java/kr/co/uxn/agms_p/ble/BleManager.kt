@@ -65,10 +65,6 @@ class BleManager(
         }
 
         const val TEST = "TEST"
-
-//        val viewModel: MainViewModel by lazy {
-//            com.example.protocol20datainfo.presentation.Application.mainViewModel
-//        }
     }
 
 
@@ -80,7 +76,7 @@ class BleManager(
 
 
     var mGatt: BluetoothGatt? = null
-
+    var isReconnect = true
 
 //    lateinit var bluetoothDevice: BluetoothDevice
 //    lateinit var bluetoothManager: BluetoothManager
@@ -119,8 +115,18 @@ class BleManager(
 
 //                isChange = false
 //                mGatt = gatt
+                if(isReconnect) {
+                    // mtu 517로 요청
+                    gatt?.requestMtu(517)
+                } else {
+                    gatt?.disconnect()
+                    gatt?.close()
+                }
+
                 // mtu 517로 요청
-                gatt?.requestMtu(517)
+//                gatt?.requestMtu(517)
+
+
                 // rssi읽기 요청. 성공하면 rssi값 onReadRemoteRssi로 메서드가 호출됨.
                 // 타이머를 이용해 5초 간격으로 실행
 

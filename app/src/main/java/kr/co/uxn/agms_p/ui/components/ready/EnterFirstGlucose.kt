@@ -73,7 +73,7 @@ fun EnterFirstGlucose(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Spacer(modifier = Modifier.size(70.dp))
+            Spacer(modifier = Modifier.size(120.dp))
 
             Image(
                 modifier = Modifier.size(200.dp, 240.dp),
@@ -139,7 +139,7 @@ fun EnterFirstGlucose(navController: NavController) {
                 color = Color.Gray
             )
 
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(50.dp))
 
             // 완료 버튼
             Box(

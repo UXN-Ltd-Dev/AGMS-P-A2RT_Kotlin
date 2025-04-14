@@ -126,6 +126,12 @@ object DataStoreManager {
         }
     }
 
+    suspend fun deleteRefreshToken() {
+        dataStore.edit { prefs ->
+            prefs.remove(REFRESH_TOKEN_KEY)
+        }
+    }
+
     suspend fun deleteUserId() {
         dataStore.edit { prefs ->
             prefs.remove(USER_ID)

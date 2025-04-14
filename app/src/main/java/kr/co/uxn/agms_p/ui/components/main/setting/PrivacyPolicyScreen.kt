@@ -94,7 +94,7 @@ fun PrivacyPolicyScreen(navController: NavController, eventScreenViewModel: Even
                 },
                 title = {
                     Text(
-                        text = "개인정보처리방침",
+                        text = "개인정보 처리방침",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium
                     )

@@ -50,6 +50,7 @@ import kr.co.uxn.agms_p.api.RetrofitClient.emptyRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignInNormal
 import kr.co.uxn.agms_p.ui.viewmodel.LoginViewModel
 import kotlinx.coroutines.withContext
+import kr.co.uxn.agms_p.NetworkUtil.isNetworkAvailable
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 
 @Composable
@@ -216,7 +217,13 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     fontSize = 14.sp,
                     modifier = Modifier
                         // 1803 : uxn 회원가입
-                        .clickable { navController.navigate("SignUpAgreeScreen1/${1803}/${"uxn signup"}") }
+                        .clickable {
+                            if (isNetworkAvailable(context)) {
+                                navController.navigate("SignUpAgreeScreen1/${1803}/${"uxn signup"}")
+                            } else {
+                                Toast.makeText(context, "네트워크 상태를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                            }
+                        }
                     )
                 Spacer(modifier = Modifier.size(17.dp))
                 Text(
@@ -241,24 +248,24 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                 modifier = Modifier
                     .wrapContentWidth()
                     .clickable {
-                        if (email.value != "" && pwd.value != "") {
-//                            navController.navigate("LoginPassword/${email.value}")
-                            CoroutineScope(Dispatchers.IO).launch {
-                                try {
-                                    // 로그인
-                                    val login =
-                                        emptyRetrofit.uxnLogin(signInInfo = RequestSignInNormal(email.value, pwd.value))
-                                    if (login.isSuccessful) {
-                                        val loginResult = login.body()
-                                        // 로그인이 성공적으로 되었을 때
+                        if (isNetworkAvailable(context)) {
+                            if (email.value != "" && pwd.value != "") {
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    try {
+                                        // 로그인
+                                        val login =
+                                            emptyRetrofit.uxnLogin(signInInfo = RequestSignInNormal(email.value, pwd.value))
+                                        if (login.isSuccessful) {
+                                            val loginResult = login.body()
+                                            // 로그인이 성공적으로 되었을 때
 
-                                        if (loginResult != null) {
-                                                 Log.e("login","로그인 결과 : ${loginResult.toString()}")
+                                            if (loginResult != null) {
+                                                Log.e("login","로그인 결과 : ${loginResult.toString()}")
 //
-                                                 // 토큰 저장
-                                                 DataStoreManager.deleteAccessToken()
-                                                 DataStoreManager.saveAccessToken(loginResult.accessToken)
-                                                 DataStoreManager.saveRefreshToken(loginResult.refreshToken)
+                                                // 토큰 저장
+                                                DataStoreManager.deleteAccessToken()
+                                                DataStoreManager.saveAccessToken(loginResult.accessToken)
+                                                DataStoreManager.saveRefreshToken(loginResult.refreshToken)
 
                                                 // userId 저장
                                                 DataStoreManager.deleteUserId()
@@ -267,23 +274,26 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                                 // mac 정리
                                                 DataStoreManager.deleteDeviceMac()
 
-                                                 // 세팅화면으로 이동
-                                                 withContext(Dispatchers.Main) {
-                                                     navController.navigate("SettingPermissionScreen")
-                                                 }
+                                                // 세팅화면으로 이동
+                                                withContext(Dispatchers.Main) {
+                                                    navController.navigate("SettingPermissionScreen")
+                                                }
+                                            }
+                                        } else {
+                                            Log.e("TEST", "API통신 실패 : ${login.errorBody()?.string()}")
                                         }
-                                    } else {
-                                        Log.e("TEST", "API통신 실패 : ${login.errorBody()?.string()}")
-                                    }
-                                } catch (exception: Exception) {
-                                    Log.e("TEST", "네트워크 에러 : ${exception.message}")
-                                    withContext(Dispatchers.Main) {
-                                        Toast.makeText(context, "계정 정보가 올바르지 않습니다.", Toast.LENGTH_SHORT).show()
+                                    } catch (exception: Exception) {
+                                        Log.e("TEST", "네트워크 에러 : ${exception.message}")
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(context, "계정 정보가 올바르지 않습니다.", Toast.LENGTH_SHORT).show()
+                                        }
                                     }
                                 }
+                            } else {
+                                Toast.makeText(context, "이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
                             }
                         } else {
-                            Toast.makeText(context, "이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "네트워크 상태를 확인해 주세요.", Toast.LENGTH_SHORT).show()
                         }
                     },
                 contentAlignment = Alignment.CenterStart
@@ -330,8 +340,13 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                 modifier = Modifier
                     .wrapContentWidth()
                     .clickable {
-                        viewModel.googleLogin(context)
-                        viewModel.updateIsLoading(true)
+
+                        if (isNetworkAvailable(context)) {
+                            viewModel.googleLogin(context)
+                            viewModel.updateIsLoading(true)
+                        } else {
+                            Toast.makeText(context, "네트워크 상태를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                        }
                     },
                 contentAlignment = Alignment.CenterStart
             ) {
@@ -359,8 +374,12 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                 modifier = Modifier
                     .wrapContentWidth()
                     .clickable {
-                        viewModel.kakaoLogin(context)
-                        viewModel.updateIsLoading(true)
+                        if (isNetworkAvailable(context)) {
+                            viewModel.kakaoLogin(context)
+                            viewModel.updateIsLoading(true)
+                        } else {
+                            Toast.makeText(context, "네트워크 상태를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                        }
                     },
                 contentAlignment = Alignment.CenterStart
             ) {

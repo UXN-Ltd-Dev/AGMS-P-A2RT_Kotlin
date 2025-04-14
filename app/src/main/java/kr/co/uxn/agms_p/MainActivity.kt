@@ -80,7 +80,11 @@ class MainActivity : ComponentActivity() {
                         ContextCompat.startForegroundService(this@MainActivity, serviceIntent)
                         Log.e("SERVICE", "메인액티비티 startForegroundService call!")
                     } else if (event == "STOP_SERVICE") {
-                        this@MainActivity.stopService(serviceIntent)
+//                        this@MainActivity.stopService(serviceIntent)
+                        val stopIntent = Intent(this@MainActivity, AlwaysService::class.java).apply {
+                            action = "ACTION_STOP_SERVICE"
+                        }
+                        ContextCompat.startForegroundService(this@MainActivity, stopIntent)
                     }
                 }
             }

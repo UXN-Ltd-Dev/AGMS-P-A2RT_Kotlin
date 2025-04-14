@@ -107,6 +107,8 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
                                 Log.e("TEST", "링크 실패 : ${linkDeviceBody.message}")
                             }
                         }
+                    } else {
+                        Log.e("TEST", "API 에러 : ${linkDevice.errorBody()?.string()}")
                     }
 
                 } catch (e: Exception) {
@@ -137,7 +139,7 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
     suspend fun teraRups() {
 //        delay(1000 * 60 * 1) // 1분
 //        delay(1000 * 60 * 1 / 60 * 10) // 10초
-        delay(1000 * 60 * 1 / 60 * 3) // 10초
+        delay(1000 * 1 * 20) // 20초
         Log.e("teraRups", "teraRups called!")
         if (!bleViewModel.isFindDevice.value) {
             navController.navigate("ScanFailScreen")

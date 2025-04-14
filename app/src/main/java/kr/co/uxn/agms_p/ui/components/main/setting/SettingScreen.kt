@@ -14,26 +14,35 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import kotlinx.coroutines.launch
+import kr.co.uxn.agms_p.api.token.DataStoreManager
+import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
+import kotlin.system.exitProcess
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingScreen(navController: NavController, paddingValues: PaddingValues) {
-
+fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bleViewModel: BleViewModel) {
     val context = LocalContext.current
     val items = listOf(
         "내 정보",
         "센서 정보",
         "알림 설정",
         "이용 약관",
-        "개인 정보 처리 방침",
+        "개인정보 처리방침",
         "로그아웃",
         "계정 삭제"
     )
@@ -44,7 +53,7 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues) {
     ) {
         Divider()
         items.forEachIndexed { index, item ->
-            SettingItem(item, index, context, navController)
+            SettingItem(item, index, context, navController, bleViewModel)
             if (index == 0 || index == 3 || index == 5) {
                 Divider(color = Color.Transparent, thickness = 1.dp)
             }
@@ -57,7 +66,68 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues) {
 }
 
 @Composable
-fun SettingItem(title: String, index: Int, context: Context, navController: NavController) {
+fun SettingItem(title: String, index: Int, context: Context, navController: NavController, bleViewModel: BleViewModel) {
+    val showDialog = remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
+    if (showDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showDialog.value = false },
+            title = { Text(text = "로그아웃") },
+            text = { Text(text = "진행 하시겠습니까?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDialog.value = false
+                        // 확인 동작
+
+
+                        coroutineScope.launch {
+                            // 0. 토큰 정리
+                            DataStoreManager.deleteAccessToken()
+                            DataStoreManager.deleteRefreshToken()
+                            DataStoreManager.deleteUserId()
+                            DataStoreManager.deleteDeviceMac()
+                            DataStoreManager.deleteStartTime()
+                            DataStoreManager.deleteEndTime()
+                            // 1. 서비스 종료
+                            bleViewModel.emit("STOP_SERVICE")
+                            // 앱 강제종료
+                            android.os.Process.killProcess(android.os.Process.myPid())
+                            exitProcess(0)
+                        }
+                        // 2. 데이터 전송
+                        // 3. 로그인 화면으로 이동
+                        navController.navigate("Login") {
+                            popUpTo(0)
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.LightGray,   // 버튼 배경색
+                        contentColor = Color.White          // 텍스트 색
+                    )
+                ) {
+                    Text("확인")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        showDialog.value = false
+                        // 취소 동작
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.LightGray,   // 버튼 배경색
+                        contentColor = Color.White          // 텍스트 색
+                    )
+                ) {
+                    Text("취소")
+                }
+            }
+        )
+    }
+
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -81,7 +151,7 @@ fun SettingItem(title: String, index: Int, context: Context, navController: NavC
                         navController.navigate("PrivacyPolicyScreen")
                     }
                     5 -> {
-                        Toast.makeText(context, "로그아웃 클릭!", Toast.LENGTH_SHORT).show()
+                        showDialog.value = true
                     }
                     6 -> {
                         navController.navigate("DeleteAccountScreen")
