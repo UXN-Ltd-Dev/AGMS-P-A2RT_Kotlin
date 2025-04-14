@@ -1,4 +1,4 @@
-package kr.co.uxn.agms_p.ui.components.main
+package kr.co.uxn.agms_p.ui.components.main.home
 
 import android.util.Log
 import android.widget.Toast
@@ -25,11 +25,9 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,8 +36,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import kr.co.uxn.agms_p.R
@@ -85,6 +81,7 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues, homeV
             .fillMaxSize()
             .padding(paddingValues)
     ) {
+        Spacer(modifier = Modifier.height(10.dp))
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -153,7 +150,6 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues, homeV
                 )
             }
         }
-
 
         // 그래프 표시 카드
         Card(

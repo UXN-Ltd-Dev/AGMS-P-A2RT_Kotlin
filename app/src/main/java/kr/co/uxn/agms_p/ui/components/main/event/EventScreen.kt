@@ -1,11 +1,12 @@
-package kr.co.uxn.agms_p.ui.components.main
+package kr.co.uxn.agms_p.ui.components.main.event
 
 import android.annotation.SuppressLint
-import androidx.annotation.DrawableRes
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -15,44 +16,58 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.MaterialTheme.colors
+import androidx.compose.material.Divider
 import androidx.compose.material.Text
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role.Companion.Button
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import kr.co.uxn.agms_p.R
-import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
+import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
 
 @SuppressLint("RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventScreen(navController: NavController, paddingValues: PaddingValues) {
+fun EventScreen(navController: NavController, paddingValues: PaddingValues, eventScreenViewModel: EventScreenViewModel) {
     var interactionSource = remember { MutableInteractionSource() }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val eventList by eventScreenViewModel.eventItemList.collectAsState()
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // onResume 시점에만 실행!
+                // 서버로부터 이벤트 목록 받아와서 화면 갱신해주기
+                Log.e("TEST", "이벤트 화면에서 뷰모델 실행")
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -61,6 +76,8 @@ fun EventScreen(navController: NavController, paddingValues: PaddingValues) {
     ) {
 
         // 1. 생활 등록 카드
+        Spacer(modifier = Modifier.height(10.dp))
+
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -77,7 +94,8 @@ fun EventScreen(navController: NavController, paddingValues: PaddingValues) {
             Spacer(modifier = Modifier.height(10.dp))
 
             Row(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(horizontal = 20.dp)
             ) {
                 Text(
@@ -89,7 +107,8 @@ fun EventScreen(navController: NavController, paddingValues: PaddingValues) {
             Spacer(modifier = Modifier.height(2.dp))
 
             Row(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(horizontal = 20.dp)
             ) {
                 Text(
@@ -106,7 +125,8 @@ fun EventScreen(navController: NavController, paddingValues: PaddingValues) {
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -117,7 +137,8 @@ fun EventScreen(navController: NavController, paddingValues: PaddingValues) {
                     fontSize = 15.sp
                 )
                 Image(
-                    modifier = Modifier.size(70.dp, 26.dp)
+                    modifier = Modifier
+                        .size(70.dp, 26.dp)
                         .padding(bottom = 3.dp)
                         .clickable(
                             // 클릭시 리플효과 제거
@@ -149,7 +170,8 @@ fun EventScreen(navController: NavController, paddingValues: PaddingValues) {
             Spacer(modifier = Modifier.height(10.dp))
 
             Row(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(horizontal = 20.dp)
             ) {
                 Text(
@@ -162,7 +184,8 @@ fun EventScreen(navController: NavController, paddingValues: PaddingValues) {
             Spacer(modifier = Modifier.height(2.dp))
 
             Row(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(horizontal = 20.dp)
             ) {
                 Text(
@@ -180,7 +203,8 @@ fun EventScreen(navController: NavController, paddingValues: PaddingValues) {
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -191,7 +215,8 @@ fun EventScreen(navController: NavController, paddingValues: PaddingValues) {
                     fontSize = 15.sp
                 )
                 Image(
-                    modifier = Modifier.size(70.dp, 26.dp)
+                    modifier = Modifier
+                        .size(70.dp, 26.dp)
                         .padding(bottom = 3.dp)
                         .clickable {
                             navController.navigate("GlucoseRegisterScreen")
@@ -221,7 +246,8 @@ fun EventScreen(navController: NavController, paddingValues: PaddingValues) {
             Spacer(modifier = Modifier.height(10.dp))
 
             Row(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(horizontal = 20.dp)
             ) {
                 Text(
@@ -231,70 +257,28 @@ fun EventScreen(navController: NavController, paddingValues: PaddingValues) {
                 )
             }
 
-            LazyColumn { // Lazy : 필요할때만 보여주겠다.
-                // 스텝 2 : items(itemList)를 이용해 Item을 반복해서 컬럼에 추가하자.
-                // item : 한개씩,
-                // items : 여러걔 삽입
-
-
-                item {
-                    Item(
-                        ItemData(imageId = R.drawable.event_activity, eventType = 1402, time = "2025.04.11 09:04", content = "컨텐트")
+            if (eventList.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center // 중앙 정렬
+                ) {
+                    Text(
+                        text = "기록이 쌓이면 나를 더 잘 알 수 있어요.",
+                        fontSize = 16.sp,
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Medium
                     )
                 }
-                item {
-                    Item(
-                        ItemData(imageId = R.drawable.event_meal, eventType = 1401, time = "2025.04.11 09:03", content = "컨텐트")
-                    )
+            } else {
+                LazyColumn {
+                    // item : 한개씩,
+                    // items : 여러걔 삽입
+                    items(eventList) { item ->
+                        Item(itemData = item)
+                    }
                 }
-                item {
-                    Item(
-                        ItemData(imageId = R.drawable.event_activity, eventType = 1402, time = "2025.04.11 10:04", content = "컨텐트")
-                    )
-                }
-
-                item {
-                    Item(
-                        ItemData(imageId = R.drawable.event_meal, eventType = 1401, time = "2025.04.11 09:03", content = "컨텐트")
-                    )
-                }
-                item {
-                    Item(
-                        ItemData(imageId = R.drawable.event_activity, eventType = 1402, time = "2025.04.11 10:04", content = "컨텐트")
-                    )
-                }
-
-                item {
-                    Item(
-                        ItemData(imageId = R.drawable.event_meal, eventType = 1401, time = "2025.04.11 09:03", content = "컨텐트")
-                    )
-                }
-                item {
-                    Item(
-                        ItemData(imageId = R.drawable.event_activity, eventType = 1402, time = "2025.04.11 10:04", content = "컨텐트")
-                    )
-                }
-                item {
-                    Item(
-                        ItemData(imageId = R.drawable.event_meal, eventType = 1401, time = "2025.04.11 09:03", content = "컨텐트")
-                    )
-                }
-                item {
-                    Item(
-                        ItemData(imageId = R.drawable.event_activity, eventType = 1402, time = "2025.04.11 10:04", content = "컨텐트")
-                    )
-                }
-//                item {
-//                    Item(itemList[1])
-//                }
-
-
-//                items(itemList) { item ->
-//                    Item(item)
-//                }
             }
-
-
         }
     }
 }
@@ -302,37 +286,51 @@ fun EventScreen(navController: NavController, paddingValues: PaddingValues) {
 
 @Composable
 fun Item(itemData: ItemData) {
-    androidx.compose.material.Card(
-        elevation = 8.dp,
-        modifier = Modifier.padding(16.dp)
-    ) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    )
+    {
         Row(
-            modifier = Modifier.fillMaxWidth()
-                .height(50.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+                .padding(start = 25.dp, end = 16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = itemData.content)
+            Text(
+                text = itemData.content,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(4f),
+                fontWeight = FontWeight.Medium
+            )
             Text(
                 text = itemData.time,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color(0xFF828282),
+                modifier = Modifier.weight(4f)
                 )
+            val image = when (itemData.eventType) {
+                1401 -> R.drawable.event_meal
+                1402 -> R.drawable.event_activity
+                1403 -> R.drawable.event_calibration
+                else -> R.drawable.event_insulin
+            }
             Image(
-                modifier = Modifier.size(30.dp),
-                painter = painterResource(id = itemData.imageId),
+                modifier = Modifier.size(40.dp)
+                    .weight(2f),
+                painter = painterResource(image),
                 contentDescription = "활동 아이콘"
             )
         }
+        Divider(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            color = Color.LightGray,
+            thickness = 1.dp
+        )
     }
 }
 
-// eventCode
-// 식사 : 1401, 활동 : 1402, 혈당 : 1403, 기타 : 1404
-data class ItemData(
-    @DrawableRes val imageId: Int,
-    val eventType: Int,
-    val time: String,
-    val content: String
-)
+

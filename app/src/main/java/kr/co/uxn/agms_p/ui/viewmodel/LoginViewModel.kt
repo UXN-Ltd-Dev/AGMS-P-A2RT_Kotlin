@@ -65,7 +65,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 val result = emptyRetrofit.testRetrofit()
-                if(result.isSuccessful) {
+                if (result.isSuccessful) {
                     val resultBody = result.body()
                     if (resultBody != null) {
                         Log.e(TAG, "apiTest : $resultBody")

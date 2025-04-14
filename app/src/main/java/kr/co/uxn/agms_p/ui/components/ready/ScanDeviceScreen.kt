@@ -10,6 +10,7 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -49,7 +50,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestLinkDevice
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.Device
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
@@ -65,7 +69,6 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
         isPlaying = true,
         speed = 0.2f
     )
-
 
     val context = LocalContext.current
     val data by bleViewModel.isFindDevice.collectAsState()
@@ -86,9 +89,35 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
                 DataStoreManager.saveDeviceMac(mac)
                 val verifiedDeviceMac = DataStoreManager.getDeviceMac().first()
                 Log.e("TEST", "스캔화면에서 저장한 datastore 맥 주소 : ${verifiedDeviceMac}")
+
+
+                val userId = DataStoreManager.getUserId().first() ?: -1
+
+
+                // 서버에 유저와 디바이스 링크
+                try {
+                    val linkDevice = tokenRetrofit.linkDevice(RequestLinkDevice(userId = userId, serialNumber = mac))
+                    if (linkDevice.isSuccessful) {
+                        val linkDeviceBody = linkDevice.body()
+                        if (linkDeviceBody != null) {
+                            Log.e("TEST", "linkDeviceBody : ${linkDeviceBody}")
+                            if (linkDeviceBody.isSuccess) {
+                                Log.e("TEST", "링크 성공!")
+                            } else {
+                                Log.e("TEST", "링크 실패 : ${linkDeviceBody.message}")
+                            }
+                        }
+                    }
+
+                } catch (e: Exception) {
+                    Log.e("TEST","네트워크 에러 : ${e.message}")
+                }
+
+
             }
             // 성공시, 안정화 화면으로 이동
             navController.navigate("StabilizationScreen")
+
         }
 
         override fun onBatchScanResults(results: MutableList<ScanResult>?) {

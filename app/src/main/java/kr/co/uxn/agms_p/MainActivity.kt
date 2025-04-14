@@ -17,18 +17,22 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.AlwaysService
 import kr.co.uxn.agms_p.ui.theme.AGMSPTheme
 import kr.co.uxn.agms_p.ui.components.login.LoginScreen
 import kr.co.uxn.agms_p.ui.components.login.SignUpAgreeScreen1
 import kr.co.uxn.agms_p.ui.components.login.SignUpCheckScreen2
 import kr.co.uxn.agms_p.ui.components.login.SignUpInfoScreen3
-import kr.co.uxn.agms_p.ui.components.main.ActivityRegisterScreen
-import kr.co.uxn.agms_p.ui.components.main.GlucoseRegisterScreen
+import kr.co.uxn.agms_p.ui.components.main.event.ActivityRegisterScreen
+import kr.co.uxn.agms_p.ui.components.main.event.GlucoseRegisterScreen
 import kr.co.uxn.agms_p.ui.components.main.MainScreen
+import kr.co.uxn.agms_p.ui.components.main.setting.DeleteAccountScreen
+import kr.co.uxn.agms_p.ui.components.main.setting.MyInfoScreen
+import kr.co.uxn.agms_p.ui.components.main.setting.NotificationScreen
+import kr.co.uxn.agms_p.ui.components.main.setting.PrivacyPolicyScreen
+import kr.co.uxn.agms_p.ui.components.main.setting.SensorInfoScreen
+import kr.co.uxn.agms_p.ui.components.main.setting.TermsAndConditionsScreen
 import kr.co.uxn.agms_p.ui.components.ready.StabilizationCompleteScreen
 import kr.co.uxn.agms_p.ui.components.ready.EnterFirstGlucose
 import kr.co.uxn.agms_p.ui.components.ready.SettingPermissionScreen
@@ -45,6 +49,7 @@ import kr.co.uxn.agms_p.ui.components.ready.StabilizationScreen
 import kr.co.uxn.agms_p.ui.components.splash.SplashScreen
 import kr.co.uxn.agms_p.ui.viewmodel.AuthEventNotifier
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
+import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.LoginNavigationEvent
 import kr.co.uxn.agms_p.ui.viewmodel.LoginViewModel
@@ -56,6 +61,7 @@ class MainActivity : ComponentActivity() {
     private val permissionViewModel: PermissionViewModel by viewModels()
     private val bleViewModel: BleViewModel by viewModels()
     private val homeViewModel: HomeViewModel by viewModels()
+    private val eventScreenViewModel: EventScreenViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -202,16 +208,41 @@ class MainActivity : ComponentActivity() {
 
             composable("MainScreen/{startIndex}") { backStackEntry ->
                 val startIndex = backStackEntry.arguments?.getString("startIndex")?.toInt() ?: 0
-                MainScreen(navController, homeViewModel, bleViewModel, startIndex)
+                MainScreen(navController, homeViewModel, bleViewModel, startIndex, eventScreenViewModel)
             }
 
             composable("GlucoseRegisterScreen") { backStackEntry ->
-                GlucoseRegisterScreen(navController)
+                GlucoseRegisterScreen(navController, eventScreenViewModel)
             }
 
             composable("ActivityRegisterScreen") { backStackEntry ->
-                ActivityRegisterScreen(navController)
+                ActivityRegisterScreen(navController, eventScreenViewModel)
             }
+
+            composable("MyInfoScreen") { backStackEntry ->
+                MyInfoScreen(navController, eventScreenViewModel)
+            }
+
+            composable("NotificationScreen") { backStackEntry ->
+                NotificationScreen(navController, eventScreenViewModel)
+            }
+
+            composable("SensorInfoScreen") { backStackEntry ->
+                SensorInfoScreen(navController, eventScreenViewModel)
+            }
+
+            composable("PrivacyPolicyScreen") { backStackEntry ->
+                PrivacyPolicyScreen(navController, eventScreenViewModel)
+            }
+
+            composable("TermsAndConditionsScreen") { backStackEntry ->
+                TermsAndConditionsScreen(navController, eventScreenViewModel)
+            }
+
+            composable("DeleteAccountScreen") { backStackEntry ->
+                DeleteAccountScreen(navController, eventScreenViewModel)
+            }
+
         }
     }
 }

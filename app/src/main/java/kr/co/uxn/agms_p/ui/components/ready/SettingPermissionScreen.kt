@@ -126,7 +126,7 @@ fun SettingPermissionScreen(
 
             Spacer(modifier = Modifier.size(20.dp))
             Text(
-                text = "모든 권한을 허용하지 않아도 앱을 사용할 수 있으나 일부 기능이 제한될 수 있어요.",
+                text = "모든 권한을 허용하지 않아도 앱을 사용할 수 있으나 일부 기능이 제한될 수 있어요",
                 fontSize = 13.sp,
                 color = Color.Gray
             )

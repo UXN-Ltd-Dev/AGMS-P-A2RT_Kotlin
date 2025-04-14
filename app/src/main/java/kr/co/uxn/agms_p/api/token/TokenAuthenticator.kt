@@ -11,6 +11,8 @@ import okhttp3.Request
 // 401 에러가 났을경우, 리프레쉬토큰을 헤더에 담아서 요청
 class TokenAuthenticator() : Authenticator {
     override fun authenticate(route: Route?, response: Response): Request? {
+
+        if (responseCount(response) >= 2) return null
         val refreshToken = runBlocking {
             DataStoreManager.getRefreshToken().first()
         }
@@ -35,4 +37,16 @@ class TokenAuthenticator() : Authenticator {
         request.newBuilder()
             .header("Authorization", "Bearer $refreshToken")
             .build()
+
+    // Too many follow-up requests: 21 에러 방어코드
+    private fun responseCount(response: Response): Int {
+        var count = 1
+        var prior = response.priorResponse
+        while (prior != null) {
+            count++
+            prior = prior.priorResponse
+        }
+        return count
+    }
+
 }

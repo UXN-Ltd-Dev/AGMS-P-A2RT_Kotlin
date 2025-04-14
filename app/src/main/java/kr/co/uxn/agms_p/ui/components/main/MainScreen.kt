@@ -1,14 +1,6 @@
 package kr.co.uxn.agms_p.ui.components.main
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.os.Build
-import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.indication
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,7 +17,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,12 +31,16 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kr.co.uxn.agms_p.BleConnectionState
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.ui.components.main.event.EventScreen
+import kr.co.uxn.agms_p.ui.components.main.home.HomeScreen
+import kr.co.uxn.agms_p.ui.components.main.setting.SettingScreen
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
+import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleViewModel: BleViewModel, startIndex: Int= 0) {
+fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleViewModel: BleViewModel, startIndex: Int= 0, eventScreenViewModel: EventScreenViewModel) {
     val context = LocalContext.current
 
     val navItemList = listOf(
@@ -130,15 +125,15 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
             }
         }
     ) { paddingValues ->
-        ContentScreen(paddingValues = paddingValues, selectedIndex, navController, homeViewModel, bleViewModel)
+        ContentScreen(paddingValues = paddingValues, selectedIndex, navController, homeViewModel, bleViewModel, eventScreenViewModel)
     }
 }
 
 @Composable
-fun ContentScreen(paddingValues: PaddingValues, selectedIndex: Int, navController: NavController, homeViewModel: HomeViewModel, bleViewModel: BleViewModel) {
+fun ContentScreen(paddingValues: PaddingValues, selectedIndex: Int, navController: NavController, homeViewModel: HomeViewModel, bleViewModel: BleViewModel, eventScreenViewModel: EventScreenViewModel) {
     when(selectedIndex) {
         0 -> HomeScreen(navController, paddingValues, homeViewModel, bleViewModel)
-        1 -> EventScreen(navController, paddingValues)
+        1 -> EventScreen(navController, paddingValues, eventScreenViewModel)
         2 -> SettingScreen(navController, paddingValues)
     }
 }

@@ -1,5 +1,7 @@
-package kr.co.uxn.agms_p.ui.components.main
+package kr.co.uxn.agms_p.ui.components.main.setting
 
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,6 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -23,13 +26,11 @@ import androidx.navigation.NavController
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingScreen(navController: NavController, paddingValues: PaddingValues) {
-//    Surface(
-//        modifier = Modifier.fillMaxSize(),
-//        color = Color.Red
-//    ) {}
 
+    val context = LocalContext.current
     val items = listOf(
         "내 정보",
+        "센서 정보",
         "알림 설정",
         "이용 약관",
         "개인 정보 처리 방침",
@@ -37,13 +38,14 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues) {
         "계정 삭제"
     )
 
-    Column(modifier = Modifier.fillMaxSize().background(Color(0xF7F7FB))) {
+    Column(modifier = Modifier.fillMaxSize()
+        .background(Color(0xF7F7FB))
+        .padding(paddingValues)
+    ) {
         Divider()
         items.forEachIndexed { index, item ->
-            SettingItem(item)
-
-//            Divider(color = Color.Transparent, thickness = 1.dp)
-            if (index == 0 || index == 1 || index == 3) {
+            SettingItem(item, index, context, navController)
+            if (index == 0 || index == 3 || index == 5) {
                 Divider(color = Color.Transparent, thickness = 1.dp)
             }
             else {
@@ -52,17 +54,41 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues) {
         }
         Spacer(modifier = Modifier.weight(1f))
     }
-
 }
 
 @Composable
-fun SettingItem(title: String) {
+fun SettingItem(title: String, index: Int, context: Context, navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color.White)
             .border(width = 1.dp, color = Color.LightGray)
-            .clickable { /* TODO */ }
+            .clickable {
+                when(index) {
+                    0 -> {
+                        navController.navigate("MyInfoScreen")
+                    }
+                    1 -> {
+                        navController.navigate("SensorInfoScreen")
+                    }
+                    2 -> {
+                        navController.navigate("NotificationScreen")
+                    }
+                    3 -> {
+                        navController.navigate("TermsAndConditionsScreen")
+                    }
+                    4 -> {
+                        navController.navigate("PrivacyPolicyScreen")
+                    }
+                    5 -> {
+                        Toast.makeText(context, "로그아웃 클릭!", Toast.LENGTH_SHORT).show()
+                    }
+                    6 -> {
+                        navController.navigate("DeleteAccountScreen")
+                    }
+                }
+
+            }
             .padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
         Text(text = title, fontSize = 16.sp)
