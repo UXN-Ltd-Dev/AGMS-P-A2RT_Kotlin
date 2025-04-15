@@ -60,12 +60,18 @@ import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
 import com.patrykandpatrick.vico.core.entry.FloatEntry
 import com.patrykandpatrick.vico.core.scroll.InitialScroll
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.rememberMarker
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController, paddingValues: PaddingValues, homeViewModel: HomeViewModel, bleViewModel: BleViewModel) {
+fun HomeScreen(
+    navController: NavController,
+    paddingValues: PaddingValues,
+    homeViewModel: HomeViewModel,
+    bleViewModel: BleViewModel
+) {
     val context = LocalContext.current
     val day by homeViewModel.day.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -100,8 +106,8 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues, homeV
             )
         )
         // 데이터
-        for (i in 1 .. 100) { // 데이터 갯수
-            val randomYFloat = (50.. 180).random().toFloat()
+        for (i in 1..100) { // 데이터 갯수
+            val randomYFloat = (50..180).random().toFloat()
             dataPoints.add(FloatEntry(x = xPos, y = randomYFloat))
             xPos += 1f
         }
@@ -238,8 +244,10 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues, homeV
             // TODO VICO CHART
             if (dataSetForModel.isNotEmpty()) {
                 ProvideChartStyle {
+                    val marker = rememberMarker()
                     Chart(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
                             .padding(top = 10.dp, start = 5.dp, end = 10.dp),
                         chart = lineChart(
                             lines = dataSetLineSpec
@@ -273,7 +281,7 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues, homeV
 
                             )
                         ),
-//                        marker = null,
+                        marker = marker,
                         isZoomEnabled = true
                     )
                 }
@@ -314,8 +322,8 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues, homeV
                     modifier = Modifier
                         .size(20.dp)
                         .clickable {
-                        Toast.makeText(context, "클릭됨", Toast.LENGTH_SHORT).show()
-                    }
+                            navController.navigate("SensorInfoScreen")
+                        }
                 )
             }
 
@@ -326,7 +334,7 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues, homeV
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 for (i in 0 until 10) {
-                    val painter = if (i < 10 - day + 1 ) {
+                    val painter = if (i < 10 - day + 1) {
                         R.drawable.sensor_progress_on
                     } else {
                         R.drawable.sensor_progress_off

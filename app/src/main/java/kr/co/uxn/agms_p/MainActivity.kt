@@ -233,7 +233,7 @@ class MainActivity : ComponentActivity() {
             }
 
             composable("SensorInfoScreen") { backStackEntry ->
-                SensorInfoScreen(navController, eventScreenViewModel)
+                SensorInfoScreen(navController)
             }
 
             composable("PrivacyPolicyScreen") { backStackEntry ->

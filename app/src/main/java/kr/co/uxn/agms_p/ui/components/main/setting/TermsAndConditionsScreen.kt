@@ -22,6 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Divider
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -118,10 +119,9 @@ fun TermsAndConditionsScreen(navController: NavController, eventScreenViewModel:
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
+                Divider()
                 Text(
-                    modifier = Modifier
-                        .padding(top = 30.dp, start = 20.dp, end = 20.dp),
+                    modifier = Modifier.padding(top = 30.dp, start = 20.dp, end = 20.dp),
                     text= "Always 이용약관\n" +
                         "\n" +
                         "마지막 개정일: 2025년 1월 1일\n" +
