@@ -236,7 +236,7 @@ fun ActivityRegisterScreen(navController: NavController, eventScreenViewModel: E
                                                                 1403 -> R.drawable.event_calibration
                                                                 else -> R.drawable.event_insulin
                                                             }
-                                                            eventScreenViewModel.addItem(ItemData(imageId = image, eventType = eventTypeCode, time = time.value, content = memo.value))
+//                                                            eventScreenViewModel.addItem(ItemData(imageId = image, eventType = eventTypeCode, time = time.value, content = memo.value))
                                                             navController.navigate("MainScreen/${1}")
                                                             Toast.makeText(context, "업로드 성공", Toast.LENGTH_SHORT).show()
                                                         }

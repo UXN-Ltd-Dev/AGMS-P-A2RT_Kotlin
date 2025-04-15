@@ -237,7 +237,7 @@ fun GlucoseRegisterScreen(navController: NavController, eventScreenViewModel: Ev
                                                         Log.e("EVENT", "EVENT 업로드 성공, ${uploadBody.message}")
                                                         withContext(Dispatchers.Main) {
                                                             val image = R.drawable.event_calibration // 추후 혈당 이미지로 변경
-                                                            eventScreenViewModel.addItem(ItemData(imageId = image, eventType = eventTypeCode, time = time.value, content = glucoseDataFromUser.value))
+//                                                            eventScreenViewModel.addItem(ItemData(imageId = image, eventType = eventTypeCode, time = time.value, content = glucoseDataFromUser.value))
                                                             navController.navigate("MainScreen/${1}")
                                                             Toast.makeText(context, "업로드 성공", Toast.LENGTH_SHORT).show()
                                                         }

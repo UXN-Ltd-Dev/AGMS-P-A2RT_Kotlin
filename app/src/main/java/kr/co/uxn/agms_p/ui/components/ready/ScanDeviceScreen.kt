@@ -59,7 +59,7 @@ import kr.co.uxn.agms_p.ble.Device
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 
 @Composable
-fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, mac: String) {
+fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, mac: String, serialNumber: String) {
     // 로티 애니메이션
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.scanning_lottie))
     val coroutineScope = rememberCoroutineScope()
@@ -96,7 +96,7 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
 
                 // 서버에 유저와 디바이스 링크
                 try {
-                    val linkDevice = tokenRetrofit.linkDevice(RequestLinkDevice(userId = userId, serialNumber = mac))
+                    val linkDevice = tokenRetrofit.linkDevice(RequestLinkDevice(userId = userId, serialNumber = serialNumber))
                     if (linkDevice.isSuccessful) {
                         val linkDeviceBody = linkDevice.body()
                         if (linkDeviceBody != null) {
@@ -110,16 +110,12 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
                     } else {
                         Log.e("TEST", "API 에러 : ${linkDevice.errorBody()?.string()}")
                     }
-
                 } catch (e: Exception) {
                     Log.e("TEST","네트워크 에러 : ${e.message}")
                 }
-
-
             }
             // 성공시, 안정화 화면으로 이동
             navController.navigate("StabilizationScreen")
-
         }
 
         override fun onBatchScanResults(results: MutableList<ScanResult>?) {
@@ -153,7 +149,6 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
             bluetoothAdapter.bluetoothLeScanner.stopScan(scanCallback)
         }
     }
-
 
     LaunchedEffect(key1 = Unit) {
         var mScanFilter = mutableListOf<ScanFilter>()
@@ -250,7 +245,6 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
                 text = "최소 3분 정도 소요됩니다",
                 fontSize = 18.sp
             )
-
         }
     }
 }

@@ -30,6 +30,14 @@ class TokenAuthenticator() : Authenticator {
             return null
         }
 
+        if (response.message == "TOKEN Expired") {
+            // 이벤트 전송
+            // 메인엑티비에서 수신하다고 있다가, 로그인화면으로 이동.
+            AuthEventNotifier.notifyRefreshTokenExpired()
+            response.close()
+            return null
+        }
+
         return newRequestWithToken(refreshToken, response.request)
     }
 

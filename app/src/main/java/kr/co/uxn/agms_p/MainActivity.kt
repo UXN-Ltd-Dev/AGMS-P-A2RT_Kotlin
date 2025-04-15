@@ -189,9 +189,10 @@ class MainActivity : ComponentActivity() {
                 RegisterDeviceScreen(navController)
             }
 
-            composable("ScanDeviceScreen/{mac}") { backStackEntry ->
+            composable("ScanDeviceScreen/{mac}/{serialNumber}") { backStackEntry ->
                 val mac = backStackEntry.arguments?.getString("mac").toString()
-                ScanDeviceScreen(navController, bleViewModel, mac)
+                val serialNumber = backStackEntry.arguments?.getString("serialNumber").toString()
+                ScanDeviceScreen(navController, bleViewModel, mac, serialNumber)
             }
 
             composable("ScanFailScreen") {

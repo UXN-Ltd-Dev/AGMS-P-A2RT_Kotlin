@@ -1,6 +1,5 @@
 package kr.co.uxn.agms_p.api
 
-
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestDataValue
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEmailCode
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEventData
@@ -13,6 +12,7 @@ import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDataValue
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDeviceMac
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseEmailCode
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseEventData
+import kr.co.uxn.agms_p.api.model.responseDTO.ResponseGetEvent
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseGetLastTime
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseLinkDevice
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseSignInNormal
@@ -61,7 +61,6 @@ interface RemoteDataSource {
     @POST("/api/device/link")
     suspend fun linkDevice(@Body linkDevice: RequestLinkDevice) : Response<ResponseLinkDevice>
 
-
     // 마지막시간 가져오기
     @GET("/api/value/recent/time")
     suspend fun getLastTime(@Query("user_id") userId: Int): Response<ResponseGetLastTime>
@@ -77,5 +76,9 @@ interface RemoteDataSource {
     // 이메일 인증번호 확인
     @POST("/api/email/code/check")
     suspend fun checkVerificationCode(@Body emailCode: RequestEmailCode): Response<ResponseEmailCode>
+
+    // 이벤트 가져오기
+    @GET("/api/event/list")
+    suspend fun getEventList(@Query("user_id") userId: Int): Response<List<ResponseGetEvent>>
 }
 

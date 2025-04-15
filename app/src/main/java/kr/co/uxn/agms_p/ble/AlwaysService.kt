@@ -38,6 +38,7 @@ import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.BleManager.Companion.TEST
 import kr.co.uxn.agms_p.room.AppDatabase
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Timer
 import java.util.TimerTask
@@ -88,7 +89,7 @@ class AlwaysService() : Service() {
 
         // 서비스안의 코루틴 제거
         serviceJob.cancel()
-        bleManager.reconnectHandler.removeCallbacksAndMessages(null)
+//        bleManager.reconnectHandler.removeCallbacksAndMessages(null)
         bleManager.isReconnect = false
     }
 
@@ -105,8 +106,6 @@ class AlwaysService() : Service() {
             stopSelf()
             return START_NOT_STICKY
         } else {
-
-
             Log.d("SERVICE", "Service onStartCommand() call!")
             Log.d("SERVICE", "Service onStartCommand() localDbRepository  : ${localDbRepository}!")
 
@@ -183,7 +182,6 @@ class AlwaysService() : Service() {
             isServiceRunning = true
 
             // 블루투스 연결
-
             val bluetoothManager =
                 baseContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
             val bluetoothAdpater = bluetoothManager.adapter
@@ -216,7 +214,6 @@ class AlwaysService() : Service() {
 //            (application as AlwaysApplication).uploadWorkRequest()
 
             // 포그라운드에서 반복실행
-//        if (isDuplicatedJob == null || isDuplicatedJob?.isActive == false) {
             isDuplicatedJob = serviceScope.launch {
                 while (isActive) {
                     Log.d("SERVICE", "Coroutine 루프에서 반복 실행 중: ${System.currentTimeMillis()}")
@@ -236,23 +233,30 @@ class AlwaysService() : Service() {
                             if (lastTimeBody != null) {
                                 Log.e(
                                     "SERVICE",
-                                    "서비스 코루틴에서 호출한 lastTime : ${lastTimeBody.toString()}"
+                                    "서비스 코루틴에서 호출한 lastTime (isSuccessful) : ${lastTimeBody.toString()}"
                                 )
+
+                                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                                val convertToLocalDateTime = LocalDateTime.parse(lastTimeBody.recentTime, formatter)
+                                val zoneId = ZoneId.of("Asia/Seoul") // 타임존 설정 (필수!)
+                                val parsedLongTime = convertToLocalDateTime.atZone(zoneId).toInstant().toEpochMilli()
 
                                 val userId2 = DataStoreManager.getUserId().first() ?: -1
-                                val createdAt = LocalDateTime.now()
-                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
-                                val sendData = tokenRetrofit.sendData(
-                                    listOf(
-                                        RequestDataValue(
-                                            userId = userId2,
-                                            createdAt = createdAt,
-                                            valueType = 1301,
-                                            value = 15.00
-                                        )
+                                val localDBDataList = localDbRepository?.dataDao()?.getListAfterLastTime(userId = userId2, lastTime = parsedLongTime)
+
+                                Log.e("TEST", "DB로부터 가져온 리스트 : ${localDBDataList}")
+
+                                val sendDataList = localDBDataList?.map {
+                                    RequestDataValue(
+                                        userId = userId2,
+                                        createdAt = it.createdAt,
+                                        valueType = it.userValueId,
+                                        value = it.value
                                     )
-                                )
+                                }
+
+                                val sendData = tokenRetrofit.sendData(sendDataList!!)
                                 if (sendData.isSuccessful) {
                                     val sendDataBody = sendData.body()
                                     if (sendDataBody != null) {
@@ -270,57 +274,15 @@ class AlwaysService() : Service() {
                                 "TEST",
                                 "recent time API통신 실패 : ${lastTime.errorBody()?.string()}"
                             )
-
-                            val userId2 = DataStoreManager.getUserId().first() ?: -1
-                            val createdAt = LocalDateTime.now()
-                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-
-                            val sendData = tokenRetrofit.sendData(
-                                listOf(
-                                    RequestDataValue(
-                                        userId = userId2,
-                                        createdAt = createdAt,
-                                        valueType = 1301,
-                                        value = 15.00
-                                    ),
-                                )
-                            )
-                            if (sendData.isSuccessful) {
-                                val sendDataBody = sendData.body()
-                                if (sendDataBody != null) {
-                                    Log.e("TEST", "SendDataBody : ${sendDataBody.toString()}")
-                                }
-                            } else {
-                                Log.e(
-                                    "TEST",
-                                    "SendData API통신 실패 : ${sendData.errorBody()?.string()}"
-                                )
-                            }
                         }
-
-
                         delay(1000 * 60 * 1)
                     } catch (e: Exception) {
                         Log.e("SERVICE", "서비스 코루틴 에러 발생 : ${e.message}")
                     } finally {
                         if (wl.isHeld) wl.release()
                     }
-
                 }
             }
-//        } else {
-//
-//            Log.e("SERVICE", "이미 서비스 코루틴이 실행중이므로 스킵")
-//        }
-
-
-//        if (intent?.action == "ACTION_STOP_SERVICE") {
-//            Log.e("TEST", "서비스 내 intent action : ${intent?.action}")
-//            stopForeground(true) // 포그라운드만 종료
-//            stopSelf()
-//        }
-//
-
             return START_STICKY
         }
     }

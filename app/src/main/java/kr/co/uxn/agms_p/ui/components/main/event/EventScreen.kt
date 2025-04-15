@@ -29,6 +29,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,23 +43,86 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
+import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
 
 @SuppressLint("RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventScreen(navController: NavController, paddingValues: PaddingValues, eventScreenViewModel: EventScreenViewModel) {
+fun EventScreen(
+    navController: NavController,
+    paddingValues: PaddingValues,
+    eventScreenViewModel: EventScreenViewModel
+) {
     var interactionSource = remember { MutableInteractionSource() }
     val lifecycleOwner = LocalLifecycleOwner.current
     val eventList by eventScreenViewModel.eventItemList.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 // onResume 시점에만 실행!
                 // 서버로부터 이벤트 목록 받아와서 화면 갱신해주기
-                Log.e("TEST", "이벤트 화면에서 뷰모델 실행")
+                Log.e("TEST", "이벤트 화면에서 onResume일때 DisposableEffect 실행")
+
+                coroutineScope.launch(Dispatchers.IO) {
+                    try {
+                        val userId = DataStoreManager.getUserId().first() ?: -1
+                        val eventList = tokenRetrofit.getEventList(userId)
+                        if (eventList.isSuccessful) {
+                            val eventListBody = eventList.body()
+
+                            /**
+                             * data class ResponseGetEvent(
+                             *     @SerializedName("event_type_code")
+                             *     val eventTypeCode: Int,
+                             *
+                             *     @SerializedName("created_at")
+                             *     val createdAt: String,
+                             *
+                             *     @SerializedName("content")
+                             *     val content: String,
+                             *
+                             *     @SerializedName("is_success")
+                             *     val isSuccess: Boolean,
+                             *
+                             *     @SerializedName("message")
+                             *     val message: String
+                             * )
+                             *
+                             *
+                             *
+                             * // 식사 : 1401, 활동 : 1402, 혈당 : 1403, 기타 : 1404
+                             * data class ItemData(
+                             *     val id: String = UUID.randomUUID().toString(),
+                             *     @DrawableRes val imageId: Int,
+                             *     val eventType: Int,
+                             *     val time: String,
+                             *     val content: String
+                             * )
+                             *
+                             *
+                             */
+                            if (eventListBody != null) {
+                                Log.e("TEST", "불러온 eventListBody : ${eventListBody}")
+                                val items = eventListBody.map { it ->
+                                    ItemData(eventType = it.eventTypeCode, time = it.createdAt, content = it.content)
+                                }
+                                eventScreenViewModel.setItems(items)
+                            }
+                        } else {
+                            Log.e("TEST", "API 에러 : ${eventList.errorBody()}")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("TEST", "네트워크 에러 : ${e.message}")
+                    }
+                }
             }
         }
 
@@ -264,7 +328,7 @@ fun EventScreen(navController: NavController, paddingValues: PaddingValues, even
                     contentAlignment = Alignment.Center // 중앙 정렬
                 ) {
                     Text(
-                        text = "기록이 쌓이면 나를 더 잘 알 수 있어요.",
+                        text = "가볍게, 오늘 하루를 남겨보세요",
                         fontSize = 16.sp,
                         color = Color.Gray,
                         fontWeight = FontWeight.Medium
@@ -272,8 +336,7 @@ fun EventScreen(navController: NavController, paddingValues: PaddingValues, even
                 }
             } else {
                 LazyColumn {
-                    // item : 한개씩,
-                    // items : 여러걔 삽입
+                    // items : 여러개 삽입
                     items(eventList) { item ->
                         Item(itemData = item)
                     }
@@ -311,7 +374,7 @@ fun Item(itemData: ItemData) {
                 fontWeight = FontWeight.Medium,
                 color = Color(0xFF828282),
                 modifier = Modifier.weight(4f)
-                )
+            )
             val image = when (itemData.eventType) {
                 1401 -> R.drawable.event_meal
                 1402 -> R.drawable.event_activity
@@ -319,7 +382,8 @@ fun Item(itemData: ItemData) {
                 else -> R.drawable.event_insulin
             }
             Image(
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier
+                    .size(40.dp)
                     .weight(2f),
                 painter = painterResource(image),
                 contentDescription = "활동 아이콘"

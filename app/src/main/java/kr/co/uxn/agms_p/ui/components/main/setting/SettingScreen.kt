@@ -47,11 +47,11 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
         "계정 삭제"
     )
 
-    Column(modifier = Modifier.fillMaxSize()
+    Column(
+        modifier = Modifier.fillMaxSize()
         .background(Color(0xF7F7FB))
         .padding(paddingValues)
     ) {
-        Divider()
         items.forEachIndexed { index, item ->
             SettingItem(item, index, context, navController, bleViewModel)
             if (index == 0 || index == 3 || index == 5) {
@@ -132,7 +132,7 @@ fun SettingItem(title: String, index: Int, context: Context, navController: NavC
         modifier = Modifier
             .fillMaxWidth()
             .background(Color.White)
-            .border(width = 1.dp, color = Color.LightGray)
+            .border(width = 1.dp, color = Color.LightGray, )
             .clickable {
                 when(index) {
                     0 -> {

@@ -115,16 +115,18 @@ class BleManager(
 
 //                isChange = false
 //                mGatt = gatt
-                if(isReconnect) {
-                    // mtu 517로 요청
-                    gatt?.requestMtu(517)
-                } else {
-                    gatt?.disconnect()
-                    gatt?.close()
-                }
+
+
+//                if(isReconnect) {
+//                    // mtu 517로 요청
+//                    gatt?.requestMtu(517)
+//                } else {
+//                    gatt?.disconnect()
+//                    gatt?.close()
+//                }
 
                 // mtu 517로 요청
-//                gatt?.requestMtu(517)
+                gatt?.requestMtu(517)
 
 
                 // rssi읽기 요청. 성공하면 rssi값 onReadRemoteRssi로 메서드가 호출됨.

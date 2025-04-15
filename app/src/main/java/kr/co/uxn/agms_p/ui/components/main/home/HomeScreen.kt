@@ -28,9 +28,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.DefaultAlpha
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -38,6 +43,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
+import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
+import com.patrykandpatrick.vico.compose.axis.vertical.rememberStartAxis
+import com.patrykandpatrick.vico.compose.chart.Chart
+import com.patrykandpatrick.vico.compose.chart.line.lineChart
+import com.patrykandpatrick.vico.compose.chart.scroll.rememberChartScrollSpec
+import com.patrykandpatrick.vico.compose.chart.scroll.rememberChartScrollState
+import com.patrykandpatrick.vico.compose.component.shape.shader.fromBrush
+import com.patrykandpatrick.vico.compose.style.ProvideChartStyle
+import com.patrykandpatrick.vico.core.DefaultAlpha
+import com.patrykandpatrick.vico.core.axis.AxisItemPlacer
+import com.patrykandpatrick.vico.core.chart.line.LineChart
+import com.patrykandpatrick.vico.core.component.shape.shader.DynamicShader
+import com.patrykandpatrick.vico.core.component.shape.shader.DynamicShaders
+import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
+import com.patrykandpatrick.vico.core.entry.FloatEntry
+import com.patrykandpatrick.vico.core.scroll.InitialScroll
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
@@ -51,6 +72,45 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues, homeV
 
     val weo1 by bleViewModel.weo1.collectAsState()
     val temperature by bleViewModel.temperature.collectAsState()
+
+    // Vico Chart
+    val modelProducer = remember { ChartEntryModelProducer() }
+    val dataSetForModel = remember { mutableStateListOf(listOf<FloatEntry>()) }
+    val dataSetLineSpec = remember { arrayListOf<LineChart.LineSpec>() }
+
+    val scrollState = rememberChartScrollState()
+
+    // VICO
+    LaunchedEffect(Unit) {
+        dataSetForModel.clear()
+        dataSetLineSpec.clear()
+        var xPos = 1f
+        val dataPoints = arrayListOf<FloatEntry>()
+        dataSetLineSpec.add(
+            LineChart.LineSpec(
+                lineColor = Color(0xFF6FB0E5).toArgb(),
+                lineBackgroundShader = DynamicShaders.fromBrush(
+                    brush = Brush.verticalGradient(
+                        listOf(
+                            Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_END),
+                            Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_START)
+                        )
+                    )
+                )
+            )
+        )
+        // 데이터
+        for (i in 1 .. 100) { // 데이터 갯수
+            val randomYFloat = (50.. 180).random().toFloat()
+            dataPoints.add(FloatEntry(x = xPos, y = randomYFloat))
+            xPos += 1f
+        }
+
+        dataSetForModel.add(dataPoints)
+        modelProducer.setEntries(dataSetForModel)
+
+
+    }
 
     // 시연용 타이머
     LaunchedEffect(Unit) {
@@ -175,12 +235,49 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues, homeV
                     .padding(start = 20.dp)
             )
 
-            Image(
-                painter = painterResource(R.drawable.fraud),
-                contentDescription = "그래프 샘플 이미지",
-                modifier = Modifier.size(350.dp, 200.dp)
-                    .padding(horizontal = 20.dp)
-            )
+            // TODO VICO CHART
+            if (dataSetForModel.isNotEmpty()) {
+                ProvideChartStyle {
+                    Chart(
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(top = 10.dp, start = 5.dp, end = 10.dp),
+                        chart = lineChart(
+                            lines = dataSetLineSpec
+                        ),
+                        chartModelProducer = modelProducer,
+                        chartScrollState = scrollState,
+                        chartScrollSpec = rememberChartScrollSpec(initialScroll = InitialScroll.End), // 우측부터 최신값추가
+                        // y축
+                        startAxis = rememberStartAxis(
+                            title = "Top values",
+                            tickLength = 0.dp,
+                            valueFormatter = { value, _ ->
+                                value.toInt().toString()
+                            },
+                            // y축 레이블 갯수
+                            itemPlacer = AxisItemPlacer.Vertical.default(
+                                maxItemCount = 6,
+                                shiftTopLines = true
+                            )
+                        ),
+
+                        // x축
+                        bottomAxis = rememberBottomAxis(
+                            title = "Count of values",
+                            tickLength = 0.dp,
+                            valueFormatter = { value, _ ->
+                                ((value.toInt())).toString()
+                            },
+                            guideline = null,
+                            itemPlacer = AxisItemPlacer.Horizontal.default(
+
+                            )
+                        ),
+//                        marker = null,
+                        isZoomEnabled = true
+                    )
+                }
+            }
         }
 
         // 센서 정보 표시 카드
@@ -248,13 +345,15 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues, homeV
                     .padding(start = 15.dp, end = 15.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = "${10 - day + 1}/10일",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                if ((10 - day + 1) < 11) {
+                    Text(
+                        text = "${10 - day + 1}/10일",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
 
-                if (day - 1 != 0) {
+                if (day - 1 > 0) {
                     Text(
                         text = "${day - 1}일 남았어요",
                         fontSize = 15.sp,
