@@ -30,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -77,6 +78,15 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
     val focusManager = LocalFocusManager.current
     val interactionSource = remember { MutableInteractionSource() }
 
+    // notification swtich
+    val checkedForSound = remember { mutableStateOf(false) }
+    val checkedForVibration = remember { mutableStateOf(false) }
+    val checkedForHighGlucose = remember { mutableStateOf(false) }
+    val checkedForLowGlucose = remember { mutableStateOf(false) }
+    val checkedForLostSignal = remember { mutableStateOf(false) }
+    val checkedForExpiredSensor = remember { mutableStateOf(false) }
+    val checkedForStabilization = remember { mutableStateOf(false) }
+    val checkedForCalibration = remember { mutableStateOf(false) }
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -104,7 +114,8 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
         },
         ) { paddingValues ->
         Surface(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
                 .pointerInput(Unit) {
                     detectTapGestures(onTap = { focusManager.clearFocus() })  // 🔹 터치 시 키보드 숨기기
                 }
@@ -116,7 +127,256 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                     .background(Color(0xFFF2F3F9)),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
                 Divider()
+
+                Box(
+                    modifier = Modifier.clickable {
+
+                    }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White)
+                            .height(50.dp)
+                            .padding(horizontal = 30.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "소리",
+                            fontSize = 16.sp
+                        )
+
+                        Switch(
+                            checked = checkedForSound.value,
+                            onCheckedChange = {
+                                checkedForSound.value = it
+                            }
+                        )
+                    }
+                }
+
+                Divider()
+
+                Box(
+                    modifier = Modifier.clickable {
+
+                    }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White)
+                            .height(50.dp)
+                            .padding(horizontal = 30.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "진동",
+                            fontSize = 16.sp
+                        )
+
+                        Switch(
+                            checked = checkedForVibration.value,
+                            onCheckedChange = {
+                                checkedForVibration.value = it
+                            }
+                        )
+                    }
+                }
+
+                Divider()
+
+                Divider(color = Color.Transparent, thickness = 20.dp)
+
+                Divider()
+
+                Box(
+                    modifier = Modifier.clickable {
+
+                    }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White)
+                            .height(50.dp)
+                            .padding(horizontal = 30.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "고혈당 알림",
+                            fontSize = 16.sp
+                        )
+
+                        Switch(
+                            checked = checkedForHighGlucose.value,
+                            onCheckedChange = {
+                                checkedForHighGlucose.value = it
+                            }
+                        )
+                    }
+                }
+
+                Divider()
+
+                Box(
+                    modifier = Modifier.clickable {
+
+                    }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White)
+                            .height(50.dp)
+                            .padding(horizontal = 30.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "저혈당 알림",
+                            fontSize = 16.sp
+                        )
+                        Switch(
+                            checked = checkedForLowGlucose.value,
+                            onCheckedChange = {
+                                checkedForLowGlucose.value = it
+                            }
+                        )
+                    }
+                }
+
+                Divider()
+
+                Divider(color = Color.Transparent, thickness = 20.dp)
+
+                Divider()
+
+                Box(
+                    modifier = Modifier.clickable {
+
+                    }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White)
+                            .height(50.dp)
+                            .padding(horizontal = 30.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "신호 소실",
+                            fontSize = 16.sp
+                        )
+                        Switch(
+                            checked = checkedForLostSignal.value,
+                            onCheckedChange = {
+                                checkedForLostSignal.value = it
+                            }
+                        )
+                    }
+                }
+
+                Divider()
+
+                Box(
+                    modifier = Modifier.clickable {
+
+                    }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White)
+                            .height(50.dp)
+                            .padding(horizontal = 30.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "센서 만료",
+                            fontSize = 16.sp
+                        )
+                        Switch(
+                            checked = checkedForExpiredSensor.value,
+                            onCheckedChange = {
+                                checkedForExpiredSensor.value = it
+                            }
+                        )
+                    }
+                }
+
+                Divider()
+
+                Box(
+                    modifier = Modifier.clickable {
+
+                    }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White)
+                            .height(50.dp)
+                            .padding(horizontal = 30.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "센서 안정화",
+                            fontSize = 16.sp
+                        )
+                        Switch(
+                            checked = checkedForStabilization.value,
+                            onCheckedChange = {
+                                checkedForStabilization.value = it
+                            }
+                        )
+                    }
+                }
+
+                Divider()
+
+                Divider(color = Color.Transparent, thickness = 20.dp)
+
+                Divider()
+
+                Box(
+                    modifier = Modifier.clickable {
+
+                    }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White)
+                            .height(50.dp)
+                            .padding(horizontal = 30.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "혈당값 입력 시간 알림",
+                            fontSize = 16.sp
+                        )
+                        Switch(
+                            checked = checkedForCalibration.value,
+                            onCheckedChange = {
+                                checkedForCalibration.value = it
+                            }
+                        )
+                    }
+                }
+
+                Divider()
+
             }
         }
     }

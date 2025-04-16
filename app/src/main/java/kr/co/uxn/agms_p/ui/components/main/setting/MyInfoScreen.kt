@@ -37,6 +37,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -98,6 +99,10 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
     var expandedForSex by remember { mutableStateOf(false) }
     var expandedForDiabetesType by remember { mutableStateOf(false) }
 
+    LaunchedEffect(Unit) {
+        // TODO 서버로부터 받아오기
+
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -616,12 +621,7 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                             )
                         }
                     }
-//
-//                    Text(
-//                        text = "목표 혈당 범위",
-//                        textAlign = TextAlign.Center
-//                    )
-//
+
 
                     Spacer(modifier = Modifier.height(120.dp))
 
@@ -634,9 +634,10 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                         Image(
                             painter = painterResource(R.drawable.btn_save),
                             contentDescription = "저장 버튼",
-                            modifier = Modifier.align(Alignment.Center)
+                            modifier = Modifier
+                                .align(Alignment.Center)
                                 .clickable {
-
+                                    // TODO 서버에 저장 요청
                                 }
                         )
                     }
