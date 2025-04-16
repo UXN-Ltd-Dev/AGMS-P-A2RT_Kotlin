@@ -316,7 +316,7 @@ class AlwaysService() : Service() {
                                         }
                                     }
 
-
+                                    // 기존 방식 : 한번에 다 보내기
 
 //                                    val sendData = tokenRetrofit.sendData(sendDataList!!)
 //                                    if (sendData.isSuccessful) {
@@ -337,6 +337,19 @@ class AlwaysService() : Service() {
                                 "TEST",
                                 "recent time API통신 실패 : ${lastTime.errorBody()?.string()}"
                             )
+                        }
+
+
+                        val glucoseList = tokenRetrofit.getGlucoseList(userId)
+                        if (glucoseList.isSuccessful) {
+                            val glucoseListBody = glucoseList.body()
+                            if (glucoseListBody != null) {
+                                // ui에 마지막 글루코즈 값 갱신
+                                Log.e("TEST", "glucoseList first : ${glucoseListBody.first().createdAt}, last : ${glucoseListBody.last().createdAt}")
+                                BleBridge.updateGlucose(glucoseListBody.last().glucose)
+                            }
+                        } else {
+                            Log.e("TEST", "glucoseList API통신 실패 : ${glucoseList.errorBody()?.string()}")
                         }
                         delay(1000 * 60 * 1)
                     } catch (e: Exception) {

@@ -629,7 +629,8 @@ class BleManager(
         val temperature =
             java.lang.Byte.toUnsignedInt(data[16]) + (java.lang.Byte.toUnsignedInt(data[17]) / 100.0f * 100).roundToInt() / 100.0
 
-        BleBridge.updateTemperature(temperature)
+        // ui에 온도 실시간 갱신
+//        BleBridge.updateTemperature(temperature)
 
 //        saveData.add(
 //            UserValue(
@@ -698,7 +699,8 @@ class BleManager(
             }
         }
 
-        BleBridge.updateWeo1(lastWeo1)
+        // ui에 weo1 값 실시간 갱신
+//        BleBridge.updateWeo1(lastWeo1)
 
         CoroutineScope(Dispatchers.IO).launch {
             AppDatabase.getInstance(context)?.dataDao()?.insert(saveData)

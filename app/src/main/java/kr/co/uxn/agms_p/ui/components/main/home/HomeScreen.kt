@@ -1,11 +1,9 @@
 package kr.co.uxn.agms_p.ui.components.main.home
 
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -42,7 +40,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.DefaultAlpha
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -62,10 +59,9 @@ import com.patrykandpatrick.vico.compose.chart.scroll.rememberChartScrollSpec
 import com.patrykandpatrick.vico.compose.chart.scroll.rememberChartScrollState
 import com.patrykandpatrick.vico.compose.component.shape.shader.fromBrush
 import com.patrykandpatrick.vico.compose.style.ProvideChartStyle
-import com.patrykandpatrick.vico.core.DefaultAlpha
 import com.patrykandpatrick.vico.core.axis.AxisItemPlacer
 import com.patrykandpatrick.vico.core.chart.line.LineChart
-import com.patrykandpatrick.vico.core.component.shape.shader.DynamicShader
+import com.patrykandpatrick.vico.core.chart.values.AxisValuesOverrider
 import com.patrykandpatrick.vico.core.component.shape.shader.DynamicShaders
 import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
 import com.patrykandpatrick.vico.core.entry.FloatEntry
@@ -73,14 +69,17 @@ import com.patrykandpatrick.vico.core.scroll.InitialScroll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.rememberMarker
-import kr.co.uxn.agms_p.ui.components.main.event.ItemData
+import kr.co.uxn.agms_p.ui.components.main.VivoItem
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,6 +96,7 @@ fun HomeScreen(
 
     val weo1 by bleViewModel.weo1.collectAsState()
     val temperature by bleViewModel.temperature.collectAsState()
+    val glucose by bleViewModel.glucose.collectAsState()
 
     // Vico Chart
     val modelProducer = remember { ChartEntryModelProducer() }
@@ -114,6 +114,8 @@ fun HomeScreen(
         dataSetLineSpec.clear()
         var xPos = 1f
         val dataPoints = arrayListOf<FloatEntry>()
+
+        // 차트 디자인 옵션
         dataSetLineSpec.add(
             LineChart.LineSpec(
                 lineColor = Color(0xFF6FB0E5).toArgb(),
@@ -127,16 +129,20 @@ fun HomeScreen(
                 )
             )
         )
+
         // 데이터
-        for (i in 1..100) { // 데이터 갯수
-            val randomYFloat = (50..180).random().toFloat()
-            dataPoints.add(FloatEntry(x = xPos, y = randomYFloat))
-            xPos += 1f
+//        for (i in 1..100) { // 데이터 갯수
+//            val randomYFloat = (50..180).random().toFloat()
+//            dataPoints.add(FloatEntry(x = xPos, y = randomYFloat))
+//            xPos += 1f
+//        }
+
+        for(i in 0 .. 20) {
+            dataPoints.add(FloatEntry(x = 0f, y = 0f))
         }
 
         dataSetForModel.add(dataPoints)
         modelProducer.setEntries(dataSetForModel)
-
 
     }
 
@@ -163,12 +169,15 @@ fun HomeScreen(
 //        }
 //    }
 
+
+
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 // onResume 시점에만 실행!
                 // 서버로부터 이벤트 목록 받아와서 화면 갱신해주기
                 Log.e("TEST", "이벤트 화면에서 onResume일때 DisposableEffect 실행")
+
 
                 coroutineScope.launch(Dispatchers.IO) {
                     try {
@@ -179,6 +188,61 @@ fun HomeScreen(
                             if (glucoseListBody != null) {
                                 Log.e("TEST", "불러온 glucoseListBody : ${glucoseListBody}")
 
+
+                                val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+
+                                val glucoseDataSetList = glucoseListBody.map {
+                                    val timeMillis = formatter.parse(it.createdAt)?.time?.toFloat() ?: 0f
+                                    VivoItem(xAxisTime = timeMillis, yAxisValue = it.glucose.toFloat())
+                                }
+                                Log.e("TEST", "glucoseDataSetList : ${glucoseDataSetList}")
+
+
+                                val currentDataSetList = glucoseListBody.map {
+                                    val timeMillis = formatter.parse(it.createdAt)?.time?.toFloat() ?: 0f
+                                    VivoItem(xAxisTime = timeMillis, yAxisValue = it.current.toFloat())
+                                }
+
+                                // VIVO
+                                withContext(Dispatchers.Main) {
+                                    dataSetForModel.clear()
+                                    dataSetLineSpec.clear()
+//                                    var xPos = 1f
+                                    val dataPoints = arrayListOf<FloatEntry>()
+
+                                    // 차트 디자인 옵션
+                                    dataSetLineSpec.add(
+                                        LineChart.LineSpec(
+                                            lineColor = Color(0xFF6FB0E5).toArgb(),
+                                            lineBackgroundShader = DynamicShaders.fromBrush(
+                                                brush = Brush.verticalGradient(
+                                                    listOf(
+                                                        Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_END),
+                                                        Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_START)
+                                                    )
+                                                )
+                                            )
+                                        )
+                                    )
+                                    // 데이터
+//                                    for (i in 1..100) { // 데이터 갯수
+//                                        val randomYFloat = (50..180).random().toFloat()
+//                                        dataPoints.add(FloatEntry(x = xPos, y = randomYFloat))
+//                                        xPos += 1f
+//                                    }
+
+                                    for ( i in 0 until glucoseDataSetList.size) {
+                                        dataPoints.add(FloatEntry(x = glucoseDataSetList[i].xAxisTime, y = glucoseDataSetList[i].yAxisValue))
+                                    }
+
+//                                    for ( i in 0 until glucoseDataSetList.size) {
+//                                        dataPoints.add(FloatEntry(x = xPos, y = glucoseDataSetList[i].yAxisValue.toFloat()))
+//                                        xPos += 1f
+//                                    }
+
+                                    dataSetForModel.add(dataPoints)
+                                    modelProducer.setEntries(dataSetForModel)
+                                }
                             }
                         } else {
                             Log.e("TEST", "API 에러 : ${glucoseList.errorBody()?.string()}")
@@ -220,8 +284,10 @@ fun HomeScreen(
             )
         ) {
             Spacer(modifier = Modifier.height(10.dp))
-            Box(
-                modifier = Modifier.fillMaxWidth()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "현재 혈당",
@@ -229,15 +295,13 @@ fun HomeScreen(
                     fontWeight = FontWeight.Medium,
                     color = Color.White,
                     modifier = Modifier
-                        .align(Alignment.CenterStart)
                         .padding(start = 20.dp)
                 )
 
                 Image(
                     modifier = Modifier
-                        .align(Alignment.CenterEnd) // ✅ 이미지는 오른쪽 끝
-                        .padding(end = 20.dp)
-                        .size(28.dp),
+                        .padding(start = 5.dp)
+                        .size(17.dp),
                     painter = painterResource(R.drawable.glucose_reset),
                     contentDescription = "glucoseReset"
                 )
@@ -249,13 +313,11 @@ fun HomeScreen(
                     .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
                 verticalAlignment = Alignment.Bottom
             ) {
-                Spacer(modifier = Modifier.width(18.dp))
+                Spacer(modifier = Modifier.width(35.dp))
                 Text(
-//                    text = "110",
-                    text = "${weo1}",
-//                    text = "${temperature}",
+                    text = "${glucose}",
                     color = Color.White,
-                    fontSize = 45.sp,
+                    fontSize = 50.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.width(20.dp))
@@ -264,14 +326,26 @@ fun HomeScreen(
                     color = Color.White,
                     fontSize = 25.sp
                 )
-                Spacer(modifier = Modifier.width(40.dp))
-                Image(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .padding(top = 10.dp),
-                    painter = painterResource(R.drawable.glucose_down),
-                    contentDescription = "glucose_down"
-                )
+                Spacer(modifier = Modifier.width(70.dp))
+                Column(
+                    modifier = Modifier.align(Alignment.Top),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Image(
+                        modifier = Modifier
+                            .size(32.dp),
+                        painter = painterResource(R.drawable.level3),
+                        contentDescription = "glucose_lv3"
+                    )
+                    Spacer(modifier = Modifier.height(3.dp))
+                    Text(
+                        text = "유지 중",
+                        color = Color.White,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
             }
         }
 
@@ -292,7 +366,7 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "일일 그래프",
+                text = "혈당 그래프",
                 fontWeight = FontWeight.Medium,
                 fontSize = 16.sp,
                 modifier = Modifier
@@ -308,7 +382,8 @@ fun HomeScreen(
                             .fillMaxWidth()
                             .padding(start = 5.dp, end = 10.dp),
                         chart = lineChart(
-                            lines = dataSetLineSpec
+                            lines = dataSetLineSpec,
+                            axisValuesOverrider = AxisValuesOverrider.fixed(minY = 0f, maxY = 250f)
                         ),
                         chartModelProducer = modelProducer,
                         chartScrollState = scrollState,
@@ -332,7 +407,9 @@ fun HomeScreen(
                             title = "Count of values",
                             tickLength = 0.dp,
                             valueFormatter = { value, _ ->
-                                ((value.toInt())).toString()
+                                val date = Date(value.toLong())
+                                val displayFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+                                displayFormat.format(date)
                             },
                             guideline = null,
                             itemPlacer = AxisItemPlacer.Horizontal.default(

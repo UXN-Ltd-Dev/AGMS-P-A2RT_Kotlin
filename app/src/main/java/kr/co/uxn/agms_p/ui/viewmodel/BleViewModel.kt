@@ -55,6 +55,15 @@ class BleViewModel(application: Application) : AndroidViewModel(application) {
             initialValue = 0.0
         )
 
+    val glucose: StateFlow<Int> = BleBridge.glucose
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = -1
+        )
+
+
+
 
 
     suspend fun emit(event: String) {

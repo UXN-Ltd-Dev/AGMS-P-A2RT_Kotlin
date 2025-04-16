@@ -15,6 +15,9 @@ object BleBridge {
     private val _temperature = MutableStateFlow<Double>(0.0)
     val temperature: StateFlow<Double> = _temperature
 
+    private val _glucose = MutableStateFlow<Int>(0)
+    val glucose: StateFlow<Int> = _glucose
+
     fun updateState(state: BleConnectionState) {
         _bleState.value = state
         Log.e("TEST", "ble브릿지의 bleState : $state")
@@ -26,5 +29,9 @@ object BleBridge {
 
     fun updateTemperature(value: Double) {
         _temperature.value = value
+    }
+
+    fun updateGlucose(value: Int) {
+        _glucose.value = value
     }
 }
