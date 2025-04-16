@@ -1,31 +1,23 @@
 package kr.co.uxn.agms_p.ui.components.main.setting
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
 import androidx.compose.material.Surface
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -44,10 +36,10 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import kotlinx.coroutines.flow.first
 import kr.co.uxn.agms_p.api.token.DataStoreManager
+import kr.co.uxn.agms_p.ui.components.main.AlwaysDialog
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -92,12 +84,15 @@ fun SensorInfoScreen(navController: NavController) {
     }
 
     if (showDialog.value) {
-        SensorShutDownDialog(
-            onDismiss = { showDialog.value = false },
+        AlwaysDialog(
+            onDismiss = {
+                showDialog.value = false
+            },
             onConfirm = {
                 showDialog.value = false
-
-            }
+            },
+            title = "센서 종료",
+            content = "센서 연결을 종료하시겠습니까?"
         )
     }
 
@@ -223,69 +218,3 @@ fun SensorInfoScreen(navController: NavController) {
         }
     }
 }
-
-@Composable
-fun SensorShutDownDialog(
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit
-) {
-    Dialog(onDismissRequest = onDismiss) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .background(Color.White, RoundedCornerShape(20.dp))
-                .padding(24.dp)
-        ) {
-            Column {
-                Text(
-                    text = "센서 종료",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = "센서 연결을 종료하시겠습니까?",
-                    fontSize = 17.sp
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End)
-                ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.weight(1f),
-                        border = BorderStroke(1.dp, Color(0xFFD8D8D8))
-                    ) {
-                        Text(
-                            text = "취소",
-                            fontWeight = FontWeight.Medium
-                            )
-                    }
-
-                    Button(
-                        onClick = onConfirm,
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF3451B2), // 파란색
-                        ),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = "확인",
-                            color = Color.White,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-

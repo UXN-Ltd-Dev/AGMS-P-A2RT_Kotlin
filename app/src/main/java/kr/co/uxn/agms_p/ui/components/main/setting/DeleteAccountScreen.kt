@@ -1,12 +1,10 @@
 package kr.co.uxn.agms_p.ui.components.main.setting
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,8 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Divider
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -29,7 +25,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
@@ -42,34 +37,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.NetworkUtil
 import kr.co.uxn.agms_p.R
-import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
-import kr.co.uxn.agms_p.api.model.requestDTO.RequestEventData
-import kr.co.uxn.agms_p.api.token.DataStoreManager
-import kr.co.uxn.agms_p.ui.components.main.event.ItemData
+import kr.co.uxn.agms_p.ui.components.main.AlwaysDialog
 import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,6 +60,23 @@ fun DeleteAccountScreen(navController: NavController, eventScreenViewModel: Even
 
     val focusManager = LocalFocusManager.current
     var isCheck by remember { mutableStateOf<Boolean>(false) }
+    val showDialog = remember { mutableStateOf(false) }
+
+    if (showDialog.value) {
+        AlwaysDialog(
+            onConfirm = {
+                showDialog.value = false
+                // TODO 서버에 계정삭제 요청 및 로그인화면 이동 또는 앱 종료 + 데이터스토어 정리
+            },
+            onDismiss = {
+                showDialog.value = false
+            },
+            title = "계정 삭제",
+            content = "정말 삭제하시겠습니까?"
+        )
+    }
+
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -262,6 +260,8 @@ fun DeleteAccountScreen(navController: NavController, eventScreenViewModel: Even
                                         Toast.makeText(context, "삭제를 체크해주세요.", Toast.LENGTH_SHORT).show()
                                     } else {
                                         if (NetworkUtil.isNetworkAvailable(context)) {
+                                            showDialog.value = true
+
                                             // TODO 서버에 계정삭제 요청 및 로그인화면 이동 또는 앱 종료 + 데이터스토어 정리
                                         } else {
                                             Toast.makeText(context, "인터넷 연결을 확인해주세요.", Toast.LENGTH_SHORT).show()
