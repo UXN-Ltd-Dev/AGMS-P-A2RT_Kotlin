@@ -78,37 +78,6 @@ fun EventScreen(
                         if (eventList.isSuccessful) {
                             val eventListBody = eventList.body()
 
-                            /**
-                             * data class ResponseGetEvent(
-                             *     @SerializedName("event_type_code")
-                             *     val eventTypeCode: Int,
-                             *
-                             *     @SerializedName("created_at")
-                             *     val createdAt: String,
-                             *
-                             *     @SerializedName("content")
-                             *     val content: String,
-                             *
-                             *     @SerializedName("is_success")
-                             *     val isSuccess: Boolean,
-                             *
-                             *     @SerializedName("message")
-                             *     val message: String
-                             * )
-                             *
-                             *
-                             *
-                             * // 식사 : 1401, 활동 : 1402, 혈당 : 1403, 기타 : 1404
-                             * data class ItemData(
-                             *     val id: String = UUID.randomUUID().toString(),
-                             *     @DrawableRes val imageId: Int,
-                             *     val eventType: Int,
-                             *     val time: String,
-                             *     val content: String
-                             * )
-                             *
-                             *
-                             */
                             if (eventListBody != null) {
                                 Log.e("TEST", "불러온 eventListBody : ${eventListBody}")
                                 val items = eventListBody.map { it ->

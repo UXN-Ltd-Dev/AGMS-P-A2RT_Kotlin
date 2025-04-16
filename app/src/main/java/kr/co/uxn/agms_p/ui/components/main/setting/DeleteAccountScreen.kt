@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Divider
@@ -29,13 +30,16 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
@@ -44,6 +48,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -56,6 +61,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kr.co.uxn.agms_p.NetworkUtil
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEventData
@@ -71,11 +77,8 @@ fun DeleteAccountScreen(navController: NavController, eventScreenViewModel: Even
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    val glucoseDataFromUser = remember { mutableStateOf("") }
-    val time = remember { mutableStateOf<String>("") }
-    val hint = remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
-    val interactionSource = remember { MutableInteractionSource() }
+    var isCheck by remember { mutableStateOf<Boolean>(false) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -86,7 +89,7 @@ fun DeleteAccountScreen(navController: NavController, eventScreenViewModel: Even
                     IconButton(onClick = {}) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "뒤로가기",
+                            contentDescription = "뒤로 가기",
                             modifier = Modifier.clickable {
                                 navController.navigate("MainScreen/${2}")
                             }
@@ -109,7 +112,6 @@ fun DeleteAccountScreen(navController: NavController, eventScreenViewModel: Even
                     detectTapGestures(onTap = { focusManager.clearFocus() })  // 🔹 터치 시 키보드 숨기기
                 }
         ) {
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -118,6 +120,174 @@ fun DeleteAccountScreen(navController: NavController, eventScreenViewModel: Even
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Divider()
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 30.dp)
+                        .padding(top = 20.dp),
+                ) {
+                    Text(
+                        text = "계정을 삭제하시겠습니까?",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        text = "계정을 삭제할 경우",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 10.dp),
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Image(
+                            modifier = Modifier.size(35.dp),
+                            painter = painterResource(R.drawable.link_icon),
+                            contentDescription = "링크 아이콘"
+                        )
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Column(
+
+                        ){
+                            Text(
+                                text = "동일한 이메일 주소를 사용하는 관련 Always"
+                            )
+                            Text(
+                                text = "앱 계정의 모든 데이터를 잃게 됩니다."
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 10.dp),
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Image(
+                            modifier = Modifier.size(27.dp),
+                            painter = painterResource(R.drawable.device_icon),
+                            contentDescription = "장치 아이콘"
+                        )
+                        Spacer(modifier = Modifier.width(7.dp))
+                        Column(
+
+                        ){
+                            Text(
+                                text = "현재 사용하고 계신 Always 제품의 연결이 끊"
+                            )
+                            Text(
+                                text = "기게 됩니다."
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(30.dp))
+
+                    Text(
+                        text = "계정을 삭제하면 이 앱에서 로그아웃됩니다."
+                    )
+                    Text(
+                        text = "세션이 만료되기까지 최대 1시간이 쇼요 될 수 있습니다."
+                    )
+
+                    Spacer(modifier = Modifier.height(30.dp))
+
+                    Text(
+                        text = "계정 삭제 후 다시 돌아오셔서 새로운 계정을 만들 수"
+                    )
+                    Text(
+                        text = "있습니다."
+                    )
+
+                    Spacer(modifier = Modifier.height(30.dp))
+
+                    Text(
+                        text = "계정을 삭제 하시겠습니까?",
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "(실행 취소는 불가능 합니다.)",
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(30.dp))
+
+
+                    Row(
+                        modifier = Modifier
+                            .selectable(
+                                selected = (isCheck == true),
+                                onClick = { isCheck = !isCheck }, // 눌렀을 때만 선택
+                                role = Role.RadioButton
+                            ),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = (isCheck == true),
+                            onClick = null // 접근성 위해 null
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "예, 계정을 삭제하겠습니다.",
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.btn_delete_account),
+                            contentDescription = "계정 삭제 버튼",
+                            modifier = Modifier.align(Alignment.Center)
+                                .clickable {
+                                    if (!isCheck) {
+                                        Toast.makeText(context, "삭제를 체크해주세요.", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        if (NetworkUtil.isNetworkAvailable(context)) {
+                                            // TODO 서버에 계정삭제 요청 및 로그인화면 이동 또는 앱 종료 + 데이터스토어 정리
+                                        } else {
+                                            Toast.makeText(context, "인터넷 연결을 확인해주세요.", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.btn_cancel),
+                            contentDescription = "취소 버튼",
+                            modifier = Modifier.align(Alignment.Center)
+                                .clickable {
+                                    navController.navigate("MainScreen/${2}")
+                                }
+                        )
+                    }
+                }
             }
         }
     }

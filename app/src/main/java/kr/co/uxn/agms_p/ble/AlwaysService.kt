@@ -213,7 +213,7 @@ class AlwaysService() : Service() {
             // 워커 실행
 //            (application as AlwaysApplication).uploadWorkRequest()
 
-            // 포그라운드에서 반복실행
+            // 포그라운드에서 반복 실행
             isDuplicatedJob = serviceScope.launch {
                 while (isActive) {
                     Log.d("SERVICE", "Coroutine 루프에서 반복 실행 중: ${System.currentTimeMillis()}")
@@ -231,42 +231,105 @@ class AlwaysService() : Service() {
                         if (lastTime.isSuccessful) {
                             val lastTimeBody = lastTime.body()
                             if (lastTimeBody != null) {
-                                Log.e(
-                                    "SERVICE",
-                                    "서비스 코루틴에서 호출한 lastTime (isSuccessful) : ${lastTimeBody.toString()}"
-                                )
+                                Log.e("SERVICE", "서비스 코루틴에서 호출한 lastTime (isSuccessful) : ${lastTimeBody.toString()}")
+                                if(lastTimeBody.isSuccess == false) {
+                                    val userId2 = DataStoreManager.getUserId().first() ?: -1
+                                    val localDBDataList = localDbRepository?.dataDao()?.getListAfterLastTime(userId = userId2, lastTime = 0)
 
-                                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                                val convertToLocalDateTime = LocalDateTime.parse(lastTimeBody.recentTime, formatter)
-                                val zoneId = ZoneId.of("Asia/Seoul") // 타임존 설정 (필수!)
-                                val parsedLongTime = convertToLocalDateTime.atZone(zoneId).toInstant().toEpochMilli()
+                                    Log.e("TEST", "DB로부터 가져온 리스트 : ${localDBDataList}")
 
-                                val userId2 = DataStoreManager.getUserId().first() ?: -1
-
-                                val localDBDataList = localDbRepository?.dataDao()?.getListAfterLastTime(userId = userId2, lastTime = parsedLongTime)
-
-                                Log.e("TEST", "DB로부터 가져온 리스트 : ${localDBDataList}")
-
-                                val sendDataList = localDBDataList?.map {
-                                    RequestDataValue(
-                                        userId = userId2,
-                                        createdAt = it.createdAt,
-                                        valueType = it.userValueId,
-                                        value = it.value
-                                    )
-                                }
-
-                                val sendData = tokenRetrofit.sendData(sendDataList!!)
-                                if (sendData.isSuccessful) {
-                                    val sendDataBody = sendData.body()
-                                    if (sendDataBody != null) {
-                                        Log.e("TEST", "SendDataBody : ${sendDataBody.toString()}")
+                                    val sendDataList = localDBDataList?.map {
+                                        RequestDataValue(
+                                            userId = it.userId,
+                                            createdAt = it.createdAt,
+                                            weCurrent = it.weCurrent,
+                                            aeCurrent = it.aeCurrent
+                                        )
                                     }
+
+                                    val chunkedList = sendDataList?.chunked(5)
+                                    chunkedList?.forEachIndexed { index, chunk ->
+                                        val sendData = tokenRetrofit.sendData(chunk)
+                                        if (sendData.isSuccessful) {
+                                            val sendDataBody = sendData.body()
+                                            if (sendDataBody != null) {
+                                                Log.e("TEST", "SendDataBody : ${sendDataBody.toString()}")
+                                            }
+                                        } else {
+                                            Log.e(
+                                                "TEST",
+                                                "SendData API통신 실패 : ${sendData.errorBody()?.string()}"
+                                            )
+                                        }
+                                    }
+
+                                    // 기존 방식
+
+//                                    val sendData = tokenRetrofit.sendData(sendDataList!!)
+//                                    if (sendData.isSuccessful) {
+//                                        val sendDataBody = sendData.body()
+//                                        if (sendDataBody != null) {
+//                                            Log.e("TEST", "SendDataBody : ${sendDataBody.toString()}")
+//                                        }
+//                                    } else {
+//                                        Log.e(
+//                                            "TEST",
+//                                            "SendData API통신 실패 : ${sendData.errorBody()?.string()}"
+//                                        )
+//                                    }
+
                                 } else {
-                                    Log.e(
-                                        "TEST",
-                                        "SendData API통신 실패 : ${sendData.errorBody()?.string()}"
-                                    )
+
+                                    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                                    val convertToLocalDateTime = LocalDateTime.parse(lastTimeBody.recentTime, formatter)
+                                    val zoneId = ZoneId.of("Asia/Seoul") // 타임존 설정 (필수!)
+                                    val parsedLongTime = convertToLocalDateTime.atZone(zoneId).toInstant().toEpochMilli()
+
+                                    val userId2 = DataStoreManager.getUserId().first() ?: -1
+
+                                    val localDBDataList = localDbRepository?.dataDao()?.getListAfterLastTime(userId = userId2, lastTime = parsedLongTime)
+
+                                    Log.e("TEST", "DB로부터 가져온 리스트 : ${localDBDataList}")
+
+                                    val sendDataList = localDBDataList?.map {
+                                        RequestDataValue(
+                                            userId = it.userId,
+                                            createdAt = it.createdAt,
+                                            weCurrent = it.weCurrent,
+                                            aeCurrent = it.aeCurrent
+                                        )
+                                    }
+
+                                    val chunkedList = sendDataList?.chunked(5)
+                                    chunkedList?.forEachIndexed { index, chunk ->
+                                        val sendData = tokenRetrofit.sendData(chunk)
+                                        if (sendData.isSuccessful) {
+                                            val sendDataBody = sendData.body()
+                                            if (sendDataBody != null) {
+                                                Log.e("TEST", "SendDataBody : ${sendDataBody.toString()}")
+                                            }
+                                        } else {
+                                            Log.e(
+                                                "TEST",
+                                                "SendData API통신 실패 : ${sendData.errorBody()?.string()}"
+                                            )
+                                        }
+                                    }
+
+
+
+//                                    val sendData = tokenRetrofit.sendData(sendDataList!!)
+//                                    if (sendData.isSuccessful) {
+//                                        val sendDataBody = sendData.body()
+//                                        if (sendDataBody != null) {
+//                                            Log.e("TEST", "SendDataBody : ${sendDataBody.toString()}")
+//                                        }
+//                                    } else {
+//                                        Log.e(
+//                                            "TEST",
+//                                            "SendData API통신 실패 : ${sendData.errorBody()?.string()}"
+//                                        )
+//                                    }
                                 }
                             }
                         } else {

@@ -13,6 +13,7 @@ import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDeviceMac
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseEmailCode
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseEventData
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseGetEvent
+import kr.co.uxn.agms_p.api.model.responseDTO.ResponseGetGlucose
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseGetLastTime
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseLinkDevice
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseSignInNormal
@@ -80,5 +81,9 @@ interface RemoteDataSource {
     // 이벤트 가져오기
     @GET("/api/event/list")
     suspend fun getEventList(@Query("user_id") userId: Int): Response<List<ResponseGetEvent>>
+
+    // 혈당 가져오기
+    @GET("/api/glucose/convert")
+    suspend fun getGlucoseList(@Query("user_id") userId: Int): Response<List<ResponseGetGlucose>>
 }
 

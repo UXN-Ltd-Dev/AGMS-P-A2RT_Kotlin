@@ -9,9 +9,9 @@ data class RequestDataValue(
     @SerializedName("created_at")
     val createdAt: String,
 
-    @SerializedName("value_type")
-    val valueType: Int,
+    @SerializedName("we_current")
+    val weCurrent: Double,
 
-    @SerializedName("value")
-    val value: Double
+    @SerializedName("ae_current")
+    val aeCurrent: Double
 )

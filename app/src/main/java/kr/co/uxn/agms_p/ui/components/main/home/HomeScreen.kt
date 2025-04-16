@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -24,12 +26,18 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -38,9 +46,12 @@ import androidx.compose.ui.graphics.DefaultAlpha
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
@@ -59,8 +70,15 @@ import com.patrykandpatrick.vico.core.component.shape.shader.DynamicShaders
 import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
 import com.patrykandpatrick.vico.core.entry.FloatEntry
 import com.patrykandpatrick.vico.core.scroll.InitialScroll
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
+import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.rememberMarker
+import kr.co.uxn.agms_p.ui.components.main.event.ItemData
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
 
@@ -73,6 +91,7 @@ fun HomeScreen(
     bleViewModel: BleViewModel
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val day by homeViewModel.day.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -85,6 +104,9 @@ fun HomeScreen(
     val dataSetLineSpec = remember { arrayListOf<LineChart.LineSpec>() }
 
     val scrollState = rememberChartScrollState()
+
+    // RadioButton
+    var selectedOption by remember { mutableStateOf("3시간") }
 
     // VICO
     LaunchedEffect(Unit) {
@@ -140,6 +162,42 @@ fun HomeScreen(
 //            lifecycleOwner.lifecycle.removeObserver(observer)
 //        }
 //    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // onResume 시점에만 실행!
+                // 서버로부터 이벤트 목록 받아와서 화면 갱신해주기
+                Log.e("TEST", "이벤트 화면에서 onResume일때 DisposableEffect 실행")
+
+                coroutineScope.launch(Dispatchers.IO) {
+                    try {
+                        val userId = DataStoreManager.getUserId().first() ?: -1
+                        val glucoseList = tokenRetrofit.getGlucoseList(userId)
+                        if (glucoseList.isSuccessful) {
+                            val glucoseListBody = glucoseList.body()
+                            if (glucoseListBody != null) {
+                                Log.e("TEST", "불러온 glucoseListBody : ${glucoseListBody}")
+
+                            }
+                        } else {
+                            Log.e("TEST", "API 에러 : ${glucoseList.errorBody()?.string()}")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("TEST", "네트워크 에러 : ${e.message}")
+                    }
+                }
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+
 
     // 혈당 표시 카드
     Column(
@@ -248,7 +306,7 @@ fun HomeScreen(
                     Chart(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 10.dp, start = 5.dp, end = 10.dp),
+                            .padding(start = 5.dp, end = 10.dp),
                         chart = lineChart(
                             lines = dataSetLineSpec
                         ),
@@ -286,6 +344,11 @@ fun HomeScreen(
                     )
                 }
             }
+
+            RadioButtonSingleSelection(
+                selectedOption = selectedOption,
+                onOptionSelected = { selectedOption = it }
+            )
         }
 
         // 센서 정보 표시 카드
@@ -374,6 +437,49 @@ fun HomeScreen(
                         fontWeight = FontWeight.Medium
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun RadioButtonSingleSelection(
+    selectedOption: String,
+    onOptionSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val radioOptions = listOf("3시간", "6시간", "12시간")
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .selectableGroup()
+            .padding(horizontal = 30.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        radioOptions.forEach { text ->
+            Row(
+                Modifier
+                    .weight(1f)
+                    .height(56.dp)
+                    .selectable(
+                        selected = (text == selectedOption),
+                        onClick = { onOptionSelected(text) },
+                        role = Role.RadioButton
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                RadioButton(
+                    selected = (text == selectedOption),
+                    onClick = null
+                )
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 10.dp)
+                )
             }
         }
     }

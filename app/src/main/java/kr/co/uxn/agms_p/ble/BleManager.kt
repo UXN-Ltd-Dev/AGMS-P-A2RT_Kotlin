@@ -611,16 +611,16 @@ class BleManager(
             .atZone(ZoneId.of("Asia/Seoul"))
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
-        saveData.add(
-            UserValue(
-                userId = userId,
-                userValueId = 1306,
-                value = battery.toDouble(),
-                valueType = 1300,
-                createdAt = createdAt,
-                createdAtLong = lastTime
-            )
-        )
+//        saveData.add(
+//            UserValue(
+//                userId = userId,
+//                userValueId = 1306,
+//                value = battery.toDouble(),
+//                valueType = 1300,
+//                createdAt = createdAt,
+//                createdAtLong = lastTime
+//            )
+//        )
 
 
         Log.d(TEST, "battery : $battery")
@@ -631,16 +631,16 @@ class BleManager(
 
         BleBridge.updateTemperature(temperature)
 
-        saveData.add(
-            UserValue(
-                userId = userId,
-                userValueId = 1307,
-                value = temperature,
-                valueType = 1300,
-                createdAt = createdAt,
-                createdAtLong = lastTime
-            )
-        )
+//        saveData.add(
+//            UserValue(
+//                userId = userId,
+//                userValueId = 1307,
+//                value = temperature,
+//                valueType = 1300,
+//                createdAt = createdAt,
+//                createdAtLong = lastTime
+//            )
+//        )
 
 
         Log.d(TEST, "temperature : $temperature")
@@ -677,23 +677,22 @@ class BleManager(
             saveData.add(
                 UserValue(
                     userId = userId,
-                    userValueId = 1301,
-                    value = weCurrent,
-                    valueType = 1300,
+                    weCurrent = weCurrent,
+                    aeCurrent = aeCurrent,
                     createdAt = convertedTime,
                     createdAtLong = time
                 )
             )
-            saveData.add(
-                UserValue(
-                    userId = userId,
-                    userValueId = 1303,
-                    value = weCurrent,
-                    valueType = 1300,
-                    createdAt = convertedTime,
-                    createdAtLong = time
-                )
-            )
+//            saveData.add(
+//                UserValue(
+//                    userId = userId,
+//                    userValueId = 1303,
+//                    value = aeCurrent,
+//                    valueType = 1300,
+//                    createdAt = convertedTime,
+//                    createdAtLong = time
+//                )
+//            )
             if (i == findBufferWeoCount - 1) {
                 lastWeo1 = weCurrent
             }
