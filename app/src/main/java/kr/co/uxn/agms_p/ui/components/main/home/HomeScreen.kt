@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -74,6 +75,7 @@ import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.rememberMarker
+import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.ui.components.main.VivoItem
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
@@ -97,23 +99,70 @@ fun HomeScreen(
     val weo1 by bleViewModel.weo1.collectAsState()
     val temperature by bleViewModel.temperature.collectAsState()
     val glucose by bleViewModel.glucose.collectAsState()
+    val chartTrigger by bleViewModel.chartTrigger.collectAsState()
 
     // Vico Chart
     val modelProducer = remember { ChartEntryModelProducer() }
     val dataSetForModel = remember { mutableStateListOf(listOf<FloatEntry>()) }
     val dataSetLineSpec = remember { arrayListOf<LineChart.LineSpec>() }
-
     val scrollState = rememberChartScrollState()
+
+    val isLoading = remember { mutableStateOf(false) }
 
     // RadioButton
     var selectedOption by remember { mutableStateOf("3시간") }
 
-    // VICO
-    LaunchedEffect(Unit) {
+    val localDbRepository by lazy {
+        AppDatabase.getInstance(context)
+    }
+
+    // VICO : 기존 더미데이터 차트
+//    LaunchedEffect(Unit) {
+//        dataSetForModel.clear()
+//        dataSetLineSpec.clear()
+//        var xPos = 1f
+//        val dataPoints = arrayListOf<FloatEntry>()
+//
+//        // 차트 디자인 옵션
+//        dataSetLineSpec.add(
+//            LineChart.LineSpec(
+//                lineColor = Color(0xFF6FB0E5).toArgb(),
+//                lineBackgroundShader = DynamicShaders.fromBrush(
+//                    brush = Brush.verticalGradient(
+//                        listOf(
+//                            Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_END),
+//                            Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_START)
+//                        )
+//                    )
+//                )
+//            )
+//        )
+//
+//        // 데이터
+////        for (i in 1..100) { // 데이터 갯수
+////            val randomYFloat = (50..180).random().toFloat()
+////            dataPoints.add(FloatEntry(x = xPos, y = randomYFloat))
+////            xPos += 1f
+////        }
+//
+//        for(i in 0 .. 20) {
+//            dataPoints.add(FloatEntry(x = xPos, y = 0f))
+//            xPos += 1
+//        }
+//
+//        dataSetForModel.add(dataPoints)
+//        modelProducer.setEntries(dataSetForModel)
+//
+//    }
+
+
+
+    LaunchedEffect(chartTrigger) {
+
         dataSetForModel.clear()
         dataSetLineSpec.clear()
-        var xPos = 1f
         val dataPoints = arrayListOf<FloatEntry>()
+
 
         // 차트 디자인 옵션
         dataSetLineSpec.add(
@@ -130,20 +179,26 @@ fun HomeScreen(
             )
         )
 
-        // 데이터
-//        for (i in 1..100) { // 데이터 갯수
-//            val randomYFloat = (50..180).random().toFloat()
-//            dataPoints.add(FloatEntry(x = xPos, y = randomYFloat))
-//            xPos += 1f
-//        }
+        val userId = DataStoreManager.getUserId().first() ?: -1
 
-        for(i in 0 .. 20) {
-            dataPoints.add(FloatEntry(x = 0f, y = 0f))
+
+        val localDBDataList = withContext(Dispatchers.IO) {
+            localDbRepository?.dataDao()?.getGlucoseList(userId = userId)
+        }
+        for ( i in 0 until localDBDataList!!.size) {
+
+
+            dataPoints.add(FloatEntry(x = localDBDataList[i].createdAtLong.toFloat(), y = localDBDataList[i].glucose.toFloat()))
         }
 
         dataSetForModel.add(dataPoints)
         modelProducer.setEntries(dataSetForModel)
+//        scrollState.lastScrolledForward
+//        dataPoints.lastOrNull()?.let { lastEntry ->
+//            scrollState.scroll(scrollPriority = )
+//        }
 
+        isLoading.value = true
     }
 
     // 시연용 타이머
@@ -171,95 +226,84 @@ fun HomeScreen(
 
 
 
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                // onResume 시점에만 실행!
-                // 서버로부터 이벤트 목록 받아와서 화면 갱신해주기
-                Log.e("TEST", "이벤트 화면에서 onResume일때 DisposableEffect 실행")
-
-
-                coroutineScope.launch(Dispatchers.IO) {
-                    try {
-                        val userId = DataStoreManager.getUserId().first() ?: -1
-                        val glucoseList = tokenRetrofit.getGlucoseList(userId)
-                        if (glucoseList.isSuccessful) {
-                            val glucoseListBody = glucoseList.body()
-                            if (glucoseListBody != null) {
-                                Log.e("TEST", "불러온 glucoseListBody : ${glucoseListBody}")
-
-
-                                val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-
-                                val glucoseDataSetList = glucoseListBody.map {
-                                    val timeMillis = formatter.parse(it.createdAt)?.time?.toFloat() ?: 0f
-                                    VivoItem(xAxisTime = timeMillis, yAxisValue = it.glucose.toFloat())
-                                }
-                                Log.e("TEST", "glucoseDataSetList : ${glucoseDataSetList}")
-
-
-                                val currentDataSetList = glucoseListBody.map {
-                                    val timeMillis = formatter.parse(it.createdAt)?.time?.toFloat() ?: 0f
-                                    VivoItem(xAxisTime = timeMillis, yAxisValue = it.current.toFloat())
-                                }
-
-                                // VIVO
-                                withContext(Dispatchers.Main) {
-                                    dataSetForModel.clear()
-                                    dataSetLineSpec.clear()
-//                                    var xPos = 1f
-                                    val dataPoints = arrayListOf<FloatEntry>()
-
-                                    // 차트 디자인 옵션
-                                    dataSetLineSpec.add(
-                                        LineChart.LineSpec(
-                                            lineColor = Color(0xFF6FB0E5).toArgb(),
-                                            lineBackgroundShader = DynamicShaders.fromBrush(
-                                                brush = Brush.verticalGradient(
-                                                    listOf(
-                                                        Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_END),
-                                                        Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_START)
-                                                    )
-                                                )
-                                            )
-                                        )
-                                    )
-                                    // 데이터
-//                                    for (i in 1..100) { // 데이터 갯수
-//                                        val randomYFloat = (50..180).random().toFloat()
-//                                        dataPoints.add(FloatEntry(x = xPos, y = randomYFloat))
-//                                        xPos += 1f
-//                                    }
-
-                                    for ( i in 0 until glucoseDataSetList.size) {
-                                        dataPoints.add(FloatEntry(x = glucoseDataSetList[i].xAxisTime, y = glucoseDataSetList[i].yAxisValue))
-                                    }
-
+//    DisposableEffect(lifecycleOwner) {
+//        val observer = LifecycleEventObserver { _, event ->
+//            if (event == Lifecycle.Event.ON_CREATE) {
+//                // onResume 시점에만 실행!
+//                // 서버로부터 이벤트 목록 받아와서 화면 갱신해주기
+//                Log.e("TEST", "이벤트 화면에서 onResume일때 DisposableEffect 실행")
+//
+//                coroutineScope.launch(Dispatchers.IO) {
+//                    try {
+//                        val userId = DataStoreManager.getUserId().first() ?: -1
+//                        val glucoseList = tokenRetrofit.getGlucoseList(userId)
+//                        if (glucoseList.isSuccessful) {
+//                            val glucoseListBody = glucoseList.body()
+//                            if (glucoseListBody != null) {
+//                                Log.e("TEST", "불러온 glucoseListBody : ${glucoseListBody}")
+//
+//
+//                                val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA)
+//
+//                                val glucoseDataSetList = glucoseListBody.map {
+//                                    val timeMillis = formatter.parse(it.createdAt)?.time?.toFloat() ?: 0f
+//                                    VivoItem(xAxisTime = timeMillis, yAxisValue = it.glucose.toFloat())
+//                                }
+//                                Log.e("TEST", "glucoseDataSetList : ${glucoseDataSetList}")
+//
+//
+//                                val currentDataSetList = glucoseListBody.map {
+//                                    val timeMillis = formatter.parse(it.createdAt)?.time?.toFloat() ?: 0f
+//                                    VivoItem(xAxisTime = timeMillis, yAxisValue = it.current.toFloat())
+//                                }
+//
+//                                // VIVO
+//                                withContext(Dispatchers.Main) {
+//                                    dataSetForModel.clear()
+//                                    dataSetLineSpec.clear()
+////                                    var xPos = 1f
+//                                    val dataPoints = arrayListOf<FloatEntry>()
+//
+//                                    // 차트 디자인 옵션
+//                                    dataSetLineSpec.add(
+//                                        LineChart.LineSpec(
+//                                            lineColor = Color(0xFF6FB0E5).toArgb(),
+//                                            lineBackgroundShader = DynamicShaders.fromBrush(
+//                                                brush = Brush.verticalGradient(
+//                                                    listOf(
+//                                                        Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_END),
+//                                                        Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_START)
+//                                                    )
+//                                                )
+//                                            )
+//                                        )
+//                                    )
+//
 //                                    for ( i in 0 until glucoseDataSetList.size) {
-//                                        dataPoints.add(FloatEntry(x = xPos, y = glucoseDataSetList[i].yAxisValue.toFloat()))
-//                                        xPos += 1f
+//                                        dataPoints.add(FloatEntry(x = glucoseDataSetList[i].xAxisTime, y = glucoseDataSetList[i].yAxisValue))
 //                                    }
-
-                                    dataSetForModel.add(dataPoints)
-                                    modelProducer.setEntries(dataSetForModel)
-                                }
-                            }
-                        } else {
-                            Log.e("TEST", "API 에러 : ${glucoseList.errorBody()?.string()}")
-                        }
-                    } catch (e: Exception) {
-                        Log.e("TEST", "네트워크 에러 : ${e.message}")
-                    }
-                }
-            }
-        }
-
-        lifecycleOwner.lifecycle.addObserver(observer)
-
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
+//
+//                                    dataSetForModel.add(dataPoints)
+//                                    modelProducer.setEntries(dataSetForModel)
+//                                    isLoading.value = true
+//                                }
+//                            }
+//                        } else {
+//                            Log.e("TEST", "API 에러 : ${glucoseList.errorBody()?.string()}")
+//                        }
+//                    } catch (e: Exception) {
+//                        Log.e("TEST", "네트워크 에러 : ${e.message}")
+//                    }
+//                }
+//            }
+//        }
+//
+//        lifecycleOwner.lifecycle.addObserver(observer)
+//
+//        onDispose {
+//            lifecycleOwner.lifecycle.removeObserver(observer)
+//        }
+//    }
 
 
 
@@ -374,7 +418,7 @@ fun HomeScreen(
             )
 
             // TODO VICO CHART
-            if (dataSetForModel.isNotEmpty()) {
+            if (dataSetForModel.isNotEmpty() && isLoading.value == true) {
                 ProvideChartStyle {
                     val marker = rememberMarker()
                     Chart(
@@ -408,18 +452,33 @@ fun HomeScreen(
                             tickLength = 0.dp,
                             valueFormatter = { value, _ ->
                                 val date = Date(value.toLong())
-                                val displayFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+                                val displayFormat = SimpleDateFormat("HH:mm", Locale.KOREAN)
                                 displayFormat.format(date)
                             },
                             guideline = null,
                             itemPlacer = AxisItemPlacer.Horizontal.default(
-
+                                spacing = 1  // x축 라벨 간격을 더 촘촘히 (기본은 자동)
                             )
+//
                         ),
                         marker = marker,
                         isZoomEnabled = true
                     )
                 }
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "그래프를 불러오는 중 입니다...",
+                        color = Color(0xFF385DAB),
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
             }
 
             RadioButtonSingleSelection(
@@ -496,6 +555,12 @@ fun HomeScreen(
                 if ((10 - day + 1) < 11) {
                     Text(
                         text = "${10 - day + 1}/10일",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }  else {
+                    Text(
+                        text = "10/10일",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium
                     )

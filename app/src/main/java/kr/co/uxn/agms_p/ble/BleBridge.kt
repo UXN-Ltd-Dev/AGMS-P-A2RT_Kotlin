@@ -18,6 +18,9 @@ object BleBridge {
     private val _glucose = MutableStateFlow<Int>(0)
     val glucose: StateFlow<Int> = _glucose
 
+    private val _chartTrigger = MutableStateFlow<Int>(0)
+    val chartTrigger: StateFlow<Int> = _chartTrigger
+
     fun updateState(state: BleConnectionState) {
         _bleState.value = state
         Log.e("TEST", "ble브릿지의 bleState : $state")
@@ -33,5 +36,10 @@ object BleBridge {
 
     fun updateGlucose(value: Int) {
         _glucose.value = value
+    }
+
+    fun activateTrigger() {
+        _chartTrigger.value = _chartTrigger.value + 1
+        Log.d("CHART", "트리거 증가됨! 현재 값: ${_chartTrigger.value}")
     }
 }

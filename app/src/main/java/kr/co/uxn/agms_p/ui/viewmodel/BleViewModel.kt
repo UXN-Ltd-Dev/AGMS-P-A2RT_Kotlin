@@ -62,7 +62,12 @@ class BleViewModel(application: Application) : AndroidViewModel(application) {
             initialValue = -1
         )
 
-
+    val chartTrigger: StateFlow<Int> = BleBridge.chartTrigger
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0
+        )
 
 
 
@@ -79,8 +84,6 @@ class BleViewModel(application: Application) : AndroidViewModel(application) {
         _device.value = device
         Log.e(TAG, "뷰모델에 저장된 device 값 : ${_device.value}")
     }
-
-
 }
 
 

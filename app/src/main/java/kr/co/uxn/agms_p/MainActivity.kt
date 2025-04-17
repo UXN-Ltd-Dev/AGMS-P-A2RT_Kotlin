@@ -149,12 +149,13 @@ class MainActivity : ComponentActivity() {
                 SignUpCheckScreen2(navController, type, oAuthEmail)
             }
 
-            composable("SignUpInfoScreen3/{email}/{pwd}") { backStackEntry ->
+            composable("SignUpInfoScreen3/{email}/{pwd}/{type}") { backStackEntry ->
                 val email = backStackEntry.arguments?.getString("email")?.let {
                     URLDecoder.decode(it, "UTF-8")
                 } ?: ""
                 val pwd = backStackEntry.arguments?.getString("pwd").toString()
-                SignUpInfoScreen3(navController, email, pwd, loginViewModel)
+                val type = backStackEntry.arguments?.getString("type")?.toInt() ?: -1
+                SignUpInfoScreen3(navController, email, pwd, loginViewModel, type)
             }
 
             composable("SettingPermissionScreen") { backStackEntry ->

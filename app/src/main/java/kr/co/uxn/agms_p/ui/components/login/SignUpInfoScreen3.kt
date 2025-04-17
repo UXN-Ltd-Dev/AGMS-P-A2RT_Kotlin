@@ -76,7 +76,8 @@ fun SignUpInfoScreen3(
     navController: NavController,
     email: String,
     pwd: String,
-    loginViewModel: LoginViewModel
+    loginViewModel: LoginViewModel,
+    type : Int
 ) {
     val context = LocalContext.current
 
@@ -670,8 +671,8 @@ fun SignUpInfoScreen3(
                                     // 이메일 인증 받았다는 전제하에
                                     // 서버에 회원가입 신청
 
-                                    Log.e("TEST", "loginType = ${loginViewModel.signUpType}")
-                                    if (loginViewModel.signUpType == 1801 || loginViewModel.signUpType == 1802) {
+                                    Log.e("TEST", "loginType = ${type}")
+                                    if (type == 1801 || type == 1802) {
                                         // 간편로그인 회원가입 및 로그인
                                         try {
                                             // oAuth 상세 정보입력
@@ -696,26 +697,13 @@ fun SignUpInfoScreen3(
                                                         val verifyRefreshToken =
                                                             DataStoreManager.getRefreshToken()
                                                         withContext(Dispatchers.Main) {
-                                                            Log.d(
-                                                                "TEST",
-                                                                "oAuthSaveDetailInfo responseBody: $resultBody"
-                                                            )
-
-                                                            Log.d(
-                                                                "TEST",
-                                                                "oAuthSaveDetailInfo responseBody: $resultBody"
-                                                            )
-                                                            Log.d(
-                                                                "TEST",
-                                                                "TokenManager | accessToken : $verifyAccessToken\nrefreshToken : $verifyRefreshToken"
-                                                            )
+                                                            Log.d("TEST", "oAuthSaveDetailInfo responseBody: $resultBody")
+                                                            Log.d("TEST", "TokenManager | accessToken : $verifyAccessToken\nrefreshToken : $verifyRefreshToken")
                                                             navController.navigate("SettingPermissionScreen")
                                                         }
                                                     } else {
                                                         withContext(Dispatchers.Main) {
-                                                            Log.d(
-                                                                "TEST", "디테일 정보 입력 실패"
-                                                            )
+                                                            Log.d("TEST", "디테일 정보 입력 실패")
                                                         }
                                                     }
                                                 }

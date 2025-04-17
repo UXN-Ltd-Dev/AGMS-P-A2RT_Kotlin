@@ -9,11 +9,10 @@ import androidx.room.Query
 interface RoomDao {
     // DB에 데이터 삽입
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(userValeList: List<UserValue>)
+    fun insertUserValue(userValeList: List<UserValue>)
 
-    // userId의 모든 데이터 가져오기
-//    @Query("SELECT * FROM user_value WHERE user_id = :userId")
-//    fun getListAll(userId: Int): List<UserValue>
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertGlucose(glucoseList: List<UserGlucose>)
 
     // userId의 lastTime 이후의 데이터 가져오기
     @Query("SELECT * FROM UserValue WHERE uxn_user_id = :userId AND created_at_long > :lastTime")
@@ -21,4 +20,9 @@ interface RoomDao {
 
     @Query("DELETE FROM UserValue")
     fun deleteUserValueTable()
+
+    // userId의 glucoseList 가져오기
+    @Query("SELECT * FROM UserGlucose WHERE uxn_user_id = :userId")
+    fun getGlucoseList(userId: Int): List<UserGlucose>
+
 }

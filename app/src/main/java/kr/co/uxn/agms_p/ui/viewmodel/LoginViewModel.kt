@@ -37,6 +37,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     val isLoggedIn = MutableStateFlow<Boolean>(false)
     val userInfo = MutableStateFlow<User>(User(0, "test", "test", "test"))
+
     var userIdTest = -1
     var signUpType = -1
 
@@ -204,6 +205,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                                 updateIsLoading(false)
                             }
                             // 회원가입 화면으로 이동
+                            Log.e("TEST", "userId : ${userId}, type : ${type}, oAuthEmail : ${oAuthEmail}")
                             _navigationEvent.value = LoginNavigationEvent.NavigateToSignUp(userId, type.toString(), oAuthEmail)
 //                            signUpType = type
 
@@ -254,5 +256,5 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
 sealed class LoginNavigationEvent {
     data class NavigateToSettingPermission(val test: String) : LoginNavigationEvent()
-    data class NavigateToSignUp(val userId: Int, val type: String, val oAuthEmail: String) : LoginNavigationEvent()
+    data class NavigateToSignUp(val userId: Int, val type: String, val oAuthEmail: String?) : LoginNavigationEvent()
 }

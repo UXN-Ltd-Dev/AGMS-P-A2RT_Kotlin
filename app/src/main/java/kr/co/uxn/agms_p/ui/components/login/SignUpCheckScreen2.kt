@@ -61,7 +61,7 @@ import kr.co.uxn.agms_p.api.model.requestDTO.RequestEmailCode
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEmailVerificationCode
 
 @Composable
-fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: String) {
+fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: String?) {
     val context = LocalContext.current
     val email = remember { mutableStateOf("") }
     val verificationCode = remember { mutableStateOf("") }
@@ -89,7 +89,6 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
             isTimerRunning.value = false
         }
     }
-
 
     Surface(
         modifier = Modifier
@@ -183,7 +182,9 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                         .padding(start = 5.dp, end = 40.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    email.value = oAuthEmail
+                    if (!oAuthEmail.isNullOrEmpty()) {
+                        email.value = oAuthEmail
+                    }
                     Text(
                         text = email.value,
                         modifier = Modifier.align(Alignment.CenterStart)
@@ -191,30 +192,30 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                 }
             } else {
                 // 카카오 회원 가입
-                if(email.value.contains("@")) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .drawBehind {
-                                val strokeWidth = 3.dp.toPx()  // 선 굵기
-                                val y = size.height - strokeWidth / 2
-                                drawLine(
-                                    color = Color(0xFFEEEEEF), // 원하는 색상
-                                    start = Offset(0f, y),
-                                    end = Offset(size.width, y),
-                                    strokeWidth = strokeWidth
-                                )
-                            }
-                            .padding(start = 5.dp, end = 40.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        email.value = oAuthEmail
-                        Text(
-                            text = email.value,
-                            modifier = Modifier.align(Alignment.CenterStart)
-                        )
-                    }
-                } else {
+//                if(email.value.contains("@")) {
+//                    Box(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .drawBehind {
+//                                val strokeWidth = 3.dp.toPx()  // 선 굵기
+//                                val y = size.height - strokeWidth / 2
+//                                drawLine(
+//                                    color = Color(0xFFEEEEEF), // 원하는 색상
+//                                    start = Offset(0f, y),
+//                                    end = Offset(size.width, y),
+//                                    strokeWidth = strokeWidth
+//                                )
+//                            }
+//                            .padding(start = 5.dp, end = 40.dp),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+////                        email.value = oAuthEmail
+//                        Text(
+//                            text = email.value,
+//                            modifier = Modifier.align(Alignment.CenterStart)
+//                        )
+//                    }
+//                } else {
                     BasicTextField(
                         value = email.value,
                         onValueChange = { email.value = it },
@@ -240,18 +241,24 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                     .padding(start = 5.dp, end = 40.dp),
                                 contentAlignment = Alignment.CenterStart
                             ) {
-                                if (email.value.isEmpty()) {
+                                if (!oAuthEmail.isNullOrEmpty()) {
+//                                    email.value = oAuthEmail
+                                }
+
+                                if (email.value == "") {
                                     Text(
                                         text = "이메일 주소를 입력해 주세요.",
                                         color = Color.Gray,
                                         fontSize = 13.sp
                                     )
-                                }
+                                    }
+//                                }
+
                                 innerTextField()
                             }
                         },
                     )
-                }
+//                }
             }
 
             Spacer(Modifier.size(10.dp))
@@ -474,139 +481,168 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // 비밀번호
-            Text(
-                text = "비밀번호",
-                fontSize = 14.sp,
-                modifier = Modifier.align(Alignment.Start)
-                    .padding(start = 5.dp)
-            )
-            BasicTextField(
-                value = pwd1.value,
-                onValueChange = { pwd1.value = it },
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = {
-                    keyboardController?.hide()
-                }),
-                decorationBox = { innerTextField ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(30.dp)
-                            .drawBehind {
-                                val strokeWidth = 3.dp.toPx() // 선 두께 설정
-                                val y = size.height - strokeWidth / 2 // 선을 하단에 위치
-                                drawLine(
-                                    color = Color(0xFFEEEEEF),
-                                    start = Offset(0f, y),
-                                    end = Offset(size.width, y),
-                                    strokeWidth = strokeWidth
+            if (type == 1801 || type == 1802) {
+
+                // 다음 버튼
+                Spacer(modifier = Modifier.height(250.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.btn_next),
+                        contentDescription = "다음 버튼",
+                        modifier = Modifier.align(Alignment.Center)
+                            .clickable {
+                                if (email.value.isEmpty()) {
+                                    Toast.makeText(context, "이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                } else if (!isEmailVerified.value) {
+                                    Toast.makeText(context, "이메일 인증을 해주세요.", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    // 인증 성공시
+                                    navController.navigate("SignUpInfoScreen3/${email.value}/${pwd1.value}/${type}")
+                                }
+                            }
+                    )
+                }
+            } else {
+                // 비밀번호
+                Text(
+                    text = "비밀번호",
+                    fontSize = 14.sp,
+                    modifier = Modifier.align(Alignment.Start)
+                        .padding(start = 5.dp)
+                )
+                BasicTextField(
+                    value = pwd1.value,
+                    onValueChange = { pwd1.value = it },
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
+                        keyboardController?.hide()
+                    }),
+                    decorationBox = { innerTextField ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(30.dp)
+                                .drawBehind {
+                                    val strokeWidth = 3.dp.toPx() // 선 두께 설정
+                                    val y = size.height - strokeWidth / 2 // 선을 하단에 위치
+                                    drawLine(
+                                        color = Color(0xFFEEEEEF),
+                                        start = Offset(0f, y),
+                                        end = Offset(size.width, y),
+                                        strokeWidth = strokeWidth
+                                    )
+                                }
+                                .padding(start = 5.dp, end = 40.dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            if (pwd1.value.isEmpty()) {
+                                Text(
+                                    text = "비밀번호를 입력해 주세요.",
+                                    color = Color.Gray,
+                                    fontSize = 13.sp
                                 )
                             }
-                            .padding(start = 5.dp, end = 40.dp),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        if (pwd1.value.isEmpty()) {
-                            Text(
-                                text = "비밀번호를 입력해 주세요.",
-                                color = Color.Gray,
-                                fontSize = 13.sp
-                            )
+                            innerTextField()
                         }
-                        innerTextField()
-                    }
-                },
-            )
+                    },
+                )
 
 //            Spacer(modifier= Modifier.size(10.dp))
 
-            // TODO 입력된 값이 조건에 맞는지 체크하는 로직 필요
+                // TODO 입력된 값이 조건에 맞는지 체크하는 로직 필요
 
-            Text(
-                text = "8~16자의 영문, 숫자, 특수문자를 조합해 사용해주세요.",
-                color = Color.Gray,
-                fontSize = 13.sp,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-            Spacer(modifier = Modifier.size(20.dp))
+                Text(
+                    text = "8~16자의 영문, 숫자, 특수문자를 조합해 사용해주세요.",
+                    color = Color.Gray,
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+                Spacer(modifier = Modifier.size(20.dp))
 
-            // 비밀번호 확인
-            Text(
-                text = "비밀번호 확인",
-                fontSize = 14.sp,
-                modifier = Modifier.align(Alignment.Start)
-                    .padding(start = 5.dp)
-            )
+                // 비밀번호 확인
+                Text(
+                    text = "비밀번호 확인",
+                    fontSize = 14.sp,
+                    modifier = Modifier.align(Alignment.Start)
+                        .padding(start = 5.dp)
+                )
 
-            BasicTextField(
-                value = pwd2.value,
-                onValueChange = { pwd2.value = it },
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = {
-                    keyboardController?.hide()
-                }),
-                decorationBox = { innerTextField ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(30.dp)
-                            .drawBehind {
-                                val strokeWidth = 3.dp.toPx() // 선 두께 설정
-                                val y = size.height - strokeWidth / 2 // 선을 하단에 위치
-                                drawLine(
-                                    color = Color(0xFFEEEEEF),
-                                    start = Offset(0f, y),
-                                    end = Offset(size.width, y),
-                                    strokeWidth = strokeWidth
+                BasicTextField(
+                    value = pwd2.value,
+                    onValueChange = { pwd2.value = it },
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
+                        keyboardController?.hide()
+                    }),
+                    decorationBox = { innerTextField ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(30.dp)
+                                .drawBehind {
+                                    val strokeWidth = 3.dp.toPx() // 선 두께 설정
+                                    val y = size.height - strokeWidth / 2 // 선을 하단에 위치
+                                    drawLine(
+                                        color = Color(0xFFEEEEEF),
+                                        start = Offset(0f, y),
+                                        end = Offset(size.width, y),
+                                        strokeWidth = strokeWidth
+                                    )
+                                }
+                                .padding(start = 5.dp, end = 40.dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            if (pwd2.value.isEmpty()) {
+                                Text(
+                                    text = "비밀번호를 확인 해주세요.",
+                                    color = Color.Gray,
+                                    fontSize = 13.sp
                                 )
                             }
-                            .padding(start = 5.dp, end = 40.dp),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        if (pwd2.value.isEmpty()) {
-                            Text(
-                                text = "비밀번호를 확인 해주세요.",
-                                color = Color.Gray,
-                                fontSize = 13.sp
-                            )
+                            innerTextField()
                         }
-                        innerTextField()
-                    }
-                },
-            )
-
-            // 다음 버튼
-            Spacer(modifier = Modifier.height(78.dp))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.btn_next),
-                    contentDescription = "다음 버튼",
-                    modifier = Modifier.align(Alignment.Center)
-                        .clickable {
-                            if (email.value.isEmpty()) {
-                                Toast.makeText(context, "이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
-                            } else if (pwd1.value.isEmpty()) {
-                                Toast.makeText(context, "비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show()
-                            } else if (pwd2.value.isEmpty()) {
-                                Toast.makeText(context, "비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show()
-                            } else if (pwd1.value != pwd2.value) {
-                                Toast.makeText(context, "비밀번호가 일치하지 않습니다.\n다시 시도해보세요.", Toast.LENGTH_SHORT).show()
-                            } else if (!isEmailVerified.value) {
-                                Toast.makeText(context, "이메일 인증을 해주세요.", Toast.LENGTH_SHORT).show()
-                            } else {
-                                // 인증 성공시
-                                navController.navigate("SignUpInfoScreen3/${email.value}/${pwd1.value}")
-                            }
-                        }
+                    },
                 )
+
+                // 다음 버튼
+                Spacer(modifier = Modifier.height(78.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.btn_next),
+                        contentDescription = "다음 버튼",
+                        modifier = Modifier.align(Alignment.Center)
+                            .clickable {
+                                if (email.value.isEmpty()) {
+                                    Toast.makeText(context, "이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                } else if (pwd1.value.isEmpty()) {
+                                    Toast.makeText(context, "비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                } else if (pwd2.value.isEmpty()) {
+                                    Toast.makeText(context, "비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                } else if (pwd1.value != pwd2.value) {
+                                    Toast.makeText(context, "비밀번호가 일치하지 않습니다.\n다시 시도해보세요.", Toast.LENGTH_SHORT).show()
+                                } else if (!isEmailVerified.value) {
+                                    Toast.makeText(context, "이메일 인증을 해주세요.", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    // 인증 성공시
+                                    navController.navigate("SignUpInfoScreen3/${email.value}/${pwd1.value}/${type}")
+                                }
+                            }
+                    )
+                }
             }
+
 
         }
     }

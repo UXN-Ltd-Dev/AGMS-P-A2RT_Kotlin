@@ -37,6 +37,7 @@ import kr.co.uxn.agms_p.api.model.requestDTO.RequestDataValue
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.BleManager.Companion.TEST
 import kr.co.uxn.agms_p.room.AppDatabase
+import kr.co.uxn.agms_p.room.UserGlucose
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -344,9 +345,29 @@ class AlwaysService() : Service() {
                         if (glucoseList.isSuccessful) {
                             val glucoseListBody = glucoseList.body()
                             if (glucoseListBody != null) {
+
+                                val userId = DataStoreManager.getUserId().first() ?: -1
+                                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                                val zoneId = ZoneId.of("Asia/Seoul") // 타임존 설정 (필수!)
+
+
+                                Log.e("TEST", "glucoseListBody : ${glucoseListBody}")
+                                val insertDataList = glucoseListBody.map {
+                                    val convertToLocalDateTime = LocalDateTime.parse(it.createdAt, formatter)
+                                    val parsedLongTime = convertToLocalDateTime.atZone(zoneId).toInstant().toEpochMilli()
+                                    UserGlucose(userId = userId , glucose = it.glucose.toDouble(), current = it.current, createdAt = it.createdAt, createdAtLong = parsedLongTime)
+                                }
+
+                                Log.e("TEST", "insertDataList : ${insertDataList}")
+                                // db에 저장
+                                localDbRepository?.dataDao()?.insertGlucose(insertDataList)
+
                                 // ui에 마지막 글루코즈 값 갱신
                                 Log.e("TEST", "glucoseList first : ${glucoseListBody.first().createdAt}, last : ${glucoseListBody.last().createdAt}")
                                 BleBridge.updateGlucose(glucoseListBody.last().glucose)
+                                // 그래프를 위한 트리거
+                                BleBridge.activateTrigger()
+
                             }
                         } else {
                             Log.e("TEST", "glucoseList API통신 실패 : ${glucoseList.errorBody()?.string()}")

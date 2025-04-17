@@ -88,12 +88,12 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
     val keyboardController = LocalSoftwareKeyboardController.current
 
     // 계정 정보
-    val email = remember { mutableStateOf("choco5732@gmail.com") }
-    val name = remember { mutableStateOf("장재용") }
+    val email = remember { mutableStateOf("beomsu@gmail.com") }
+    val name = remember { mutableStateOf("김범수") }
     val sex = remember { mutableStateOf("남성") }
-    val age = remember { mutableStateOf("30") }
-    val height = remember { mutableStateOf("175") }
-    val weight = remember { mutableStateOf("90") }
+    val age = remember { mutableStateOf("50") }
+    val height = remember { mutableStateOf("168") }
+    val weight = remember { mutableStateOf("70") }
     val diabetesType = remember { mutableStateOf("정상") }
 
     var expandedForSex by remember { mutableStateOf(false) }

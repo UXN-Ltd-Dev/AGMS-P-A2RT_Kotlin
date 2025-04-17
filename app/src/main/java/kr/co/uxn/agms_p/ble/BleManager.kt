@@ -703,7 +703,7 @@ class BleManager(
 //        BleBridge.updateWeo1(lastWeo1)
 
         CoroutineScope(Dispatchers.IO).launch {
-            AppDatabase.getInstance(context)?.dataDao()?.insert(saveData)
+            AppDatabase.getInstance(context)?.dataDao()?.insertUserValue(saveData)
         }
 
         return 0
