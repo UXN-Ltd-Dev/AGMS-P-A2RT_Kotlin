@@ -97,7 +97,7 @@ fun SignUpInfoScreen3(
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(key1 = Unit) {
-        Log.e("SignUpInfoScreen3", "email: $email, pwd: $pwd")
+//        Log.e("SignUpInfoScreen3", "email: $email, pwd: $pwd")
     }
 
     Surface(
@@ -614,15 +614,9 @@ fun SignUpInfoScreen3(
                             } else if (weight.value == "") {
                                 Toast.makeText(context, "체중을 입력해 주세요.", Toast.LENGTH_SHORT).show()
                             } else if (diabetesType.value == "") {
-                                Toast.makeText(context, "당뇨 정보를 입력해 주세요.", Toast.LENGTH_SHORT)
-                                    .show()
+                                Toast.makeText(context, "당뇨 정보를 입력해 주세요.", Toast.LENGTH_SHORT).show()
                             } else if (checked.value == false) {
-                                Toast.makeText(
-                                    context,
-                                    "개인정보 처리방침 및 이용약관에 동의해주세요.",
-                                    Toast.LENGTH_SHORT
-                                )
-                                    .show()
+                                Toast.makeText(context, "개인정보 처리방침 및 이용약관에 동의해주세요.", Toast.LENGTH_SHORT).show()
                             } else {
                                 // TODO : 서버에 가입정보 전달
                                 // TODO : 가입에 성공하면 로그인 API로 로그인 시도
@@ -699,7 +693,13 @@ fun SignUpInfoScreen3(
                                                         withContext(Dispatchers.Main) {
                                                             Log.d("TEST", "oAuthSaveDetailInfo responseBody: $resultBody")
                                                             Log.d("TEST", "TokenManager | accessToken : $verifyAccessToken\nrefreshToken : $verifyRefreshToken")
-                                                            navController.navigate("SettingPermissionScreen")
+
+                                                            navController.navigate("SettingPermissionScreen") {
+                                                                popUpTo("Splash") {
+                                                                    inclusive = true
+                                                                }
+                                                                launchSingleTop = true
+                                                            }
                                                         }
                                                     } else {
                                                         withContext(Dispatchers.Main) {
@@ -765,7 +765,12 @@ fun SignUpInfoScreen3(
                                                                         "DTO",
                                                                         requestSignUpNormal.toString()
                                                                     )
-                                                                    navController.navigate("SettingPermissionScreen")
+                                                                    navController.navigate("SettingPermissionScreen") {
+                                                                        popUpTo("Splash") {
+                                                                            inclusive = true
+                                                                        }
+                                                                        launchSingleTop = true
+                                                                    }
                                                                 }
                                                             }
                                                         } else {

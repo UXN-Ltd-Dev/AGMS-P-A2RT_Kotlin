@@ -231,14 +231,6 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     fontSize = 14.sp,
                     modifier = Modifier.clickable {
                         Toast.makeText(context, "기능 업데이트 중 입니다\n조금만 기다려주세요.", Toast.LENGTH_SHORT).show()
-
-//                        viewModel.apiTest()
-//                        navController.navigate("GuideScreen1") // 기존
-//                        navController.navigate("EnterFirstGlucose") // 혈당입력 화면
-//                        navController.navigate("MainScreen/${0}") // 메인화면
-//                        navController.navigate("ScanFailScreen") // 스캔 실패 화면
-//                        navController.navigate("StabilizationCompleteScreen") // 안정화 완료 화면
-
                     }
                 )
             }
@@ -332,7 +324,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                 ) {
                     androidx.compose.material3.CircularProgressIndicator()
                 }
-                Spacer(modifier = Modifier.size(30.dp))
+                Spacer(modifier = Modifier.size(24.dp))
             }
 
 

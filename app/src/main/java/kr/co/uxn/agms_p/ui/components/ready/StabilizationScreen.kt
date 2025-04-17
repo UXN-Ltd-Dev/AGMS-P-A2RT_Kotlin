@@ -83,7 +83,12 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
             override fun onFinish() {
                 // 타이머가 끝나면 다음 화면으로 이동
                 if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
-                    navController.navigate("StabilizationCompleteScreen")
+                    navController.navigate("StabilizationCompleteScreen") {
+                        popUpTo("Splash") {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
                 } else {
                     Log.e("NAVIGATION", "Navigation skipped - lifecycle not ready")
                 }

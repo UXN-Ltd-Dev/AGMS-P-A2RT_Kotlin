@@ -182,7 +182,7 @@ fun RegisterDeviceScreen(navController: NavController) {
                                                     val mac = resultBody.deviceMac
                                                     withContext(Dispatchers.Main) {
                                                         navController.navigate("ScanDeviceScreen/$mac/${deviceNumber.value}")
-                                                        Toast.makeText(context, "조회된 mac은\n$mac 입니다.", Toast.LENGTH_SHORT).show()
+//                                                        Toast.makeText(context, "조회된 mac은\n$mac 입니다.", Toast.LENGTH_SHORT).show()
                                                     }
                                                 }
                                             }

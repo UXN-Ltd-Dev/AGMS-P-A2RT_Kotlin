@@ -98,7 +98,10 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                 coroutineScope.launch {
                     // 0. 토큰 정리
                     DataStoreManager.saveIsMain(false)
+                    DataStoreManager.deleteRoute()
+                    DataStoreManager.saveRoute("Splash")
                     Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
+                    Log.e("TEST", "DS에 저장된 Route : ${DataStoreManager.getRoute().first()}")
                     DataStoreManager.deleteAccessToken()
                     DataStoreManager.deleteRefreshToken()
                     DataStoreManager.deleteUserId()

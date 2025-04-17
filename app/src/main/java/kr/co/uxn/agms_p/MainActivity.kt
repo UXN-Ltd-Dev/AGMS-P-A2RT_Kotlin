@@ -104,9 +104,15 @@ class MainActivity : ComponentActivity() {
         val destination = remember { mutableStateOf<String?>(null) }
 
         LaunchedEffect(Unit) {
-            val isMain = DataStoreManager.getIsMain().first() ?: false
-            Log.e("TEST", "isMain From DS : $isMain")
-            destination.value = if (isMain) "MainScreen/0" else "Splash"
+//            val isMain = DataStoreManager.getIsMain().first() ?: false
+//            Log.e("TEST", "isMain From DS : $isMain")
+//            destination.value = if (isMain) "MainScreen/0" else "Splash"
+
+            val startRoute = DataStoreManager.getRoute().first() ?: "Splash"
+
+            Log.e("TEST", "Route From DS : $startRoute")
+            destination.value = startRoute
+//            destination.value = if (isMain) "MainScreen/0" else "Splash"
         }
 
         LaunchedEffect(Unit) {

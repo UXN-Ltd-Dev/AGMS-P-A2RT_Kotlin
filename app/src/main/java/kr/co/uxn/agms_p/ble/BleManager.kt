@@ -128,39 +128,6 @@ class BleManager(
                 // mtu 517로 요청
                 gatt?.requestMtu(517)
 
-
-                // rssi읽기 요청. 성공하면 rssi값 onReadRemoteRssi로 메서드가 호출됨.
-                // 타이머를 이용해 5초 간격으로 실행
-
-//                if (timerTaskForConnected == null) {
-//                    timerTaskForConnected = object : TimerTask() {
-//                        override fun run() {
-//                            gatt?.readRemoteRssi()
-//                        }
-//                    }
-//                    timerWhenConnected = Timer()
-//                    timerWhenConnected!!.schedule(timerTaskForConnected, 0, 5000)
-//                }
-
-//                CoroutineScope(Dispatchers.Main).launch {
-//                    Log.e("gatt", "gatt connected!")
-////                    viewModel.updateIsShow(false)
-////                    viewModel.updateBleState("connected")
-//
-//                    val deviceName = gatt?.device?.name
-//                    if (deviceName != null) {
-//                        viewModel.updateDeviceName(deviceName!!)
-//                        Log.d("miracle", "뷰모델 업데이트 디바이스명 성공")
-//                    }
-
-                // 기기명 저장
-//                    latestConnectedDevice = mGatt?.device?.name ?: "emptyDevice"
-//                    Log.d("gatt", "latestConnectedDevice : $latestConnectedDevice")
-
-
-                // 항상 true가 나오는건 아니다.
-                // 따라서 false일 경우 다시 connect하는 로직 추후에 작성할 것
-
             }
 
 
@@ -179,9 +146,9 @@ class BleManager(
                     context.getSharedPreferences("isChange", Context.MODE_PRIVATE)
                 var isChange = sharedPreferences.getBoolean("isChange", true)
 
-                CoroutineScope(Dispatchers.Main).launch {
-                    Toast.makeText(context, "gatt 연결 끊어짐!", Toast.LENGTH_SHORT).show()
-                }
+//                CoroutineScope(Dispatchers.Main).launch {
+//                    Toast.makeText(context, "BLE가 끊어졌습니다", Toast.LENGTH_SHORT).show()
+//                }
 
                 Log.d(TEST, "disconnect 콜백 내부 : ${gatt?.device?.name}")
                 Log.d(TEST, "BLE 매니저에서 isChange 상태 : $isChange")
@@ -280,7 +247,6 @@ class BleManager(
             Log.d(TEST, "찾은 서비스는 ${service.toString()}입니다.")
 
             val readCharacteristic = service.getCharacteristic(characteristicUUID)
-//                val finaldescriptor = finalCharacteristic.getDescriptor()
             gatt.setCharacteristicNotification(readCharacteristic, true)
 
             CoroutineScope(Dispatchers.Main).launch {
@@ -289,13 +255,6 @@ class BleManager(
                     "데이터를 가져오는 중입니다.. \n잠시만 기다려주세요..",
                     Toast.LENGTH_SHORT
                 ).show()
-
-//                val deviceName: String = gatt.device.name
-//                Log.d(TEST, "디바이스네임 : $deviceName")
-//                val deviceAddress: String = gatt.device.address
-//                Log.d(TEST, "디바이스주소 : $deviceAddress")
-//                    viewModel.updateDeviceName(deviceName)
-//                viewModel.updateDeviceAddress(deviceAddress)
 
             }
 

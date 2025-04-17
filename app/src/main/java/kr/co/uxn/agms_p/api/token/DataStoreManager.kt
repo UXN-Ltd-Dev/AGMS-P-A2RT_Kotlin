@@ -25,6 +25,7 @@ object DataStoreManager {
     private val END_TIME = longPreferencesKey("end_time")
     private val DEVICE_MAC = stringPreferencesKey("device_mac")
     private val IS_MAIN = booleanPreferencesKey("is_main")
+    private val ROUTE = stringPreferencesKey("route")
 
     fun init(context: Context) {
         dataStore = PreferenceDataStoreFactory.create {
@@ -86,6 +87,12 @@ object DataStoreManager {
         }
     }
 
+    fun getRoute(): Flow<String?> {
+        return dataStore.data.map { prefs ->
+            prefs[ROUTE]
+        }
+    }
+
     suspend fun saveEmail(email: String) {
         dataStore.edit { prefs ->
             prefs[EMAIL] = email
@@ -134,6 +141,12 @@ object DataStoreManager {
         }
     }
 
+    suspend fun saveRoute(route: String) {
+        dataStore.edit { prefs ->
+            prefs[ROUTE] = route
+        }
+    }
+
     suspend fun deleteAccessToken() {
         dataStore.edit { prefs ->
             prefs.remove(ACCESS_TOKEN_KEY)
@@ -176,10 +189,15 @@ object DataStoreManager {
         }
     }
 
+    suspend fun deleteRoute() {
+        dataStore.edit { prefs ->
+            prefs.remove(ROUTE)
+        }
+    }
+
     suspend fun saveRefreshToken(token: String) {
         dataStore.edit { prefs ->
             prefs[REFRESH_TOKEN_KEY] = token
         }
     }
-
 }

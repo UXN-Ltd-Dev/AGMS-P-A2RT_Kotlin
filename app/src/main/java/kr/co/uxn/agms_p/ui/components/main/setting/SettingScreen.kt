@@ -49,7 +49,10 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                     // 0. 토큰 정리
                     // 메인화면으로 고정 isMain = true
                     DataStoreManager.saveIsMain(false)
+                    DataStoreManager.deleteRoute()
+                    DataStoreManager.saveRoute("Splash")
                     Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
+                    Log.e("TEST", "DS에 저장된 Route는${DataStoreManager.getRoute().first()}")
                     DataStoreManager.deleteAccessToken()
                     DataStoreManager.deleteRefreshToken()
                     DataStoreManager.deleteUserId()

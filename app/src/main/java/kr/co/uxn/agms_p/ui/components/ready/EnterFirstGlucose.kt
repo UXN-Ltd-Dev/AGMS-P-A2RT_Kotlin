@@ -177,7 +177,13 @@ fun EnterFirstGlucose(navController: NavController) {
                                                 if (uploadBody.isSuccess) {
                                                     withContext(Dispatchers.Main) {
                                                         Log.e("TEST", "${uploadBody.toString()}")
-                                                        navController.navigate("MainScreen/${0}")
+//                                                        navController.navigate("MainScreen/${0}") 기존
+                                                        navController.navigate("MainScreen/${0}") {
+                                                            popUpTo("StabilizationCompleteScreen") {
+                                                                inclusive = true
+                                                            }
+                                                            launchSingleTop = true
+                                                        }
                                                     }
                                                 }
                                             }
