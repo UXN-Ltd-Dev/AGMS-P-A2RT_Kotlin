@@ -1,5 +1,6 @@
 package kr.co.uxn.agms_p.ui.components.main.setting
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -94,11 +95,10 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
             onConfirm = {
                 showDialog.value = false
 
-
-
-
                 coroutineScope.launch {
                     // 0. 토큰 정리
+                    DataStoreManager.saveIsMain(false)
+                    Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
                     DataStoreManager.deleteAccessToken()
                     DataStoreManager.deleteRefreshToken()
                     DataStoreManager.deleteUserId()
@@ -130,7 +130,7 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                             imageVector = Icons.Filled.ArrowBack,
                             contentDescription = "뒤로 가기",
                             modifier = Modifier.clickable {
-                                navController.navigate("MainScreen/${2}")
+                                navController.navigate("MainScreen/${0}")
                             }
                         )
                     }

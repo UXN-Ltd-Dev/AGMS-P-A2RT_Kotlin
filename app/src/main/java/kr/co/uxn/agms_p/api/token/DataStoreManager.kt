@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -23,6 +24,7 @@ object DataStoreManager {
     private val MEASUREMENT_TIME = longPreferencesKey("measurement_time")
     private val END_TIME = longPreferencesKey("end_time")
     private val DEVICE_MAC = stringPreferencesKey("device_mac")
+    private val IS_MAIN = booleanPreferencesKey("is_main")
 
     fun init(context: Context) {
         dataStore = PreferenceDataStoreFactory.create {
@@ -78,9 +80,21 @@ object DataStoreManager {
         }
     }
 
+    fun getIsMain(): Flow<Boolean?> {
+        return dataStore.data.map { prefs ->
+            prefs[IS_MAIN]
+        }
+    }
+
     suspend fun saveEmail(email: String) {
         dataStore.edit { prefs ->
             prefs[EMAIL] = email
+        }
+    }
+
+    suspend fun saveIsMain(isMain: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[IS_MAIN] = isMain
         }
     }
 

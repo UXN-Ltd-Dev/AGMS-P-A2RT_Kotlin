@@ -8,6 +8,7 @@ import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignInNormal
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignUpNormal
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestOAuthSignUpAndLogin
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignUpOauthDetail
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestUpdateUser
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDataValue
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDeviceMac
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseEmailCode
@@ -20,6 +21,8 @@ import kr.co.uxn.agms_p.api.model.responseDTO.ResponseSignInNormal
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseSignUpNormal
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseSignUpOauthAndLogin
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseSignUpOauthDetail
+import kr.co.uxn.agms_p.api.model.responseDTO.ResponseUpdateUser
+import kr.co.uxn.agms_p.api.model.responseDTO.ResponseUserData
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseVerificationCode
 import retrofit2.http.Body
 import retrofit2.http.POST
@@ -85,5 +88,13 @@ interface RemoteDataSource {
     // 혈당 가져오기
     @GET("/api/glucose/convert")
     suspend fun getGlucoseList(@Query("user_id") userId: Int): Response<List<ResponseGetGlucose>>
+
+    // 유저 정보 가져오기
+    @GET("/api/user/info")
+    suspend fun getUser(@Query("user_id") userId: Int) : Response<ResponseUserData>
+
+    // 유저 정보 업데이트
+    @POST("/api/user/update")
+    suspend fun updateUser(@Body userInfo: RequestUpdateUser) : Response<ResponseUpdateUser>
 }
 

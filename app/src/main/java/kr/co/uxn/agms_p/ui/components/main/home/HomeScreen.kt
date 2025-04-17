@@ -118,45 +118,6 @@ fun HomeScreen(
         AppDatabase.getInstance(context)
     }
 
-    // VICO : 기존 더미데이터 차트
-//    LaunchedEffect(Unit) {
-//        dataSetForModel.clear()
-//        dataSetLineSpec.clear()
-//        var xPos = 1f
-//        val dataPoints = arrayListOf<FloatEntry>()
-//
-//        // 차트 디자인 옵션
-//        dataSetLineSpec.add(
-//            LineChart.LineSpec(
-//                lineColor = Color(0xFF6FB0E5).toArgb(),
-//                lineBackgroundShader = DynamicShaders.fromBrush(
-//                    brush = Brush.verticalGradient(
-//                        listOf(
-//                            Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_END),
-//                            Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_START)
-//                        )
-//                    )
-//                )
-//            )
-//        )
-//
-//        // 데이터
-////        for (i in 1..100) { // 데이터 갯수
-////            val randomYFloat = (50..180).random().toFloat()
-////            dataPoints.add(FloatEntry(x = xPos, y = randomYFloat))
-////            xPos += 1f
-////        }
-//
-//        for(i in 0 .. 20) {
-//            dataPoints.add(FloatEntry(x = xPos, y = 0f))
-//            xPos += 1
-//        }
-//
-//        dataSetForModel.add(dataPoints)
-//        modelProducer.setEntries(dataSetForModel)
-//
-//    }
-
     LaunchedEffect(selectedOption) {
         withContext(Dispatchers.IO) {
             dataSetForModel.clear()
@@ -235,10 +196,6 @@ fun HomeScreen(
 
             val userId = DataStoreManager.getUserId().first() ?: -1
 
-//
-//        val localDBDataList = withContext(Dispatchers.IO) {
-//            localDbRepository?.dataDao()?.getGlucoseList(userId = userId)
-//        }
             Log.e("TEST", "slectedOption : ${selectedOption}")
             val lastTime = when(selectedOption) {
                 "3시간" -> System.currentTimeMillis() - (3 * 60 * 60 * 1000L)
@@ -261,127 +218,35 @@ fun HomeScreen(
 
             Log.e("DB", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
 
-//            val localDBDataList = localDbRepository?.dataDao()?.getGlucoseList(userId = userId)
-//            for ( i in 0 until localDBDataList!!.size) {
-//                dataPoints.add(FloatEntry(x = localDBDataList[i].createdAtLong.toFloat(), y = localDBDataList[i].glucose.toFloat()))
-//            }
-
             dataSetForModel.add(dataPoints)
             modelProducer.setEntries(dataSetForModel)
-//        scrollState.lastScrolledForward
-//        dataPoints.lastOrNull()?.let { lastEntry ->
-//            scrollState.scroll(scrollPriority = )
-//        }
 
             isLoading.value = true
         }
     }
 
     // 시연용 타이머
-    LaunchedEffect(Unit) {
-        homeViewModel.startTimerForTest()
-        Log.e("TEST", "홈 화면에서 타이머 실행")
-    }
+//    LaunchedEffect(Unit) {
+//        homeViewModel.startTimerForTest()
+//        Log.e("TEST", "홈 화면에서 타이머 실행")
+//    }
 
     // 실제 타이머
-//    DisposableEffect(lifecycleOwner) {
-//        val observer = LifecycleEventObserver { _, event ->
-//            if (event == Lifecycle.Event.ON_RESUME) {
-//                // onResume 시점에만 실행!
-//                homeViewModel.startTimer()
-//                Log.e("TEST", "홈 화면에서 타이머 실행")
-//            }
-//        }
-//
-//        lifecycleOwner.lifecycle.addObserver(observer)
-//
-//        onDispose {
-//            lifecycleOwner.lifecycle.removeObserver(observer)
-//        }
-//    }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // onResume 시점에만 실행!
+                homeViewModel.startTimer()
+                Log.e("TEST", "홈 화면에서 타이머 실행")
+            }
+        }
 
+        lifecycleOwner.lifecycle.addObserver(observer)
 
-
-//    DisposableEffect(lifecycleOwner) {
-//        val observer = LifecycleEventObserver { _, event ->
-//            if (event == Lifecycle.Event.ON_CREATE) {
-//                // onResume 시점에만 실행!
-//                // 서버로부터 이벤트 목록 받아와서 화면 갱신해주기
-//                Log.e("TEST", "이벤트 화면에서 onResume일때 DisposableEffect 실행")
-//
-//                coroutineScope.launch(Dispatchers.IO) {
-//                    try {
-//                        val userId = DataStoreManager.getUserId().first() ?: -1
-//                        val glucoseList = tokenRetrofit.getGlucoseList(userId)
-//                        if (glucoseList.isSuccessful) {
-//                            val glucoseListBody = glucoseList.body()
-//                            if (glucoseListBody != null) {
-//                                Log.e("TEST", "불러온 glucoseListBody : ${glucoseListBody}")
-//
-//
-//                                val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA)
-//
-//                                val glucoseDataSetList = glucoseListBody.map {
-//                                    val timeMillis = formatter.parse(it.createdAt)?.time?.toFloat() ?: 0f
-//                                    VivoItem(xAxisTime = timeMillis, yAxisValue = it.glucose.toFloat())
-//                                }
-//                                Log.e("TEST", "glucoseDataSetList : ${glucoseDataSetList}")
-//
-//
-//                                val currentDataSetList = glucoseListBody.map {
-//                                    val timeMillis = formatter.parse(it.createdAt)?.time?.toFloat() ?: 0f
-//                                    VivoItem(xAxisTime = timeMillis, yAxisValue = it.current.toFloat())
-//                                }
-//
-//                                // VIVO
-//                                withContext(Dispatchers.Main) {
-//                                    dataSetForModel.clear()
-//                                    dataSetLineSpec.clear()
-////                                    var xPos = 1f
-//                                    val dataPoints = arrayListOf<FloatEntry>()
-//
-//                                    // 차트 디자인 옵션
-//                                    dataSetLineSpec.add(
-//                                        LineChart.LineSpec(
-//                                            lineColor = Color(0xFF6FB0E5).toArgb(),
-//                                            lineBackgroundShader = DynamicShaders.fromBrush(
-//                                                brush = Brush.verticalGradient(
-//                                                    listOf(
-//                                                        Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_END),
-//                                                        Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_START)
-//                                                    )
-//                                                )
-//                                            )
-//                                        )
-//                                    )
-//
-//                                    for ( i in 0 until glucoseDataSetList.size) {
-//                                        dataPoints.add(FloatEntry(x = glucoseDataSetList[i].xAxisTime, y = glucoseDataSetList[i].yAxisValue))
-//                                    }
-//
-//                                    dataSetForModel.add(dataPoints)
-//                                    modelProducer.setEntries(dataSetForModel)
-//                                    isLoading.value = true
-//                                }
-//                            }
-//                        } else {
-//                            Log.e("TEST", "API 에러 : ${glucoseList.errorBody()?.string()}")
-//                        }
-//                    } catch (e: Exception) {
-//                        Log.e("TEST", "네트워크 에러 : ${e.message}")
-//                    }
-//                }
-//            }
-//        }
-//
-//        lifecycleOwner.lifecycle.addObserver(observer)
-//
-//        onDispose {
-//            lifecycleOwner.lifecycle.removeObserver(observer)
-//        }
-//    }
-
-
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     // 혈당 표시 카드
     Column(

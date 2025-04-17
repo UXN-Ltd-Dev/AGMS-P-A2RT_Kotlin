@@ -1,13 +1,10 @@
 package kr.co.uxn.agms_p.ui.components.main.setting
 
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,7 +29,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -46,7 +42,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -64,17 +59,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
-import kr.co.uxn.agms_p.api.model.requestDTO.RequestEventData
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestUpdateUser
 import kr.co.uxn.agms_p.api.token.DataStoreManager
-import kr.co.uxn.agms_p.ui.components.main.event.ItemData
 import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,7 +92,31 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
     var expandedForDiabetesType by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        // TODO 서버로부터 받아오기
+        try {
+            val userId = DataStoreManager.getUserId().first() ?: -1
+            Log.e("TEST", "내정보 에서 불러온 userId : ${userId}")
+            val getUserData = tokenRetrofit.getUser(userId)
+            if (getUserData.isSuccessful) {
+                val userData = getUserData.body()
+                Log.e("TEST", "userDataBody : ${userData}")
+                if (userData != null) {
+                    if (userData.isSuccess) {
+                        email.value = userData.email
+                        name.value = userData.name
+                        sex.value = userData.sex
+                        age.value = userData.age.toString()
+                        height.value = userData.height.toString()
+                        weight.value = userData.weight.toString()
+                        diabetesType.value = userData.diabetesType
+                    }
+                }
+            } else {
+                Log.e("TEST", "API 에러 : ${getUserData.errorBody()?.string()}")
+            }
+        } catch (e: Exception) {
+            Log.e("TEST", "네트워크 에러 : ${e.message}")
+        }
+
 
     }
 
@@ -558,7 +574,7 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                                 },
                             contentAlignment = Alignment.Center
                         ) {
-                           Text(
+                            Text(
                                 text = diabetesType.value,
                                 fontSize = 20.sp,
                                 modifier = Modifier.clickable {
@@ -638,6 +654,59 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                                 .align(Alignment.Center)
                                 .clickable {
                                     // TODO 서버에 저장 요청
+
+                                    coroutineScope.launch(Dispatchers.IO) {
+
+                                        try {
+                                            val userId = DataStoreManager.getUserId().first() ?: -1
+                                            Log.e("TEST", "저장버튼 에서 불러온 userId : ${userId}")
+
+                                            val sex = when (sex.value) {
+                                                "남성" -> 1601
+                                                "여성" -> 1602
+                                                else -> 1603
+                                            }
+
+                                            Log.e("TEST", "코드로 변환된 sex : ${sex}")
+
+                                            val diabetesType = when (diabetesType.value) {
+                                                "제1형 당뇨병" -> 1701
+                                                "제2형 당뇨병" -> 1702
+                                                "임신성 당뇨병" -> 1703
+                                                "당뇨 전단계" -> 1704
+                                                else -> 1603
+                                            }
+
+                                            Log.e("TEST", "코드로 변환된 sex : ${sex}")
+
+                                            val requestUpdateUser = RequestUpdateUser(
+                                                userId = userId,
+                                                name = name.value,
+                                                sex = sex,
+                                                age = age.value.toInt(),
+                                                height = height.value.toInt(),
+                                                weight = weight.value.toInt(),
+                                                diabetesType = diabetesType
+                                            )
+                                            val getUserData =
+                                                tokenRetrofit.updateUser(requestUpdateUser)
+                                            if (getUserData.isSuccessful) {
+                                                val userData = getUserData.body()
+                                                Log.e("TEST", "userDataBody : ${userData}")
+                                                if (userData != null) {
+                                                    if (userData.isSuccess) {
+                                                        Log.e("TEST", "DB 저장 성공")
+                                                    } else {
+
+                                                    }
+                                                }
+                                            } else {
+                                                Log.e("TEST", "API 에러 발생 : ${getUserData.errorBody()?.string()}")
+                                            }
+                                        } catch (e: Exception) {
+                                            Log.e("TEST", "네트워크 에러 발생 : ${e.message}")
+                                        }
+                                    }
                                 }
                         )
                     }

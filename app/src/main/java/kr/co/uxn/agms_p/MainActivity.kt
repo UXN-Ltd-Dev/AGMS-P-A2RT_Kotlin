@@ -8,6 +8,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
@@ -17,7 +19,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.AlwaysService
 import kr.co.uxn.agms_p.ui.theme.AGMSPTheme
 import kr.co.uxn.agms_p.ui.components.login.LoginScreen
@@ -96,6 +100,15 @@ class MainActivity : ComponentActivity() {
         modifier: Modifier = Modifier,
         navController: NavHostController = rememberNavController()
     ) {
+
+        val destination = remember { mutableStateOf<String?>(null) }
+
+        LaunchedEffect(Unit) {
+            val isMain = DataStoreManager.getIsMain().first() ?: false
+            Log.e("TEST", "isMain From DS : $isMain")
+            destination.value = if (isMain) "MainScreen/0" else "Splash"
+        }
+
         LaunchedEffect(Unit) {
             AuthEventNotifier.refreshTokenExpired.collect {
                 Log.e("토큰", "토큰 만료됨.")
@@ -127,128 +140,130 @@ class MainActivity : ComponentActivity() {
         }
 
 
+        destination.value?.let {
+            startDestination ->
+            NavHost(navController, startDestination, modifier = modifier) {
+                composable("Splash") {
+                    SplashScreen(navController, activity = this@MainActivity)
+                }
 
-        NavHost(navController, "Splash", modifier = modifier) {
-            composable("Splash") {
-                SplashScreen(navController, activity = this@MainActivity)
+                composable("Login") {
+                    LoginScreen(loginViewModel, navController)
+                }
+
+                composable("SignUpAgreeScreen1/{type}/{email}") {backStackEntry ->
+                    val type = backStackEntry.arguments?.getString("type")?.toIntOrNull() ?: -1
+                    val oAuthEmail = backStackEntry.arguments?.getString("email").toString()
+                    SignUpAgreeScreen1(navController, type, oAuthEmail)
+                }
+
+                composable("SignUpCheckScreen2/{type}/{email}") {backStackEntry ->
+                    val type = backStackEntry.arguments?.getString("type")?.toIntOrNull() ?: -1
+                    val oAuthEmail = backStackEntry.arguments?.getString("email").toString()
+                    SignUpCheckScreen2(navController, type, oAuthEmail)
+                }
+
+                composable("SignUpInfoScreen3/{email}/{pwd}/{type}") { backStackEntry ->
+                    val email = backStackEntry.arguments?.getString("email")?.let {
+                        URLDecoder.decode(it, "UTF-8")
+                    } ?: ""
+                    val pwd = backStackEntry.arguments?.getString("pwd").toString()
+                    val type = backStackEntry.arguments?.getString("type")?.toInt() ?: -1
+                    SignUpInfoScreen3(navController, email, pwd, loginViewModel, type)
+                }
+
+                composable("SettingPermissionScreen") { backStackEntry ->
+                    SettingPermissionScreen(navController, permissionViewModel, this@MainActivity)
+                }
+
+                composable("GuideScreen1") { backStackEntry ->
+                    GuideScreen1(navController)
+                }
+
+                composable("GuideScreen2") { backStackEntry ->
+                    GuideScreen2(navController)
+                }
+
+                composable("GuideScreen3") { backStackEntry ->
+                    GuideScreen3(navController)
+                }
+
+                composable("GuideScreen4") { backStackEntry ->
+                    GuideScreen4(navController)
+                }
+
+                composable("GuideScreen5") { backStackEntry ->
+                    GuideScreen5(navController)
+                }
+
+                composable("GuideScreen6") { backStackEntry ->
+                    GuideScreen6(navController)
+                }
+
+                composable("RegisterDeviceScreen") { backStackEntry ->
+                    RegisterDeviceScreen(navController)
+                }
+
+                composable("ScanDeviceScreen/{mac}/{serialNumber}") { backStackEntry ->
+                    val mac = backStackEntry.arguments?.getString("mac").toString()
+                    val serialNumber = backStackEntry.arguments?.getString("serialNumber").toString()
+                    ScanDeviceScreen(navController, bleViewModel, mac, serialNumber)
+                }
+
+                composable("ScanFailScreen") {
+                    ScanFailScreen(navController)
+                }
+
+                composable("StabilizationScreen") { backStackEntry ->
+                    StabilizationScreen(navController, bleViewModel)
+                }
+
+                composable("StabilizationCompleteScreen") { backStackEntry ->
+                    StabilizationCompleteScreen(navController)
+                }
+
+                composable("EnterFirstGlucose") { backStackEntry ->
+                    EnterFirstGlucose(navController)
+                }
+
+                composable("MainScreen/{startIndex}") { backStackEntry ->
+                    val startIndex = backStackEntry.arguments?.getString("startIndex")?.toInt() ?: 0
+                    MainScreen(navController, homeViewModel, bleViewModel, startIndex, eventScreenViewModel)
+                }
+
+                composable("GlucoseRegisterScreen") { backStackEntry ->
+                    GlucoseRegisterScreen(navController, eventScreenViewModel)
+                }
+
+                composable("ActivityRegisterScreen") { backStackEntry ->
+                    ActivityRegisterScreen(navController, eventScreenViewModel)
+                }
+
+                composable("MyInfoScreen") { backStackEntry ->
+                    MyInfoScreen(navController, eventScreenViewModel)
+                }
+
+                composable("NotificationScreen") { backStackEntry ->
+                    NotificationScreen(navController, eventScreenViewModel)
+                }
+
+                composable("SensorInfoScreen") { backStackEntry ->
+                    SensorInfoScreen(navController, bleViewModel)
+                }
+
+                composable("PrivacyPolicyScreen") { backStackEntry ->
+                    PrivacyPolicyScreen(navController, eventScreenViewModel)
+                }
+
+                composable("TermsAndConditionsScreen") { backStackEntry ->
+                    TermsAndConditionsScreen(navController, eventScreenViewModel)
+                }
+
+                composable("DeleteAccountScreen") { backStackEntry ->
+                    DeleteAccountScreen(navController, eventScreenViewModel)
+                }
             }
-
-            composable("Login") {
-                LoginScreen(loginViewModel, navController)
-            }
-
-            composable("SignUpAgreeScreen1/{type}/{email}") {backStackEntry ->
-                val type = backStackEntry.arguments?.getString("type")?.toIntOrNull() ?: -1
-                val oAuthEmail = backStackEntry.arguments?.getString("email").toString()
-                SignUpAgreeScreen1(navController, type, oAuthEmail)
-            }
-
-            composable("SignUpCheckScreen2/{type}/{email}") {backStackEntry ->
-                val type = backStackEntry.arguments?.getString("type")?.toIntOrNull() ?: -1
-                val oAuthEmail = backStackEntry.arguments?.getString("email").toString()
-                SignUpCheckScreen2(navController, type, oAuthEmail)
-            }
-
-            composable("SignUpInfoScreen3/{email}/{pwd}/{type}") { backStackEntry ->
-                val email = backStackEntry.arguments?.getString("email")?.let {
-                    URLDecoder.decode(it, "UTF-8")
-                } ?: ""
-                val pwd = backStackEntry.arguments?.getString("pwd").toString()
-                val type = backStackEntry.arguments?.getString("type")?.toInt() ?: -1
-                SignUpInfoScreen3(navController, email, pwd, loginViewModel, type)
-            }
-
-            composable("SettingPermissionScreen") { backStackEntry ->
-                SettingPermissionScreen(navController, permissionViewModel, this@MainActivity)
-            }
-
-            composable("GuideScreen1") { backStackEntry ->
-                GuideScreen1(navController)
-            }
-
-            composable("GuideScreen2") { backStackEntry ->
-                GuideScreen2(navController)
-            }
-
-            composable("GuideScreen3") { backStackEntry ->
-                GuideScreen3(navController)
-            }
-
-            composable("GuideScreen4") { backStackEntry ->
-                GuideScreen4(navController)
-            }
-
-            composable("GuideScreen5") { backStackEntry ->
-                GuideScreen5(navController)
-            }
-
-            composable("GuideScreen6") { backStackEntry ->
-                GuideScreen6(navController)
-            }
-
-            composable("RegisterDeviceScreen") { backStackEntry ->
-                RegisterDeviceScreen(navController)
-            }
-
-            composable("ScanDeviceScreen/{mac}/{serialNumber}") { backStackEntry ->
-                val mac = backStackEntry.arguments?.getString("mac").toString()
-                val serialNumber = backStackEntry.arguments?.getString("serialNumber").toString()
-                ScanDeviceScreen(navController, bleViewModel, mac, serialNumber)
-            }
-
-            composable("ScanFailScreen") {
-                ScanFailScreen(navController)
-            }
-
-            composable("StabilizationScreen") { backStackEntry ->
-                StabilizationScreen(navController, bleViewModel)
-            }
-
-            composable("StabilizationCompleteScreen") { backStackEntry ->
-                StabilizationCompleteScreen(navController)
-            }
-
-            composable("EnterFirstGlucose") { backStackEntry ->
-                EnterFirstGlucose(navController)
-            }
-
-            composable("MainScreen/{startIndex}") { backStackEntry ->
-                val startIndex = backStackEntry.arguments?.getString("startIndex")?.toInt() ?: 0
-                MainScreen(navController, homeViewModel, bleViewModel, startIndex, eventScreenViewModel)
-            }
-
-            composable("GlucoseRegisterScreen") { backStackEntry ->
-                GlucoseRegisterScreen(navController, eventScreenViewModel)
-            }
-
-            composable("ActivityRegisterScreen") { backStackEntry ->
-                ActivityRegisterScreen(navController, eventScreenViewModel)
-            }
-
-            composable("MyInfoScreen") { backStackEntry ->
-                MyInfoScreen(navController, eventScreenViewModel)
-            }
-
-            composable("NotificationScreen") { backStackEntry ->
-                NotificationScreen(navController, eventScreenViewModel)
-            }
-
-            composable("SensorInfoScreen") { backStackEntry ->
-                SensorInfoScreen(navController, bleViewModel)
-            }
-
-            composable("PrivacyPolicyScreen") { backStackEntry ->
-                PrivacyPolicyScreen(navController, eventScreenViewModel)
-            }
-
-            composable("TermsAndConditionsScreen") { backStackEntry ->
-                TermsAndConditionsScreen(navController, eventScreenViewModel)
-            }
-
-            composable("DeleteAccountScreen") { backStackEntry ->
-                DeleteAccountScreen(navController, eventScreenViewModel)
-            }
-
         }
+
     }
 }

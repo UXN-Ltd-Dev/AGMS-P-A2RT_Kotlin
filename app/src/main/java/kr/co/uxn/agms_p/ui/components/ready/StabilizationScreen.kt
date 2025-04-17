@@ -56,9 +56,8 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
 
     val context = LocalContext.current
 
-//    val totalTime = 120 * 60 * 1000L // 120분을 밀리초로 변환
-//    val totalTime = 1 * 60 * 1000L // 시연을 위해 1분 설정
-    val totalTime = 1 * 30 * 1000L // 테스트를 위해 초단위 설정
+//    val totalTime = 120 * 60 * 1000L // 120분
+    val totalTime = 1 * 20 * 1000L // 테스트용 초단위 초단위 설정
     val remainingTime = remember { mutableStateOf(totalTime) }
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(Unit) {

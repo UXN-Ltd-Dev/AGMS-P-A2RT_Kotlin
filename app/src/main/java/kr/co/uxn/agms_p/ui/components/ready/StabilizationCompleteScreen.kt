@@ -1,5 +1,6 @@
 package kr.co.uxn.agms_p.ui.components.ready
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,6 +16,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,10 +25,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.api.token.DataStoreManager
 
 @Composable
 fun StabilizationCompleteScreen(navController: NavController) {
+    val coroutine = rememberCoroutineScope()
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -70,9 +77,17 @@ fun StabilizationCompleteScreen(navController: NavController) {
                 Image(
                     painter = painterResource(R.drawable.btn_next),
                     contentDescription = "다음 버튼",
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier
+                        .align(Alignment.Center)
                         .clickable {
                             navController.navigate("EnterFirstGlucose")
+
+                            // 메인화면으로 고정 isMain = true
+                            coroutine.launch(Dispatchers.IO) {
+                                DataStoreManager.saveIsMain(true)
+                                val isMain = DataStoreManager.getIsMain().first()
+                                Log.e("TEST", "안정화 화면에서 버튼 눌럿을시isMain : ${isMain}")
+                            }
                         }
                 )
             }

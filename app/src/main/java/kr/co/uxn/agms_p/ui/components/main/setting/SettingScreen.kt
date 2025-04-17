@@ -1,5 +1,6 @@
 package kr.co.uxn.agms_p.ui.components.main.setting
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +26,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ui.components.main.AlwaysDialog
@@ -44,6 +47,9 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                 showDialog.value = false
                 coroutineScope.launch {
                     // 0. 토큰 정리
+                    // 메인화면으로 고정 isMain = true
+                    DataStoreManager.saveIsMain(false)
+                    Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
                     DataStoreManager.deleteAccessToken()
                     DataStoreManager.deleteRefreshToken()
                     DataStoreManager.deleteUserId()

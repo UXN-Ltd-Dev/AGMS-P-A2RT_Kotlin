@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,7 +40,7 @@ fun AlwaysDialog(
                 .padding(24.dp)
         ) {
             Column {
-                androidx.compose.material3.Text(
+                Text(
                     text = title,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium
@@ -47,7 +48,7 @@ fun AlwaysDialog(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                androidx.compose.material3.Text(
+                Text(
                     text = content,
                     fontSize = 17.sp
                 )
@@ -59,19 +60,19 @@ fun AlwaysDialog(
                     horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End)
                 ) {
                     OutlinedButton(
-                        onClick = onDismiss,
+                        onClick = onConfirm,
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.weight(1f),
                         border = BorderStroke(1.dp, Color(0xFFD8D8D8))
                     ) {
                         androidx.compose.material3.Text(
-                            text = "취소",
+                            text = "예",
                             fontWeight = FontWeight.Medium
                         )
                     }
 
                     Button(
-                        onClick = onConfirm,
+                        onClick = onDismiss,
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF3451B2), // 파란색
@@ -79,7 +80,7 @@ fun AlwaysDialog(
                         modifier = Modifier.weight(1f)
                     ) {
                         androidx.compose.material3.Text(
-                            text = "확인",
+                            text = "아니오",
                             color = Color.White,
                             fontWeight = FontWeight.Medium
                         )
