@@ -238,7 +238,6 @@ fun ActivityRegisterScreen(navController: NavController, eventScreenViewModel: E
                                                             }
 //                                                            eventScreenViewModel.addItem(ItemData(imageId = image, eventType = eventTypeCode, time = time.value, content = memo.value))
                                                             navController.navigate("MainScreen/${1}")
-                                                            Toast.makeText(context, "업로드 성공", Toast.LENGTH_SHORT).show()
                                                         }
                                                     }
                                                 }

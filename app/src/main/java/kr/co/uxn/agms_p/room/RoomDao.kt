@@ -25,4 +25,7 @@ interface RoomDao {
     @Query("SELECT * FROM UserGlucose WHERE uxn_user_id = :userId")
     fun getGlucoseList(userId: Int): List<UserGlucose>
 
+    @Query("SELECT * FROM UserGlucose WHERE uxn_user_id = :userId AND created_at_long > :lastTime")
+    fun getGlucoseListAfterLastTime(userId: Int, lastTime: Long): List<UserGlucose>
+
 }

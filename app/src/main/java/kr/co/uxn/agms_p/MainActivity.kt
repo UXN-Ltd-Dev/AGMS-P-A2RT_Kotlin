@@ -234,7 +234,7 @@ class MainActivity : ComponentActivity() {
             }
 
             composable("SensorInfoScreen") { backStackEntry ->
-                SensorInfoScreen(navController)
+                SensorInfoScreen(navController, bleViewModel)
             }
 
             composable("PrivacyPolicyScreen") { backStackEntry ->

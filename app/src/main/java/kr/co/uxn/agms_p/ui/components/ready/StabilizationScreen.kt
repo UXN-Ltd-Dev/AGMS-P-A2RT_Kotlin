@@ -126,7 +126,6 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
         // check
         val endTimeFromDS = DataStoreManager.getEndTime().first() ?: 0
         Log.e("TEST", "endTimeFromDS : $endTimeFromDS")
-
     }
 
 

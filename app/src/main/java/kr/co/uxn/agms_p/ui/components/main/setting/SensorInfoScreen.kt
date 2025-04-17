@@ -38,16 +38,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ui.components.main.AlwaysDialog
+import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.time.ZoneId
+import kotlin.system.exitProcess
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SensorInfoScreen(navController: NavController) {
+fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -90,6 +93,25 @@ fun SensorInfoScreen(navController: NavController) {
             },
             onConfirm = {
                 showDialog.value = false
+
+
+
+
+                coroutineScope.launch {
+                    // 0. 토큰 정리
+                    DataStoreManager.deleteAccessToken()
+                    DataStoreManager.deleteRefreshToken()
+                    DataStoreManager.deleteUserId()
+                    DataStoreManager.deleteDeviceMac()
+                    DataStoreManager.deleteStartTime()
+                    DataStoreManager.deleteEndTime()
+                    // 1. 서비스 종료
+                    bleViewModel.emit("STOP_SERVICE")
+                    // 앱 강제종료
+                    android.os.Process.killProcess(android.os.Process.myPid())
+                    exitProcess(0)
+                }
+
             },
             title = "센서 종료",
             content = "센서 연결을 종료하시겠습니까?"

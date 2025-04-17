@@ -83,6 +83,7 @@ import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -156,6 +157,58 @@ fun HomeScreen(
 //
 //    }
 
+    LaunchedEffect(selectedOption) {
+        withContext(Dispatchers.IO) {
+            dataSetForModel.clear()
+            dataSetLineSpec.clear()
+            val dataPoints = arrayListOf<FloatEntry>()
+
+
+            // 차트 디자인 옵션
+            dataSetLineSpec.add(
+                LineChart.LineSpec(
+                    lineColor = Color(0xFF6FB0E5).toArgb(),
+                    lineBackgroundShader = DynamicShaders.fromBrush(
+                        brush = Brush.verticalGradient(
+                            listOf(
+                                Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_END),
+                                Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_START)
+                            )
+                        )
+                    )
+                )
+            )
+
+            val userId = DataStoreManager.getUserId().first() ?: -1
+
+            Log.e("TEST", "slectedOption : ${selectedOption}")
+            val lastTime = when(selectedOption) {
+                "3시간" -> System.currentTimeMillis() - (3 * 60 * 60 * 1000L)
+                "6시간" -> System.currentTimeMillis() - (6 * 60 * 60 * 1000L)
+                else -> System.currentTimeMillis() - (12 * 60 * 60 * 1000L)
+            }
+            Log.e("DB", "lastTime : ${lastTime}")
+            val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA)
+            formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
+            val convertedLastTime = formatter.format(Date(lastTime))
+
+            Log.e("DB", "converted : ${convertedLastTime}")
+
+            val localDBDataListAfterLastTime =
+                localDbRepository?.dataDao()?.getGlucoseListAfterLastTime(userId = userId, lastTime = lastTime)
+
+            for ( i in 0 until localDBDataListAfterLastTime!!.size) {
+                dataPoints.add(FloatEntry(x = localDBDataListAfterLastTime[i].createdAtLong.toFloat(), y = localDBDataListAfterLastTime[i].glucose.toFloat()))
+            }
+
+            Log.e("DB", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
+            dataSetForModel.add(dataPoints)
+            modelProducer.setEntries(dataSetForModel)
+            isLoading.value = true
+        }
+    }
+
+
 
 
     LaunchedEffect(chartTrigger) {
@@ -186,13 +239,32 @@ fun HomeScreen(
 //        val localDBDataList = withContext(Dispatchers.IO) {
 //            localDbRepository?.dataDao()?.getGlucoseList(userId = userId)
 //        }
-
-            val localDBDataList = localDbRepository?.dataDao()?.getGlucoseList(userId = userId)
-            for ( i in 0 until localDBDataList!!.size) {
-
-
-                dataPoints.add(FloatEntry(x = localDBDataList[i].createdAtLong.toFloat(), y = localDBDataList[i].glucose.toFloat()))
+            Log.e("TEST", "slectedOption : ${selectedOption}")
+            val lastTime = when(selectedOption) {
+                "3시간" -> System.currentTimeMillis() - (3 * 60 * 60 * 1000L)
+                "6시간" -> System.currentTimeMillis() - (6 * 60 * 60 * 1000L)
+                else -> System.currentTimeMillis() - (12 * 60 * 60 * 1000L)
             }
+            Log.e("DB", "lastTime : ${lastTime}")
+            val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA)
+            formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
+            val convertedLastTime = formatter.format(Date(lastTime))
+
+            Log.e("DB", "converted : ${convertedLastTime}")
+
+            val localDBDataListAfterLastTime =
+                localDbRepository?.dataDao()?.getGlucoseListAfterLastTime(userId = userId, lastTime = lastTime)
+
+            for ( i in 0 until localDBDataListAfterLastTime!!.size) {
+                dataPoints.add(FloatEntry(x = localDBDataListAfterLastTime[i].createdAtLong.toFloat(), y = localDBDataListAfterLastTime[i].glucose.toFloat()))
+            }
+
+            Log.e("DB", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
+
+//            val localDBDataList = localDbRepository?.dataDao()?.getGlucoseList(userId = userId)
+//            for ( i in 0 until localDBDataList!!.size) {
+//                dataPoints.add(FloatEntry(x = localDBDataList[i].createdAtLong.toFloat(), y = localDBDataList[i].glucose.toFloat()))
+//            }
 
             dataSetForModel.add(dataPoints)
             modelProducer.setEntries(dataSetForModel)
