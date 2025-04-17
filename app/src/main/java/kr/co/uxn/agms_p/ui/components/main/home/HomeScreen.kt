@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.DismissState
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
@@ -158,47 +159,50 @@ fun HomeScreen(
 
 
     LaunchedEffect(chartTrigger) {
+        withContext(Dispatchers.IO) {
+            dataSetForModel.clear()
+            dataSetLineSpec.clear()
+            val dataPoints = arrayListOf<FloatEntry>()
 
-        dataSetForModel.clear()
-        dataSetLineSpec.clear()
-        val dataPoints = arrayListOf<FloatEntry>()
 
-
-        // 차트 디자인 옵션
-        dataSetLineSpec.add(
-            LineChart.LineSpec(
-                lineColor = Color(0xFF6FB0E5).toArgb(),
-                lineBackgroundShader = DynamicShaders.fromBrush(
-                    brush = Brush.verticalGradient(
-                        listOf(
-                            Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_END),
-                            Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_START)
+            // 차트 디자인 옵션
+            dataSetLineSpec.add(
+                LineChart.LineSpec(
+                    lineColor = Color(0xFF6FB0E5).toArgb(),
+                    lineBackgroundShader = DynamicShaders.fromBrush(
+                        brush = Brush.verticalGradient(
+                            listOf(
+                                Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_END),
+                                Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_START)
+                            )
                         )
                     )
                 )
             )
-        )
 
-        val userId = DataStoreManager.getUserId().first() ?: -1
+            val userId = DataStoreManager.getUserId().first() ?: -1
+
+//
+//        val localDBDataList = withContext(Dispatchers.IO) {
+//            localDbRepository?.dataDao()?.getGlucoseList(userId = userId)
+//        }
+
+            val localDBDataList = localDbRepository?.dataDao()?.getGlucoseList(userId = userId)
+            for ( i in 0 until localDBDataList!!.size) {
 
 
-        val localDBDataList = withContext(Dispatchers.IO) {
-            localDbRepository?.dataDao()?.getGlucoseList(userId = userId)
-        }
-        for ( i in 0 until localDBDataList!!.size) {
+                dataPoints.add(FloatEntry(x = localDBDataList[i].createdAtLong.toFloat(), y = localDBDataList[i].glucose.toFloat()))
+            }
 
-
-            dataPoints.add(FloatEntry(x = localDBDataList[i].createdAtLong.toFloat(), y = localDBDataList[i].glucose.toFloat()))
-        }
-
-        dataSetForModel.add(dataPoints)
-        modelProducer.setEntries(dataSetForModel)
+            dataSetForModel.add(dataPoints)
+            modelProducer.setEntries(dataSetForModel)
 //        scrollState.lastScrolledForward
 //        dataPoints.lastOrNull()?.let { lastEntry ->
 //            scrollState.scroll(scrollPriority = )
 //        }
 
-        isLoading.value = true
+            isLoading.value = true
+        }
     }
 
     // 시연용 타이머

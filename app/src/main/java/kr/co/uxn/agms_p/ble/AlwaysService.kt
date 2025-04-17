@@ -171,7 +171,7 @@ class AlwaysService() : Service() {
             val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
                 .setOngoing(true)
                 .setContentTitle("AGMS 실행 중")
-                .setContentText("포그라운드 서비스가 작동 중 입니다.")
+                .setContentText("Always가 작동 중입니다.")
                 .setSmallIcon(R.mipmap.ic_launcher_round)
                 .setContentIntent(pendingIntent)
                 .setSilent(true)
