@@ -74,10 +74,6 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
         viewModel.updateIsLoading(false)
     }
 
-//    fun validateEmail(email: String) {
-//        if (email.length >= 8 &&)
-//    }
-
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -333,7 +329,6 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                 modifier = Modifier
                     .wrapContentWidth()
                     .clickable {
-
                         if (isNetworkAvailable(context)) {
                             viewModel.googleLogin(context)
                             viewModel.updateIsLoading(true)
