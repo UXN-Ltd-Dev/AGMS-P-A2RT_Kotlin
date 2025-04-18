@@ -2,6 +2,7 @@ package kr.co.uxn.agms_p.ui.components.main.home
 
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,6 +29,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -174,10 +176,10 @@ fun HomeScreen(
 
     LaunchedEffect(chartTrigger) {
         withContext(Dispatchers.IO) {
+            delay(3000)
             dataSetForModel.clear()
             dataSetLineSpec.clear()
             val dataPoints = arrayListOf<FloatEntry>()
-
 
             // 차트 디자인 옵션
             dataSetLineSpec.add(
@@ -209,6 +211,7 @@ fun HomeScreen(
 
             Log.e("DB", "converted : ${convertedLastTime}")
 
+            // db로부터 불러오기
             val localDBDataListAfterLastTime =
                 localDbRepository?.dataDao()?.getGlucoseListAfterLastTime(userId = userId, lastTime = lastTime)
 
@@ -224,12 +227,6 @@ fun HomeScreen(
             isLoading.value = true
         }
     }
-
-    // 시연용 타이머
-//    LaunchedEffect(Unit) {
-//        homeViewModel.startTimerForTest()
-//        Log.e("TEST", "홈 화면에서 타이머 실행")
-//    }
 
     // 실제 타이머
     DisposableEffect(lifecycleOwner) {
@@ -326,11 +323,10 @@ fun HomeScreen(
                     Text(
                         text = "유지 중",
                         color = Color.White,
-                        fontSize = 15.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
                     )
                 }
-
             }
         }
 
@@ -400,12 +396,13 @@ fun HomeScreen(
                             itemPlacer = AxisItemPlacer.Horizontal.default(
                                 spacing = 1  // x축 라벨 간격을 더 촘촘히 (기본은 자동)
                             )
-//
                         ),
                         marker = marker,
                         isZoomEnabled = true
                     )
                 }
+//            }
+
             } else {
                 Box(
                     modifier = Modifier.fillMaxWidth()
@@ -420,6 +417,7 @@ fun HomeScreen(
                     )
                 }
 
+                }
             }
 
             RadioButtonSingleSelection(

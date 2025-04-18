@@ -321,7 +321,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                 enabled = !isEmailVerified.value,
             ) {
                 Text(
-                    text = "이메일 인증",
+                    text = "인증번호 전송",
                     fontSize = 12.sp,
                     textAlign = TextAlign.Center
                 )
@@ -471,7 +471,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                         modifier = Modifier.size(120.dp, 35.dp)
                     ) {
                         Text(
-                            text = "인증번호 전송",
+                            text = "확인",
                             fontSize = 12.sp,
                             textAlign = TextAlign.Center
                         )
