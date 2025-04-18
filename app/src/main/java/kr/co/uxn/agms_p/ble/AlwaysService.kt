@@ -357,7 +357,7 @@ class AlwaysService() : Service() {
                                 val insertDataList = glucoseListBody.map {
                                     val convertToLocalDateTime = LocalDateTime.parse(it.createdAt, formatter)
                                     val parsedLongTime = convertToLocalDateTime.atZone(zoneId).toInstant().toEpochMilli()
-                                    UserGlucose(userId = userId , glucose = it.glucose.toDouble(), current = it.current, createdAt = it.createdAt, createdAtLong = parsedLongTime)
+                                    UserGlucose(userId = userId , glucose = it.glucose.toDouble(), weo1 = it.weo1, weo2 = it.weo2, createdAt = it.createdAt, createdAtLong = parsedLongTime)
                                 }
 
                                 Log.e("TEST", "insertDataList : ${insertDataList}")

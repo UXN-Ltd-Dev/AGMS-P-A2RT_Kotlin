@@ -38,8 +38,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestDataValue
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ui.components.main.AlwaysDialog
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
@@ -94,27 +98,43 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
             },
             onConfirm = {
                 showDialog.value = false
-
-                coroutineScope.launch {
+                coroutineScope.launch(Dispatchers.IO) {
                     // 0. 토큰 정리
-                    DataStoreManager.saveIsMain(false)
-                    DataStoreManager.deleteRoute()
-                    DataStoreManager.saveRoute("Splash")
-                    Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
-                    Log.e("TEST", "DS에 저장된 Route : ${DataStoreManager.getRoute().first()}")
-                    DataStoreManager.deleteAccessToken()
-                    DataStoreManager.deleteRefreshToken()
-                    DataStoreManager.deleteUserId()
-                    DataStoreManager.deleteDeviceMac()
-                    DataStoreManager.deleteStartTime()
-                    DataStoreManager.deleteEndTime()
-                    // 1. 서비스 종료
-                    bleViewModel.emit("STOP_SERVICE")
-                    // 앱 강제종료
-                    android.os.Process.killProcess(android.os.Process.myPid())
-                    exitProcess(0)
-                }
+                    val userId = DataStoreManager.getUserId().first() ?: -1
+                    val sensorOff = tokenRetrofit.doSensorOff(userId)
 
+                    if (sensorOff.isSuccessful) {
+                        val sensorOffBody = sensorOff.body()
+                        if (sensorOffBody != null) {
+                            Log.w("TEST", "sensorOff responseBody : ${sensorOffBody}")
+                            if (sensorOffBody.isSuccess) {
+                                Log.w("TEST", "sensorOff 성공")
+                                DataStoreManager.saveIsMain(false)
+                                DataStoreManager.deleteRoute()
+                                DataStoreManager.saveRoute("Splash")
+                                Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
+                                Log.e("TEST", "DS에 저장된 Route : ${DataStoreManager.getRoute().first()}")
+                                DataStoreManager.deleteAccessToken()
+                                DataStoreManager.deleteRefreshToken()
+                                DataStoreManager.deleteUserId()
+                                DataStoreManager.deleteDeviceMac()
+                                DataStoreManager.deleteStartTime()
+                                DataStoreManager.deleteEndTime()
+                                withContext(Dispatchers.Main) {
+                                    // 1. 서비스 종료
+                                    bleViewModel.emit("STOP_SERVICE")
+                                    // 앱 강제종료
+                                    android.os.Process.killProcess(android.os.Process.myPid())
+                                    exitProcess(0)
+                                }
+                            } else {
+                                Log.w("TEST", "sensorOff 실패")
+                            }
+                        }
+                    } else {
+                        Log.w("TEST", "sensorOff API통신 실패 : ${sensorOff.errorBody()?.string()}")
+                    }
+                }
             },
             title = "센서 종료",
             content = "센서 연결을 종료하시겠습니까?"
@@ -174,7 +194,7 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "센서 시작 시간",
+                        text = "센서 시작일",
                         fontSize = 16.sp
                     )
                     Text(

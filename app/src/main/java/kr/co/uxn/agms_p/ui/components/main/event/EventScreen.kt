@@ -115,7 +115,10 @@ fun EventScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(110.dp)
-                .padding(10.dp),
+                .padding(10.dp)
+                .clickable {
+                    navController.navigate("ActivityRegisterScreen")
+                },
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.White, // 카드 배경색 설정
@@ -173,11 +176,7 @@ fun EventScreen(
                     modifier = Modifier
                         .size(70.dp, 26.dp)
                         .padding(bottom = 3.dp)
-                        .clickable(
-                            // 클릭시 리플효과 제거
-//                            interactionSource = interactionSource,
-//                            indication = null
-                        ) {
+                        .clickable {
                             navController.navigate("ActivityRegisterScreen")
                         },
                     painter = painterResource(R.drawable.enter_icon),
@@ -191,7 +190,10 @@ fun EventScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(110.dp)
-                .padding(10.dp),
+                .padding(10.dp)
+                .clickable {
+                    navController.navigate("GlucoseRegisterScreen")
+                },
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.White, // 카드 배경색 설정

@@ -9,8 +9,10 @@ data class UserGlucose(
     val userId: Int,
     @ColumnInfo(name = "glucose")
     val glucose: Double,
-    @ColumnInfo(name = "current")
-    val current: Double,
+    @ColumnInfo(name = "w1_current")
+    val weo1: Double,
+    @ColumnInfo(name = "w2_current")
+    val weo2: Double,
     @ColumnInfo(name = "created_at")
     val createdAt: String,
     @ColumnInfo(name = "created_at_long")

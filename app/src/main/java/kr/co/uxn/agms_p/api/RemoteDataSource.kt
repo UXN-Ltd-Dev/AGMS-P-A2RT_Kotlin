@@ -17,6 +17,7 @@ import kr.co.uxn.agms_p.api.model.responseDTO.ResponseGetEvent
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseGetGlucose
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseGetLastTime
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseLinkDevice
+import kr.co.uxn.agms_p.api.model.responseDTO.ResponseSensorOff
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseSignInNormal
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseSignUpNormal
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseSignUpOauthAndLogin
@@ -96,5 +97,9 @@ interface RemoteDataSource {
     // 유저 정보 업데이트
     @POST("/api/user/update")
     suspend fun updateUser(@Body userInfo: RequestUpdateUser) : Response<ResponseUpdateUser>
+
+    // 유저 정보 업데이트
+    @GET("/api/device/end")
+    suspend fun doSensorOff(@Query("user_Id") userId: Int) : Response<ResponseSensorOff>
 }
 
