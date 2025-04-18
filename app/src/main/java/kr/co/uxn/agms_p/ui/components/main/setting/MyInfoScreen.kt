@@ -62,6 +62,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestUpdateUser
@@ -80,13 +81,13 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
     val keyboardController = LocalSoftwareKeyboardController.current
 
     // 계정 정보
-    val email = remember { mutableStateOf("beomsu@gmail.com") }
-    val name = remember { mutableStateOf("김범수") }
-    val sex = remember { mutableStateOf("남성") }
-    val age = remember { mutableStateOf("50") }
-    val height = remember { mutableStateOf("168") }
-    val weight = remember { mutableStateOf("70") }
-    val diabetesType = remember { mutableStateOf("정상") }
+    val email = remember { mutableStateOf("") }
+    val name = remember { mutableStateOf("") }
+    val sex = remember { mutableStateOf("") }
+    val age = remember { mutableStateOf("") }
+    val height = remember { mutableStateOf("") }
+    val weight = remember { mutableStateOf("") }
+    val diabetesType = remember { mutableStateOf("") }
 
     var expandedForSex by remember { mutableStateOf(false) }
     var expandedForDiabetesType by remember { mutableStateOf(false) }
@@ -674,7 +675,8 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                                                 "제2형 당뇨병" -> 1702
                                                 "임신성 당뇨병" -> 1703
                                                 "당뇨 전단계" -> 1704
-                                                else -> 1603
+                                                "LADA" -> 1705
+                                                else -> 1706
                                             }
 
                                             Log.e("TEST", "코드로 변환된 sex : ${sex}")
@@ -696,8 +698,13 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                                                 if (userData != null) {
                                                     if (userData.isSuccess) {
                                                         Log.e("TEST", "DB 저장 성공")
+                                                        withContext(Dispatchers.Main) {
+                                                            navController.navigate("MainScreen/${2}")
+                                                        }
                                                     } else {
-
+                                                        withContext(Dispatchers.Main) {
+                                                            navController.navigate("MainScreen/${2}")
+                                                        }
                                                     }
                                                 }
                                             } else {

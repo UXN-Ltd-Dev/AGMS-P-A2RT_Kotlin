@@ -38,11 +38,13 @@ import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.BleManager.Companion.TEST
 import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.room.UserGlucose
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Timer
 import java.util.TimerTask
+import kotlin.system.exitProcess
 
 class AlwaysService() : Service() {
     companion object {
@@ -372,6 +374,44 @@ class AlwaysService() : Service() {
                         } else {
                             Log.e("TEST", "glucoseList API통신 실패 : ${glucoseList.errorBody()?.string()}")
                         }
+
+                        // 측정 종료 로직
+                        val zoneId = ZoneId.of("Asia/Seoul")
+                        val now = LocalDateTime.now().atZone(zoneId).toInstant().toEpochMilli()
+                        val endTime = DataStoreManager.getEndTime().first()
+
+                        val convertedNow= Instant.ofEpochMilli(now)
+                            .atZone(ZoneId.of("Asia/Seoul"))
+                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+
+                        val convertedEndTime = endTime?.let {
+                            Instant.ofEpochMilli(it)
+                                .atZone(ZoneId.of("Asia/Seoul"))
+                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                        }
+
+                        Log.d("SERVICE", "now : $convertedNow \nendTime : $convertedEndTime")
+
+                        if (endTime != null && now > endTime) {
+                            DataStoreManager.saveIsMain(false)
+                            DataStoreManager.deleteRoute()
+                            DataStoreManager.saveRoute("Splash")
+                            Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
+                            Log.e("TEST", "DS에 저장된 Route는${DataStoreManager.getRoute().first()}")
+                            DataStoreManager.deleteAccessToken()
+                            DataStoreManager.deleteRefreshToken()
+                            DataStoreManager.deleteUserId()
+                            DataStoreManager.deleteDeviceMac()
+                            DataStoreManager.deleteStartTime()
+                            DataStoreManager.deleteEndTime()
+                            // 1. 서비스 종료
+                            stopSelf()
+                            // 앱 강제종료
+                            android.os.Process.killProcess(android.os.Process.myPid())
+                            exitProcess(0)
+                        }
+
+
                         delay(1000 * 60 * 1)
                     } catch (e: Exception) {
                         Log.e("SERVICE", "서비스 코루틴 에러 발생 : ${e.message}")

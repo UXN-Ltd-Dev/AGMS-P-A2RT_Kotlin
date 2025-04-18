@@ -72,7 +72,6 @@ fun DeleteAccountScreen(navController: NavController, eventScreenViewModel: Even
                 showDialog.value = false
                 // TODO 서버에 계정삭제 요청 및 로그인화면 이동 또는 앱 종료 + 데이터스토어 정리
 
-
             },
             onDismiss = {
                 showDialog.value = false
