@@ -133,7 +133,7 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                             imageVector = Icons.Filled.ArrowBack,
                             contentDescription = "뒤로 가기",
                             modifier = Modifier.clickable {
-                                navController.navigate("MainScreen/${0}")
+                                navController.navigate("MainScreen/${2}")
                             }
                         )
                     }
