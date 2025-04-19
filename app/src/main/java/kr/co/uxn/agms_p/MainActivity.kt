@@ -3,6 +3,7 @@ package kr.co.uxn.agms_p
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -19,12 +20,15 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.model.UpdateAvailability
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.AlwaysService
 import kr.co.uxn.agms_p.ui.theme.AGMSPTheme
 import kr.co.uxn.agms_p.ui.components.login.LoginScreen
+import kr.co.uxn.agms_p.ui.components.login.PassWordResetScreen
 import kr.co.uxn.agms_p.ui.components.login.SignUpAgreeScreen1
 import kr.co.uxn.agms_p.ui.components.login.SignUpCheckScreen2
 import kr.co.uxn.agms_p.ui.components.login.SignUpInfoScreen3
@@ -68,6 +72,7 @@ class MainActivity : ComponentActivity() {
     private val eventScreenViewModel: EventScreenViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             AGMSPTheme {
                 Navigation()
@@ -91,6 +96,15 @@ class MainActivity : ComponentActivity() {
                         ContextCompat.startForegroundService(this@MainActivity, stopIntent)
                     }
                 }
+            }
+        }
+
+        // 앱 업데이트 알림
+        val appUpdateManager = AppUpdateManagerFactory.create(this)
+        val appUpdateInfoTask = appUpdateManager.appUpdateInfo
+        appUpdateInfoTask.addOnSuccessListener {
+            if (it.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE ) {//&& it.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
+                Toast.makeText(this, "플레이스토어에서 최신버전으로 업데이트 해주세요",Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -155,6 +169,10 @@ class MainActivity : ComponentActivity() {
 
                 composable("Login") {
                     LoginScreen(loginViewModel, navController)
+                }
+
+                composable("PasswordResetScreen") {
+                    PassWordResetScreen(navController)
                 }
 
                 composable("SignUpAgreeScreen1/{type}/{email}") {backStackEntry ->

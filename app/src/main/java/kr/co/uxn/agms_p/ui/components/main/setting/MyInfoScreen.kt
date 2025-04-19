@@ -117,8 +117,6 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
         } catch (e: Exception) {
             Log.e("TEST", "네트워크 에러 : ${e.message}")
         }
-
-
     }
 
     Scaffold(

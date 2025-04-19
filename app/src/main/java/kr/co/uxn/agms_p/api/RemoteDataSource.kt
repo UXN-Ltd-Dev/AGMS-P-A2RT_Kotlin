@@ -98,8 +98,10 @@ interface RemoteDataSource {
     @POST("/api/user/update")
     suspend fun updateUser(@Body userInfo: RequestUpdateUser) : Response<ResponseUpdateUser>
 
-    // 유저 정보 업데이트
+
+    // 센서 종료
+    // isFinish가 false인 것 중 가장 최근 걸 불러온다
     @GET("/api/device/end")
-    suspend fun doSensorOff(@Query("user_Id") userId: Int) : Response<ResponseSensorOff>
+    suspend fun doSensorOff(@Query("user_id") userId: Int) : Response<ResponseSensorOff>
 }
 

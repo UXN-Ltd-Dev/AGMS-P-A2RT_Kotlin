@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -72,7 +73,8 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    val glucoseDataFromUser = remember { mutableStateOf("") }
+    val targetGlucoseRange = remember { mutableStateOf("80~150mg/dL") }
+    val dailyCalibrationTime = remember { mutableStateOf("오전 11시") }
     val time = remember { mutableStateOf<String>("") }
     val hint = remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
@@ -81,12 +83,14 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
     // notification swtich
     val checkedForSound = remember { mutableStateOf(false) }
     val checkedForVibration = remember { mutableStateOf(false) }
+    val checkedDoNotDisturbMode = remember { mutableStateOf(false) }
     val checkedForHighGlucose = remember { mutableStateOf(false) }
     val checkedForLowGlucose = remember { mutableStateOf(false) }
     val checkedForLostSignal = remember { mutableStateOf(false) }
     val checkedForExpiredSensor = remember { mutableStateOf(false) }
     val checkedForStabilization = remember { mutableStateOf(false) }
     val checkedForCalibration = remember { mutableStateOf(false) }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -130,11 +134,7 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
 
                 Divider()
 
-                Box(
-                    modifier = Modifier.clickable {
-
-                    }
-                ) {
+                Box() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -160,11 +160,7 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
 
                 Divider()
 
-                Box(
-                    modifier = Modifier.clickable {
-
-                    }
-                ) {
+                Box() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -190,15 +186,70 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
 
                 Divider()
 
+                Box() {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White)
+                            .height(50.dp)
+                            .padding(horizontal = 30.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "방해금지 중 알림 허용",
+                            fontSize = 16.sp
+                        )
+
+                        Switch(
+                            checked = checkedDoNotDisturbMode.value,
+                            onCheckedChange = {
+                                checkedDoNotDisturbMode.value = it
+                            }
+                        )
+                    }
+                }
+
+                Divider()
+
                 Divider(color = Color.Transparent, thickness = 20.dp)
 
                 Divider()
 
-                Box(
-                    modifier = Modifier.clickable {
+                Box() {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White)
+                            .height(50.dp)
+                            .padding(horizontal = 30.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Text(
+                            text = "목표 혈당 범위",
+                            fontSize = 16.sp,
+                            modifier = Modifier.weight(1.5f)
+                        )
 
+                        Text(
+                            text = targetGlucoseRange.value,
+                            fontSize = 15.sp,
+                            color = Color(0xFF828282),
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        Icon(
+                            painter = painterResource(id = R.drawable.edit_icon),
+                            modifier = Modifier.size(14.dp),
+                            contentDescription = "목표 혈당 범위 수정 아이콘"
+                        )
                     }
-                ) {
+                }
+
+                Divider()
+
+                Box() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -224,11 +275,7 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
 
                 Divider()
 
-                Box(
-                    modifier = Modifier.clickable {
-
-                    }
-                ) {
+                Box() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -257,11 +304,7 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
 
                 Divider()
 
-                Box(
-                    modifier = Modifier.clickable {
-
-                    }
-                ) {
+                Box() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -286,11 +329,7 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
 
                 Divider()
 
-                Box(
-                    modifier = Modifier.clickable {
-
-                    }
-                ) {
+                Box() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -315,11 +354,7 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
 
                 Divider()
 
-                Box(
-                    modifier = Modifier.clickable {
-
-                    }
-                ) {
+                Box() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -348,30 +383,56 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
 
                 Divider()
 
-                Box(
-                    modifier = Modifier.clickable {
-
-                    }
-                ) {
-                    Row(
+                Box() {
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(Color.White)
-                            .height(50.dp)
-                            .padding(horizontal = 30.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .height(80.dp),
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Text(
-                            text = "혈당값 입력 시간 알림",
-                            fontSize = 16.sp
-                        )
-                        Switch(
-                            checked = checkedForCalibration.value,
-                            onCheckedChange = {
-                                checkedForCalibration.value = it
-                            }
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.White)
+                                .height(50.dp)
+                                .padding(horizontal = 30.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "혈당값 입력 시간 알림",
+                                fontSize = 16.sp
+                            )
+                            Switch(
+                                checked = checkedForCalibration.value,
+                                onCheckedChange = {
+                                    checkedForCalibration.value = it
+                                }
+                            )
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.White)
+                                .height(30.dp)
+                                .padding(horizontal = 30.dp),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Text(
+                                text = dailyCalibrationTime.value,
+                                color = Color(0xFF828282),
+                                fontSize = 15.sp
+                            )
+                            Spacer(modifier = Modifier.width(15.dp))
+                            Icon(
+                                painter = painterResource(id = R.drawable.edit_icon),
+                                modifier = Modifier.size(14.dp)
+                                    .align(Alignment.CenterVertically),
+                                contentDescription = "혈당 입력 시간 수정"
+                            )
+                        }
                     }
                 }
 

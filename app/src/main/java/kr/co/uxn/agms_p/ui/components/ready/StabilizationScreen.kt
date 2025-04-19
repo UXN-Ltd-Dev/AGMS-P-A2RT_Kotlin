@@ -163,8 +163,8 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
                 if (minutes > 0) {
                     Text(
 //                    modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                        text = minutes.toString(),
+//                        textAlign = TextAlign.Center,
+                        text = minutes.toString() +"분",
                         fontSize = 70.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF385DAB)
@@ -172,14 +172,14 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
                 }
 
 
-                Text(
-//                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    text = "분",
-                    fontSize = 70.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF385DAB)
-                )
+//                Text(
+////                    modifier = Modifier.fillMaxWidth(),
+////                    textAlign = TextAlign.Center,
+//                    text = "분",
+//                    fontSize = 70.sp,
+//                    fontWeight = FontWeight.Bold,
+//                    color = Color(0xFF385DAB)
+//                )
             }
 
 

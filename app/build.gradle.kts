@@ -151,21 +151,19 @@ dependencies {
     implementation("androidx.room:room-ktx:$roomVersion")
 
     // To use Kotlin annotation processing tool (kapt)
-//    kapt("androidx.room:room-compiler:$roomVersion")
+    // kapt("androidx.room:room-compiler:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
 
     // workManager
     val workVersion = "2.10.0"
     implementation("androidx.work:work-runtime-ktx:${workVersion}")
 
-    // vico
-//    implementation("com.patrykandpatrick.vico:compose:2.1.2")
-    // vico for m3
-//    implementation("com.patrykandpatrick.vico:compose-m3:2.1.2")
-
     val vicoVersion = "1.11.1"
     implementation("com.patrykandpatrick.vico:core:$vicoVersion")
     implementation("com.patrykandpatrick.vico:compose:$vicoVersion")
     implementation("com.patrykandpatrick.vico:compose-m2:$vicoVersion")
     implementation("com.patrykandpatrick.vico:compose-m3:$vicoVersion")
+
+    // 앱 업데이트 확인
+    implementation("com.google.android.play:app-update-ktx:2.1.0")
 }

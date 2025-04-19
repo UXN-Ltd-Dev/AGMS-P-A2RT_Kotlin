@@ -343,7 +343,7 @@ class AlwaysService() : Service() {
                         }
 
 
-                        val glucoseList = tokenRetrofit.getGlucoseList(userId)
+                        val glucoseList = tokenRetrofit.getGlucoseList(602)
                         if (glucoseList.isSuccessful) {
                             val glucoseListBody = glucoseList.body()
                             if (glucoseListBody != null) {
@@ -351,7 +351,6 @@ class AlwaysService() : Service() {
                                 val userId = DataStoreManager.getUserId().first() ?: -1
                                 val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                                 val zoneId = ZoneId.of("Asia/Seoul") // 타임존 설정 (필수!)
-
 
                                 Log.e("TEST", "glucoseListBody : ${glucoseListBody}")
                                 val insertDataList = glucoseListBody.map {

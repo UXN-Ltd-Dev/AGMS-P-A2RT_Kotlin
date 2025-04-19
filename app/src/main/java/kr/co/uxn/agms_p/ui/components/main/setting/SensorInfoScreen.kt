@@ -102,7 +102,6 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                     // 0. 토큰 정리
                     val userId = DataStoreManager.getUserId().first() ?: -1
                     val sensorOff = tokenRetrofit.doSensorOff(userId)
-
                     if (sensorOff.isSuccessful) {
                         val sensorOffBody = sensorOff.body()
                         if (sensorOffBody != null) {

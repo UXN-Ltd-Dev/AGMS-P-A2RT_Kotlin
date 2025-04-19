@@ -226,7 +226,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     text = "비밀번호 찾기",
                     fontSize = 14.sp,
                     modifier = Modifier.clickable {
-                        Toast.makeText(context, "기능 업데이트 중 입니다\n조금만 기다려주세요.", Toast.LENGTH_SHORT).show()
+                        navController.navigate("PasswordResetScreen")
                     }
                 )
             }
