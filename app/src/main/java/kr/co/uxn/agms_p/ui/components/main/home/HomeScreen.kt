@@ -2,7 +2,6 @@ package kr.co.uxn.agms_p.ui.components.main.home
 
 import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.DismissState
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
@@ -29,7 +27,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -71,15 +68,13 @@ import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
 import com.patrykandpatrick.vico.core.entry.FloatEntry
 import com.patrykandpatrick.vico.core.scroll.InitialScroll
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
-import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.rememberMarker
 import kr.co.uxn.agms_p.room.AppDatabase
-import kr.co.uxn.agms_p.ui.components.main.VivoItem
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
 import java.text.SimpleDateFormat
@@ -126,7 +121,6 @@ fun HomeScreen(
             dataSetLineSpec.clear()
             val dataPoints = arrayListOf<FloatEntry>()
 
-
             // 차트 디자인 옵션
             dataSetLineSpec.add(
                 LineChart.LineSpec(
@@ -144,8 +138,8 @@ fun HomeScreen(
 
             val userId = DataStoreManager.getUserId().first() ?: -1
 
-            Log.e("TEST", "slectedOption : ${selectedOption}")
-            val lastTime = when(selectedOption) {
+            Log.e("TEST", "selectedOption : ${selectedOption}")
+            val lastTime = when (selectedOption) {
                 "3시간" -> System.currentTimeMillis() - (3 * 60 * 60 * 1000L)
                 "6시간" -> System.currentTimeMillis() - (6 * 60 * 60 * 1000L)
                 else -> System.currentTimeMillis() - (12 * 60 * 60 * 1000L)
@@ -158,10 +152,16 @@ fun HomeScreen(
             Log.e("DB", "converted : ${convertedLastTime}")
 
             val localDBDataListAfterLastTime =
-                localDbRepository?.dataDao()?.getGlucoseListAfterLastTime(userId = userId, lastTime = lastTime)
+                localDbRepository?.dataDao()
+                    ?.getGlucoseListAfterLastTime(userId = userId, lastTime = lastTime)
 
-            for ( i in 0 until localDBDataListAfterLastTime!!.size) {
-                dataPoints.add(FloatEntry(x = localDBDataListAfterLastTime[i].createdAtLong.toFloat(), y = localDBDataListAfterLastTime[i].glucose.toFloat()))
+            for (i in 0 until localDBDataListAfterLastTime!!.size) {
+                dataPoints.add(
+                    FloatEntry(
+                        x = localDBDataListAfterLastTime[i].createdAtLong.toFloat(),
+                        y = localDBDataListAfterLastTime[i].glucose.toFloat()
+                    )
+                )
             }
 
             Log.e("DB", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
@@ -170,9 +170,6 @@ fun HomeScreen(
             isLoading.value = true
         }
     }
-
-
-
 
     LaunchedEffect(chartTrigger) {
         withContext(Dispatchers.IO) {
@@ -198,8 +195,8 @@ fun HomeScreen(
 
             val userId = DataStoreManager.getUserId().first() ?: -1
 
-            Log.e("TEST", "slectedOption : ${selectedOption}")
-            val lastTime = when(selectedOption) {
+            Log.e("TEST", "selectedOption : ${selectedOption}")
+            val lastTime = when (selectedOption) {
                 "3시간" -> System.currentTimeMillis() - (3 * 60 * 60 * 1000L)
                 "6시간" -> System.currentTimeMillis() - (6 * 60 * 60 * 1000L)
                 else -> System.currentTimeMillis() - (12 * 60 * 60 * 1000L)
@@ -213,10 +210,16 @@ fun HomeScreen(
 
             // db로부터 불러오기
             val localDBDataListAfterLastTime =
-                localDbRepository?.dataDao()?.getGlucoseListAfterLastTime(userId = userId, lastTime = lastTime)
+                localDbRepository?.dataDao()
+                    ?.getGlucoseListAfterLastTime(userId = userId, lastTime = lastTime)
 
-            for ( i in 0 until localDBDataListAfterLastTime!!.size) {
-                dataPoints.add(FloatEntry(x = localDBDataListAfterLastTime[i].createdAtLong.toFloat(), y = localDBDataListAfterLastTime[i].glucose.toFloat()))
+            for (i in 0 until localDBDataListAfterLastTime!!.size) {
+                dataPoints.add(
+                    FloatEntry(
+                        x = localDBDataListAfterLastTime[i].createdAtLong.toFloat(),
+                        y = localDBDataListAfterLastTime[i].glucose.toFloat()
+                    )
+                )
             }
 
             Log.e("DB", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
@@ -319,7 +322,7 @@ fun HomeScreen(
                         painter = painterResource(R.drawable.level3),
                         contentDescription = "glucose_lv3"
                     )
-                    Spacer(modifier = Modifier.height(3.dp))
+                    Spacer(modifier = Modifier.height(1.dp))
                     Text(
                         text = "유지 중",
                         color = Color.White,
@@ -401,8 +404,6 @@ fun HomeScreen(
                         isZoomEnabled = true
                     )
                 }
-//            }
-
             } else {
                 Box(
                     modifier = Modifier.fillMaxWidth()
@@ -416,10 +417,7 @@ fun HomeScreen(
                         fontWeight = FontWeight.Medium
                     )
                 }
-
-                }
             }
-
             RadioButtonSingleSelection(
                 selectedOption = selectedOption,
                 onOptionSelected = { selectedOption = it }
@@ -497,7 +495,7 @@ fun HomeScreen(
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium
                     )
-                }  else {
+                } else {
                     Text(
                         text = "10/10일",
                         fontSize = 15.sp,
@@ -522,6 +520,7 @@ fun HomeScreen(
         }
     }
 }
+
 
 @Composable
 fun RadioButtonSingleSelection(
