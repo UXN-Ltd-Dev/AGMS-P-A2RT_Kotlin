@@ -45,6 +45,7 @@ import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestDataValue
 import kr.co.uxn.agms_p.api.token.DataStoreManager
+import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.ui.components.main.AlwaysDialog
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import java.time.Instant
@@ -65,10 +66,15 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
     val startTime = remember { mutableStateOf("") }
     val leftTime = remember { mutableStateOf(-1) }
 
+    val localDbRepository by lazy {
+        AppDatabase.getInstance(context)
+    }
+
     LaunchedEffect(Unit) {
         val startTimeMilli = DataStoreManager.getStartTime().first() ?: -1
         val endTimeMilli = DataStoreManager.getEndTime().first() ?: -1
         val formatter = DateTimeFormatter.ofPattern("yyyy년 M월 d일", Locale.KOREAN)
+        val userId = DataStoreManager.getUserId().first() ?: -1
 
         val formattedDate = if (startTimeMilli != -1L) {
             Instant.ofEpochMilli(startTimeMilli)
@@ -107,6 +113,11 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                         if (sensorOffBody != null) {
                             Log.w("TEST", "sensorOff responseBody : ${sensorOffBody}")
                             if (sensorOffBody.isSuccess) {
+                                // userId의 db삭제
+
+                                localDbRepository?.dataDao()?.deleteUserValueTable(userId)
+                                localDbRepository?.dataDao()?.deleteUserGlucoseTable(userId)
+
                                 Log.w("TEST", "sensorOff 성공")
                                 DataStoreManager.saveIsMain(false)
                                 DataStoreManager.deleteRoute()

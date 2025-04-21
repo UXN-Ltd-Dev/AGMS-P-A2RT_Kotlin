@@ -266,21 +266,6 @@ class AlwaysService() : Service() {
                                         }
                                     }
 
-                                    // 기존 방식
-
-//                                    val sendData = tokenRetrofit.sendData(sendDataList!!)
-//                                    if (sendData.isSuccessful) {
-//                                        val sendDataBody = sendData.body()
-//                                        if (sendDataBody != null) {
-//                                            Log.e("TEST", "SendDataBody : ${sendDataBody.toString()}")
-//                                        }
-//                                    } else {
-//                                        Log.e(
-//                                            "TEST",
-//                                            "SendData API통신 실패 : ${sendData.errorBody()?.string()}"
-//                                        )
-//                                    }
-
                                 } else {
 
                                     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
@@ -318,21 +303,6 @@ class AlwaysService() : Service() {
                                             )
                                         }
                                     }
-
-                                    // 기존 방식 : 한번에 다 보내기
-
-//                                    val sendData = tokenRetrofit.sendData(sendDataList!!)
-//                                    if (sendData.isSuccessful) {
-//                                        val sendDataBody = sendData.body()
-//                                        if (sendDataBody != null) {
-//                                            Log.e("TEST", "SendDataBody : ${sendDataBody.toString()}")
-//                                        }
-//                                    } else {
-//                                        Log.e(
-//                                            "TEST",
-//                                            "SendData API통신 실패 : ${sendData.errorBody()?.string()}"
-//                                        )
-//                                    }
                                 }
                             }
                         } else {

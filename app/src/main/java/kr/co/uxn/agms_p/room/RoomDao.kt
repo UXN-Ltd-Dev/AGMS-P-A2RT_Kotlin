@@ -18,8 +18,11 @@ interface RoomDao {
     @Query("SELECT * FROM UserValue WHERE uxn_user_id = :userId AND created_at_long > :lastTime")
     suspend fun getListAfterLastTime(userId: Int, lastTime: Long): List<UserValue>
 
-    @Query("DELETE FROM UserValue")
-    suspend fun deleteUserValueTable()
+    @Query("DELETE FROM UserGlucose WHERE uxn_user_id = :userId")
+    suspend fun deleteUserGlucoseTable(userId: Int)
+
+    @Query("DELETE FROM UserValue WHERE uxn_user_id = :userId")
+    suspend fun deleteUserValueTable(userId: Int)
 
     // userId의 glucoseList 가져오기
     @Query("SELECT * FROM UserGlucose WHERE uxn_user_id = :userId")

@@ -2,6 +2,7 @@ package kr.co.uxn.agms_p.ui.components.main.home
 
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -95,11 +96,13 @@ fun HomeScreen(
     val day by homeViewModel.day.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    var chartDisplayMode by remember { mutableStateOf(0)}
+//    var chartDisplayMode by remember { mutableStateOf(0)}
 
     val weo1 by bleViewModel.weo1.collectAsState()
     val glucose by bleViewModel.glucose.collectAsState()
     val chartTrigger by bleViewModel.chartTrigger.collectAsState()
+
+    val randomLevel = remember(chartTrigger) { (1..5).random() }
 
     // Vico Chart
     val modelProducer = remember { ChartEntryModelProducer() }
@@ -116,10 +119,10 @@ fun HomeScreen(
         AppDatabase.getInstance(context)
     }
 
-    LaunchedEffect(selectedOption, chartDisplayMode) {
+    LaunchedEffect(selectedOption) {
         withContext(Dispatchers.IO) {
             dataSetForModel.clear()
-            dataSetLineSpec.clear()
+//            dataSetLineSpec.clear()
             val dataPoints = arrayListOf<FloatEntry>()
 
             // 차트 디자인 옵션
@@ -143,8 +146,7 @@ fun HomeScreen(
             val lastTime = when (selectedOption) {
                 "3시간" -> System.currentTimeMillis() - (3 * 60 * 60 * 1000L)
                 "6시간" -> System.currentTimeMillis() - (6 * 60 * 60 * 1000L)
-//                else -> System.currentTimeMillis() - (12 * 60 * 60 * 1000L)
-                else -> 0
+                else -> System.currentTimeMillis() - (12 * 60 * 60 * 1000L)
             }
             Log.e("DB", "lastTime : ${lastTime}")
             val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA)
@@ -157,46 +159,31 @@ fun HomeScreen(
                 localDbRepository?.dataDao()
                     ?.getGlucoseListAfterLastTime(userId = userId, lastTime = lastTime)
 
-            when (chartDisplayMode) {
-                0 -> {
-                    for (i in 0 until localDBDataListAfterLastTime!!.size) {
-                        dataPoints.add(
-                            FloatEntry(
-                                x = localDBDataListAfterLastTime[i].createdAtLong.toFloat(),
-                                y = localDBDataListAfterLastTime[i].glucose.toFloat()
-                            )
-                        )
-                    }
-                }
-                1 -> {
-                    for (i in 0 until localDBDataListAfterLastTime!!.size) {
-                        dataPoints.add(
-                            FloatEntry(
-                                x = localDBDataListAfterLastTime[i].createdAtLong.toFloat(),
-                                y = localDBDataListAfterLastTime[i].weo1.toFloat()
-                            )
-                        )
-                    }
-
-                }
-                else -> {
-                    for (i in 0 until localDBDataListAfterLastTime!!.size) {
-                        dataPoints.add(
-                            FloatEntry(
-                                x = localDBDataListAfterLastTime[i].createdAtLong.toFloat(),
-                                y = localDBDataListAfterLastTime[i].weo2.toFloat()
-                            )
-                        )
-                    }
-                }
+            for (i in 0 until localDBDataListAfterLastTime!!.size) {
+                dataPoints.add(
+                    FloatEntry(
+                        x = (localDBDataListAfterLastTime[i].createdAtLong / 1000).toFloat(),
+                        y = localDBDataListAfterLastTime[i].glucose.toFloat()
+                    )
+                )
             }
 
+            // 트림추가 코드
+            val trimmedDataPoints =
+                if (dataPoints.size > 500) dataPoints.takeLast(500) else dataPoints
+            Log.e("CHART", "trimmedDataPoints size: ${trimmedDataPoints.size}")
+            dataSetForModel.add(trimmedDataPoints)
 
-
-            Log.e("DB", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
-            dataSetForModel.add(dataPoints)
-            modelProducer.setEntries(dataSetForModel)
-            isLoading.value = true
+            withContext(Dispatchers.Main) {
+                modelProducer.setEntries(dataSetForModel)
+                isLoading.value = true
+                delay(100)
+                scrollState.scroll(MutatePriority.Default) {
+                    // 강제로 끝까지 스크롤
+                    val delta = scrollState.maxValue
+                    scrollBy(delta)
+                }
+            }
         }
     }
 
@@ -204,7 +191,7 @@ fun HomeScreen(
         withContext(Dispatchers.IO) {
             delay(3000)
             dataSetForModel.clear()
-            dataSetLineSpec.clear()
+//            dataSetLineSpec.clear()
             val dataPoints = arrayListOf<FloatEntry>()
 
             // 차트 디자인 옵션
@@ -245,18 +232,33 @@ fun HomeScreen(
             for (i in 0 until localDBDataListAfterLastTime!!.size) {
                 dataPoints.add(
                     FloatEntry(
-                        x = localDBDataListAfterLastTime[i].createdAtLong.toFloat(),
+                        x = (localDBDataListAfterLastTime[i].createdAtLong / 1000).toFloat(),
                         y = localDBDataListAfterLastTime[i].glucose.toFloat()
                     )
                 )
+
             }
 
             Log.e("DB", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
 
-            dataSetForModel.add(dataPoints)
-            modelProducer.setEntries(dataSetForModel)
+            Log.d("CHART", "dataPoints size: ${dataPoints.size}")
+            // 트림추가 코드
+            val trimmedDataPoints =
+                if (dataPoints.size > 500) dataPoints.takeLast(500) else dataPoints
+            Log.e("CHART", "trimmedDataPoints size: ${trimmedDataPoints.size}")
+            dataSetForModel.add(trimmedDataPoints)
 
-            isLoading.value = true
+
+            withContext(Dispatchers.Main) {
+                modelProducer.setEntries(dataSetForModel)
+                isLoading.value = true
+                delay(100)
+                scrollState.scroll(MutatePriority.Default) {
+                    // 강제로 끝까지 스크롤
+                    val delta = scrollState.maxValue
+                    scrollBy(delta)
+                }
+            }
         }
     }
 
@@ -290,9 +292,10 @@ fun HomeScreen(
                 .fillMaxWidth()
                 .height(130.dp)
                 .padding(10.dp)
-                .clickable {
-                    chartDisplayMode = (chartDisplayMode + 1) % 3
-                },
+//                .clickable {
+//                    chartDisplayMode = (chartDisplayMode + 1) % 3
+//                },
+            ,
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color(0xFF385DAB), // 카드 배경색 설정
@@ -308,14 +311,15 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
-                val mode = when (chartDisplayMode) {
-                    0 -> "현재 혈당"
-                    1 -> "Weo1"
-                    else -> "Weo2"
-                }
+//                val mode = when (chartDisplayMode) {
+//                    0 -> "현재 혈당"
+//                    1 -> "Weo1"
+//                    else -> "Weo2"
+//                }
 
                 Text(
-                    text = mode,
+//                    text = mode,
+                    text = "현재 혈당",
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.White,
@@ -337,33 +341,51 @@ fun HomeScreen(
                     .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
                 verticalAlignment = Alignment.Bottom
             ) {
-                Spacer(modifier = Modifier.width(35.dp))
+                Spacer(modifier = Modifier.width(30.dp))
                 Text(
                     text = "${glucose}",
                     color = Color.White,
-                    fontSize = 50.sp,
+                    fontSize = 45.sp,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.width(20.dp))
+                Spacer(modifier = Modifier.width(15.dp))
                 Text(
                     text = "mg/dL",
                     color = Color.White,
                     fontSize = 25.sp
                 )
-                Spacer(modifier = Modifier.width(70.dp))
+                Spacer(modifier = Modifier.width(50.dp))
                 Column(
                     modifier = Modifier.align(Alignment.Top),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    val levelImageRes = when (randomLevel) {
+                        1 -> R.drawable.level1
+                        2 -> R.drawable.level2
+                        3 -> R.drawable.level3
+                        4 -> R.drawable.level4
+                        else -> R.drawable.level5
+                    }
+
+                    val statusText = when(levelImageRes) {
+                        R.drawable.level1 -> "급하락 중"
+                        R.drawable.level2 -> "하락 중"
+                        R.drawable.level3 -> "유지 중"
+                        R.drawable.level4 -> "상승 중"
+                        else -> "급상승 중"
+                    }
+
                     Image(
                         modifier = Modifier
                             .size(32.dp),
-                        painter = painterResource(R.drawable.level3),
+//                        painter = painterResource(R.drawable.level3),
+                        painter = painterResource(levelImageRes),
                         contentDescription = "glucose_lv3"
                     )
                     Spacer(modifier = Modifier.height(1.dp))
                     Text(
-                        text = "유지 중",
+                        text = statusText,
+//                        text = "정상",
                         color = Color.White,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
@@ -388,14 +410,8 @@ fun HomeScreen(
         ) {
             Spacer(modifier = Modifier.height(10.dp))
 
-            val mode = when (chartDisplayMode) {
-                0 -> "현재 혈당"
-                1 -> "Weo1"
-                else -> "Weo2"
-            }
-
             Text(
-                text = mode + " 그래프",
+                text = "혈당 그래프",
                 fontWeight = FontWeight.Medium,
                 fontSize = 16.sp,
                 modifier = Modifier
@@ -436,13 +452,15 @@ fun HomeScreen(
                             title = "Count of values",
                             tickLength = 0.dp,
                             valueFormatter = { value, _ ->
-                                val date = Date(value.toLong())
-                                val displayFormat = SimpleDateFormat("HH:mm", Locale.KOREAN)
-                                displayFormat.format(date)
+                                Log.e("TEST", "value : $value")
+                                val date = Date((value * 1000).toLong())
+                                val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
+                                formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
+                                formatter.format(date)
                             },
                             guideline = null,
                             itemPlacer = AxisItemPlacer.Horizontal.default(
-                                spacing = 1  // x축 라벨 간격을 더 촘촘히 (기본은 자동)
+                                spacing = 1,  // x축 라벨 간격을 더 촘촘히 (기본은 자동)
                             )
                         ),
                         marker = marker,
@@ -454,10 +472,11 @@ fun HomeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp),
+//                        .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "그래프를 불러오는 중 입니다...",
+                        text = "",
                         color = Color(0xFF385DAB),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Medium

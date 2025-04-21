@@ -65,7 +65,10 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GlucoseRegisterScreen(navController: NavController, eventScreenViewModel: EventScreenViewModel) {
+fun GlucoseRegisterScreen(
+    navController: NavController,
+    eventScreenViewModel: EventScreenViewModel
+) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -100,9 +103,10 @@ fun GlucoseRegisterScreen(navController: NavController, eventScreenViewModel: Ev
                 }
             )
         },
-        ) { paddingValues ->
+    ) { paddingValues ->
         Surface(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
                 .pointerInput(Unit) {
                     detectTapGestures(onTap = { focusManager.clearFocus() })  // 🔹 터치 시 키보드 숨기기
                 }
@@ -115,12 +119,14 @@ fun GlucoseRegisterScreen(navController: NavController, eventScreenViewModel: Ev
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
                         .padding(horizontal = 20.dp, vertical = 20.dp),
                     horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd. a h:mm"))
+                    val now = LocalDateTime.now()
+                        .format(DateTimeFormatter.ofPattern("yyyy.MM.dd. a h:mm"))
                     time.value = now
                     Text(
                         modifier = Modifier.padding(start = 20.dp),
@@ -206,10 +212,16 @@ fun GlucoseRegisterScreen(navController: NavController, eventScreenViewModel: Ev
                     Image(
                         painter = painterResource(R.drawable.btn_save),
                         contentDescription = "저장 버튼",
-                        modifier = Modifier.align(Alignment.Center)
+                        modifier = Modifier
+                            .align(Alignment.Center)
                             .clickable(
                             ) {
-                                if (glucoseDataFromUser.value != "") {
+                                if (glucoseDataFromUser.value.contains(".") ||
+                                    glucoseDataFromUser.value.contains("-") ||
+                                    glucoseDataFromUser.value.contains(",")
+                                ) {
+                                    Toast.makeText(context, "숫자만 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                } else if (glucoseDataFromUser.value != "") {
                                     coroutineScope.launch(Dispatchers.IO) {
                                         try {
                                             val userId = DataStoreManager.getUserId().first() ?: -1
@@ -229,14 +241,21 @@ fun GlucoseRegisterScreen(navController: NavController, eventScreenViewModel: Ev
                                                 )
                                             )
 
-                                            Log.e("EVENT", "uploadBody : ${upload.body().toString()}")
+                                            Log.e(
+                                                "EVENT",
+                                                "uploadBody : ${upload.body().toString()}"
+                                            )
                                             if (upload.isSuccessful) {
                                                 val uploadBody = upload.body()
                                                 if (uploadBody != null) {
                                                     if (uploadBody.isSuccess) {
-                                                        Log.e("EVENT", "EVENT 업로드 성공, ${uploadBody.message}")
+                                                        Log.e(
+                                                            "EVENT",
+                                                            "EVENT 업로드 성공, ${uploadBody.message}"
+                                                        )
                                                         withContext(Dispatchers.Main) {
-                                                            val image = R.drawable.event_calibration // 추후 혈당 이미지로 변경
+                                                            val image =
+                                                                R.drawable.event_calibration // 추후 혈당 이미지로 변경
 //                                                            eventScreenViewModel.addItem(ItemData(imageId = image, eventType = eventTypeCode, time = time.value, content = glucoseDataFromUser.value))
                                                             navController.navigate("MainScreen/${1}")
                                                         }
@@ -248,7 +267,11 @@ fun GlucoseRegisterScreen(navController: NavController, eventScreenViewModel: Ev
                                         } catch (e: Exception) {
                                             Log.e("EVENT", "네트워크 또는 userId null 에러 : ${e.message}")
                                             withContext(Dispatchers.Main) {
-                                                Toast.makeText(context, "네트워크를 확인해주세요.", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(
+                                                    context,
+                                                    "네트워크를 확인해주세요.",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
                                                 Log.e("EVENT", "활동 이벤트 업로드 실패")
                                             }
                                         }
