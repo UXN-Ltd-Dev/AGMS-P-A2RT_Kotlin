@@ -343,7 +343,7 @@ class AlwaysService() : Service() {
                         }
 
 
-                        val glucoseList = tokenRetrofit.getGlucoseList(602)
+                        val glucoseList = tokenRetrofit.getGlucoseList(userId)
                         if (glucoseList.isSuccessful) {
                             val glucoseListBody = glucoseList.body()
                             if (glucoseListBody != null) {

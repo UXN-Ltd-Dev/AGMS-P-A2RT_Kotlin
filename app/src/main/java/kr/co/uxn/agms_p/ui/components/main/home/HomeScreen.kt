@@ -95,8 +95,9 @@ fun HomeScreen(
     val day by homeViewModel.day.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
 
+    var chartDisplayMode by remember { mutableStateOf(0)}
+
     val weo1 by bleViewModel.weo1.collectAsState()
-    val temperature by bleViewModel.temperature.collectAsState()
     val glucose by bleViewModel.glucose.collectAsState()
     val chartTrigger by bleViewModel.chartTrigger.collectAsState()
 
@@ -115,7 +116,7 @@ fun HomeScreen(
         AppDatabase.getInstance(context)
     }
 
-    LaunchedEffect(selectedOption) {
+    LaunchedEffect(selectedOption, chartDisplayMode) {
         withContext(Dispatchers.IO) {
             dataSetForModel.clear()
             dataSetLineSpec.clear()
@@ -142,7 +143,8 @@ fun HomeScreen(
             val lastTime = when (selectedOption) {
                 "3시간" -> System.currentTimeMillis() - (3 * 60 * 60 * 1000L)
                 "6시간" -> System.currentTimeMillis() - (6 * 60 * 60 * 1000L)
-                else -> System.currentTimeMillis() - (12 * 60 * 60 * 1000L)
+//                else -> System.currentTimeMillis() - (12 * 60 * 60 * 1000L)
+                else -> 0
             }
             Log.e("DB", "lastTime : ${lastTime}")
             val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA)
@@ -155,14 +157,41 @@ fun HomeScreen(
                 localDbRepository?.dataDao()
                     ?.getGlucoseListAfterLastTime(userId = userId, lastTime = lastTime)
 
-            for (i in 0 until localDBDataListAfterLastTime!!.size) {
-                dataPoints.add(
-                    FloatEntry(
-                        x = localDBDataListAfterLastTime[i].createdAtLong.toFloat(),
-                        y = localDBDataListAfterLastTime[i].glucose.toFloat()
-                    )
-                )
+            when (chartDisplayMode) {
+                0 -> {
+                    for (i in 0 until localDBDataListAfterLastTime!!.size) {
+                        dataPoints.add(
+                            FloatEntry(
+                                x = localDBDataListAfterLastTime[i].createdAtLong.toFloat(),
+                                y = localDBDataListAfterLastTime[i].glucose.toFloat()
+                            )
+                        )
+                    }
+                }
+                1 -> {
+                    for (i in 0 until localDBDataListAfterLastTime!!.size) {
+                        dataPoints.add(
+                            FloatEntry(
+                                x = localDBDataListAfterLastTime[i].createdAtLong.toFloat(),
+                                y = localDBDataListAfterLastTime[i].weo1.toFloat()
+                            )
+                        )
+                    }
+
+                }
+                else -> {
+                    for (i in 0 until localDBDataListAfterLastTime!!.size) {
+                        dataPoints.add(
+                            FloatEntry(
+                                x = localDBDataListAfterLastTime[i].createdAtLong.toFloat(),
+                                y = localDBDataListAfterLastTime[i].weo2.toFloat()
+                            )
+                        )
+                    }
+                }
             }
+
+
 
             Log.e("DB", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
             dataSetForModel.add(dataPoints)
@@ -248,18 +277,22 @@ fun HomeScreen(
         }
     }
 
-    // 혈당 표시 카드
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(paddingValues)
     ) {
         Spacer(modifier = Modifier.height(10.dp))
+        // 혈당 표시 카드
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(130.dp)
-                .padding(10.dp),
+                .padding(10.dp)
+                .clickable {
+                    chartDisplayMode = (chartDisplayMode + 1) % 3
+                },
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color(0xFF385DAB), // 카드 배경색 설정
@@ -274,15 +307,21 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+
+                val mode = when (chartDisplayMode) {
+                    0 -> "현재 혈당"
+                    1 -> "Weo1"
+                    else -> "Weo2"
+                }
+
                 Text(
-                    text = "현재 혈당",
+                    text = mode,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.White,
                     modifier = Modifier
                         .padding(start = 20.dp)
                 )
-
                 Image(
                     modifier = Modifier
                         .padding(start = 5.dp)
@@ -349,8 +388,14 @@ fun HomeScreen(
         ) {
             Spacer(modifier = Modifier.height(10.dp))
 
+            val mode = when (chartDisplayMode) {
+                0 -> "현재 혈당"
+                1 -> "Weo1"
+                else -> "Weo2"
+            }
+
             Text(
-                text = "혈당 그래프",
+                text = mode + " 그래프",
                 fontWeight = FontWeight.Medium,
                 fontSize = 16.sp,
                 modifier = Modifier
@@ -406,7 +451,8 @@ fun HomeScreen(
                 }
             } else {
                 Box(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
                         .height(200.dp),
                     contentAlignment = Alignment.Center
                 ) {
