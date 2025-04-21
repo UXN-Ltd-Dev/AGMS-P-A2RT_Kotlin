@@ -60,12 +60,15 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.emptyRetrofit
+import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEmailCode
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEmailVerificationCode
+import kr.co.uxn.agms_p.api.token.DataStoreManager
 
 @Composable
 fun PassWordResetScreen(navController: NavController) {
@@ -558,6 +561,12 @@ fun PassWordResetScreen(navController: NavController) {
                                         } else {
                                             // 인증 성공시
                                             // TODO : 재설정 API 전송 및 로그인 화면으로 이동
+
+                                            try {
+//                                                tokenRetrofit.resetPwd(userId)
+                                            } catch(e: Exception) {
+                                                Log.e("TEST", "네트워크 에러 : ${e.message}")
+                                            }
                                             Toast.makeText(context, "비밀번호가 재설정 되었습니다.", Toast.LENGTH_SHORT).show()
                                             navController.popBackStack()
                                         }
@@ -566,9 +575,6 @@ fun PassWordResetScreen(navController: NavController) {
                         }
                     }
                 }
-
-
-
             }
         }
     }

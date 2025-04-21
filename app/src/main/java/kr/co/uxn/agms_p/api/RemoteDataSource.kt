@@ -9,6 +9,7 @@ import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignUpNormal
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestOAuthSignUpAndLogin
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignUpOauthDetail
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestUpdateUser
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestUserInfo
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDataValue
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDeviceMac
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseEmailCode
@@ -24,6 +25,7 @@ import kr.co.uxn.agms_p.api.model.responseDTO.ResponseSignUpOauthAndLogin
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseSignUpOauthDetail
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseUpdateUser
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseUserData
+import kr.co.uxn.agms_p.api.model.responseDTO.ResponseUserInfo
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseVerificationCode
 import retrofit2.http.Body
 import retrofit2.http.POST
@@ -103,5 +105,9 @@ interface RemoteDataSource {
     // isFinish가 false인 것 중 가장 최근 걸 불러온다
     @GET("/api/device/end")
     suspend fun doSensorOff(@Query("user_id") userId: Int) : Response<ResponseSensorOff>
+
+    // pwd 리셋
+    @POST("/api/user/update/password")
+    suspend fun resetPwd(@Body userPwd: RequestUserInfo): Response<ResponseUserInfo>
 }
 
