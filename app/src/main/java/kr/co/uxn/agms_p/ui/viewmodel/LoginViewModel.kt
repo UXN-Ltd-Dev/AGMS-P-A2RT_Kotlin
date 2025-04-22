@@ -194,6 +194,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                             DataStoreManager.saveAccessToken(accessToken)
                             DataStoreManager.saveRefreshToken(refreshToken)
                             DataStoreManager.saveUserId(userId)
+
                             // mac 정리
                             DataStoreManager.deleteDeviceMac()
                             // 토큰 저장 테스트
@@ -231,7 +232,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                                 updateIsLoading(false)
                             }
                             // 세팅 화면으로 이동
-                            _navigationEvent.value = LoginNavigationEvent.NavigateToSettingPermission("세팅 화면으로 이동")
+                            _navigationEvent.value = LoginNavigationEvent.NavigateToSettingPermission(type)
                         }
                     }
                 } else {
@@ -255,6 +256,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 }
 
 sealed class LoginNavigationEvent {
-    data class NavigateToSettingPermission(val test: String) : LoginNavigationEvent()
+    data class NavigateToSettingPermission(val type: Int) : LoginNavigationEvent()
     data class NavigateToSignUp(val userId: Int, val type: String, val oAuthEmail: String?) : LoginNavigationEvent()
 }

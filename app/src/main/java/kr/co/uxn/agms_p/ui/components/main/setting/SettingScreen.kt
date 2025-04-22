@@ -62,9 +62,10 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                     DataStoreManager.deleteDeviceMac()
                     DataStoreManager.deleteStartTime()
                     DataStoreManager.deleteEndTime()
+
                     // 1. 서비스 종료
                     bleViewModel.emit("STOP_SERVICE")
-                    // 앱 강제종료
+                    // 앱 강제 종료
                     android.os.Process.killProcess(android.os.Process.myPid())
                     exitProcess(0)
                 }

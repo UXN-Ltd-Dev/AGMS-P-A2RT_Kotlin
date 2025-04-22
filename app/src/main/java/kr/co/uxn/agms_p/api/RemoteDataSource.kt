@@ -1,6 +1,8 @@
 package kr.co.uxn.agms_p.api
 
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestDataValue
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestDeleteOauthUserInfo
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestDeleteUserInfo
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEmailCode
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEventData
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestLinkDevice
@@ -11,6 +13,8 @@ import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignUpOauthDetail
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestUpdateUser
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestUserInfo
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDataValue
+import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDeleteOauthUserInfo
+import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDeleteUserInfo
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDeviceMac
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseEmailCode
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseEventData
@@ -52,9 +56,7 @@ interface RemoteDataSource {
 
     // Oauth 세부 정보 등록
     @POST("/api/user/detail")
-    suspend fun oAuthSaveDetailInfo(
-        @Body oAuthDetailInfo: RequestSignUpOauthDetail
-    ): Response<ResponseSignUpOauthDetail>
+    suspend fun oAuthSaveDetailInfo(@Body oAuthDetailInfo: RequestSignUpOauthDetail): Response<ResponseSignUpOauthDetail>
 
     // 혈당, 식사, 운동, 인슐린 전송
     @POST("/api/event/add")
@@ -109,5 +111,16 @@ interface RemoteDataSource {
     // pwd 리셋
     @POST("/api/user/update/password")
     suspend fun resetPwd(@Body userInfo: RequestUserInfo): Response<ResponseUserInfo>
+
+    // 탈퇴하기(일반)
+    @POST("/api/user/delete")
+    suspend fun deleteUser(@Body userInfo: RequestDeleteUserInfo): Response<ResponseDeleteUserInfo>
+
+    // 탈퇴하기(oAuth)
+    @POST("/api/oauth/delete")
+    suspend fun deleteOauthUser(@Body userInfo: RequestDeleteOauthUserInfo): Response<ResponseDeleteOauthUserInfo>
+
+    // 혈당 더미데이터 불러오기
+
 }
 

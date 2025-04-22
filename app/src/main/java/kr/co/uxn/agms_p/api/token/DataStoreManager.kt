@@ -27,6 +27,7 @@ object DataStoreManager {
     private val DEVICE_MAC = stringPreferencesKey("device_mac")
     private val IS_MAIN = booleanPreferencesKey("is_main")
     private val ROUTE = stringPreferencesKey("route")
+    private val TYPE = intPreferencesKey("type")
 
     // noti
     private val NOTI_HIGH_GLUCOSE = booleanPreferencesKey("noti_high_glucose")
@@ -108,6 +109,12 @@ object DataStoreManager {
         }
     }
 
+    fun getType(): Flow<Int?> {
+        return dataStore.data.map { prefs ->
+            prefs[TYPE]
+        }
+    }
+
 
     suspend fun saveEmail(email: String) {
         dataStore.edit { prefs ->
@@ -163,6 +170,12 @@ object DataStoreManager {
         }
     }
 
+    suspend fun saveType(type: Int) {
+        dataStore.edit { prefs ->
+            prefs[TYPE] = type
+        }
+    }
+
     suspend fun deleteAccessToken() {
         dataStore.edit { prefs ->
             prefs.remove(ACCESS_TOKEN_KEY)
@@ -211,11 +224,18 @@ object DataStoreManager {
         }
     }
 
+    suspend fun deleteType() {
+        dataStore.edit { prefs ->
+            prefs.remove(TYPE)
+        }
+    }
+
     suspend fun saveRefreshToken(token: String) {
         dataStore.edit { prefs ->
             prefs[REFRESH_TOKEN_KEY] = token
         }
     }
+
 
 
 

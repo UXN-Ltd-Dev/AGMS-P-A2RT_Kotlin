@@ -694,7 +694,7 @@ fun SignUpInfoScreen3(
                                                             Log.d("TEST", "oAuthSaveDetailInfo responseBody: $resultBody")
                                                             Log.d("TEST", "TokenManager | accessToken : $verifyAccessToken\nrefreshToken : $verifyRefreshToken")
 
-                                                            navController.navigate("SettingPermissionScreen") {
+                                                            navController.navigate("SettingPermissionScreen/${type}") {
                                                                 popUpTo("Splash") {
                                                                     inclusive = true
                                                                 }
@@ -765,7 +765,7 @@ fun SignUpInfoScreen3(
                                                                         "DTO",
                                                                         requestSignUpNormal.toString()
                                                                     )
-                                                                    navController.navigate("SettingPermissionScreen") {
+                                                                    navController.navigate("SettingPermissionScreen/${type}") {
                                                                         popUpTo("Splash") {
                                                                             inclusive = true
                                                                         }

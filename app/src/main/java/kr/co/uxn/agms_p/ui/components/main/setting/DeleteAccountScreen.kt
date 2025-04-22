@@ -1,5 +1,6 @@
 package kr.co.uxn.agms_p.ui.components.main.setting
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -47,10 +48,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.NetworkUtil
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestDeleteOauthUserInfo
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestDeleteUserInfo
 import kr.co.uxn.agms_p.api.token.DataStoreManager
+import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.ui.components.main.AlwaysDialog
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
@@ -66,12 +74,115 @@ fun DeleteAccountScreen(navController: NavController, eventScreenViewModel: Even
     var isCheck by remember { mutableStateOf<Boolean>(false) }
     val showDialog = remember { mutableStateOf(false) }
 
+    val localDbRepository by lazy {
+        AppDatabase.getInstance(context)
+    }
+
+
     if (showDialog.value) {
         AlwaysDialog(
             onConfirm = {
                 showDialog.value = false
                 // TODO 서버에 계정삭제 요청 및 로그인화면 이동 또는 앱 종료 + 데이터스토어 정리
 
+                coroutineScope.launch(Dispatchers.IO) {
+                    val type = DataStoreManager.getType().first() ?: -1
+                    val userId = DataStoreManager.getUserId().first() ?: -1
+
+                    if (type != -1) {
+                        Log.e("TEST", "type : $type")
+                        if (type == 1803) {
+                            try {
+                                val deleteUser = tokenRetrofit.deleteUser(RequestDeleteUserInfo(userId))
+                                val deleteUserBody = deleteUser.body()
+                                Log.e("TEST", "deleteUserBody : $deleteUserBody")
+                                if (deleteUser.isSuccessful) {
+                                    if (deleteUserBody != null) {
+                                        if (deleteUserBody.isSuccess) {
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(context, "계정이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                                            }
+
+                                            // 토큰정리 및 앱 종료
+
+                                            localDbRepository?.dataDao()?.deleteUserValueTable(userId)
+                                            localDbRepository?.dataDao()?.deleteUserGlucoseTable(userId)
+
+                                            Log.w("TEST", "sensorOff 성공")
+                                            DataStoreManager.saveIsMain(false)
+                                            DataStoreManager.deleteRoute()
+                                            DataStoreManager.saveRoute("Splash")
+                                            Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
+                                            Log.e("TEST", "DS에 저장된 Route : ${DataStoreManager.getRoute().first()}")
+                                            DataStoreManager.deleteAccessToken()
+                                            DataStoreManager.deleteRefreshToken()
+                                            DataStoreManager.deleteUserId()
+                                            DataStoreManager.deleteDeviceMac()
+                                            DataStoreManager.deleteStartTime()
+                                            DataStoreManager.deleteEndTime()
+                                            withContext(Dispatchers.Main) {
+                                                // 1. 서비스 종료
+//                                                bleViewModel.emit("STOP_SERVICE")
+                                                // 앱 강제종료
+                                                android.os.Process.killProcess(android.os.Process.myPid())
+                                                exitProcess(0)
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    Log.e("TEST", "API 에러 : ${deleteUser.errorBody()?.string()}")
+                                }
+                            } catch (e: Exception) {
+                                Log.e("TEST", "네트워크 에러 : $e")
+
+                            }
+                        } else {
+                            try {
+                                val deleteOauthUser = tokenRetrofit.deleteOauthUser(RequestDeleteOauthUserInfo(userId, type))
+                                val deleteOauthUserBody = deleteOauthUser.body()
+                                Log.e("TEST", "deleteOauthUserBody : $deleteOauthUserBody")
+                                if (deleteOauthUser.isSuccessful) {
+                                    if (deleteOauthUserBody != null) {
+                                        if (deleteOauthUserBody.isSuccess) {
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(context, "계정이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                                            }
+
+                                            // 토큰정리 및 앱 종료
+
+                                            localDbRepository?.dataDao()?.deleteUserValueTable(userId)
+                                            localDbRepository?.dataDao()?.deleteUserGlucoseTable(userId)
+
+                                            Log.w("TEST", "sensorOff 성공")
+                                            DataStoreManager.saveIsMain(false)
+                                            DataStoreManager.deleteRoute()
+                                            DataStoreManager.saveRoute("Splash")
+                                            Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
+                                            Log.e("TEST", "DS에 저장된 Route : ${DataStoreManager.getRoute().first()}")
+                                            DataStoreManager.deleteAccessToken()
+                                            DataStoreManager.deleteRefreshToken()
+                                            DataStoreManager.deleteUserId()
+                                            DataStoreManager.deleteDeviceMac()
+                                            DataStoreManager.deleteStartTime()
+                                            DataStoreManager.deleteEndTime()
+                                            withContext(Dispatchers.Main) {
+                                                // 1. 서비스 종료
+//                                                bleViewModel.emit("STOP_SERVICE")
+                                                // 앱 강제종료
+                                                android.os.Process.killProcess(android.os.Process.myPid())
+                                                exitProcess(0)
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    Log.e("TEST", "API 에러 : ${deleteOauthUser.errorBody()?.string()}")
+                                }
+                            } catch (e: Exception) {
+                                Log.e("TEST", "네트워크 에러 : $e")
+                            }
+                        }
+                    }
+                }
             },
             onDismiss = {
                 showDialog.value = false

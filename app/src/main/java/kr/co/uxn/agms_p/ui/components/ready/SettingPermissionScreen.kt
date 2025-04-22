@@ -58,7 +58,8 @@ import kr.co.uxn.agms_p.ui.viewmodel.PermissionViewModel
 fun SettingPermissionScreen(
     navController: NavController,
     viewModel: PermissionViewModel,
-    activity: Activity
+    activity: Activity,
+    type : Int
 ) {
 //    var timerWhenScan: Timer? = null
     val context = LocalContext.current
@@ -108,6 +109,11 @@ fun SettingPermissionScreen(
             permissionLauncher.launch(permissions)
             delay(5000)
         }
+    }
+
+    LaunchedEffect(Unit) {
+        DataStoreManager.deleteType()
+        DataStoreManager.saveType(type)
     }
 
     Surface {
@@ -224,33 +230,6 @@ fun SettingPermissionScreen(
                         }
                 )
             }
-
-
-
-//            Button(
-//                onClick = {
-//                    Log.e("PERMISSION", "isGrant : ${isGrant}")
-//                    if (isGrant) {
-//                        navController.navigate("GuideScreen1")
-//                    } else {
-//                        openAppSettings(activity)
-//                        viewModel.changeGrantState(true)
-//                    }
-//                },
-//                modifier = Modifier
-//                    .size(280.dp, 50.dp)
-//                    .background(
-//                        color = Color(0xFF385DAB),
-//                        shape = RoundedCornerShape(10.dp)
-//                    )
-//                    .align(Alignment.CenterHorizontally)
-//            ) {
-//                Text(
-//                    text = "확인",
-//                    color = Color.White,
-//                    fontSize = 15.sp
-//                )
-//            }
         }
     }
 }

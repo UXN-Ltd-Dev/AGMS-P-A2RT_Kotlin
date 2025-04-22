@@ -140,7 +140,7 @@ class MainActivity : ComponentActivity() {
             loginViewModel.navigationEvent.collect { event ->
                 when (event) {
                     is LoginNavigationEvent.NavigateToSettingPermission -> {
-                        navController.navigate("SettingPermissionScreen")
+                        navController.navigate("SettingPermissionScreen/${event.type}")
                         loginViewModel.clearNavigationEvent()
                     }
 
@@ -196,8 +196,9 @@ class MainActivity : ComponentActivity() {
                     SignUpInfoScreen3(navController, email, pwd, loginViewModel, type)
                 }
 
-                composable("SettingPermissionScreen") { backStackEntry ->
-                    SettingPermissionScreen(navController, permissionViewModel, this@MainActivity)
+                composable("SettingPermissionScreen/{type}") { backStackEntry ->
+                    val type = backStackEntry.arguments?.getString("type")?.toInt() ?: -1
+                    SettingPermissionScreen(navController, permissionViewModel, this@MainActivity, type)
                 }
 
                 composable("GuideScreen1") { backStackEntry ->

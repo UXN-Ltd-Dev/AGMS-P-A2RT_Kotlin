@@ -265,7 +265,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
 
                                                 // 세팅화면으로 이동
                                                 withContext(Dispatchers.Main) {
-                                                    navController.navigate("SettingPermissionScreen")
+                                                    navController.navigate("SettingPermissionScreen/${1803}")
                                                 }
                                             }
                                         } else {
