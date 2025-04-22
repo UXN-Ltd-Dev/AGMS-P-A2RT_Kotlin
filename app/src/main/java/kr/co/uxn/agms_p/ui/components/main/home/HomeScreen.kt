@@ -102,7 +102,7 @@ fun HomeScreen(
     val glucose by bleViewModel.glucose.collectAsState()
     val chartTrigger by bleViewModel.chartTrigger.collectAsState()
 
-    val randomLevel = remember(chartTrigger) { (1..5).random() }
+//    val randomLevel = remember(chartTrigger) { (1..5).random() }
 
     // Vico Chart
     val modelProducer = remember { ChartEntryModelProducer() }
@@ -169,10 +169,11 @@ fun HomeScreen(
             }
 
             // 트림추가 코드
-            val trimmedDataPoints =
-                if (dataPoints.size > 500) dataPoints.takeLast(500) else dataPoints
-            Log.e("CHART", "trimmedDataPoints size: ${trimmedDataPoints.size}")
-            dataSetForModel.add(trimmedDataPoints)
+//            val trimmedDataPoints =
+//                if (dataPoints.size > 500) dataPoints.takeLast(500) else dataPoints
+//            Log.e("CHART", "trimmedDataPoints size: ${trimmedDataPoints.size}")
+//            dataSetForModel.add(trimmedDataPoints)
+            dataSetForModel.add(dataPoints)
 
             withContext(Dispatchers.Main) {
                 modelProducer.setEntries(dataSetForModel)
@@ -243,10 +244,11 @@ fun HomeScreen(
 
             Log.d("CHART", "dataPoints size: ${dataPoints.size}")
             // 트림추가 코드
-            val trimmedDataPoints =
-                if (dataPoints.size > 500) dataPoints.takeLast(500) else dataPoints
-            Log.e("CHART", "trimmedDataPoints size: ${trimmedDataPoints.size}")
-            dataSetForModel.add(trimmedDataPoints)
+//            val trimmedDataPoints =
+//                if (dataPoints.size > 500) dataPoints.takeLast(500) else dataPoints
+//            Log.e("CHART", "trimmedDataPoints size: ${trimmedDataPoints.size}")
+//            dataSetForModel.add(trimmedDataPoints)
+            dataSetForModel.add(dataPoints)
 
 
             withContext(Dispatchers.Main) {
@@ -359,33 +361,33 @@ fun HomeScreen(
                     modifier = Modifier.align(Alignment.Top),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    val levelImageRes = when (randomLevel) {
-                        1 -> R.drawable.level1
-                        2 -> R.drawable.level2
-                        3 -> R.drawable.level3
-                        4 -> R.drawable.level4
-                        else -> R.drawable.level5
-                    }
-
-                    val statusText = when(levelImageRes) {
-                        R.drawable.level1 -> "급하락 중"
-                        R.drawable.level2 -> "하락 중"
-                        R.drawable.level3 -> "유지 중"
-                        R.drawable.level4 -> "상승 중"
-                        else -> "급상승 중"
-                    }
+//                    val levelImageRes = when (randomLevel) {
+//                        1 -> R.drawable.level1
+//                        2 -> R.drawable.level2
+//                        3 -> R.drawable.level3
+//                        4 -> R.drawable.level4
+//                        else -> R.drawable.level5
+//                    }
+//
+//                    val statusText = when(levelImageRes) {
+//                        R.drawable.level1 -> "급하락 중"
+//                        R.drawable.level2 -> "하락 중"
+//                        R.drawable.level3 -> "유지 중"
+//                        R.drawable.level4 -> "상승 중"
+//                        else -> "급상승 중"
+//                    }
 
                     Image(
                         modifier = Modifier
                             .size(32.dp),
-//                        painter = painterResource(R.drawable.level3),
-                        painter = painterResource(levelImageRes),
+                        painter = painterResource(R.drawable.level3),
+//                        painter = painterResource(levelImageRes),
                         contentDescription = "glucose_lv3"
                     )
                     Spacer(modifier = Modifier.height(1.dp))
                     Text(
-                        text = statusText,
-//                        text = "정상",
+//                        text = statusText,
+                        text = "유지 중",
                         color = Color.White,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
@@ -452,7 +454,7 @@ fun HomeScreen(
                             title = "Count of values",
                             tickLength = 0.dp,
                             valueFormatter = { value, _ ->
-                                Log.e("TEST", "value : $value")
+//                                Log.e("TEST", "value : $value")
                                 val date = Date((value * 1000).toLong())
                                 val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
                                 formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
