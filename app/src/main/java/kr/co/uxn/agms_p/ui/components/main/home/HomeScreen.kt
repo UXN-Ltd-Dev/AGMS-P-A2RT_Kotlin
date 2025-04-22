@@ -159,13 +159,29 @@ fun HomeScreen(
                 localDbRepository?.dataDao()
                     ?.getGlucoseListAfterLastTime(userId = userId, lastTime = lastTime)
 
+//            for (i in 0 until localDBDataListAfterLastTime!!.size) {
+//                dataPoints.add(
+//                    FloatEntry(
+//                        x = (localDBDataListAfterLastTime[i].createdAtLong / 1000).toFloat(),
+//                        y = localDBDataListAfterLastTime[i].glucose.toFloat()
+//                    )
+//                )
+//            }
+            val baseTime = 1743442800000L // 25년 4월 1일 00시 00분 00초
             for (i in 0 until localDBDataListAfterLastTime!!.size) {
+                val timeDiffMillis = localDBDataListAfterLastTime[i].createdAtLong - baseTime
+                val timeDiffMinutes = (timeDiffMillis / 1000 / 60).toFloat()  // millis → seconds → minutes
+
+
                 dataPoints.add(
                     FloatEntry(
-                        x = (localDBDataListAfterLastTime[i].createdAtLong / 1000).toFloat(),
+//                        x = (localDBDataListAfterLastTime[i].createdAtLong / 1000).toFloat(),
+//                        x = (i+1).toFloat(),
+                        x = (timeDiffMinutes),
                         y = localDBDataListAfterLastTime[i].glucose.toFloat()
                     )
                 )
+
             }
 
             // 트림추가 코드
@@ -230,15 +246,31 @@ fun HomeScreen(
                 localDbRepository?.dataDao()
                     ?.getGlucoseListAfterLastTime(userId = userId, lastTime = lastTime)
 
+//            for (i in 0 until localDBDataListAfterLastTime!!.size) {
+//                dataPoints.add(
+//                    FloatEntry(
+//                        x = (localDBDataListAfterLastTime[i].createdAtLong / 1000).toFloat(),
+//                        y = localDBDataListAfterLastTime[i].glucose.toFloat()
+//                    )
+//                )
+//
+//            }
+            val baseTime = 1743442800000L // 25년 4월 1일 00시 00분 00초
             for (i in 0 until localDBDataListAfterLastTime!!.size) {
+                val timeDiffMillis = localDBDataListAfterLastTime[i].createdAtLong - baseTime
+                val timeDiffMinutes = (timeDiffMillis / 1000 / 60).toFloat()  // millis → seconds → minutes
+
                 dataPoints.add(
                     FloatEntry(
-                        x = (localDBDataListAfterLastTime[i].createdAtLong / 1000).toFloat(),
+//                        x = (localDBDataListAfterLastTime[i].createdAtLong / 1000).toFloat(),
+//                        x = (i+1).toFloat(),
+                        x = (timeDiffMinutes),
                         y = localDBDataListAfterLastTime[i].glucose.toFloat()
                     )
                 )
-
             }
+
+
 
             Log.e("DB", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
 
@@ -454,11 +486,11 @@ fun HomeScreen(
                             title = "Count of values",
                             tickLength = 0.dp,
                             valueFormatter = { value, _ ->
-//                                Log.e("TEST", "value : $value")
-                                val date = Date((value * 1000).toLong())
-                                val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
+                                val baseTime = 1743442800000L // 25년 4월 1일 00시 00분 00초
+                                val actualTimeMillis = baseTime + (value * 60 * 1000).toLong()
+                                val formatter = SimpleDateFormat("HH:mm:ss", Locale.KOREAN)
                                 formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
-                                formatter.format(date)
+                                formatter.format(Date(actualTimeMillis))
                             },
                             guideline = null,
                             itemPlacer = AxisItemPlacer.Horizontal.default(
