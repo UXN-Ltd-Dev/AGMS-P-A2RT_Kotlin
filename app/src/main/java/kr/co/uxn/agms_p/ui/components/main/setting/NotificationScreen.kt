@@ -1,5 +1,8 @@
 package kr.co.uxn.agms_p.ui.components.main.setting
 
+import android.util.Log
+import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -16,19 +19,27 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Divider
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -40,10 +51,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.api.token.DataStoreManager
+import kr.co.uxn.agms_p.ui.components.main.AlwaysDialog
 import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,7 +73,6 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    val targetGlucoseRange = remember { mutableStateOf("80~150mg/dL") }
     val dailyCalibrationTime = remember { mutableStateOf("오전 11시") }
     val time = remember { mutableStateOf<String>("") }
     val hint = remember { mutableStateOf("") }
@@ -70,8 +90,141 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
     val checkedForStabilization = remember { mutableStateOf(false) }
     val checkedForCalibration = remember { mutableStateOf(false) }
 
+    val showGlucoseDialog = remember { mutableStateOf(false) }
+    val targetLowGlucose = remember { mutableStateOf("") }
+    val targetHighGlucose = remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            // DS로부터 값 불러오기
+            val verifiedDSHigh = DataStoreManager.getNotiHighGlucose().first() ?: false
+            val verifiedDSLow = DataStoreManager.getNotiLowGlucose().first() ?: false
+            val verifiedDSLostSignal = DataStoreManager.getNotiLostSignal().first() ?: false
+            val verifiedDSExpiredSensor = DataStoreManager.getNotiExpiredSensor().first() ?: false
+            val verifiedDSStabilization = DataStoreManager.getNotiStabilization().first() ?: false
+            val verifiedDSCalibration = DataStoreManager.getNotiCalibration().first() ?: false
+            val verifiedDSTargetLowGlucose = DataStoreManager.getTargetLowGlucose().first() ?: -1
+            val verifiedDSTargetHighGlucose = DataStoreManager.getTargetHighGlucose().first() ?: -1
+
+            // 화면에 값 설정
+            checkedForHighGlucose.value = verifiedDSHigh
+            checkedForLowGlucose.value = verifiedDSLow
+            checkedForLostSignal.value = verifiedDSLostSignal
+            checkedForExpiredSensor.value = verifiedDSExpiredSensor
+            checkedForStabilization.value = verifiedDSStabilization
+            checkedForCalibration.value = verifiedDSCalibration
+            targetLowGlucose.value = verifiedDSTargetLowGlucose.toString()
+            targetHighGlucose.value = verifiedDSTargetHighGlucose.toString()
+
+            // 로그 띄우기
+            Log.e("NOTI", "After High : ${verifiedDSHigh}, Low : ${verifiedDSLow} " +
+                    "\n Lost : ${verifiedDSLostSignal} ExpiredSensor : ${verifiedDSExpiredSensor}" +
+                    "\n Stabilization : ${verifiedDSStabilization} Calibration : ${verifiedDSCalibration}" +
+                    "\n Target High Glucose : ${verifiedDSTargetHighGlucose} Target Low Glucose : ${verifiedDSTargetLowGlucose}")
+        }
+    }
+
+    if (showGlucoseDialog.value) {
+        Dialog(onDismissRequest = { showGlucoseDialog.value = false }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .background(Color.White, RoundedCornerShape(20.dp))
+                    .padding(24.dp)
+            ) {
+                Column {
+                    Text(
+                        text = "저혈당",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Spacer(modifier = Modifier.height(5.dp))
+
+                    OutlinedTextField(
+                        value = targetLowGlucose.value,
+                        onValueChange = { targetLowGlucose.value = it},
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Done,
+                            keyboardType = KeyboardType.Number
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { focusManager.clearFocus() }
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(15 .dp))
+
+                    Text(
+                        text = "고혈당",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Spacer(modifier = Modifier.height(5.dp))
+
+                    OutlinedTextField(
+                        value = targetHighGlucose.value,
+                        onValueChange = { targetHighGlucose.value = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Done,
+                            keyboardType = KeyboardType.Number
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { focusManager.clearFocus() }
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(15.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Button(
+                            onClick = {
+                                if (targetHighGlucose.value.contains(".") || targetHighGlucose.value.contains("-") || targetHighGlucose.value.contains(",")
+                                    || targetLowGlucose.value.contains(".") || targetLowGlucose.value.contains("-") || targetLowGlucose.value.contains(",")
+                                    ) {
+                                    Toast.makeText(context, "숫자만 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                } else if (targetHighGlucose.value != "" && targetLowGlucose.value != "") {
+                                    showGlucoseDialog.value = false
+                                    coroutineScope.launch(Dispatchers.Main) {
+                                        DataStoreManager.setTargetHighGlucose(targetHighGlucose.value.toInt())
+                                        DataStoreManager.setTargetLowGlucose(targetLowGlucose.value.toInt())
+                                        Log.e("TEST", "저장된 고혈당 : ${DataStoreManager.getTargetHighGlucose().first()}")
+                                        Log.e("TEST", "저장된 저혈당 : ${DataStoreManager.getTargetLowGlucose().first()}")
+                                    }
+                                } else {
+                                    Toast.makeText(context, "혈당을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                }},
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF3451B2), // 파란색
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "입력",
+                                color = Color.White,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = { focusManager.clearFocus() })  // 🔹 터치 시 키보드 숨기기
+            },
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
@@ -201,7 +354,10 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                             .fillMaxWidth()
                             .background(Color.White)
                             .height(50.dp)
-                            .padding(horizontal = 30.dp),
+                            .padding(horizontal = 30.dp)
+                            .clickable {
+                                showGlucoseDialog.value = true
+                            },
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Start
                     ) {
@@ -212,7 +368,7 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                         )
 
                         Text(
-                            text = targetGlucoseRange.value,
+                            text = "${targetLowGlucose.value}" +  "~" + "${targetHighGlucose.value}" + "mg/dL",
                             fontSize = 15.sp,
                             color = Color(0xFF828282),
                             modifier = Modifier.weight(1f)
@@ -247,6 +403,9 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                             checked = checkedForHighGlucose.value,
                             onCheckedChange = {
                                 checkedForHighGlucose.value = it
+                                coroutineScope.launch(Dispatchers.IO) {
+                                    DataStoreManager.setNotiHighGlucose(it)
+                                }
                             }
                         )
                     }
@@ -272,6 +431,9 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                             checked = checkedForLowGlucose.value,
                             onCheckedChange = {
                                 checkedForLowGlucose.value = it
+                                coroutineScope.launch(Dispatchers.IO) {
+                                    DataStoreManager.setNotiLowGlucose(it)
+                                }
                             }
                         )
                     }
@@ -301,6 +463,9 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                             checked = checkedForLostSignal.value,
                             onCheckedChange = {
                                 checkedForLostSignal.value = it
+                                coroutineScope.launch(Dispatchers.IO) {
+                                    DataStoreManager.setNotiLostSignal(it)
+                                }
                             }
                         )
                     }
@@ -326,6 +491,9 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                             checked = checkedForExpiredSensor.value,
                             onCheckedChange = {
                                 checkedForExpiredSensor.value = it
+                                coroutineScope.launch(Dispatchers.IO) {
+                                    DataStoreManager.setNotiExpiredSensor(it)
+                                }
                             }
                         )
                     }
@@ -351,6 +519,9 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                             checked = checkedForStabilization.value,
                             onCheckedChange = {
                                 checkedForStabilization.value = it
+                                coroutineScope.launch(Dispatchers.IO) {
+                                    DataStoreManager.setNotiStabilization(it)
+                                }
                             }
                         )
                     }
@@ -387,6 +558,9 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                                 checked = checkedForCalibration.value,
                                 onCheckedChange = {
                                     checkedForCalibration.value = it
+                                    coroutineScope.launch(Dispatchers.IO) {
+                                        DataStoreManager.setNotiCalibration(it)
+                                    }
                                 }
                             )
                         }
@@ -407,7 +581,8 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                             Spacer(modifier = Modifier.width(15.dp))
                             Icon(
                                 painter = painterResource(id = R.drawable.edit_icon),
-                                modifier = Modifier.size(14.dp)
+                                modifier = Modifier
+                                    .size(14.dp)
                                     .align(Alignment.CenterVertically),
                                 contentDescription = "혈당 입력 시간 수정"
                             )
@@ -421,4 +596,3 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
         }
     }
 }
-

@@ -98,6 +98,10 @@ fun StabilizationCompleteScreen(navController: NavController) {
                                 val route = DataStoreManager.getRoute().first()
                                 Log.e("TEST", "안정화 화면에서 버튼 눌럿을시isMain : ${isMain}")
                                 Log.e("TEST", "안정화 화면에서 버튼 눌럿을시 Route : ${route}")
+
+                                // 목표혈당 설정
+                                DataStoreManager.setTargetLowGlucose(70)
+                                DataStoreManager.setTargetHighGlucose(170)
                             }
                         }
                 )

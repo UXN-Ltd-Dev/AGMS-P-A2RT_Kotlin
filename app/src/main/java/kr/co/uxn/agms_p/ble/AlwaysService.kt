@@ -73,7 +73,6 @@ class AlwaysService() : Service() {
 
 //    var manager: NotificationManager? = null
 
-
     override fun onCreate() {
         super.onCreate()
         Log.d("SERVICE", "Service onCreate() call!")

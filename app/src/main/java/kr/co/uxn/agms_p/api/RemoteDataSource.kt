@@ -108,6 +108,6 @@ interface RemoteDataSource {
 
     // pwd 리셋
     @POST("/api/user/update/password")
-    suspend fun resetPwd(@Body userPwd: RequestUserInfo): Response<ResponseUserInfo>
+    suspend fun resetPwd(@Body userInfo: RequestUserInfo): Response<ResponseUserInfo>
 }
 

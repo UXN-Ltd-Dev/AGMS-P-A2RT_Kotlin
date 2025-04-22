@@ -16,6 +16,7 @@ import kr.co.uxn.agms_p.ble.Device
 
 object DataStoreManager {
     private lateinit var dataStore: DataStore<Preferences>
+    private lateinit var notiStore: DataStore<Preferences>
     private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
     private val REFRESH_TOKEN_KEY = stringPreferencesKey("refresh_token")
     private val EMAIL = stringPreferencesKey("email")
@@ -27,9 +28,23 @@ object DataStoreManager {
     private val IS_MAIN = booleanPreferencesKey("is_main")
     private val ROUTE = stringPreferencesKey("route")
 
+    // noti
+    private val NOTI_HIGH_GLUCOSE = booleanPreferencesKey("noti_high_glucose")
+    private val NOTI_LOW_GLUCOSE = booleanPreferencesKey("noti_low_glucose")
+    private val NOTI_LOST_SIGNAL = booleanPreferencesKey("noti_lost_signal")
+    private val NOTI_EXPIRED_SENSOR = booleanPreferencesKey("noti_expired_sensor")
+    private val NOTI_STABILIZATION = booleanPreferencesKey("noti_stabilization")
+    private val NOTI_CALIBRATION = booleanPreferencesKey("noti_calibration")
+    private val TARGET_HIGH_GLUCOSE = intPreferencesKey("target_high_glucose")
+    private val TARGET_LOW_GLUCOSE = intPreferencesKey("target_low_glucose")
+
     fun init(context: Context) {
         dataStore = PreferenceDataStoreFactory.create {
             context.preferencesDataStoreFile("token_prefs")
+        }
+
+        notiStore = PreferenceDataStoreFactory.create {
+            context.preferencesDataStoreFile("noti_prefs")
         }
     }
 
@@ -92,6 +107,7 @@ object DataStoreManager {
             prefs[ROUTE]
         }
     }
+
 
     suspend fun saveEmail(email: String) {
         dataStore.edit { prefs ->
@@ -198,6 +214,104 @@ object DataStoreManager {
     suspend fun saveRefreshToken(token: String) {
         dataStore.edit { prefs ->
             prefs[REFRESH_TOKEN_KEY] = token
+        }
+    }
+
+
+
+    // noti
+
+    fun getNotiHighGlucose(): Flow<Boolean?> {
+        return notiStore.data.map { prefs ->
+            prefs[NOTI_HIGH_GLUCOSE]
+        }
+    }
+    fun getNotiLowGlucose(): Flow<Boolean?> {
+        return notiStore.data.map { prefs ->
+            prefs[NOTI_LOW_GLUCOSE]
+        }
+    }
+
+    fun getNotiLostSignal(): Flow<Boolean?> {
+        return notiStore.data.map { prefs ->
+            prefs[NOTI_LOST_SIGNAL]
+        }
+    }
+
+    fun getNotiExpiredSensor(): Flow<Boolean?> {
+        return notiStore.data.map { prefs ->
+            prefs[NOTI_EXPIRED_SENSOR]
+        }
+    }
+
+    fun getNotiStabilization(): Flow<Boolean?> {
+        return notiStore.data.map { prefs ->
+            prefs[NOTI_STABILIZATION]
+        }
+    }
+
+    fun getNotiCalibration(): Flow<Boolean?> {
+        return notiStore.data.map { prefs ->
+            prefs[NOTI_CALIBRATION]
+        }
+    }
+
+    fun getTargetHighGlucose(): Flow<Int?> {
+        return notiStore.data.map { prefs ->
+            prefs[TARGET_HIGH_GLUCOSE]
+        }
+    }
+
+    fun getTargetLowGlucose(): Flow<Int?> {
+        return notiStore.data.map { prefs ->
+            prefs[TARGET_LOW_GLUCOSE]
+        }
+    }
+
+    suspend fun setNotiHighGlucose(isCheck: Boolean) {
+        notiStore.edit { prefs ->
+            prefs[NOTI_HIGH_GLUCOSE] = isCheck
+        }
+    }
+
+    suspend fun setNotiLowGlucose(isCheck: Boolean) {
+        notiStore.edit { prefs ->
+            prefs[NOTI_LOW_GLUCOSE] = isCheck
+        }
+    }
+    suspend fun setNotiLostSignal(isCheck: Boolean) {
+        notiStore.edit { prefs ->
+            prefs[NOTI_LOST_SIGNAL] = isCheck
+        }
+    }
+
+    suspend fun setNotiExpiredSensor(isCheck: Boolean) {
+        notiStore.edit { prefs ->
+            prefs[NOTI_EXPIRED_SENSOR] = isCheck
+        }
+    }
+
+    suspend fun setNotiStabilization(isCheck: Boolean) {
+        notiStore.edit { prefs ->
+            prefs[NOTI_STABILIZATION] = isCheck
+        }
+    }
+
+    suspend fun setNotiCalibration(isCheck: Boolean) {
+        notiStore.edit { prefs ->
+            prefs[NOTI_CALIBRATION] = isCheck
+        }
+    }
+
+    suspend fun setTargetHighGlucose(glucose: Int) {
+        notiStore.edit { prefs ->
+            prefs[TARGET_HIGH_GLUCOSE] = glucose
+        }
+    }
+
+    suspend fun setTargetLowGlucose(glucose: Int) {
+        notiStore.edit { prefs ->
+            prefs[TARGET_LOW_GLUCOSE] = glucose
         }
     }
 }

@@ -39,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -59,6 +60,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -68,6 +70,7 @@ import kr.co.uxn.agms_p.api.RetrofitClient.emptyRetrofit
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEmailCode
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEmailVerificationCode
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestUserInfo
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 
 @Composable
@@ -81,6 +84,7 @@ fun PassWordResetScreen(navController: NavController) {
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val coroutineScope = rememberCoroutineScope()
 
     // 인증번호 관련 변수
     val timerSeconds = remember { mutableStateOf(0) }
@@ -559,16 +563,30 @@ fun PassWordResetScreen(navController: NavController) {
                                                 Toast.LENGTH_SHORT
                                             ).show()
                                         } else {
-                                            // 인증 성공시
-                                            // TODO : 재설정 API 전송 및 로그인 화면으로 이동
-
                                             try {
-//                                                tokenRetrofit.resetPwd(userId)
+                                                coroutineScope.launch(Dispatchers.IO) {
+                                                    val resetPwd = emptyRetrofit.resetPwd(RequestUserInfo(email = email.value, pwd = pwd1.value))
+                                                    Log.d("TEST", "email  = ${email.value}, pwd = ${pwd1.value})")
+                                                    val resetPwdBody = resetPwd.body()
+                                                    if (resetPwd.isSuccessful) {
+                                                        Log.d("TEST", "resetPwdBody = ${resetPwdBody}")
+                                                        withContext(Dispatchers.Main) {
+                                                           Toast.makeText(context, "비밀번호가 재설정 되었습니다.", Toast.LENGTH_SHORT).show()
+                                                            navController.popBackStack()
+                                                        }
+                                                    }
+
+                                                    else {
+                                                        withContext(Dispatchers.Main) {
+                                                            Toast.makeText(context, "재설정 실패", Toast.LENGTH_SHORT).show()
+//                                                            navController.popBackStack()
+                                                        }
+                                                        Log.e("TEST", "resetPwd 실패 : ${resetPwd.errorBody().toString()}")
+                                                    }
+                                                }
                                             } catch(e: Exception) {
                                                 Log.e("TEST", "네트워크 에러 : ${e.message}")
                                             }
-                                            Toast.makeText(context, "비밀번호가 재설정 되었습니다.", Toast.LENGTH_SHORT).show()
-                                            navController.popBackStack()
                                         }
                                     }
                             )
