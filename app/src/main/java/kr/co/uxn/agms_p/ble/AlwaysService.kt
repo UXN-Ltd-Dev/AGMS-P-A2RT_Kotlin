@@ -1,5 +1,6 @@
 package kr.co.uxn.agms_p.ble
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -17,6 +18,7 @@ import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import android.util.Log
+import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.ListenableWorker.Result
@@ -335,9 +337,33 @@ class AlwaysService() : Service() {
                                 // ui에 마지막 글루코즈 값 갱신
                                 Log.e("TEST", "glucoseList first : ${glucoseListBody.first().createdAt}, last : ${glucoseListBody.last().createdAt}")
                                 BleBridge.updateGlucose(glucoseListBody.last().glucose)
+
+
+                                val lastGlucose = glucoseListBody.last().glucose
+
+
+                                // 알람을 위한 target glucose 값 불러오기
+
+                                val targetHigh = DataStoreManager.getTargetHighGlucose().first() ?: -1
+                                val targetLow = DataStoreManager.getTargetLowGlucose().first() ?: -1
+
+                                val highChecker = DataStoreManager.getNotiHighGlucose().first() ?: false
+                                val lowChecker = DataStoreManager.getNotiLowGlucose().first() ?: false
+
+                                if (highChecker) {
+                                    if (lastGlucose > targetHigh) {
+                                        sendNotification(baseContext, "고혈당 주의", "고혈당이 감지되었습니다. \n현재 혈당 : ${lastGlucose} mg/dL", 96)
+                                    }
+                                }
+
+                                if (lowChecker) {
+                                    if (lastGlucose < targetLow) {
+                                        sendNotification(baseContext, "저혈당 주의", "저혈당이 감지되었습니다 \n현재 혈당 : ${lastGlucose} mg/dL", 95)
+                                    }
+                                }
+
                                 // 그래프를 위한 트리거
                                 BleBridge.activateTrigger()
-
                             }
                         } else {
                             Log.e("TEST", "glucoseList API통신 실패 : ${glucoseList.errorBody()?.string()}")
@@ -404,6 +430,35 @@ class AlwaysService() : Service() {
 
             Log.e("SERVICE", "이미 노티 매니저가 생성되었으므로 스킵")
         }
+    }
+
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+    fun sendNotification(context: Context, title: String, message: String, notificationId: Int) {
+        val channelId = "glucose_alert_channel"
+
+        // Oreo 이상은 채널 필요
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "Glucose Alerts",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Alerts for high or low glucose levels"
+            }
+
+            val notificationManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+
+
+        val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
+            .setOngoing(true)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setSmallIcon(R.mipmap.ic_launcher_round)
+            .build()
+        NotificationManagerCompat.from(baseContext).notify(notificationId, notification)
     }
 
     inner class LocalBinder : Binder() {

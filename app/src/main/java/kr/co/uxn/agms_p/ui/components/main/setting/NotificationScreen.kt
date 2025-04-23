@@ -94,14 +94,16 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
     val targetLowGlucose = remember { mutableStateOf("") }
     val targetHighGlucose = remember { mutableStateOf("") }
 
+    val showSetDailyCalibrationDialog = remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             // DS로부터 값 불러오기
             val verifiedDSHigh = DataStoreManager.getNotiHighGlucose().first() ?: false
             val verifiedDSLow = DataStoreManager.getNotiLowGlucose().first() ?: false
             val verifiedDSLostSignal = DataStoreManager.getNotiLostSignal().first() ?: false
-            val verifiedDSExpiredSensor = DataStoreManager.getNotiExpiredSensor().first() ?: false
-            val verifiedDSStabilization = DataStoreManager.getNotiStabilization().first() ?: false
+            val verifiedDSExpiredSensor = DataStoreManager.getNotiExpiredSensor().first() ?: true
+            val verifiedDSStabilization = DataStoreManager.getNotiStabilization().first() ?: true
             val verifiedDSCalibration = DataStoreManager.getNotiCalibration().first() ?: false
             val verifiedDSTargetLowGlucose = DataStoreManager.getTargetLowGlucose().first() ?: -1
             val verifiedDSTargetHighGlucose = DataStoreManager.getTargetHighGlucose().first() ?: -1
@@ -200,6 +202,78 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                                     }
                                 } else {
                                     Toast.makeText(context, "혈당을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                }},
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF3451B2), // 파란색
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "입력",
+                                color = Color.White,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showSetDailyCalibrationDialog.value) {
+        Dialog(onDismissRequest = { showSetDailyCalibrationDialog.value = false }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .background(Color.White, RoundedCornerShape(20.dp))
+                    .padding(24.dp)
+            ) {
+                Column {
+                    Text(
+                        text = "시간",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Spacer(modifier = Modifier.height(5.dp))
+
+                    OutlinedTextField(
+                        value = targetLowGlucose.value,
+                        onValueChange = { targetLowGlucose.value = it},
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Done,
+                            keyboardType = KeyboardType.Number
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { focusManager.clearFocus() }
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(15.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Button(
+                            onClick = {
+                                if (targetHighGlucose.value.contains(".") || targetHighGlucose.value.contains("-") || targetHighGlucose.value.contains(",")
+                                    || targetLowGlucose.value.contains(".") || targetLowGlucose.value.contains("-") || targetLowGlucose.value.contains(",")
+                                ) {
+                                    Toast.makeText(context, "숫자만 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                } else if (targetHighGlucose.value != "" && targetLowGlucose.value != "") {
+                                    showGlucoseDialog.value = false
+                                    coroutineScope.launch(Dispatchers.Main) {
+//                                        DataStoreManager.setTargetHighGlucose(targetHighGlucose.value.toInt())
+//                                        DataStoreManager.setTargetLowGlucose(targetLowGlucose.value.toInt())
+//                                        Log.e("TEST", "저장된 고혈당 : ${DataStoreManager.getTargetHighGlucose().first()}")
+//                                        Log.e("TEST", "저장된 저혈당 : ${DataStoreManager.getTargetLowGlucose().first()}")
+                                    }
+                                } else {
+                                    Toast.makeText(context, "시간을 입력해주세요.", Toast.LENGTH_SHORT).show()
                                 }},
                             shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.buttonColors(
@@ -569,7 +643,10 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                                 .fillMaxWidth()
                                 .background(Color.White)
                                 .height(30.dp)
-                                .padding(horizontal = 30.dp),
+                                .padding(horizontal = 30.dp)
+                                .clickable {
+                                    showSetDailyCalibrationDialog.value = true
+                                },
                             verticalAlignment = Alignment.Top,
                             horizontalArrangement = Arrangement.Start
                         ) {
