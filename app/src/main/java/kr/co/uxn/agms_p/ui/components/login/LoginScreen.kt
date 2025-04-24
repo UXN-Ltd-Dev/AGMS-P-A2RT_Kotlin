@@ -230,7 +230,8 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     }
                 )
             }
-            Spacer(modifier = Modifier.size(30.dp))
+
+            Spacer(modifier = Modifier.height(40.dp))
 
             // 이메일로 시작하기 버튼
             Box(
@@ -387,6 +388,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     )
                 }
             }
+
         }
     }
 }

@@ -333,7 +333,6 @@ fun HomeScreen(
             .fillMaxSize()
             .padding(paddingValues)
     ) {
-        Spacer(modifier = Modifier.height(10.dp))
 
         // 1. 혈당 표시 카드
         Card(
@@ -481,7 +480,7 @@ fun HomeScreen(
         }
 
 
-        // 그래프 표시 카드
+        // 2. 그래프 표시 카드
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -500,7 +499,7 @@ fun HomeScreen(
             Text(
                 text = "혈당 그래프",
                 fontWeight = FontWeight.Medium,
-                fontSize = 16.sp,
+                fontSize = 17.sp,
                 modifier = Modifier
                     .padding(start = 20.dp)
             )
@@ -597,12 +596,14 @@ fun HomeScreen(
 
         }
 
-        // 센서 정보 표시 카드
+        // 3. 센서 정보 표시 카드
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(130.dp)
-                .padding(10.dp),
+                .height(140.dp)
+                .padding(horizontal = 10.dp)
+                .padding(top = 10.dp, bottom = 20.dp)
+            ,
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.White, // 카드 배경색 설정
@@ -621,10 +622,9 @@ fun HomeScreen(
 
                 Text(
                     text = "센서 정보",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Medium,
                 )
-
                 Icon(
                     Icons.Filled.MoreVert,
                     contentDescription = "더보기 아이콘",

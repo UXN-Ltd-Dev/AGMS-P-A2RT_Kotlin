@@ -33,6 +33,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -64,13 +65,24 @@ fun EventScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val eventList by eventScreenViewModel.eventItemList.collectAsState()
     val coroutineScope = rememberCoroutineScope()
+    val configuration = LocalConfiguration.current
+    val screenWidthDp = configuration.screenWidthDp
+    val screenHeightDp = configuration.screenHeightDp
+
+    val cardHeight = when {
+        screenHeightDp == 783 -> 130.dp
+        else -> 100.dp
+
+    }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
+
                 // onResume 시점에만 실행!
                 // 서버로부터 이벤트 목록 받아와서 화면 갱신해주기
                 Log.e("TEST", "이벤트 화면에서 onResume일때 DisposableEffect 실행")
+                Log.e("TEST", "이벤트 화면에서 width :${screenWidthDp} height : ${screenHeightDp}")
 
                 coroutineScope.launch(Dispatchers.IO) {
                     try {
@@ -82,7 +94,11 @@ fun EventScreen(
                             if (eventListBody != null) {
                                 Log.e("TEST", "불러온 eventListBody : ${eventListBody}")
                                 val items = eventListBody.map { it ->
-                                    ItemData(eventType = it.eventTypeCode, time = it.createdAt, content = it.content)
+                                    ItemData(
+                                        eventType = it.eventTypeCode,
+                                        time = it.createdAt,
+                                        content = it.content
+                                    )
                                 }
                                 eventScreenViewModel.setItems(items)
                             }
@@ -110,12 +126,12 @@ fun EventScreen(
     ) {
 
         // 1. 생활 등록 카드
-        Spacer(modifier = Modifier.height(10.dp))
+//        Spacer(modifier = Modifier.height(10.dp))
 
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(110.dp)
+                .height(130.dp)
                 .padding(10.dp)
                 .clickable {
                     navController.navigate("ActivityRegisterScreen")
@@ -138,7 +154,7 @@ fun EventScreen(
                 Text(
                     text = "생활 등록",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
+                    fontSize = 17.sp
                 )
             }
             Spacer(modifier = Modifier.height(2.dp))
@@ -151,13 +167,13 @@ fun EventScreen(
                 Text(
                     text = "식사와 운동, 인슐린 주입",
                     fontWeight = FontWeight.Medium,
-                    fontSize = 15.sp
+                    fontSize = 17.sp
                 )
                 Text(
                     text = " 등",
                     fontWeight = FontWeight.Medium,
                     color = Color(0xFF828282),
-                    fontSize = 15.sp
+                    fontSize = 17.sp
                 )
             }
 
@@ -171,15 +187,12 @@ fun EventScreen(
                     text = "일상 활동을 기록하세요",
                     color = Color(0xFF828282),
                     fontWeight = FontWeight.Medium,
-                    fontSize = 15.sp
+                    fontSize = 17.sp
                 )
                 Image(
                     modifier = Modifier
                         .size(70.dp, 26.dp)
-                        .padding(bottom = 3.dp)
-                        .clickable {
-                            navController.navigate("ActivityRegisterScreen")
-                        },
+                        .padding(bottom = 3.dp),
                     painter = painterResource(R.drawable.enter_icon),
                     contentDescription = "입력 아이콘"
                 )
@@ -190,7 +203,7 @@ fun EventScreen(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(110.dp)
+                .height(130.dp)
                 .padding(10.dp)
                 .clickable {
                     navController.navigate("GlucoseRegisterScreen")
@@ -213,7 +226,7 @@ fun EventScreen(
                 Text(
                     text = "혈당값 입력",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
+                    fontSize = 17.sp
                 )
             }
 
@@ -227,14 +240,14 @@ fun EventScreen(
                 Text(
                     text = "최소 ",
                     fontWeight = FontWeight.Medium,
-                    fontSize = 15.sp,
+                    fontSize = 17.sp,
                     color = Color(0xFF828282),
                 )
                 Text(
                     text = "1일 1회",
                     fontWeight = FontWeight.Medium,
                     textDecoration = TextDecoration.Underline,
-                    fontSize = 15.sp
+                    fontSize = 17.sp
                 )
             }
 
@@ -245,32 +258,31 @@ fun EventScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "공복혈당을 입력하세요",
+                    text = "공복 혈당을 입력하세요",
                     fontWeight = FontWeight.Medium,
                     color = Color(0xFF828282),
-                    fontSize = 15.sp
+                    fontSize = 17.sp
                 )
                 Image(
                     modifier = Modifier
                         .size(70.dp, 26.dp)
-                        .padding(bottom = 3.dp)
-                        .clickable {
-                            navController.navigate("GlucoseRegisterScreen")
-                        },
+                        .padding(bottom = 3.dp),
                     painter = painterResource(R.drawable.enter_icon),
                     contentDescription = "입력 아이콘"
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(30.dp))
 
         // 3. 최근 활동 카드
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp)
-                .padding(10.dp),
+//                .height(300.dp)
+                .weight(1f)
+                .padding(horizontal = 10.dp)
+                .padding(top = 20.dp, bottom = 30.dp)
+            ,
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.White, // 카드 배경색 설정
@@ -289,7 +301,7 @@ fun EventScreen(
                 Text(
                     text = "최근 활동",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
+                    fontSize = 17.sp
                 )
             }
 
@@ -329,12 +341,13 @@ fun Item(itemData: ItemData) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
-                .padding(start = 25.dp, end = 16.dp),
+                .padding(start = 40.dp, end = 16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = itemData.content,
+                fontSize = 16.sp,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(4f),
@@ -342,7 +355,7 @@ fun Item(itemData: ItemData) {
             )
             Text(
                 text = itemData.time,
-                fontSize = 12.sp,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color(0xFF828282),
                 modifier = Modifier.weight(4f)

@@ -12,7 +12,7 @@ class EventScreenViewModel : ViewModel() {
     val eventItemList = _eventItemList.asStateFlow()
 
     fun setItems(list: List<ItemData>) {
-        _eventItemList.value = list.reversed()
+        _eventItemList.value = list.sortedBy { it.time }.reversed()
     }
 
     fun addItem(item: ItemData) {

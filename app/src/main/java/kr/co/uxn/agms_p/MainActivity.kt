@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
@@ -79,15 +80,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // ✅ 시스템 바 영역 침범 허용
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+//        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         // ✅ 상태바와 내비게이션 바 투명하게
-        window.statusBarColor = android.graphics.Color.TRANSPARENT
-        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+        window.statusBarColor = android.graphics.Color.WHITE
+        window.navigationBarColor = android.graphics.Color.WHITE
 
         // ✅ 상태바 아이콘 색 조정 (배경이 밝으면 true, 어두우면 false)
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
 //  WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = true
+
 
 
         setContent {

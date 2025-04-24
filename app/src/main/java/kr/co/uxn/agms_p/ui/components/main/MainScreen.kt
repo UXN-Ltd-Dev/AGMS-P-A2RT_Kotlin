@@ -87,7 +87,7 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
         },
         bottomBar = {
             NavigationBar(
-                modifier = Modifier.height(60.dp),
+                modifier = Modifier.height(80.dp),
                 containerColor = Color.White
             ) {
                 navItemList.forEachIndexed { index, navItem ->
@@ -99,13 +99,13 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
                         icon = {
                             if(selectedIndex == index) {
                                 Image(
-                                    modifier = Modifier.size(20.dp),
+                                    modifier = Modifier.size(22.dp),
                                     painter = navItem.selectedIcon,
                                     contentDescription = "Navigation Selected Icon",
                                 )
                             } else {
                                 Image(
-                                    modifier = Modifier.size(20.dp),
+                                    modifier = Modifier.size(22.dp),
                                     painter = navItem.icon,
                                     contentDescription = "Navigation Icon",
                                 )
@@ -115,7 +115,7 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
                         label = {
                             Text(
                                 text = navItem.label,
-                                fontSize = 12.sp
+                                fontSize = 13.sp
                             )
                         },
                         colors = NavigationBarItemDefaults.colors(
