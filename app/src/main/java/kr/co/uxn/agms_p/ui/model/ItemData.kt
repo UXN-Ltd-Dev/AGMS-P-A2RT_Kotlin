@@ -1,6 +1,5 @@
-package kr.co.uxn.agms_p.ui.components.main.event
+package kr.co.uxn.agms_p.ui.model
 
-import androidx.annotation.DrawableRes
 import java.util.UUID
 
 // eventCode

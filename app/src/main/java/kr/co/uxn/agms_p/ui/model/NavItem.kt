@@ -1,4 +1,4 @@
-package kr.co.uxn.agms_p.ui.components.main
+package kr.co.uxn.agms_p.ui.model
 
 import androidx.compose.ui.graphics.painter.Painter
 

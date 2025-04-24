@@ -3,7 +3,7 @@ package kr.co.uxn.agms_p.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kr.co.uxn.agms_p.ui.components.main.event.ItemData
+import kr.co.uxn.agms_p.ui.model.ItemData
 
 class EventScreenViewModel : ViewModel() {
 

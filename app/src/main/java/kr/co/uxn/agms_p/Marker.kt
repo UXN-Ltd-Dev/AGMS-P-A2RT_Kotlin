@@ -55,6 +55,7 @@ internal fun rememberMarker(): Marker {
         padding = labelPadding,
         typeface = Typeface.MONOSPACE,
     )
+
     val indicatorInnerComponent = shapeComponent(Shapes.pillShape, MaterialTheme.colorScheme.surface)
     val indicatorCenterComponent = shapeComponent(Shapes.pillShape, Color.White)
     val indicatorOuterComponent = shapeComponent(Shapes.pillShape, Color.White)

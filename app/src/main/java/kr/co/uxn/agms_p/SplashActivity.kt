@@ -20,6 +20,9 @@ class SplashActivity : ComponentActivity() {
         spalshScreen.setKeepOnScreenCondition { false }
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
+
+        // 흰화면 깜빡임 없애기 위한 코드 실험
+        overridePendingTransition(0, 0)
         finish()
     }
 }

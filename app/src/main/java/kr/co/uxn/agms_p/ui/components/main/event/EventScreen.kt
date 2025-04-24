@@ -49,6 +49,7 @@ import kotlinx.coroutines.launch
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.token.DataStoreManager
+import kr.co.uxn.agms_p.ui.model.ItemData
 import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
 
 @SuppressLint("RememberReturnType")

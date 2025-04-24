@@ -26,7 +26,9 @@ fun SplashScreen(navController: NavHostController, activity: Activity) {
 //        delay(500) // 테스트용
         delay(2000) // 실제
         // 애니메이션 후 네비게이션
-        navController.navigate("Login")
+        navController.navigate("Login") {
+            popUpTo(0) { inclusive = true }
+        }
     }
 
     Surface(

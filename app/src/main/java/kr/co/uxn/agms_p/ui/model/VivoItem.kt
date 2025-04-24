@@ -1,4 +1,4 @@
-package kr.co.uxn.agms_p.ui.components.main
+package kr.co.uxn.agms_p.ui.model
 
 data class VivoItem(
     val xAxisTime: Float,

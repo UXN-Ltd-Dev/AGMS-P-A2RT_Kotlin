@@ -34,6 +34,7 @@ import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.ui.components.main.event.EventScreen
 import kr.co.uxn.agms_p.ui.components.main.home.HomeScreen
 import kr.co.uxn.agms_p.ui.components.main.setting.SettingScreen
+import kr.co.uxn.agms_p.ui.model.NavItem
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel

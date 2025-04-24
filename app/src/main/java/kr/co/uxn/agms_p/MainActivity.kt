@@ -1,6 +1,7 @@
 package kr.co.uxn.agms_p
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -13,6 +14,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -71,7 +74,21 @@ class MainActivity : ComponentActivity() {
     private val homeViewModel: HomeViewModel by viewModels()
     private val eventScreenViewModel: EventScreenViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        setTheme(R.style.Theme_AGMSP)
         super.onCreate(savedInstanceState)
+
+        // ✅ 시스템 바 영역 침범 허용
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        // ✅ 상태바와 내비게이션 바 투명하게
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+
+        // ✅ 상태바 아이콘 색 조정 (배경이 밝으면 true, 어두우면 false)
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
+//  WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = true
+
 
         setContent {
             AGMSPTheme {
