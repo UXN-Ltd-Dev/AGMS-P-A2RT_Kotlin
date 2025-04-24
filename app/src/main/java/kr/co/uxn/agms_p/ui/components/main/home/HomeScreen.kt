@@ -47,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
@@ -128,6 +129,14 @@ fun HomeScreen(
     val localDbRepository by lazy {
         AppDatabase.getInstance(context)
     }
+
+    val configuration = LocalConfiguration.current
+    val screenHeightDp = configuration.screenHeightDp
+    val fontSize = when {
+        screenHeightDp == 783 -> 17.sp // a시리즈
+        else -> 16.sp
+    }
+
 
     LaunchedEffect(selectedOption) {
         withContext(Dispatchers.IO) {
@@ -218,7 +227,7 @@ fun HomeScreen(
 
     LaunchedEffect(chartTrigger) {
         withContext(Dispatchers.IO) {
-            delay(3000)
+            delay(1000)
             dataSetForModel.clear()
 //            dataSetLineSpec.clear()
             val dataPoints = arrayListOf<FloatEntry>()
@@ -370,7 +379,7 @@ fun HomeScreen(
                 Text(
 //                    text = mode,
                     text = "현재 혈당",
-                    fontSize = 17.sp,
+                    fontSize = fontSize,
                     fontWeight = FontWeight.Medium,
                     color = Color.White,
                     modifier = Modifier
@@ -499,7 +508,7 @@ fun HomeScreen(
             Text(
                 text = "혈당 그래프",
                 fontWeight = FontWeight.Medium,
-                fontSize = 17.sp,
+                fontSize = fontSize,
                 modifier = Modifier
                     .padding(start = 20.dp)
             )
@@ -616,13 +625,14 @@ fun HomeScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 10.dp, start = 15.dp, end = 10.dp),
+//                    .padding(top = 10.dp, start = 15.dp, end = 10.dp),
+                    .padding(top = 10.dp, start = 20.dp, end = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
 
                 Text(
                     text = "센서 정보",
-                    fontSize = 17.sp,
+                    fontSize = fontSize,
                     fontWeight = FontWeight.Medium,
                 )
                 Icon(
@@ -639,7 +649,8 @@ fun HomeScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(15.dp),
+                    .padding(vertical = 15.dp)
+                    .padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 for (i in 0 until 10) {
@@ -659,7 +670,7 @@ fun HomeScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 15.dp, end = 15.dp),
+                    .padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 if ((10 - day + 1) < 11) {

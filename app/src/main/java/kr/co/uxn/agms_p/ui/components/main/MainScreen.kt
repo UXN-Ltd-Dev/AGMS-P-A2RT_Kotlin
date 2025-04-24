@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -60,6 +61,13 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
         BleConnectionState.CONNECTING -> R.drawable.ble_connecting
     }
 
+    val configuration = LocalConfiguration.current
+    val screenHeightDp = configuration.screenHeightDp
+    val navHeight = when {
+        screenHeightDp == 783 -> 17.sp // a시리즈
+        else -> 16.sp
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -87,7 +95,7 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
         },
         bottomBar = {
             NavigationBar(
-                modifier = Modifier.height(80.dp),
+                modifier = Modifier.height(70.dp),
                 containerColor = Color.White
             ) {
                 navItemList.forEachIndexed { index, navItem ->

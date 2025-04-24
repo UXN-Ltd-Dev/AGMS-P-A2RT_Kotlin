@@ -8,4 +8,6 @@
     <color name="black">#FF000000</color>
     <color name="white">#F5F5F5</color>
     <color name="blue_splash">#385DAB</color>
+    <color name="default_color">#FAF9FD</color>
+
 </resources>

@@ -83,12 +83,12 @@ class MainActivity : ComponentActivity() {
 //        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         // ✅ 상태바와 내비게이션 바 투명하게
-        window.statusBarColor = android.graphics.Color.WHITE
-        window.navigationBarColor = android.graphics.Color.WHITE
+//        window.statusBarColor = android.graphics.Color.WHITE
+//        window.navigationBarColor = android.graphics.Color.WHITE
 
         // ✅ 상태바 아이콘 색 조정 (배경이 밝으면 true, 어두우면 false)
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
-//  WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = true
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = true
 
 
 

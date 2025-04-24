@@ -24,8 +24,10 @@ import androidx.compose.material.Text
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -68,11 +70,21 @@ fun EventScreen(
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp
     val screenHeightDp = configuration.screenHeightDp
+    val fontSizeSp = configuration.screenHeightDp
 
     val cardHeight = when {
         screenHeightDp == 783 -> 130.dp
-        else -> 100.dp
+        else -> 110.dp
+    }
 
+    val fontSize = when {
+        screenHeightDp == 783 -> 17.sp
+        else -> 15.sp
+    }
+
+    val bgColor = MaterialTheme.colorScheme.background
+    LaunchedEffect(Unit) {
+        Log.e("COLOR", "배경 RGB = ${bgColor.red} ${bgColor.green} ${bgColor.blue}")
     }
 
     DisposableEffect(lifecycleOwner) {
@@ -131,7 +143,7 @@ fun EventScreen(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(130.dp)
+                .height(cardHeight)
                 .padding(10.dp)
                 .clickable {
                     navController.navigate("ActivityRegisterScreen")
@@ -154,7 +166,7 @@ fun EventScreen(
                 Text(
                     text = "생활 등록",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp
+                    fontSize = fontSize
                 )
             }
             Spacer(modifier = Modifier.height(2.dp))
@@ -167,13 +179,13 @@ fun EventScreen(
                 Text(
                     text = "식사와 운동, 인슐린 주입",
                     fontWeight = FontWeight.Medium,
-                    fontSize = 17.sp
+                    fontSize = fontSize
                 )
                 Text(
                     text = " 등",
                     fontWeight = FontWeight.Medium,
                     color = Color(0xFF828282),
-                    fontSize = 17.sp
+                    fontSize = fontSize
                 )
             }
 
@@ -187,7 +199,7 @@ fun EventScreen(
                     text = "일상 활동을 기록하세요",
                     color = Color(0xFF828282),
                     fontWeight = FontWeight.Medium,
-                    fontSize = 17.sp
+                    fontSize = fontSize
                 )
                 Image(
                     modifier = Modifier
@@ -203,7 +215,7 @@ fun EventScreen(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(130.dp)
+                .height(cardHeight)
                 .padding(10.dp)
                 .clickable {
                     navController.navigate("GlucoseRegisterScreen")
@@ -226,7 +238,7 @@ fun EventScreen(
                 Text(
                     text = "혈당값 입력",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp
+                    fontSize = fontSize
                 )
             }
 
@@ -240,14 +252,14 @@ fun EventScreen(
                 Text(
                     text = "최소 ",
                     fontWeight = FontWeight.Medium,
-                    fontSize = 17.sp,
+                    fontSize = fontSize,
                     color = Color(0xFF828282),
                 )
                 Text(
                     text = "1일 1회",
                     fontWeight = FontWeight.Medium,
                     textDecoration = TextDecoration.Underline,
-                    fontSize = 17.sp
+                    fontSize = fontSize
                 )
             }
 
@@ -261,7 +273,7 @@ fun EventScreen(
                     text = "공복 혈당을 입력하세요",
                     fontWeight = FontWeight.Medium,
                     color = Color(0xFF828282),
-                    fontSize = 17.sp
+                    fontSize = fontSize
                 )
                 Image(
                     modifier = Modifier
@@ -281,7 +293,7 @@ fun EventScreen(
 //                .height(300.dp)
                 .weight(1f)
                 .padding(horizontal = 10.dp)
-                .padding(top = 20.dp, bottom = 30.dp)
+                .padding(top = 30.dp, bottom = 30.dp)
             ,
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
@@ -301,7 +313,7 @@ fun EventScreen(
                 Text(
                     text = "최근 활동",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp
+                    fontSize = fontSize
                 )
             }
 
@@ -313,7 +325,7 @@ fun EventScreen(
                 ) {
                     Text(
                         text = "가볍게, 오늘 하루를 남겨보세요",
-                        fontSize = 16.sp,
+                        fontSize = fontSize,
                         color = Color.Gray,
                         fontWeight = FontWeight.Medium
                     )
@@ -333,6 +345,13 @@ fun EventScreen(
 
 @Composable
 fun Item(itemData: ItemData) {
+
+    val configuration = LocalConfiguration.current
+    val screenHeightDp = configuration.screenHeightDp
+    val startPadding = when {
+        screenHeightDp == 783 -> 40.dp
+        else -> 25.dp
+    }
     Column(
         modifier = Modifier.fillMaxWidth()
     )
@@ -341,13 +360,13 @@ fun Item(itemData: ItemData) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
-                .padding(start = 40.dp, end = 16.dp),
+                .padding(start = startPadding, end = 16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = itemData.content,
-                fontSize = 16.sp,
+//                fontSize = 16.sp,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(4f),
@@ -355,7 +374,7 @@ fun Item(itemData: ItemData) {
             )
             Text(
                 text = itemData.time,
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color(0xFF828282),
                 modifier = Modifier.weight(4f)
