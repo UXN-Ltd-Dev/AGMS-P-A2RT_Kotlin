@@ -63,9 +63,14 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
 
     val configuration = LocalConfiguration.current
     val screenHeightDp = configuration.screenHeightDp
+    val iconSize = when {
+        screenHeightDp == 783 -> 22.dp // a시리즈
+        else -> 21.dp
+    }
+
     val navHeight = when {
-        screenHeightDp == 783 -> 17.sp // a시리즈
-        else -> 16.sp
+        screenHeightDp == 783 -> 70.dp // a시리즈
+        else -> 65.dp
     }
 
     Scaffold(
@@ -95,7 +100,7 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
         },
         bottomBar = {
             NavigationBar(
-                modifier = Modifier.height(70.dp),
+                modifier = Modifier.height(navHeight),
                 containerColor = Color.White
             ) {
                 navItemList.forEachIndexed { index, navItem ->
@@ -107,13 +112,13 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
                         icon = {
                             if(selectedIndex == index) {
                                 Image(
-                                    modifier = Modifier.size(22.dp),
+                                    modifier = Modifier.size(iconSize),
                                     painter = navItem.selectedIcon,
                                     contentDescription = "Navigation Selected Icon",
                                 )
                             } else {
                                 Image(
-                                    modifier = Modifier.size(22.dp),
+                                    modifier = Modifier.size(iconSize),
                                     painter = navItem.icon,
                                     contentDescription = "Navigation Icon",
                                 )

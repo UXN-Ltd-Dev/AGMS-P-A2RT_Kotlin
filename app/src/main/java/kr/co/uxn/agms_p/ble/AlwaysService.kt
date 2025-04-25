@@ -42,11 +42,15 @@ import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.room.UserGlucose
 import java.time.Instant
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import java.util.Timer
 import java.util.TimerTask
 import kotlin.system.exitProcess
+import java.time.Duration
+import kotlin.math.abs
 
 class AlwaysService() : Service() {
     companion object {
@@ -313,7 +317,40 @@ class AlwaysService() : Service() {
                             )
                         }
 
+                        // 혈당값 매일 입력 알림
+                        val calibrationTime = DataStoreManager.getDailyCalibrationTime().first() ?: ""
+                        Log.d("CALI", "calibrationTime is : ${calibrationTime}")
+                        if (calibrationTime != "") {
+//                                    a hh:mm 형태의 스트링 값을 현재 시간과 비교후 오차간격 10분 이내면 알림 울림
 
+                            val formatter = DateTimeFormatter.ofPattern("a hh:mm", Locale.KOREAN)
+                            val targetTime = LocalTime.parse(calibrationTime, formatter)
+
+
+                            Log.d("CALI", "targetTime is : ${targetTime}")
+
+                            val nowTime = LocalTime.now(ZoneId.of("Asia/Seoul"))
+                            Log.d("CALI", "nowTime is : ${nowTime}")
+
+                            val diff = Duration.between(targetTime, nowTime).toMinutes().let { abs(it) }
+                            Log.d("CALI", "diff is : ${diff}")
+
+                            if (diff <= 1) {
+                                Log.d("CALI", "3분 이내! 알림 실행 diff : ${diff}")
+                                sendNotification(baseContext, "혈당 입력 시간입니다", "오늘의 혈당을 입력해주세요", 93)
+
+                                BleBridge.showCaliDialog(true)
+
+                            } else {
+                                Log.d("CALI", "캘리 알림 범위 아님 : ${diff}")
+                            }
+
+                        }
+
+
+
+
+                        // 혈당 불러오기
                         val glucoseList = tokenRetrofit.getGlucoseList(userId)
                         if (glucoseList.isSuccessful) {
                             val glucoseListBody = glucoseList.body()
@@ -361,6 +398,7 @@ class AlwaysService() : Service() {
                                         sendNotification(baseContext, "저혈당 주의", "저혈당이 감지되었습니다 \n현재 혈당 : ${lastGlucose} mg/dL", 95)
                                     }
                                 }
+
 
                                 // 그래프를 위한 트리거
                                 BleBridge.activateTrigger()
@@ -451,7 +489,7 @@ class AlwaysService() : Service() {
         }
 
 
-        val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
+        val notification = NotificationCompat.Builder(context, NOTI_CHANNEL_ID)
             .setOngoing(true)
             .setContentTitle(title)
             .setContentText(message)

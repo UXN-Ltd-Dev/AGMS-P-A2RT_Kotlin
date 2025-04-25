@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -31,6 +32,7 @@ import kr.co.uxn.agms_p.R
 @Composable
 fun NotiDialog(
     onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
     title : String,
     content: String
 ) {
@@ -44,17 +46,20 @@ fun NotiDialog(
         ) {
             Column {
                 Row(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Image(
                         painter = painterResource(R.drawable.noti_icon),
                         contentDescription = "알림 아이콘",
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(25.dp)
                     )
+
+                    Spacer(modifier = Modifier.width(10.dp))
 
                     Text(
                         text = title,
-                        fontSize = 17.sp,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -64,7 +69,7 @@ fun NotiDialog(
 
                 Text(
                     text = content,
-                    fontSize = 17.sp
+                    fontSize = 14.sp
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -75,14 +80,14 @@ fun NotiDialog(
                 ) {
 
                     Button(
-                        onClick = onDismiss,
+                        onClick = onConfirm,
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF3451B2), // 파란색
                         ),
                         modifier = Modifier.weight(1f)
                     ) {
-                        androidx.compose.material3.Text(
+                        Text(
                             text = "확인",
                             color = Color.White,
                             fontWeight = FontWeight.Medium

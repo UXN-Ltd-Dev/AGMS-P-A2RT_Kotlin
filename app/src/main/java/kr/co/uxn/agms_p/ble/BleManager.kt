@@ -1,6 +1,10 @@
 package kr.co.uxn.agms_p.ble
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service.NOTIFICATION_SERVICE
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
@@ -17,10 +21,18 @@ import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.annotation.RequiresPermission
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.BleConnectionState
+import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.room.UserValue
 import java.lang.reflect.Method
@@ -133,6 +145,22 @@ class BleManager(
 
             BluetoothProfile.STATE_DISCONNECTED -> {
                 Log.e("gatt", "gatt disconnected!!!")
+
+                // 끊김 알림
+                CoroutineScope(Dispatchers.IO).launch {
+                    val isShowBleNoti = DataStoreManager.getNotiLostSignal().first() ?: false
+                    Log.e("BLE", "BLE 연결 끊김 알림 DS로부터 불러온 설정값 : $isShowBleNoti")
+                    if (isShowBleNoti) {
+                        withContext(Dispatchers.Main) {
+                            sendNotification(context, "센서와의 연결이 일시적으로 끊어졌어요",
+                                "",
+                                89
+                            )
+                            BleBridge.showBleConnectDialog(true )
+                        }
+                    }
+                }
+
 
                 // BleBridege에 Disconnected 상태 전송
                 BleBridge.updateState(BleConnectionState.DISCONNECTED)
@@ -570,38 +598,11 @@ class BleManager(
             .atZone(ZoneId.of("Asia/Seoul"))
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
-//        saveData.add(
-//            UserValue(
-//                userId = userId,
-//                userValueId = 1306,
-//                value = battery.toDouble(),
-//                valueType = 1300,
-//                createdAt = createdAt,
-//                createdAtLong = lastTime
-//            )
-//        )
-
-
         Log.d(TEST, "battery : $battery")
 
         // 온도
         val temperature =
             java.lang.Byte.toUnsignedInt(data[16]) + (java.lang.Byte.toUnsignedInt(data[17]) / 100.0f * 100).roundToInt() / 100.0
-
-        // ui에 온도 실시간 갱신
-//        BleBridge.updateTemperature(temperature)
-
-//        saveData.add(
-//            UserValue(
-//                userId = userId,
-//                userValueId = 1307,
-//                value = temperature,
-//                valueType = 1300,
-//                createdAt = createdAt,
-//                createdAtLong = lastTime
-//            )
-//        )
-
 
         Log.d(TEST, "temperature : $temperature")
 
@@ -643,16 +644,6 @@ class BleManager(
                     createdAtLong = time
                 )
             )
-//            saveData.add(
-//                UserValue(
-//                    userId = userId,
-//                    userValueId = 1303,
-//                    value = aeCurrent,
-//                    valueType = 1300,
-//                    createdAt = convertedTime,
-//                    createdAtLong = time
-//                )
-//            )
             if (i == findBufferWeoCount - 1) {
                 lastWeo1 = weCurrent
             }
@@ -664,6 +655,8 @@ class BleManager(
         CoroutineScope(Dispatchers.IO).launch {
             AppDatabase.getInstance(context)?.dataDao()?.insertUserValue(saveData)
         }
+
+
 
         return 0
     }
@@ -787,6 +780,35 @@ class BleManager(
             gatt.writeCharacteristic(writeCharacteristic)
             Log.d(TEST, "기존 버전 write")
         }
+    }
+
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+    fun sendNotification(context: Context, title: String, message: String, notificationId: Int) {
+        val channelId = "ble_disconnect_alert_channel"
+
+        // Oreo 이상은 채널 필요
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "ble disconnect alert",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "ble disconnect alert"
+            }
+
+            val notificationManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+
+
+        val notification = NotificationCompat.Builder(context, channelId)
+            .setOngoing(true)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setSmallIcon(R.mipmap.ic_launcher_round)
+            .build()
+        NotificationManagerCompat.from(context).notify(notificationId, notification)
     }
 
 }

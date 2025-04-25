@@ -79,7 +79,7 @@ fun EventScreen(
 
     val fontSize = when {
         screenHeightDp == 783 -> 17.sp
-        else -> 15.sp
+        else -> 16.sp
     }
 
     val bgColor = MaterialTheme.colorScheme.background
@@ -348,10 +348,12 @@ fun Item(itemData: ItemData) {
 
     val configuration = LocalConfiguration.current
     val screenHeightDp = configuration.screenHeightDp
-    val startPadding = when {
-        screenHeightDp == 783 -> 40.dp
-        else -> 25.dp
+    val endPadding = when {
+        screenHeightDp == 783 -> 40.dp // A시리즈
+        else -> 30.dp
     }
+
+
     Column(
         modifier = Modifier.fillMaxWidth()
     )
@@ -360,7 +362,7 @@ fun Item(itemData: ItemData) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
-                .padding(start = startPadding, end = 16.dp),
+                .padding(start = 40.dp, end = endPadding),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -369,7 +371,7 @@ fun Item(itemData: ItemData) {
 //                fontSize = 16.sp,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(4f),
+                modifier = Modifier.weight(3f),
                 fontWeight = FontWeight.Medium
             )
             Text(
@@ -377,7 +379,7 @@ fun Item(itemData: ItemData) {
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color(0xFF828282),
-                modifier = Modifier.weight(4f)
+                modifier = Modifier.weight(5f)
             )
             val image = when (itemData.eventType) {
                 1401 -> R.drawable.event_meal
@@ -388,7 +390,7 @@ fun Item(itemData: ItemData) {
             Image(
                 modifier = Modifier
                     .size(40.dp)
-                    .weight(2f),
+                    .weight(1f),
                 painter = painterResource(image),
                 contentDescription = "활동 아이콘"
             )

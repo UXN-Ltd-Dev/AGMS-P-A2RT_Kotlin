@@ -1,6 +1,14 @@
 package kr.co.uxn.agms_p.ui.components.ready
 
+import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service.NOTIFICATION_SERVICE
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,10 +29,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.navigation.NavController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -34,13 +46,29 @@ import kr.co.uxn.agms_p.api.token.DataStoreManager
 
 @Composable
 fun StabilizationCompleteScreen(navController: NavController) {
+    val context = LocalContext.current
+    val coroutine = rememberCoroutineScope()
+    var isNotiStabilization = false
     LaunchedEffect(Unit) {
         DataStoreManager.deleteRoute()
         DataStoreManager.saveRoute("StabilizationCompleteScreen")
         val route = DataStoreManager.getRoute().first()
         Log.e("TEST", "안정화 완료 화면에서 Route : ${route}")
+
+        coroutine.launch(Dispatchers.IO) {
+            isNotiStabilization = DataStoreManager.getNotiStabilization().first() ?: false
+            Log.d("TEST", "안정화 완료 화면에서 isNotiStabilization : ${isNotiStabilization}")
+        }
+        // 안정화 완료 노티
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+
+            if (isNotiStabilization) {
+                sendNotification(context,"센서가 준비되었습니다", "", 90)
+            }
+
+        }
     }
-    val coroutine = rememberCoroutineScope()
+
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -108,4 +136,34 @@ fun StabilizationCompleteScreen(navController: NavController) {
             }
         }
     }
+}
+
+@RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+fun sendNotification(context: Context, title: String, message: String, notificationId: Int) {
+    val channelId = "stabilization_channel"
+
+    // Oreo 이상은 채널 필요
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val channel = NotificationChannel(
+            channelId,
+            "stabilization alert",
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = "Alerts for stabilization"
+        }
+
+        val notificationManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
+    }
+
+
+    val notification = NotificationCompat.Builder(context, channelId)
+        .setOngoing(true)
+        .setContentTitle(title)
+        .setContentText(message)
+        .setPriority(NotificationCompat.PRIORITY_HIGH)
+        .setSmallIcon(R.mipmap.ic_launcher_round)
+        .build()
+
+    NotificationManagerCompat.from(context).notify(notificationId, notification)
 }

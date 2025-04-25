@@ -76,15 +76,14 @@ class MainActivity : ComponentActivity() {
     private val eventScreenViewModel: EventScreenViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
 
-        setTheme(R.style.Theme_AGMSP)
         super.onCreate(savedInstanceState)
 
         // ✅ 시스템 바 영역 침범 허용
 //        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         // ✅ 상태바와 내비게이션 바 투명하게
-//        window.statusBarColor = android.graphics.Color.WHITE
-//        window.navigationBarColor = android.graphics.Color.WHITE
+        window.statusBarColor = android.graphics.Color.WHITE
+        window.navigationBarColor = android.graphics.Color.WHITE
 
         // ✅ 상태바 아이콘 색 조정 (배경이 밝으면 true, 어두우면 false)
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true

@@ -2,11 +2,9 @@ package kr.co.uxn.agms_p.ui.components.main.setting
 
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,11 +31,12 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
+import androidx.compose.material3.TimeInput
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -58,14 +57,16 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.token.DataStoreManager
-import kr.co.uxn.agms_p.ui.components.main.AlwaysDialog
+import kr.co.uxn.agms_p.ui.components.main.TimePickerDialog
 import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,7 +74,6 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    val dailyCalibrationTime = remember { mutableStateOf("오전 11시") }
     val time = remember { mutableStateOf<String>("") }
     val hint = remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
@@ -96,6 +96,14 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
 
     val showSetDailyCalibrationDialog = remember { mutableStateOf(false) }
 
+    var dailyCalibrationTime = remember { mutableStateOf("") }
+    val state = rememberTimePickerState(
+        is24Hour = true,
+        initialHour = 0,
+        initialMinute = 0
+    )
+    val formatter = remember { SimpleDateFormat("a hh:mm", Locale.KOREAN) }
+
 
 
     LaunchedEffect(Unit) {
@@ -106,9 +114,10 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
             val verifiedDSLostSignal = DataStoreManager.getNotiLostSignal().first() ?: false
             val verifiedDSExpiredSensor = DataStoreManager.getNotiExpiredSensor().first() ?: true
             val verifiedDSStabilization = DataStoreManager.getNotiStabilization().first() ?: true
-            val verifiedDSCalibration = DataStoreManager.getNotiCalibration().first() ?: false
+            val verifiedDSCalibration = DataStoreManager.getNotiCalibration().first() ?: true
             val verifiedDSTargetLowGlucose = DataStoreManager.getTargetLowGlucose().first() ?: -1
             val verifiedDSTargetHighGlucose = DataStoreManager.getTargetHighGlucose().first() ?: -1
+            val verifiedDSDailyCalibrationTime = DataStoreManager.getDailyCalibrationTime().first() ?: "오전 11:00"
 
             // 화면에 값 설정
             checkedForHighGlucose.value = verifiedDSHigh
@@ -119,6 +128,7 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
             checkedForCalibration.value = verifiedDSCalibration
             targetLowGlucose.value = verifiedDSTargetLowGlucose.toString()
             targetHighGlucose.value = verifiedDSTargetHighGlucose.toString()
+            dailyCalibrationTime.value = verifiedDSDailyCalibrationTime
 
             // 로그 띄우기
             Log.e("NOTI", "After High : ${verifiedDSHigh}, Low : ${verifiedDSLow} " +
@@ -126,6 +136,31 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                     "\n Stabilization : ${verifiedDSStabilization} Calibration : ${verifiedDSCalibration}" +
                     "\n Target High Glucose : ${verifiedDSTargetHighGlucose} Target Low Glucose : ${verifiedDSTargetLowGlucose}")
         }
+    }
+
+    if (showSetDailyCalibrationDialog.value) {
+
+        TimePickerDialog(
+            title = "혈당값 입력 시간",
+            onCancel = { showSetDailyCalibrationDialog.value = false },
+            onConfirm = {
+                val cal = Calendar.getInstance()
+                cal.set(Calendar.HOUR_OF_DAY, state.hour)
+                cal.set(Calendar.MINUTE, state.minute)
+                cal.isLenient = false
+                dailyCalibrationTime.value = formatter.format(cal.time)
+                showSetDailyCalibrationDialog.value = false
+
+                coroutineScope.launch(Dispatchers.IO) {
+                    DataStoreManager.setDailyCalibrationTime(dailyCalibrationTime.value)
+                }
+                Log.d("TIME", "finalTime : $dailyCalibrationTime")
+            }
+        ) {
+            TimeInput(state = state)
+
+        }
+
     }
 
     if (showGlucoseDialog.value) {
@@ -192,7 +227,7 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                             onClick = {
                                 if (targetHighGlucose.value.contains(".") || targetHighGlucose.value.contains("-") || targetHighGlucose.value.contains(",")
                                     || targetLowGlucose.value.contains(".") || targetLowGlucose.value.contains("-") || targetLowGlucose.value.contains(",")
-                                    ) {
+                                ) {
                                     Toast.makeText(context, "숫자만 입력해주세요.", Toast.LENGTH_SHORT).show()
                                 } else if (targetHighGlucose.value != "" && targetLowGlucose.value != "") {
                                     showGlucoseDialog.value = false
@@ -220,6 +255,7 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                     }
                 }
             }
+
         }
     }
 
@@ -352,16 +388,17 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
 
                 Divider()
 
-                Box() {
+                Box(
+                    modifier = Modifier.clickable {
+                    showGlucoseDialog.value = true
+                }
+                ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(Color.White)
                             .height(50.dp)
-                            .padding(horizontal = 30.dp)
-                            .clickable {
-                                showGlucoseDialog.value = true
-                            },
+                            .padding(horizontal = 30.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Start
                     ) {
@@ -378,11 +415,18 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                             modifier = Modifier.weight(1f)
                         )
 
-                        Icon(
-                            painter = painterResource(id = R.drawable.edit_icon),
-                            modifier = Modifier.size(14.dp),
-                            contentDescription = "목표 혈당 범위 수정 아이콘"
-                        )
+
+                        Surface(
+                            modifier = Modifier
+                                .padding(top = 2.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.edit_icon),
+                                modifier = Modifier
+                                    .size(16.dp),
+                                contentDescription = "혈당 입력 시간 수정"
+                            )
+                        }
                     }
                 }
 
@@ -537,7 +581,11 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
 
                 Divider()
 
-                Box() {
+                Box(
+                    modifier = Modifier.clickable {
+                        showSetDailyCalibrationDialog.value = true
+                    }
+                ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -573,10 +621,7 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                                 .fillMaxWidth()
                                 .background(Color.White)
                                 .height(30.dp)
-                                .padding(horizontal = 30.dp)
-                                .clickable {
-                                    showSetDailyCalibrationDialog.value = true
-                                },
+                                .padding(horizontal = 30.dp),
                             verticalAlignment = Alignment.Top,
                             horizontalArrangement = Arrangement.Start
                         ) {
@@ -586,13 +631,17 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                                 fontSize = 15.sp
                             )
                             Spacer(modifier = Modifier.width(15.dp))
-                            Icon(
-                                painter = painterResource(id = R.drawable.edit_icon),
+                            Surface(
                                 modifier = Modifier
-                                    .size(14.dp)
-                                    .align(Alignment.CenterVertically),
-                                contentDescription = "혈당 입력 시간 수정"
-                            )
+                                    .padding(top = 2.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.edit_icon),
+                                    modifier = Modifier
+                                        .size(16.dp),
+                                    contentDescription = "혈당 입력 시간 수정"
+                                )
+                            }
                         }
                     }
                 }

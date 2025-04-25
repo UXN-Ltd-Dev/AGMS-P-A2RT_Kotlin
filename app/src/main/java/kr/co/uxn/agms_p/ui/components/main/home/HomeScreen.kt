@@ -53,6 +53,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.Typeface
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -71,6 +72,7 @@ import com.patrykandpatrick.vico.compose.component.textComponent
 import com.patrykandpatrick.vico.compose.dimensions.dimensionsOf
 import com.patrykandpatrick.vico.compose.style.ProvideChartStyle
 import com.patrykandpatrick.vico.compose.style.currentChartStyle
+import com.patrykandpatrick.vico.core.DefaultAlpha
 import com.patrykandpatrick.vico.core.axis.AxisItemPlacer
 import com.patrykandpatrick.vico.core.chart.line.LineChart
 import com.patrykandpatrick.vico.core.chart.values.AxisValuesOverrider
@@ -85,8 +87,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.token.DataStoreManager
+import kr.co.uxn.agms_p.ble.BleBridge
 import kr.co.uxn.agms_p.rememberMarker
 import kr.co.uxn.agms_p.room.AppDatabase
+import kr.co.uxn.agms_p.ui.components.main.NotiDialog
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
 import java.text.SimpleDateFormat
@@ -112,6 +116,8 @@ fun HomeScreen(
     val weo1 by bleViewModel.weo1.collectAsState()
     val glucose by bleViewModel.glucose.collectAsState()
     val chartTrigger by bleViewModel.chartTrigger.collectAsState()
+    var showCaliDialog =  bleViewModel.showCaliDialog.collectAsState()
+    var showBleConnectDialog =  bleViewModel.showBleConnectDialog.collectAsState()
 
 //    val randomLevel = remember(chartTrigger) { (1..5).random() }
 
@@ -151,8 +157,8 @@ fun HomeScreen(
                     lineBackgroundShader = DynamicShaders.fromBrush(
                         brush = Brush.verticalGradient(
                             listOf(
-                                Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_END),
-                                Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_START)
+                                Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_END),
+                                Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_START)
                             )
                         )
                     )
@@ -239,8 +245,8 @@ fun HomeScreen(
                     lineBackgroundShader = DynamicShaders.fromBrush(
                         brush = Brush.verticalGradient(
                             listOf(
-                                Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_END),
-                                Color(0xFF6FB0E5).copy(com.patrykandpatrick.vico.core.DefaultAlpha.LINE_BACKGROUND_SHADER_START)
+                                Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_END),
+                                Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_START)
                             )
                         )
                     )
@@ -335,6 +341,32 @@ fun HomeScreen(
         }
     }
 
+    // 1. 노티 : 혈당입력
+    if (showCaliDialog.value) {
+        NotiDialog(
+            onDismiss = { BleBridge.showCaliDialog(false) },
+            onConfirm = {
+                BleBridge.showCaliDialog(false)
+                navController.navigate("GlucoseRegisterScreen")
+            },
+            title = "혈당 입력 시간입니다",
+            content = "정확한 측정을 위해 공복 상태에서 자가채혈한 혈당을 입력해주세요.",
+        )
+    }
+
+    // 2. 노티 : BLE 끊김
+    if (showBleConnectDialog.value) {
+        NotiDialog(
+            onDismiss = { BleBridge.showBleConnectDialog(false) },
+            onConfirm = {
+                BleBridge.showBleConnectDialog(false)
+            },
+            title = "블루투스 연결이 끊어졌습니다",
+            content = "센서와의 연결이 일시적으로 끊어졌어요\n스마트폰을 가까이 두고 앱을 다시 실행해보세요",
+        )
+    }
+
+
 
 
     Column(
@@ -394,54 +426,7 @@ fun HomeScreen(
                 )
             }
 
-
-            // 기존 코드
-//            Spacer(modifier = Modifier.height(5.dp))
-//            Row(
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
-//                verticalAlignment = Alignment.Bottom
-//            ) {
-//                Spacer(modifier = Modifier.width(30.dp))
-//                Text(
-//                    text = "${glucose}",
-//                    color = Color.White,
-//                    fontSize = 45.sp,
-//                    fontWeight = FontWeight.Bold
-//                )
-//                Spacer(modifier = Modifier.width(15.dp))
-//                Text(
-//                    text = "mg/dL",
-//                    color = Color.White,
-//                    fontSize = 25.sp
-//                )
-//                Spacer(modifier = Modifier.width(50.dp))
-//                Column(
-//                    modifier = Modifier.align(Alignment.Top),
-//                    horizontalAlignment = Alignment.CenterHorizontally
-//                ) {
-//
-//                    Image(
-//                        modifier = Modifier
-//                            .size(32.dp),
-//                        painter = painterResource(R.drawable.level3),
-////                        painter = painterResource(levelImageRes),
-//                        contentDescription = "glucose_lv3"
-//                    )
-//                    Spacer(modifier = Modifier.height(1.dp))
-//                    Text(
-////                        text = statusText,
-//                        text = "유지 중",
-//                        color = Color.White,
-//                        fontSize = 12.sp,
-//                        fontWeight = FontWeight.Medium
-//                    )
-//                }
-//            }
-
             // Box로 수정
-
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -450,12 +435,16 @@ fun HomeScreen(
             ) {
                 Spacer(modifier = Modifier.width(30.dp))
                 Text(
-//                    text = "${glucose}",
-                    text = "1000",
+
+                    text = if (glucose == 0) {
+                        "_ _ _"
+                    } else {
+                        "${glucose}"
+                    },
                     color = Color.White,
                     fontSize = 45.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.TopStart)
+                    modifier = Modifier.align(Alignment.TopStart),
                 )
 
                 Text(
@@ -507,7 +496,7 @@ fun HomeScreen(
 
             Text(
                 text = "혈당 그래프",
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Bold,
                 fontSize = fontSize,
                 modifier = Modifier
                     .padding(start = 20.dp)
@@ -633,7 +622,7 @@ fun HomeScreen(
                 Text(
                     text = "센서 정보",
                     fontSize = fontSize,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.Bold,
                 )
                 Icon(
                     Icons.Filled.MoreVert,

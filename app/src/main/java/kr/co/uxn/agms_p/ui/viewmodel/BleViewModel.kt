@@ -69,6 +69,20 @@ class BleViewModel(application: Application) : AndroidViewModel(application) {
             initialValue = 0
         )
 
+    var showCaliDialog: StateFlow<Boolean> = BleBridge.showCaliDialog
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
+
+    var showBleConnectDialog: StateFlow<Boolean> = BleBridge.showBleConnectDialog
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
+
 
 
     suspend fun emit(event: String) {

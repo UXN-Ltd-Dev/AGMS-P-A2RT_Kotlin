@@ -38,6 +38,7 @@ object DataStoreManager {
     private val NOTI_CALIBRATION = booleanPreferencesKey("noti_calibration")
     private val TARGET_HIGH_GLUCOSE = intPreferencesKey("target_high_glucose")
     private val TARGET_LOW_GLUCOSE = intPreferencesKey("target_low_glucose")
+    private val DAILY_CALIBRATION_TIME = stringPreferencesKey("daily_calibration_time")
 
     fun init(context: Context) {
         dataStore = PreferenceDataStoreFactory.create {
@@ -230,17 +231,19 @@ object DataStoreManager {
         }
     }
 
+    suspend fun deleteDailyCalibrationTime() {
+        dataStore.edit { prefs ->
+            prefs.remove(DAILY_CALIBRATION_TIME)
+        }
+    }
+
     suspend fun saveRefreshToken(token: String) {
         dataStore.edit { prefs ->
             prefs[REFRESH_TOKEN_KEY] = token
         }
     }
 
-
-
-
     // noti
-
     fun getNotiHighGlucose(): Flow<Boolean?> {
         return notiStore.data.map { prefs ->
             prefs[NOTI_HIGH_GLUCOSE]
@@ -288,6 +291,12 @@ object DataStoreManager {
         }
     }
 
+    fun getDailyCalibrationTime(): Flow<String?> {
+        return notiStore.data.map { prefs ->
+            prefs[DAILY_CALIBRATION_TIME]
+        }
+    }
+
     suspend fun setNotiHighGlucose(isCheck: Boolean) {
         notiStore.edit { prefs ->
             prefs[NOTI_HIGH_GLUCOSE] = isCheck
@@ -332,6 +341,12 @@ object DataStoreManager {
     suspend fun setTargetLowGlucose(glucose: Int) {
         notiStore.edit { prefs ->
             prefs[TARGET_LOW_GLUCOSE] = glucose
+        }
+    }
+
+    suspend fun setDailyCalibrationTime(time: String) {
+        notiStore.edit { prefs ->
+            prefs[DAILY_CALIBRATION_TIME] = time
         }
     }
 }
