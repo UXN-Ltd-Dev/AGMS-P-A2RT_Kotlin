@@ -119,6 +119,8 @@ fun HomeScreen(
     var showCaliDialog =  bleViewModel.showCaliDialog.collectAsState()
     var showBleConnectDialog =  bleViewModel.showBleConnectDialog.collectAsState()
 
+    val glucoseTrend = remember { mutableStateOf("유지 중") }
+
 //    val randomLevel = remember(chartTrigger) { (1..5).random() }
 
     // Vico Chart
@@ -282,6 +284,12 @@ fun HomeScreen(
 //                )
 //
 //            }
+
+            // 이진트리 순회
+
+
+
+
             val baseTime = 1743442800000L // 25년 4월 1일 00시 00분 00초
             for (i in 0 until localDBDataListAfterLastTime!!.size) {
                 val timeDiffMillis = localDBDataListAfterLastTime[i].createdAtLong - baseTime
@@ -365,9 +373,6 @@ fun HomeScreen(
             content = "센서와의 연결이 일시적으로 끊어졌어요\n스마트폰을 가까이 두고 앱을 다시 실행해보세요",
         )
     }
-
-
-
 
     Column(
         modifier = Modifier
@@ -738,6 +743,34 @@ fun RadioButtonSingleSelection(
         }
     }
 }
+
+fun getTrendStatus(glucoseValues: List<Int>): String {
+    if (glucoseValues.size < 2) return "유지"
+
+    val n = glucoseValues.size
+    val x = (0 until n).toList()
+    val y = glucoseValues
+
+    val sumX = x.sum()
+    val sumY = y.sum()
+    val sumXY = x.zip(y) { xi, yi -> xi * yi }.sum()
+    val sumXSquare = x.sumOf { it * it }
+
+    val numerator = n * sumXY - sumX * sumY
+    val denominator = n * sumXSquare - sumX * sumX
+
+    val slope = if (denominator != 0) numerator.toDouble() / denominator else 0.0
+
+    return when {
+        slope >= 5.0 -> "급상승"
+        slope in 1.0..4.9 -> "상승"
+        slope in -0.9..0.9 -> "유지"
+        slope in -4.9..-1.0 -> "하강"
+        slope <= -5.0 -> "급하강"
+        else -> "알 수 없음"
+    }
+}
+
 
 
 

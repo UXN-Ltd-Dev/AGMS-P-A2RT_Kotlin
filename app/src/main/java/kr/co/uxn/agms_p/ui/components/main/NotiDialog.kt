@@ -93,7 +93,6 @@ fun NotiDialog(
                             fontWeight = FontWeight.Medium
                         )
                     }
-
                 }
             }
         }
