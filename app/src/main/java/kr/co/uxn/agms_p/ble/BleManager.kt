@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.BleConnectionState
+import kr.co.uxn.agms_p.PythonManager
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.room.AppDatabase
@@ -272,7 +273,6 @@ class BleManager(
                 i++
             }
 
-            Log.d(TEST, "찾은 서비스는 ${service.toString()}입니다.")
 
             val readCharacteristic = service.getCharacteristic(characteristicUUID)
             gatt.setCharacteristicNotification(readCharacteristic, true)
@@ -630,6 +630,7 @@ class BleManager(
 
             Log.e(TEST, "WE_Current " + i + ": " + weCurrent)
             Log.e(TEST, "AE_Current " + i + ": " + aeCurrent)
+            Log.e("PYTHON", "Glucose " + i + ": " + "${PythonManager.getInstance().calculationGlucose(time / 1000, weCurrent, aeCurrent)}")
 
             val convertedTime = Instant.ofEpochMilli(time)
                 .atZone(ZoneId.of("Asia/Seoul"))

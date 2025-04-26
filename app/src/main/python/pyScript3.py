@@ -70,14 +70,14 @@ class DataProcessor:
             return (200 - DataProcessor.startidx) + (DataProcessor.currentidx + 1)
 
     def insert_into_cbuffer(timestamp, wraw, nperm, lengthinmin) :
-        
+
         DataProcessor.currentidx = (DataProcessor.currentidx+1) % 200
         DataProcessor.tstampcbuffer[DataProcessor.currentidx] = timestamp
         DataProcessor.rdatacbuffer[DataProcessor.currentidx] = wraw
-        
+
         if DataProcessor.get_cbuffer_length() > lengthinmin * nperm :
             DataProcessor.startidx = (DataProcessor.startidx + 1) % 200
-            
+
         return
 
     def insert_into_cbuffer2_3(timestamp, wtemp2, nperm, lengthinmin) :

@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("kotlin-parcelize")
     id("com.google.devtools.ksp")
+    id("com.chaquo.python")
 }
 
 val propertiesFile = rootProject.file("server.properties")
@@ -43,6 +44,44 @@ android {
             properties.getProperty("google_web_client_id")
         )
         buildConfigField("String", "base_url", properties.getProperty("base_url"))
+
+        ndk {
+            // On Apple silicon, you can omit x86_64.
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
+
+        chaquopy {
+            defaultConfig {
+                version = "3.8"
+                pip {
+                    // A requirement specifier, with or without a version number:
+                    install("scipy")
+//                    install("requests==2.24.0")
+
+                    // An sdist or wheel filename, relative to the project directory:
+//                    install("MyPackage-1.2.3-py2.py3-none-any.whl")
+
+                    // A directory containing a setup.py, relative to the project
+                    // directory (must contain at least one slash):
+                    install("numpy")
+
+                    // "-r"` followed by a requirements filename, relative to the
+                    // project directory:
+//                    install("-r", "requirements.txt")
+                    install("pandas")
+                    install("configparser")
+                }
+            }
+        }
+
+    }
+
+    chaquopy {
+        sourceSets {
+            getByName("main") {
+                srcDir("src/main/python")
+            }
+        }
     }
 
 
