@@ -4,54 +4,65 @@ import android.annotation.SuppressLint
 import android.util.Log
 import com.chaquo.python.PyObject
 import com.chaquo.python.Python
+import java.util.Objects
+
 
 class PythonManager {
+    private val mPythonModule: PyObject
 
-    private var mPythonModule: PyObject? = null
+
     init {
         val mPython = Python.getInstance()
         mPythonModule = mPython.getModule("pyScript3")
     }
 
+    fun calculationGlucose(timeStamp: Long, W1: Double, W2: Double): Int {
+        var glucose = 0
+
+        try {
+            val temp = mPythonModule.callAttr("getGlucoseValue", timeStamp, W1, W2).toJava(
+                Double::class.java
+            )
+            glucose = Math.round(temp).toInt()
+        } catch (e: Exception) {
+            Log.e(TAG, "calculationGlucose exception : " + e.message)
+        }
+
+        return glucose
+    }
+
+    fun setOnepointCalibration(timeStamp: Long, calValue: Int): Int {
+        var tmp = 0
+        try {
+            tmp = mPythonModule.callAttr("setOnepointCalibration", timeStamp, calValue).toJava(
+                Int::class.java
+            )
+
+
+            Log.e(TAG, "setOnepointCalibration result: $tmp")
+        } catch (e: Exception) {
+            Log.e(TAG, "setOnepointCalibration exception : " + e.message)
+        }
+
+        return tmp
+    }
+
     companion object {
-        private const val TAG = "PythonManager"
+        private val TAG: String = PythonManager::class.java.simpleName
 
         @SuppressLint("StaticFieldLeak")
-        @Volatile
         private var mInstance: PythonManager? = null
 
-        fun getInstance(): PythonManager {
-            return mInstance ?: synchronized(this) {
-                mInstance ?: PythonManager().also { mInstance = it }
+        val instance: PythonManager
+            get() {
+                if (Objects.isNull(mInstance)) {
+                    synchronized(PythonManager::class.java) {
+                        if (Objects.isNull(mInstance)) {
+                            mInstance = PythonManager()
+                        }
+                    }
+                }
+                return mInstance!!
             }
-        }
     }
-
-
-
-    fun calculationGlucose(timeStamp: Long, w1: Double, w2: Double): Int {
-        return try {
-            val temp = mPythonModule?.callAttr("getGlucoseValue", timeStamp, w1, w2)?.toJava(Double::class.java)
-            if(temp != null) {
-                return Math.round(temp).toInt()
-            }else {
-                -1
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "calculationGlucose exception: ${e.message}")
-            0
-        }
-    }
-
-    fun setOnePointCalibration(timeStamp: Long, calValue: Int): Int {
-        return try {
-            val tmp = mPythonModule?.callAttr("setOnePointCalibration", timeStamp, calValue)!!.toJava(Int::class.java)
-            Log.e(TAG, "setOnePointCalibration result: $tmp")
-            tmp
-        } catch (e: Exception) {
-            Log.e(TAG, "setOnePointCalibration exception: ${e.message}")
-            0
-        }
-    }
-
 }

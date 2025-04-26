@@ -7,6 +7,8 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.chaquo.python.Python
+import com.chaquo.python.android.AndroidPlatform
 import com.kakao.sdk.common.KakaoSdk
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.BleManager.Companion.TEST
@@ -22,6 +24,11 @@ class AlwaysApplication : Application() {
 
         // 토큰매니저 초기화
         DataStoreManager.init(this)
+
+        // 파이썬 초기화
+        if (!Python.isStarted()) {
+            Python.start(AndroidPlatform(this))
+        }
 
     }
     fun uploadWorkRequest() {
