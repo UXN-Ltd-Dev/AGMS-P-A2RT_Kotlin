@@ -42,4 +42,7 @@ interface RoomDao {
     @Query("SELECT * FROM UserCalibration WHERE user_id = :userId")
     suspend fun getCalibrationList(userId: Int): List<UserCalibration>
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDummyList(dataList: List<DummyValue>)
+
 }

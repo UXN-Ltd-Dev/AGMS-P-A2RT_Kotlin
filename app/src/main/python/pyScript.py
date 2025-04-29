@@ -202,10 +202,12 @@ class DP:
         Wtemp = W2raw
         if DP.starttime == -1 :
             DP.starttime = timestamp
-        Wtemp2 = DP.smoothe_data(timestamp, Wtemp, 6, 5)
+        # Wtemp2 = DP.smoothe_data(timestamp, Wtemp, 6, 5) 기존
+        Wtemp2 = DP.smoothe_data(timestamp, Wtemp, 1, 5)
 
         DP.global_counter = DP.global_counter + 1
-        if DP.global_counter % 6 == 0 :
+        # if DP.global_counter % 6 == 0 : 기존
+        if DP.global_counter % 1 == 0 :
             dayidx = (timestamp-DP.starttime) // 86400
 
 

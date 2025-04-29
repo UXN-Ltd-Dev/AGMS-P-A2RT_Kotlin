@@ -360,6 +360,42 @@ class AlwaysService() : Service() {
 //                        val userId = DataStoreManager.getUserId().first() ?: -1
                         val userValueList = localDbRepository?.dataDao()?.getListAfterLastTime(userId, 0)
 
+
+
+                        // 빈 리스트 생성
+                        var seperatedUserValueList: List<UserValue>? = emptyList()
+
+                        // 첫 번째로 담기
+                        if(!userValueList.isNullOrEmpty()) {
+                            seperatedUserValueList = userValueList
+                                .chunked(6)
+                                .map { it.first() }
+                                .sortedBy { it.createdAtLong }
+
+                            Log.d("TEST","userValueList : ${userValueList}")
+                            Log.d("TEST", "seperatedUserValueList : ${seperatedUserValueList}")
+                        }
+
+                        var convertedList  = seperatedUserValueList?.map {
+                            RequestDataValue(
+                                userId = it.userId,
+                                createdAt = it.createdAt,
+                                weCurrent = it.weCurrent,
+                                aeCurrent = it.aeCurrent
+                            )
+                        }
+
+                        Log.d("TEST", "convertedList : ${convertedList}")
+
+
+//                        seperatedUserValueList = userValueList
+//                            ?.groupBy { it.createdAt.substring(0, 16) } // 분 단위로 그룹핑
+//                            ?.mapNotNull { (_, values) ->
+//                                values.minByOrNull { it.createdAtLong } // 가장 빠른 초 값 선택
+//                            }
+
+
+
                         val currentList = userValueList?.map {
                             RequestDataValue(
                                 userId = userId,
@@ -377,7 +413,8 @@ class AlwaysService() : Service() {
                                 )
                             } ?: emptyList()
 
-                        val glucoseList2 = PythonManager.instance.calculateGlucose(currentList!!, calibrationList)
+
+                        val glucoseList2 = PythonManager.instance.calculateGlucose(convertedList!!, calibrationList)
 //
                         Log.d("PYTHON", "glucoseList2 : ${glucoseList2}")
 
