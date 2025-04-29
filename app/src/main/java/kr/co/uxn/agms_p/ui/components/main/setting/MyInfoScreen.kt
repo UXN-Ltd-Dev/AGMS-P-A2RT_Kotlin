@@ -543,7 +543,7 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                         modifier = Modifier.padding(start = 50.dp)
                     ) {
                         Text(
-                            text = "당뇨 정보",
+                            text = "당뇨 유형",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium
                         )

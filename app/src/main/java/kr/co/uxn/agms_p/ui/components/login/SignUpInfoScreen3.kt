@@ -474,7 +474,7 @@ fun SignUpInfoScreen3(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 50.dp)
             ) {
-                Text(text = "당뇨 정보")
+                Text(text = "당뇨 유형")
                 // 제1형 당뇨병
                 // 제2형 당뇨병
                 // 임신성 당뇨병
@@ -614,7 +614,7 @@ fun SignUpInfoScreen3(
                             } else if (weight.value == "") {
                                 Toast.makeText(context, "체중을 입력해 주세요.", Toast.LENGTH_SHORT).show()
                             } else if (diabetesType.value == "") {
-                                Toast.makeText(context, "당뇨 정보를 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "당뇨 유형을 입력해 주세요.", Toast.LENGTH_SHORT).show()
                             } else if (checked.value == false) {
                                 Toast.makeText(context, "개인정보 처리방침 및 이용약관에 동의해주세요.", Toast.LENGTH_SHORT).show()
                             } else {
