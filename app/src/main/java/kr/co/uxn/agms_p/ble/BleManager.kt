@@ -630,7 +630,7 @@ class BleManager(
 
             Log.e(TEST, "WE_Current " + i + ": " + weCurrent)
             Log.e(TEST, "AE_Current " + i + ": " + aeCurrent)
-            Log.e("PYTHON", "Glucose " + i + ": " + "${PythonManager.instance.calculationGlucose(time / 1000, weCurrent, aeCurrent)}")
+//            Log.e("PYTHON", "Glucose " + i + ": " + "${PythonManager.instance.calculationGlucose(time / 1000, weCurrent, aeCurrent)}")
 
             val convertedTime = Instant.ofEpochMilli(time)
                 .atZone(ZoneId.of("Asia/Seoul"))

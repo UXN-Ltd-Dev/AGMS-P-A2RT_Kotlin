@@ -28,6 +28,7 @@ object DataStoreManager {
     private val IS_MAIN = booleanPreferencesKey("is_main")
     private val ROUTE = stringPreferencesKey("route")
     private val TYPE = intPreferencesKey("type")
+    private val IS_STABILIZATION = booleanPreferencesKey("is_stabilization")
 
     // noti
     private val NOTI_HIGH_GLUCOSE = booleanPreferencesKey("noti_high_glucose")
@@ -116,6 +117,13 @@ object DataStoreManager {
         }
     }
 
+    fun getIsStabilization(): Flow<Boolean?> {
+        return dataStore.data.map { prefs ->
+            prefs[IS_STABILIZATION]
+        }
+    }
+
+
 
     suspend fun saveEmail(email: String) {
         dataStore.edit { prefs ->
@@ -177,6 +185,20 @@ object DataStoreManager {
         }
     }
 
+    suspend fun saveRefreshToken(token: String) {
+        dataStore.edit { prefs ->
+            prefs[REFRESH_TOKEN_KEY] = token
+        }
+    }
+
+    suspend fun saveIsStabilization(value: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[IS_STABILIZATION] = value
+        }
+    }
+
+
+
     suspend fun deleteAccessToken() {
         dataStore.edit { prefs ->
             prefs.remove(ACCESS_TOKEN_KEY)
@@ -237,9 +259,9 @@ object DataStoreManager {
         }
     }
 
-    suspend fun saveRefreshToken(token: String) {
+    suspend fun deleteIsStabilization() {
         dataStore.edit { prefs ->
-            prefs[REFRESH_TOKEN_KEY] = token
+            prefs.remove(IS_STABILIZATION)
         }
     }
 

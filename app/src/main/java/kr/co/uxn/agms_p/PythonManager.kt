@@ -4,6 +4,11 @@ import android.annotation.SuppressLint
 import android.util.Log
 import com.chaquo.python.PyObject
 import com.chaquo.python.Python
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestDataValue
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestEventListData
+import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDataValue
+import kr.co.uxn.agms_p.api.model.responseDTO.ResponseEventData
+import kr.co.uxn.agms_p.api.model.responseDTO.ResponseGetGlucose
 import java.util.Objects
 
 
@@ -13,38 +18,23 @@ class PythonManager {
 
     init {
         val mPython = Python.getInstance()
-        mPythonModule = mPython.getModule("pyScript3")
+        mPythonModule = mPython.getModule("pyScript")
     }
 
-    fun calculationGlucose(timeStamp: Long, W1: Double, W2: Double): Int {
-        var glucose = 0
+    fun calculateGlucose(glucoseList: List<RequestDataValue>, eventList: List<RequestEventListData>): List<ResponseGetGlucose> {
+        return try {
+            val jsonString = mPythonModule.callAttr("getGlucoseList", glucoseList, eventList).toString()
+            Log.d(TAG, "받은 jsonString: $jsonString")
 
-        try {
-            val temp = mPythonModule.callAttr("getGlucoseValue", timeStamp, W1, W2).toJava(
-                Double::class.java
-            )
-            glucose = Math.round(temp).toInt()
+            val gson = com.google.gson.Gson()
+            val result = gson.fromJson(jsonString, Array<ResponseGetGlucose>::class.java).toList()
+            Log.d(TAG, "result: $result")
+
+            return result
         } catch (e: Exception) {
-            Log.e(TAG, "calculationGlucose exception : " + e.message)
+            Log.e(TAG, "calculationGlucose exception : ${e.message}")
+            emptyList()
         }
-
-        return glucose
-    }
-
-    fun setOnepointCalibration(timeStamp: Long, calValue: Int): Int {
-        var tmp = 0
-        try {
-            tmp = mPythonModule.callAttr("setOnepointCalibration", timeStamp, calValue).toJava(
-                Int::class.java
-            )
-
-
-            Log.e(TAG, "setOnepointCalibration result: $tmp")
-        } catch (e: Exception) {
-            Log.e(TAG, "setOnepointCalibration exception : " + e.message)
-        }
-
-        return tmp
     }
 
     companion object {

@@ -48,6 +48,8 @@ import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEventData
 import kr.co.uxn.agms_p.api.token.DataStoreManager
+import kr.co.uxn.agms_p.room.AppDatabase
+import kr.co.uxn.agms_p.room.UserCalibration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -60,6 +62,10 @@ fun EnterFirstGlucose(navController: NavController) {
     // 터치 시, 힌트를 지우기 위한 용도
     val interactionSource = remember { MutableInteractionSource() }
     val coroutineScope = rememberCoroutineScope()
+
+    val localDbRepository by lazy {
+        AppDatabase.getInstance(context)
+    }
 
     Surface(
         modifier = Modifier
@@ -158,12 +164,18 @@ fun EnterFirstGlucose(navController: NavController) {
                             } else if (glucoseDataFromUser.value != "") {
                                 // TODO : 서버에 혈당데이터 전송, 화면이동
                                 coroutineScope.launch(Dispatchers.IO) {
-                                    val userId = DataStoreManager.getUserId().first()
+                                    val userId = DataStoreManager.getUserId().first() ?: -1
                                     Log.e("TEST", "userId : $userId")
                                     try {
                                         val createdAt = LocalDateTime.now()
                                             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
                                         Log.e("TEST", "createdAt : $createdAt")
+
+                                        // db에 저장
+                                        localDbRepository?.dataDao()?.insertCalibration(
+                                            UserCalibration(userId = userId, createdAt = createdAt, glucoseValue = glucoseDataFromUser.value.toDouble())
+                                        )
+
                                         val upload = tokenRetrofit.uploadEvent(
                                             RequestEventData(
                                                 userId = userId!!,
@@ -172,6 +184,8 @@ fun EnterFirstGlucose(navController: NavController) {
                                                 content = glucoseDataFromUser.value
                                             )
                                         )
+
+
                                         Log.e("TEST", "uploadbody : ${upload.body().toString()}")
                                         if (upload.isSuccessful) {
                                             val uploadBody = upload.body()

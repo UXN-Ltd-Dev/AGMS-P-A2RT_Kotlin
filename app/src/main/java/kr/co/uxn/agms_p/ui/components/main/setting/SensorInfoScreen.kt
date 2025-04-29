@@ -117,6 +117,7 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
 
                                 localDbRepository?.dataDao()?.deleteUserValueTable(userId)
                                 localDbRepository?.dataDao()?.deleteUserGlucoseTable(userId)
+                                localDbRepository?.dataDao()?.deleteUserCalibrationTable(userId)
 
                                 Log.w("TEST", "sensorOff 성공")
                                 DataStoreManager.saveIsMain(false)

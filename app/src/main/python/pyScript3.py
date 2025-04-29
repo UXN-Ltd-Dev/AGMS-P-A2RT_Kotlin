@@ -252,7 +252,7 @@ input_offset(dOffset)
 # print("python >> coefficient: " + str(Parameters.COEFFICIENT))
 
 #convert glucose
-def getGlucoseValue(timestamp, W1, W2):
+def getGlucoseValue(timestamp, W1, W2, event_time, event_value):
 
     # print('python >> getGlucoseValue called')
 

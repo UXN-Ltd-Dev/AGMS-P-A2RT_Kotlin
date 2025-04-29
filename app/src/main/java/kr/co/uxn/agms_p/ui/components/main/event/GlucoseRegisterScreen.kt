@@ -59,6 +59,8 @@ import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEventData
 import kr.co.uxn.agms_p.api.token.DataStoreManager
+import kr.co.uxn.agms_p.room.AppDatabase
+import kr.co.uxn.agms_p.room.UserCalibration
 import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -77,6 +79,10 @@ fun GlucoseRegisterScreen(
     val hint = remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
     val interactionSource = remember { MutableInteractionSource() }
+
+    val localDbRepository by lazy {
+        AppDatabase.getInstance(context)
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -253,6 +259,12 @@ fun GlucoseRegisterScreen(
                                                             "EVENT",
                                                             "EVENT 업로드 성공, ${uploadBody.message}"
                                                         )
+
+                                                        localDbRepository?.dataDao()?.insertCalibration(
+                                                            UserCalibration(userId = userId, createdAt = newParsedTime, glucoseValue = glucoseDataFromUser.value.toDouble())
+                                                        )
+
+
                                                         withContext(Dispatchers.Main) {
                                                             val image =
                                                                 R.drawable.event_calibration // 추후 혈당 이미지로 변경

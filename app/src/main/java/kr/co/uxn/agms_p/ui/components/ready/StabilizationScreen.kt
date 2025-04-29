@@ -60,8 +60,11 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
     val totalTime = 1 * 10 * 1000L // 테스트용 초단위 초단위 설정
     val remainingTime = remember { mutableStateOf(totalTime) }
     val lifecycleOwner = LocalLifecycleOwner.current
-    LaunchedEffect(Unit) {
 
+
+    LaunchedEffect(Unit) {
+        val isStabilization = DataStoreManager.getIsStabilization().first() ?: false
+        Log.d("StabilizationScreen", "isStabilization From DS: $isStabilization")
         // 서비스 실행 이벤트 발행
         bleViewModel.emit("START_SERVICE")
         Log.e("StabilizationScreen", "START_SERVICE EMIT!")

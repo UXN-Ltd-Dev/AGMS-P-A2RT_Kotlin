@@ -90,6 +90,7 @@ import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.BleBridge
 import kr.co.uxn.agms_p.rememberMarker
 import kr.co.uxn.agms_p.room.AppDatabase
+import kr.co.uxn.agms_p.room.UserGlucose
 import kr.co.uxn.agms_p.ui.components.main.NotiDialog
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
@@ -120,6 +121,7 @@ fun HomeScreen(
     var showBleConnectDialog =  bleViewModel.showBleConnectDialog.collectAsState()
 
     val glucoseTrend = remember { mutableStateOf("유지 중") }
+    val glucoseTrendImgResource = remember { mutableStateOf(R.drawable.level3) }
 
 //    val randomLevel = remember(chartTrigger) { (1..5).random() }
 
@@ -285,7 +287,6 @@ fun HomeScreen(
 //
 //            }
 
-            // 이진트리 순회
 
 
 
@@ -329,6 +330,25 @@ fun HomeScreen(
                     scrollBy(delta)
                 }
             }
+
+            // 추세 변화 알고리즘
+            glucoseTrend.value = getTrendStatus(localDBDataListAfterLastTime)
+
+//            slope >= 10.0 -> "급상승"
+//            slope in 1.0..4.9 -> "상승 중"
+//            slope in -0.9..0.9 -> "유지 중"
+//            slope in -4.9..-1.0 -> "하강 중"
+//            slope <= -10.0 -> "급하강"
+//            else -> "유지 중"
+
+            glucoseTrendImgResource.value = when (glucoseTrend.value) {
+                "급상승" -> R.drawable.level5
+                "상승 중" -> R.drawable.level4
+                "유지 중" -> R.drawable.level3
+                "하강 중" -> R.drawable.level2
+                else -> R.drawable.level1//"급하강"
+            }
+
         }
     }
 
@@ -358,7 +378,7 @@ fun HomeScreen(
                 navController.navigate("GlucoseRegisterScreen")
             },
             title = "혈당 입력 시간입니다",
-            content = "정확한 측정을 위해 공복 상태에서 자가채혈한 혈당을 입력해주세요.",
+            content = "정확한 측정을 위해 공복 상태에서 자가 채혈한 혈당을 입력해주세요.",
         )
     }
 
@@ -465,15 +485,15 @@ fun HomeScreen(
                         .size(32.dp)
                         .align(Alignment.TopEnd)
                     ,
-                    painter = painterResource(R.drawable.level3),
-//                        painter = painterResource(levelImageRes),
-                    contentDescription = "glucose_lv3"
+//                    painter = painterResource(R.drawable.level3),
+                    painter = painterResource(glucoseTrendImgResource.value),
+                    contentDescription = "glucose_trend_img"
                 )
                 Text(
-//                        text = statusText,
                     modifier = Modifier.align(Alignment.BottomEnd)
                         .padding(bottom = 15.dp),
-                    text = "유지 중",
+                    text = glucoseTrend.value,
+                    textAlign = TextAlign.Center,
                     color = Color.White,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium
@@ -744,12 +764,16 @@ fun RadioButtonSingleSelection(
     }
 }
 
-fun getTrendStatus(glucoseValues: List<Int>): String {
-    if (glucoseValues.size < 2) return "유지"
+fun getTrendStatus(glucoseValueList: List<UserGlucose>): String {
+    if (glucoseValueList.size < 4) return "유지 중"
 
-    val n = glucoseValues.size
+    val list = glucoseValueList.takeLast(5)
+
+    Log.d("TEST", "glucoseValeList : ${glucoseValueList}")
+    Log.d("TEST", "glucoseValeList last 5 : ${list}")
+    val n = list.size
     val x = (0 until n).toList()
-    val y = glucoseValues
+    val y = list.map { it.glucose }
 
     val sumX = x.sum()
     val sumY = y.sum()
@@ -760,14 +784,15 @@ fun getTrendStatus(glucoseValues: List<Int>): String {
     val denominator = n * sumXSquare - sumX * sumX
 
     val slope = if (denominator != 0) numerator.toDouble() / denominator else 0.0
+    Log.d("TEST", "slope : $slope")
 
     return when {
-        slope >= 5.0 -> "급상승"
-        slope in 1.0..4.9 -> "상승"
-        slope in -0.9..0.9 -> "유지"
-        slope in -4.9..-1.0 -> "하강"
-        slope <= -5.0 -> "급하강"
-        else -> "알 수 없음"
+        slope >= 10.0 -> "급상승"
+        slope in 2.1..4.9 -> "상승 중"
+        slope in -2.0..2.0 -> "유지 중"
+        slope in -4.9..-2.1 -> "하강 중"
+        slope <= -10.0 -> "급하강"
+        else -> "유지 중"
     }
 }
 

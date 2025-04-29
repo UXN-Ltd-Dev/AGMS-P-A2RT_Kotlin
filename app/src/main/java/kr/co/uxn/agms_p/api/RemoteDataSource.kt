@@ -16,6 +16,7 @@ import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDataValue
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDeleteOauthUserInfo
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDeleteUserInfo
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDeviceMac
+import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDummyGlucose
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseEmailCode
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseEventData
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseGetEvent
@@ -102,7 +103,6 @@ interface RemoteDataSource {
     @POST("/api/user/update")
     suspend fun updateUser(@Body userInfo: RequestUpdateUser) : Response<ResponseUpdateUser>
 
-
     // 센서 종료
     // isFinish가 false인 것 중 가장 최근 걸 불러온다
     @GET("/api/device/end")
@@ -121,6 +121,8 @@ interface RemoteDataSource {
     suspend fun deleteOauthUser(@Body userInfo: RequestDeleteOauthUserInfo): Response<ResponseDeleteOauthUserInfo>
 
     // 혈당 더미데이터 불러오기
+    @GET("/api/glucose/convert2")
+    suspend fun getDummyGlucose(@Query("count") count: Int): Response<List<ResponseDummyGlucose>>
 
 }
 
