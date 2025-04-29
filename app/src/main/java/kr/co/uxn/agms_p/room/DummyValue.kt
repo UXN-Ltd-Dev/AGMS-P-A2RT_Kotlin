@@ -20,6 +20,4 @@ data class DummyValue(
     @ColumnInfo(name = "created_at")
     val createdAt: String,
 
-    @ColumnInfo(name = "created_at_long")
-    val createdAtLong: Long
 )

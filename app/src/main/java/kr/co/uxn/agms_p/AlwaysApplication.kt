@@ -40,33 +40,30 @@ class AlwaysApplication : Application() {
         }
 
         // db에 더미 저장
+        val inputStream = this.assets.open("dummy_current_file1.csv")
+        val list = mutableListOf<DummyValue>()
 
-//        val inputStream = this.assets.open("dummy_current_file1.csv")
-//
-//        inputStream.bufferedReader().useLines { lines ->
-//            lines.drop(1)
-//                .forEach { line ->
-//                    val tokens = line.split(",")
-//                    if (tokens.size >= 4) {
-//                        try {
-//                            val item = DummyValue(
-//                                weCurrent = tokens[2].trim().toDouble(),
-//                                aeCurrent = tokens[3].trim().toDouble(),
-//                                createdAt = tokens[1].trim().toString(),
-//                                createdAtLong = 12
-//                            )
-//                        } catch (e : Exception) {
-//                        }
-//                    }
-//                }
-//        }
-//        val reader = BufferedReader(InputStreamReader(inputStream))
-//
-//        reader.useLines { lines ->
-//            lines.forEach { line ->
-//                Log.d("TEST", "CSV Line: $line")
-//            }
-//        }
+        inputStream.bufferedReader().useLines { lines ->
+            lines.drop(1)
+                .forEach { line ->
+                    val tokens = line.split(",")
+                    if (tokens.size >= 4) {
+                        try {
+                            val item = DummyValue(
+                                weCurrent = tokens[2].trim().toDouble(),
+                                aeCurrent = tokens[3].trim().toDouble(),
+                                createdAt = tokens[1].trim().toString(),
+                            )
+                            list.add(item)
+                        } catch (e : Exception) {
+                            Log.d("TEST", "Exception : $e")
+                        }
+                    }
+                }
+        }
+        Log.d("TEST", "list size : ${list.size}")
+        Log.d("TEST", "list : ${list}")
+
 
 //        localDbRepository.dataDao().insertDummyList()
 
