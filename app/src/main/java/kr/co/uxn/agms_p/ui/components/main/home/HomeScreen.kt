@@ -203,7 +203,7 @@ fun HomeScreen(
                 val timeDiffMinutes =
                     (timeDiffMillis / 1000 / 60).toFloat()  // millis → seconds → minutes
 
-
+                Log.d("TEST", "timeDiffMinutes : ${timeDiffMinutes}")
                 dataPoints.add(
                     FloatEntry(
 //                        x = (localDBDataListAfterLastTime[i].createdAtLong / 1000).toFloat(),
@@ -287,15 +287,13 @@ fun HomeScreen(
 //
 //            }
 
-
-
-
-
             val baseTime = 1743442800000L // 25년 4월 1일 00시 00분 00초
             for (i in 0 until localDBDataListAfterLastTime!!.size) {
                 val timeDiffMillis = localDBDataListAfterLastTime[i].createdAtLong - baseTime
                 val timeDiffMinutes =
                     (timeDiffMillis / 1000 / 60).toFloat()  // millis → seconds → minutes
+
+                Log.d("TEST", "timeDiffMinutes : ${timeDiffMinutes}")
 
                 dataPoints.add(
                     FloatEntry(
