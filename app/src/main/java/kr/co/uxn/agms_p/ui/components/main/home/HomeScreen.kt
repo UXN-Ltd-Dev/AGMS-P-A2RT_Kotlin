@@ -6,6 +6,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +26,8 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -36,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -47,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -74,23 +80,28 @@ import com.patrykandpatrick.vico.compose.style.ProvideChartStyle
 import com.patrykandpatrick.vico.compose.style.currentChartStyle
 import com.patrykandpatrick.vico.core.DefaultAlpha
 import com.patrykandpatrick.vico.core.axis.AxisItemPlacer
+import com.patrykandpatrick.vico.core.axis.AxisManager
 import com.patrykandpatrick.vico.core.chart.line.LineChart
 import com.patrykandpatrick.vico.core.chart.values.AxisValuesOverrider
+import com.patrykandpatrick.vico.core.chart.values.ChartValuesProvider
 import com.patrykandpatrick.vico.core.component.shape.ShapeComponent
 import com.patrykandpatrick.vico.core.component.shape.shader.DynamicShaders
 import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
 import com.patrykandpatrick.vico.core.entry.FloatEntry
+import com.patrykandpatrick.vico.core.entry.entriesOf
 import com.patrykandpatrick.vico.core.scroll.InitialScroll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import kr.co.uxn.agms_p.CustomXAxisFormatter
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.BleBridge
 import kr.co.uxn.agms_p.rememberMarker
 import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.room.UserGlucose
+import kr.co.uxn.agms_p.ui.components.main.ModeDialog
 import kr.co.uxn.agms_p.ui.components.main.NotiDialog
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
@@ -112,6 +123,8 @@ fun HomeScreen(
     val day by homeViewModel.day.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
 
+    val totalEntryCount = remember { mutableStateOf(0) }
+
 //    var chartDisplayMode by remember { mutableStateOf(0)}
 
     val weo1 by bleViewModel.weo1.collectAsState()
@@ -119,9 +132,14 @@ fun HomeScreen(
     val chartTrigger by bleViewModel.chartTrigger.collectAsState()
     var showCaliDialog =  bleViewModel.showCaliDialog.collectAsState()
     var showBleConnectDialog =  bleViewModel.showBleConnectDialog.collectAsState()
+    var showModeDialog = remember { mutableStateOf(false) }
+    var selectedChartOption by remember { mutableStateOf("혈당") }
 
     val glucoseTrend = remember { mutableStateOf("유지 중") }
     val glucoseTrendImgResource = remember { mutableStateOf(R.drawable.level3) }
+
+    var baseMinY by remember {mutableStateOf(0f)}
+    var baseMaxY by remember {mutableStateOf(0f)}
 
 //    val randomLevel = remember(chartTrigger) { (1..5).random() }
 
@@ -132,6 +150,24 @@ fun HomeScreen(
     val scrollState = rememberChartScrollState()
 
     val isLoading = remember { mutableStateOf(false) }
+
+    // Zoom 변수
+    var zoomFactor by remember { mutableStateOf(1f) }
+    baseMinY = when (selectedChartOption) {
+        "혈당" -> 0f
+        "WEO1", "WEO2" -> 0f
+        else -> 0f
+    }
+    baseMaxY = when (selectedChartOption) {
+        "혈당" -> 250f
+        "WEO1", "WEO2" -> 30f
+        else -> 250f
+    }
+    val centerY = (baseMinY + baseMaxY) / 2f
+    val halfRange = ((baseMaxY - baseMinY) / 2f) / zoomFactor.coerceIn(1f, 5f)
+    val minY = centerY - halfRange
+    val maxY = centerY + halfRange
+
 
     // RadioButton
     var selectedOption by remember { mutableStateOf("3시간") }
@@ -146,6 +182,7 @@ fun HomeScreen(
         screenHeightDp == 783 -> 17.sp // a시리즈
         else -> 16.sp
     }
+
 
 
     LaunchedEffect(selectedOption) {
@@ -188,6 +225,12 @@ fun HomeScreen(
                 localDbRepository?.dataDao()
                     ?.getGlucoseListAfterLastTime(userId = userId, lastTime = lastTime)
 
+            if (localDBDataListAfterLastTime != null) {
+                totalEntryCount.value = localDBDataListAfterLastTime.size
+            }
+
+            Log.d("TEST", "localDbList : ${localDBDataListAfterLastTime}")
+
 //            for (i in 0 until localDBDataListAfterLastTime!!.size) {
 //                dataPoints.add(
 //                    FloatEntry(
@@ -203,16 +246,33 @@ fun HomeScreen(
                 val timeDiffMinutes =
                     (timeDiffMillis / 1000 / 60).toFloat()  // millis → seconds → minutes
 
-                Log.d("TEST", "timeDiffMinutes : ${timeDiffMinutes}")
-                dataPoints.add(
-                    FloatEntry(
-//                        x = (localDBDataListAfterLastTime[i].createdAtLong / 1000).toFloat(),
-//                        x = (i+1).toFloat(),
-                        x = (timeDiffMinutes),
-                        y = localDBDataListAfterLastTime[i].glucose.toFloat()
-                    )
-                )
-
+//                Log.d("TEST", "timeDiffMinutes : ${timeDiffMinutes}")
+                when(selectedChartOption) {
+                    "혈당" -> {
+                        dataPoints.add(
+                            FloatEntry(
+                                x = (timeDiffMinutes),
+                                y = localDBDataListAfterLastTime[i].glucose.toFloat()
+                            )
+                        )
+                    }
+                    "WEO1" -> {
+                        dataPoints.add(
+                            FloatEntry(
+                                x = (timeDiffMinutes),
+                                y = localDBDataListAfterLastTime[i].weo1.toFloat()
+                            )
+                        )
+                    }
+                    else -> {
+                        dataPoints.add(
+                            FloatEntry(
+                                x = (timeDiffMinutes),
+                                y = localDBDataListAfterLastTime[i].weo2.toFloat()
+                            )
+                        )
+                    }
+                }
             }
 
             // 트림추가 코드
@@ -235,9 +295,11 @@ fun HomeScreen(
         }
     }
 
-    LaunchedEffect(chartTrigger) {
+
+    LaunchedEffect(chartTrigger, selectedChartOption) {
         withContext(Dispatchers.IO) {
-            delay(1000)
+            // delay는 추후에 ANR이 발생하면 다시 활성화할 것!!
+//            delay(1000)
             dataSetForModel.clear()
 //            dataSetLineSpec.clear()
             val dataPoints = arrayListOf<FloatEntry>()
@@ -277,15 +339,9 @@ fun HomeScreen(
                 localDbRepository?.dataDao()
                     ?.getGlucoseListAfterLastTime(userId = userId, lastTime = lastTime)
 
-//            for (i in 0 until localDBDataListAfterLastTime!!.size) {
-//                dataPoints.add(
-//                    FloatEntry(
-//                        x = (localDBDataListAfterLastTime[i].createdAtLong / 1000).toFloat(),
-//                        y = localDBDataListAfterLastTime[i].glucose.toFloat()
-//                    )
-//                )
-//
-//            }
+            if (localDBDataListAfterLastTime != null) {
+                totalEntryCount.value = localDBDataListAfterLastTime.size
+            }
 
             val baseTime = 1743442800000L // 25년 4월 1일 00시 00분 00초
             for (i in 0 until localDBDataListAfterLastTime!!.size) {
@@ -295,14 +351,34 @@ fun HomeScreen(
 
                 Log.d("TEST", "timeDiffMinutes : ${timeDiffMinutes}")
 
-                dataPoints.add(
-                    FloatEntry(
-//                        x = (localDBDataListAfterLastTime[i].createdAtLong / 1000).toFloat(),
-//                        x = (i+1).toFloat(),
-                        x = (timeDiffMinutes),
-                        y = localDBDataListAfterLastTime[i].glucose.toFloat()
-                    )
-                )
+
+
+                when(selectedChartOption) {
+                    "혈당" -> {
+                        dataPoints.add(
+                            FloatEntry(
+                                x = (timeDiffMinutes),
+                                y = localDBDataListAfterLastTime[i].glucose.toFloat()
+                            )
+                        )
+                    }
+                    "WEO1" -> {
+                        dataPoints.add(
+                            FloatEntry(
+                                x = (timeDiffMinutes),
+                                y = localDBDataListAfterLastTime[i].weo1.toFloat()
+                            )
+                        )
+                    }
+                    else -> {
+                        dataPoints.add(
+                            FloatEntry(
+                                x = (timeDiffMinutes),
+                                y = localDBDataListAfterLastTime[i].weo2.toFloat()
+                            )
+                        )
+                    }
+                }
             }
 
 
@@ -392,6 +468,20 @@ fun HomeScreen(
         )
     }
 
+    // 3. 그래프 노드 다이얼로그
+    if (showModeDialog.value) {
+        ModeDialog(
+            options = listOf("혈당", "WEO1", "WEO2"),
+            selectedOption = selectedChartOption,
+            onOptionSelected =
+                {
+                    showModeDialog.value = false
+                    selectedChartOption = it
+                },
+            onDismissRequest = { showModeDialog.value = false}
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -407,7 +497,20 @@ fun HomeScreen(
 //                .clickable {
 //                    chartDisplayMode = (chartDisplayMode + 1) % 3
 //                },
-            ,
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onLongPress = {
+                            // 롱클릭 시 실행할 코드
+                            Log.d("TEST", "롱클릭됨!")
+                            showModeDialog.value = true
+
+                        },
+                        onTap = {
+                            // 짧은 클릭 (탭) 시 실행할 코드 (선택사항)
+//                            Log.d("TEST", "터치됨!")
+                        }
+                    )
+                },
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color(0xFF385DAB), // 카드 배경색 설정
@@ -425,10 +528,10 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
-//                val mode = when (chartDisplayMode) {
-//                    0 -> "현재 혈당"
-//                    1 -> "Weo1"
-//                    else -> "Weo2"
+//                val mode = when (selectedChartOption) {
+//                    "혈당" -> "현재 혈당"
+//                    "WEO1" -> "WEO1"
+//                    else -> "WEO2"
 //                }
 
                 Text(
@@ -474,7 +577,8 @@ fun HomeScreen(
                     text = "mg/dL",
                     color = Color.White,
                     fontSize = 25.sp,
-                    modifier = Modifier.align(Alignment.BottomCenter)
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
                         .padding(start = 10.dp, bottom = 25.dp)
                 )
 
@@ -488,7 +592,8 @@ fun HomeScreen(
                     contentDescription = "glucose_trend_img"
                 )
                 Text(
-                    modifier = Modifier.align(Alignment.BottomEnd)
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
                         .padding(bottom = 15.dp),
                     text = glucoseTrend.value,
                     textAlign = TextAlign.Center,
@@ -517,19 +622,75 @@ fun HomeScreen(
         ) {
             Spacer(modifier = Modifier.height(10.dp))
 
-            Text(
-                text = "혈당 그래프",
-                fontWeight = FontWeight.Bold,
-                fontSize = fontSize,
-                modifier = Modifier
-                    .padding(start = 20.dp)
-            )
+            val mode = when (selectedChartOption) {
+                "혈당" -> "혈당 그래프"
+                "WEO1" -> "WEO1 그래프"
+                else -> "WEO2 그래프"
+            }
+
+
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .padding(start = 20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+//                text = "혈당 그래프",
+                    text = mode,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = fontSize,
+                    modifier = Modifier
+                )
+
+                when (selectedChartOption) {
+                    "혈당" -> {
+                        Text(
+//                text = "혈당 그래프",
+                            text = "       ",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = fontSize,
+                            modifier = Modifier
+                        )
+
+                    } else -> { // WEO1, WEO2
+                    Icon(
+                        Icons.Filled.Add,
+                        contentDescription = "확대 아이콘",
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable {
+                                baseMaxY += 10f
+                                baseMinY -= 10f
+                            }
+                    )
+                    Icon(
+                        Icons.Filled.ArrowDropDown,
+                        contentDescription = "축소 아이콘",
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable {
+
+                            }
+                    )
+                    }
+                }
+
+            }
+
+
 
             // TODO VICO CHART
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp)
+//                    .pointerInput(Unit) {
+//                        detectTransformGestures { _, _, zoom, _ ->
+//                            zoomFactor *= zoom
+//                            zoomFactor = zoomFactor.coerceIn(0.5f, 5f)
+//                        }
+//                    }
                     .weight(1f),
                 color = Color.Transparent
             ) {
@@ -539,16 +700,22 @@ fun HomeScreen(
                     if (dataSetForModel.isNotEmpty() && isLoading.value == true) {
                         ProvideChartStyle {
                             val marker = rememberMarker()
+//                            val (minY, maxY) = when (selectedChartOption) {
+//                                "혈당" -> 0f to 250f
+//                                "WEO1" -> 24f to 26f
+//                                else -> 24f to 26f
+//                            }
                             Chart(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .weight(1f),
 //                            .padding(start = 5.dp, end = 10.dp),
+
                                 chart = lineChart(
                                     lines = dataSetLineSpec,
                                     axisValuesOverrider = AxisValuesOverrider.fixed(
-                                        minY = 0f,
-                                        maxY = 250f
+                                        minY = minY,
+                                        maxY = maxY
                                     )
                                 ),
                                 chartModelProducer = modelProducer,
@@ -575,10 +742,11 @@ fun HomeScreen(
                                     title = "Count of values",
                                     tickLength = 0.dp,
                                     valueFormatter = { value, _ ->
-                                        val baseTime = 1743442800000L // 25년 4월 1일 00시 00분 00초
+                                        val baseTime = 1743442801000L // 25년 4월 1일 00시 00분 00초
                                         val actualTimeMillis =
                                             baseTime + (value * 60 * 1000).toLong()
-                                        val formatter = SimpleDateFormat("HH:mm:ss", Locale.KOREAN)
+//                                        val formatter = SimpleDateFormat("HH:mm:ss", Locale.KOREAN)
+                                        val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
                                         formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
                                         formatter.format(Date(actualTimeMillis))
                                     },
@@ -588,6 +756,26 @@ fun HomeScreen(
                                         spacing = 1,  // x축 라벨 간격을 더 촘촘히 (기본은 자동)
                                     )
                                 ),
+
+
+
+
+//                            bottomAxis = rememberBottomAxis(
+//                                title = "Count of values",
+//                                tickLength = 0.dp,
+//                                valueFormatter = CustomXAxisFormatter(
+//                                    baseTime = 1743442800000L,
+//                                    interval = 5,
+//                                    totalEntryCount = totalEntryCount.value
+//                                ),
+//                                label = axisLabelComponent(
+//                                    color = Color.Black
+//                                ),
+//                                guideline = null,
+//                                itemPlacer = AxisItemPlacer.Horizontal.default(1) // 여기도 일치시켜야 간격 정확
+//                            ),
+
+
                                 marker = marker,
                                 isZoomEnabled = true
                             )
@@ -793,8 +981,3 @@ fun getTrendStatus(glucoseValueList: List<UserGlucose>): String {
         else -> "유지 중"
     }
 }
-
-
-
-
-
