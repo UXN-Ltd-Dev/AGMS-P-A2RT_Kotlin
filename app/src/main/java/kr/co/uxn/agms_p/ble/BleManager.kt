@@ -110,33 +110,6 @@ class BleManager(
 
                 // BleBridge에 상태 연결완료 전송
                 BleBridge.updateState(BleConnectionState.CONNECTED)
-                // afterChange값 불러오기 (sharedpreference)
-//                val prefAfterChange = context.getSharedPreferences("afterChange", Context.MODE_PRIVATE)
-//                val afterChange = prefAfterChange.getBoolean("afterChange", false)
-//                Log.e(TAG, "onConnectionStateChange - connected -> afterChange : $afterChange")
-
-//                context.getSharedPreferences("isChange", Context.MODE_PRIVATE)
-//                    .edit()
-//                    .putBoolean("isChange", false)
-//                    .apply()
-
-
-//                if (isConnectingTest) {
-//                    mGatt?.close()
-//                }
-
-
-//                isChange = false
-//                mGatt = gatt
-
-
-//                if(isReconnect) {
-//                    // mtu 517로 요청
-//                    gatt?.requestMtu(517)
-//                } else {
-//                    gatt?.disconnect()
-//                    gatt?.close()
-//                }
 
                 // mtu 517로 요청
                 gatt?.requestMtu(517)
@@ -162,27 +135,10 @@ class BleManager(
                     }
                 }
 
-
                 // BleBridege에 Disconnected 상태 전송
                 BleBridge.updateState(BleConnectionState.DISCONNECTED)
 
-                // afterChange pref 변수 불러오기
-                val prefAfterChange =
-                    context.getSharedPreferences("afterChange", Context.MODE_PRIVATE)
-                val afterChange = prefAfterChange.getBoolean("afterChange", false)
-
-                val sharedPreferences =
-                    context.getSharedPreferences("isChange", Context.MODE_PRIVATE)
-                var isChange = sharedPreferences.getBoolean("isChange", true)
-
-//                CoroutineScope(Dispatchers.Main).launch {
-//                    Toast.makeText(context, "BLE가 끊어졌습니다", Toast.LENGTH_SHORT).show()
-//                }
-
                 Log.d(TEST, "disconnect 콜백 내부 : ${gatt?.device?.name}")
-                Log.d(TEST, "BLE 매니저에서 isChange 상태 : $isChange")
-
-
 
                 reconnectHandler.postDelayed({
                     // BleBridege에 Connecting 상태 전송
@@ -190,38 +146,6 @@ class BleManager(
                     reconnect(gatt, mac)
                 }, 3000) // 일반 모드일 때, 재연결 3초 뒤에 실행
 
-//                if (!isChange) {
-//                    // isClicked : 끊겼을 때, 붉은 배경으로 바로 바꿔줄지, 딜레이를 줄지를 결정하는 변수
-//                    // true -> 즉시 : 기기 목록에서 클릭해서 데이터 화면으로 넘어왔을 때
-//                    // false -> 딜레이 : 끊겼다가 연결될 때(reconnect)
-//                        Log.e("culture", "!testMode 안")
-//                        reconnectHandler.postDelayed({
-//                            reconnect(gatt, viewModel.getDevice().deviceMac!!)
-//                            CoroutineScope(Dispatchers.Main).launch {
-//                                viewModel.updateBleState("connecting")
-//                            }
-//                        }, 3000) // 일반 모드일 때, 재연결 3초 뒤에 실행
-//
-//                } else {
-//                    isGattWork = false // 다른 기기 연결 허용
-
-//                    gatt?.close()
-//                    refreshDeviceCache(gatt)
-//                    mGatt = null
-
-//                    if (afterChange) {
-//                        CoroutineScope(Dispatchers.Main).launch {
-//                            Toast.makeText(
-//                                context,
-//                                "기존 연결이 끊겼습니다.\n새로운 기기 연결 가능",
-//                                Toast.LENGTH_SHORT
-//                            ).show()
-//                            // 서비스 종료
-//                            val serviceIntent = Intent(context, DataService::class.java)
-//                            context.stopService(serviceIntent)
-//                        }
-//                    }
-//                }
             }
 
 
@@ -407,16 +331,18 @@ class BleManager(
     @SuppressLint("MissingPermission")
     override fun onMtuChanged(gatt: BluetoothGatt?, mtu: Int, status: Int) {
         super.onMtuChanged(gatt, mtu, status)
-        gatt?.discoverServices();
+        gatt?.discoverServices()
     }
 
     @SuppressLint("MissingPermission")
     private fun reconnect(gatt: BluetoothGatt?, address: String) {
+        Log.d("TEST",  "======BLE reconnect() 진입 ======")
         gatt?.close()
         refreshDeviceCache(gatt)
 
         // 스캔 방식
 //        mGatt = gatt?.device?.connectGatt(context, false, this)
+//        gatt?.device?.connectGatt(context, false, this)
         // 논스캔 방식
         val bluetoothManager =
             context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager

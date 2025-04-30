@@ -38,6 +38,7 @@ import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestDataValue
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEventListData
+import kr.co.uxn.agms_p.api.model.responseDTO.ResponseGetGlucose
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.BleManager.Companion.TEST
 import kr.co.uxn.agms_p.room.AppDatabase
@@ -415,6 +416,7 @@ class AlwaysService() : Service() {
 
 
                         val glucoseList2 = PythonManager.instance.calculateGlucose(convertedList!!, calibrationList)
+//                        val glucoseList2 = emptyList<ResponseGetGlucose>()
 //
                         Log.d("PYTHON", "glucoseList2 : ${glucoseList2}")
 

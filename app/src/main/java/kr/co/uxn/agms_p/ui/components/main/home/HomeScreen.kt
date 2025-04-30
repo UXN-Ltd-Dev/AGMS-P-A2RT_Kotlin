@@ -628,55 +628,63 @@ fun HomeScreen(
                 else -> "WEO2 그래프"
             }
 
-
-            Row(
-                modifier = Modifier.fillMaxWidth()
-                    .padding(start = 20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
+            Text(
 //                text = "혈당 그래프",
-                    text = mode,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = fontSize,
-                    modifier = Modifier
-                )
+                text = mode,
+                fontWeight = FontWeight.Bold,
+                fontSize = fontSize,
+                modifier = Modifier
+                    .padding(start = 20.dp)
+            )
 
-                when (selectedChartOption) {
-                    "혈당" -> {
-                        Text(
-//                text = "혈당 그래프",
-                            text = "       ",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = fontSize,
-                            modifier = Modifier
-                        )
+//            Row(
+//                modifier = Modifier.fillMaxWidth()
+//                    .padding(start = 20.dp),
+//                horizontalArrangement = Arrangement.SpaceBetween,
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                Text(
+////                text = "혈당 그래프",
+//                    text = mode,
+//                    fontWeight = FontWeight.Bold,
+//                    fontSize = fontSize,
+//                    modifier = Modifier
+//                )
 
-                    } else -> { // WEO1, WEO2
-                    Icon(
-                        Icons.Filled.Add,
-                        contentDescription = "확대 아이콘",
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clickable {
-                                baseMaxY += 10f
-                                baseMinY -= 10f
-                            }
-                    )
-                    Icon(
-                        Icons.Filled.ArrowDropDown,
-                        contentDescription = "축소 아이콘",
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clickable {
+//                when (selectedChartOption) {
+//                    "혈당" -> {
+//                        Text(
+////                text = "혈당 그래프",
+//                            text = "       ",
+//                            fontWeight = FontWeight.Bold,
+//                            fontSize = fontSize,
+//                            modifier = Modifier
+//                        )
+//
+//                    } else -> { // WEO1, WEO2
+//                    Icon(
+//                        Icons.Filled.Add,
+//                        contentDescription = "확대 아이콘",
+//                        modifier = Modifier
+//                            .size(20.dp)
+//                            .clickable {
+//                                baseMaxY += 10f
+//                                baseMinY -= 10f
+//                            }
+//                    )
+//                    Icon(
+//                        Icons.Filled.ArrowDropDown,
+//                        contentDescription = "축소 아이콘",
+//                        modifier = Modifier
+//                            .size(20.dp)
+//                            .clickable {
+//
+//                            }
+//                    )
+//                    }
+//                }
 
-                            }
-                    )
-                    }
-                }
-
-            }
+//            }
 
 
 
