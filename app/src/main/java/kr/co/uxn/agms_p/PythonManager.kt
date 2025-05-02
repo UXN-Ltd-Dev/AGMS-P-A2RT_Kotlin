@@ -18,7 +18,7 @@ class PythonManager {
 
     init {
         val mPython = Python.getInstance()
-        mPythonModule = mPython.getModule("pyScript")
+        mPythonModule = mPython.getModule("pyScript5")
     }
 
     fun calculateGlucose(glucoseList: List<RequestDataValue>, eventList: List<RequestEventListData>): List<ResponseGetGlucose> {
