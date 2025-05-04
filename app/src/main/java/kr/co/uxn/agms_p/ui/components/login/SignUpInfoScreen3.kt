@@ -560,6 +560,14 @@ fun SignUpInfoScreen3(
                             expandedForDiabetesType = !expandedForDiabetesType
                         }
                     )
+                    HorizontalDivider()
+                    DropdownMenuItem(
+                        text = { Text("모름") },
+                        onClick = {
+                            diabetesType.value = "모름"
+                            expandedForDiabetesType = !expandedForDiabetesType
+                        }
+                    )
                 }
             }
 
@@ -629,6 +637,7 @@ fun SignUpInfoScreen3(
                                             "당뇨 전단계" -> 1704
                                             "LADA" -> 1705
                                             "정상" -> 1706
+                                            "모름" -> 1707
                                             else -> throw IllegalArgumentException("Unknown diabetes type")
                                         }
 

@@ -34,6 +34,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -634,6 +635,14 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                                     expandedForDiabetesType = !expandedForDiabetesType
                                 }
                             )
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { androidx.compose.material3.Text("모름") },
+                                onClick = {
+                                    diabetesType.value = "모름"
+                                    expandedForDiabetesType = !expandedForDiabetesType
+                                }
+                            )
                         }
                     }
 
@@ -674,7 +683,8 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                                                 "임신성 당뇨병" -> 1703
                                                 "당뇨 전단계" -> 1704
                                                 "LADA" -> 1705
-                                                else -> 1706
+                                                "정상" -> 1706
+                                                else -> 1707
                                             }
 
                                             Log.e("TEST", "코드로 변환된 sex : ${sex}")

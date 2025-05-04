@@ -299,7 +299,7 @@ fun HomeScreen(
     LaunchedEffect(chartTrigger, selectedChartOption) {
         withContext(Dispatchers.IO) {
             // delay는 추후에 ANR이 발생하면 다시 활성화할 것!!
-//            delay(1000)
+            delay(2000)
             dataSetForModel.clear()
 //            dataSetLineSpec.clear()
             val dataPoints = arrayListOf<FloatEntry>()
