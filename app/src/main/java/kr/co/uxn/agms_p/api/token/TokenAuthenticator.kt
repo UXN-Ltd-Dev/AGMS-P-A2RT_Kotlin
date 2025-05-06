@@ -1,7 +1,13 @@
 package kr.co.uxn.agms_p.api.token
 
+import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestRefreshToken
 import kr.co.uxn.agms_p.ui.viewmodel.AuthEventNotifier
 import okhttp3.Authenticator
 import okhttp3.Response
@@ -15,6 +21,9 @@ class TokenAuthenticator() : Authenticator {
         if (responseCount(response) >= 2) return null
         val refreshToken = runBlocking {
             DataStoreManager.getRefreshToken().first()
+        }
+        val userId = runBlocking {
+            DataStoreManager.getUserId().first() ?: -1
         }
 
         if (response.message == "REFRESH_TOKEN_EXPIRED") {
@@ -38,13 +47,42 @@ class TokenAuthenticator() : Authenticator {
             return null
         }
 
-        return newRequestWithToken(refreshToken, response.request)
+        return newRequestWithToken(refreshToken, userId, response.request)
     }
 
-    private fun newRequestWithToken(refreshToken: String, request: Request): Request =
-        request.newBuilder()
-            .header("Authorization", "Bearer $refreshToken")
+    private fun newRequestWithToken(refreshToken: String, userId: Int, request: Request): Request? {
+        if (userId == -1) {
+            return null
+        }
+
+        val newAccessToken: String? = runBlocking {
+            try {
+                val response = tokenRetrofit.getNewAccessToken(RequestRefreshToken(userId, refreshToken))
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body != null && body.isSuccess) {
+                        DataStoreManager.deleteAccessToken()
+                        DataStoreManager.saveAccessToken(body.accessToken)
+                        Log.d("TEST", "새 accessToken 저장 완료: ${body.accessToken}")
+                        return@runBlocking body.accessToken
+                    }
+                } else {
+                    Log.e("TEST", "API 에러 : ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                Log.e("TEST", "네트워크 에러: ${e.message}")
+            }
+            null
+        }
+
+        if (newAccessToken == null) return null
+
+        // 새 accessToken으로 원래 요청 복사
+        return request.newBuilder()
+            .header("Authorization", "Bearer $newAccessToken")
             .build()
+    }
+
 
     // Too many follow-up requests: 21 에러 방어코드
     private fun responseCount(response: Response): Int {

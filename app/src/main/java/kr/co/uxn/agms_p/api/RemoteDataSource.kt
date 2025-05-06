@@ -9,6 +9,7 @@ import kr.co.uxn.agms_p.api.model.requestDTO.RequestLinkDevice
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignInNormal
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignUpNormal
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestOAuthSignUpAndLogin
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestRefreshToken
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignUpOauthDetail
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestUpdateUser
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestUserInfo
@@ -23,6 +24,7 @@ import kr.co.uxn.agms_p.api.model.responseDTO.ResponseGetEvent
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseGetGlucose
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseGetLastTime
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseLinkDevice
+import kr.co.uxn.agms_p.api.model.responseDTO.ResponseRefreshToken
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseSensorOff
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseSignInNormal
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseSignUpNormal
@@ -124,5 +126,8 @@ interface RemoteDataSource {
     @GET("/api/glucose/convert2")
     suspend fun getDummyGlucose(@Query("count") count: Int): Response<List<ResponseDummyGlucose>>
 
+    // 액세스토큰 갱신
+    @POST("/api/user/token")
+    suspend fun getNewAccessToken(@Body userInfo: RequestRefreshToken): Response<ResponseRefreshToken>
 }
 
