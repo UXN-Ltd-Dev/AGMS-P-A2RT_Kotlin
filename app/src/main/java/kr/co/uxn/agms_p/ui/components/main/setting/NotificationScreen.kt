@@ -304,87 +304,87 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                Divider()
+//                Divider()
+//
+//                Box() {
+//                    Row(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .background(Color.White)
+//                            .height(50.dp)
+//                            .padding(horizontal = 30.dp),
+//                        verticalAlignment = Alignment.CenterVertically,
+//                        horizontalArrangement = Arrangement.SpaceBetween
+//                    ) {
+//                        Text(
+//                            text = "소리",
+//                            fontSize = 16.sp
+//                        )
+//
+//                        Switch(
+//                            checked = checkedForSound.value,
+//                            onCheckedChange = {
+//                                checkedForSound.value = it
+//                            }
+//                        )
+//                    }
+//                }
+//
+//                Divider()
+//
+//                Box() {
+//                    Row(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .background(Color.White)
+//                            .height(50.dp)
+//                            .padding(horizontal = 30.dp),
+//                        verticalAlignment = Alignment.CenterVertically,
+//                        horizontalArrangement = Arrangement.SpaceBetween
+//                    ) {
+//                        Text(
+//                            text = "진동",
+//                            fontSize = 16.sp
+//                        )
+//
+//                        Switch(
+//                            checked = checkedForVibration.value,
+//                            onCheckedChange = {
+//                                checkedForVibration.value = it
+//                            }
+//                        )
+//                    }
+//                }
+//
+//                Divider()
+//
+//                Box() {
+//                    Row(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .background(Color.White)
+//                            .height(50.dp)
+//                            .padding(horizontal = 30.dp),
+//                        verticalAlignment = Alignment.CenterVertically,
+//                        horizontalArrangement = Arrangement.SpaceBetween
+//                    ) {
+//                        Text(
+//                            text = "방해금지 중 알림 허용",
+//                            fontSize = 16.sp
+//                        )
+//
+//                        Switch(
+//                            checked = checkedDoNotDisturbMode.value,
+//                            onCheckedChange = {
+//                                checkedDoNotDisturbMode.value = it
+//                            }
+//                        )
+//                    }
+//                }
 
-                Box() {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White)
-                            .height(50.dp)
-                            .padding(horizontal = 30.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "소리",
-                            fontSize = 16.sp
-                        )
-
-                        Switch(
-                            checked = checkedForSound.value,
-                            onCheckedChange = {
-                                checkedForSound.value = it
-                            }
-                        )
-                    }
-                }
-
-                Divider()
-
-                Box() {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White)
-                            .height(50.dp)
-                            .padding(horizontal = 30.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "진동",
-                            fontSize = 16.sp
-                        )
-
-                        Switch(
-                            checked = checkedForVibration.value,
-                            onCheckedChange = {
-                                checkedForVibration.value = it
-                            }
-                        )
-                    }
-                }
-
-                Divider()
-
-                Box() {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White)
-                            .height(50.dp)
-                            .padding(horizontal = 30.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "방해금지 중 알림 허용",
-                            fontSize = 16.sp
-                        )
-
-                        Switch(
-                            checked = checkedDoNotDisturbMode.value,
-                            onCheckedChange = {
-                                checkedDoNotDisturbMode.value = it
-                            }
-                        )
-                    }
-                }
-
-                Divider()
-
-                Divider(color = Color.Transparent, thickness = 20.dp)
+//                Divider()
+//
+//                Divider(color = Color.Transparent, thickness = 20.dp)
 
                 Divider()
 
