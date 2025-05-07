@@ -316,7 +316,7 @@ fun DeleteAccountScreen(navController: NavController, eventScreenViewModel: Even
                         text = "계정을 삭제하면 이 앱에서 로그아웃됩니다."
                     )
                     Text(
-                        text = "세션이 만료되기까지 최대 1시간이 쇼요 될 수 있습니다."
+                        text = "세션이 만료되기까지 최대 1시간이 소요 될 수 있습니다."
                     )
 
                     Spacer(modifier = Modifier.height(30.dp))
@@ -331,7 +331,7 @@ fun DeleteAccountScreen(navController: NavController, eventScreenViewModel: Even
                     Spacer(modifier = Modifier.height(30.dp))
 
                     Text(
-                        text = "계정을 삭제 하시겠습니까?",
+                        text = "계정을 삭제하시겠습니까?",
                         fontWeight = FontWeight.Bold
                     )
                     Text(

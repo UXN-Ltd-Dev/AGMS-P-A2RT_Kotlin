@@ -247,7 +247,6 @@ fun PassWordResetScreen(navController: NavController) {
                                 } else {
                                     Toast.makeText(context, "올바른 이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
                                 }
-
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF385DAB) // 배경색 설정
@@ -388,9 +387,8 @@ fun PassWordResetScreen(navController: NavController) {
                                                                 "isEmailVerified : ${isEmailVerified.value}"
                                                             )
 
-                                                            // 패스워드창 보이기
-                                                            delay(1000)
-
+                                                            // 패스워드 창 보이기
+                                                            delay(500)
                                                             isShowResetPwd.value = true
 
                                                         }

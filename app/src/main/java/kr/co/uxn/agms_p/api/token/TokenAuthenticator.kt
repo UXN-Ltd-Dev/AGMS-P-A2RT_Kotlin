@@ -47,41 +47,46 @@ class TokenAuthenticator() : Authenticator {
             return null
         }
 
-        return newRequestWithToken(refreshToken, userId, response.request)
+        return newRequestWithToken(refreshToken, response.request)
     }
 
-    private fun newRequestWithToken(refreshToken: String, userId: Int, request: Request): Request? {
-        if (userId == -1) {
-            return null
-        }
+//    private fun newRequestWithToken(refreshToken: String, userId: Int, request: Request): Request? {
+//        if (userId == -1) {
+//            return null
+//        }
+//
+//        val newAccessToken: String? = runBlocking {
+//            try {
+//                val response = tokenRetrofit.getNewAccessToken(RequestRefreshToken(userId, refreshToken))
+//                if (response.isSuccessful) {
+//                    val body = response.body()
+//                    if (body != null && body.isSuccess) {
+//                        DataStoreManager.deleteAccessToken()
+//                        DataStoreManager.saveAccessToken(body.accessToken)
+//                        Log.d("TEST", "새 accessToken 저장 완료: ${body.accessToken}")
+//                        return@runBlocking body.accessToken
+//                    }
+//                } else {
+//                    Log.e("TEST", "API 에러 : ${response.errorBody()?.string()}")
+//                }
+//            } catch (e: Exception) {
+//                Log.e("TEST", "네트워크 에러: ${e.message}")
+//            }
+//            null
+//        }
+//
+//        if (newAccessToken == null) return null
+//
+//        // 새 accessToken으로 원래 요청 복사
+//        return request.newBuilder()
+//            .header("Authorization", "Bearer $newAccessToken")
+//            .build()
+//    }
 
-        val newAccessToken: String? = runBlocking {
-            try {
-                val response = tokenRetrofit.getNewAccessToken(RequestRefreshToken(userId, refreshToken))
-                if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body != null && body.isSuccess) {
-                        DataStoreManager.deleteAccessToken()
-                        DataStoreManager.saveAccessToken(body.accessToken)
-                        Log.d("TEST", "새 accessToken 저장 완료: ${body.accessToken}")
-                        return@runBlocking body.accessToken
-                    }
-                } else {
-                    Log.e("TEST", "API 에러 : ${response.errorBody()?.string()}")
-                }
-            } catch (e: Exception) {
-                Log.e("TEST", "네트워크 에러: ${e.message}")
-            }
-            null
-        }
-
-        if (newAccessToken == null) return null
-
-        // 새 accessToken으로 원래 요청 복사
-        return request.newBuilder()
-            .header("Authorization", "Bearer $newAccessToken")
+    private fun newRequestWithToken(refreshToken: String, request: Request): Request =
+        request.newBuilder()
+            .header("Authorization", "Bearer $refreshToken")
             .build()
-    }
 
 
     // Too many follow-up requests: 21 에러 방어코드

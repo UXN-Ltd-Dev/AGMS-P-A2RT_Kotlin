@@ -21,6 +21,7 @@ import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.datastore.dataStore
 import androidx.work.ListenableWorker.Result
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -236,6 +237,9 @@ class AlwaysService() : Service() {
 
                     try {
                         Log.e("SERVICE", "서비스 내 코루틴 실행")
+
+                        // 액세스토큰 변경 테스트
+                        Log.d("TEST" , "현재 액세스 토큰 : ${DataStoreManager.getAccessToken().first()?:"비어잇음"}")
 
                         wl.acquire(1000 * 75) // 75초
 
