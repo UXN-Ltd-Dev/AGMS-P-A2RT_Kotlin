@@ -583,7 +583,6 @@ class BleManager(
         }
 
 
-
         return 0
     }
 
