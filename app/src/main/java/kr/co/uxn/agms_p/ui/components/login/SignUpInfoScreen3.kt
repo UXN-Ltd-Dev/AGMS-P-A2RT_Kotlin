@@ -710,6 +710,7 @@ fun SignUpInfoScreen3(
                                                                 launchSingleTop = true
                                                             }
                                                         }
+
                                                     } else {
                                                         withContext(Dispatchers.Main) {
                                                             Log.d("TEST", "디테일 정보 입력 실패")

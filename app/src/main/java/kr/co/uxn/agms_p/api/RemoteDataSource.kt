@@ -114,19 +114,19 @@ interface RemoteDataSource {
     @POST("/api/user/update/password")
     suspend fun resetPwd(@Body userInfo: RequestUserInfo): Response<ResponseUserInfo>
 
-    // 탈퇴하기(일반)
+    // 탈퇴 하기(일반)
     @POST("/api/user/delete")
     suspend fun deleteUser(@Body userInfo: RequestDeleteUserInfo): Response<ResponseDeleteUserInfo>
 
-    // 탈퇴하기(oAuth)
+    // 탈퇴 하기(oAuth)
     @POST("/api/oauth/delete")
     suspend fun deleteOauthUser(@Body userInfo: RequestDeleteOauthUserInfo): Response<ResponseDeleteOauthUserInfo>
 
-    // 혈당 더미데이터 불러오기
+    // 혈당 더미 데이터 불러오기
     @GET("/api/glucose/convert2")
     suspend fun getDummyGlucose(@Query("count") count: Int): Response<List<ResponseDummyGlucose>>
 
-    // 액세스토큰 갱신
+    // 액세스 토큰 갱신
     @POST("/api/user/token")
     suspend fun getNewAccessToken(@Body userInfo: RequestRefreshToken): Response<ResponseRefreshToken>
 }
