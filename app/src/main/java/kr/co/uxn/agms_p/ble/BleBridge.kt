@@ -27,6 +27,9 @@ object BleBridge {
     private val _showBleConnectDialog = MutableStateFlow<Boolean>(false)
     val showBleConnectDialog: StateFlow<Boolean> = _showBleConnectDialog
 
+    private val _showEndMeasurementDialog = MutableStateFlow<Boolean>(false)
+    val showEndMeasurementDialog: StateFlow<Boolean> = _showEndMeasurementDialog
+
     fun updateState(state: BleConnectionState) {
         _bleState.value = state
         Log.e("TEST", "ble브릿지의 bleState : $state")
@@ -50,6 +53,10 @@ object BleBridge {
 
     fun showBleConnectDialog(value: Boolean) {
         _showBleConnectDialog.value = value
+    }
+
+    fun showEndMeasurementDialog(value: Boolean) {
+        _showEndMeasurementDialog.value = value
     }
 
     fun activateTrigger() {

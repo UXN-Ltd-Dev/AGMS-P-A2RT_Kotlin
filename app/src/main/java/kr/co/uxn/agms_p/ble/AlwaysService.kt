@@ -533,22 +533,26 @@ class AlwaysService() : Service() {
                         Log.d("SERVICE", "now : $convertedNow \nendTime : $convertedEndTime")
 
                         if (endTime != null && now > endTime) {
-                            DataStoreManager.saveIsMain(false)
-                            DataStoreManager.deleteRoute()
-                            DataStoreManager.saveRoute("Splash")
-                            Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
-                            Log.e("TEST", "DS에 저장된 Route는${DataStoreManager.getRoute().first()}")
-                            DataStoreManager.deleteAccessToken()
-                            DataStoreManager.deleteRefreshToken()
-                            DataStoreManager.deleteUserId()
-                            DataStoreManager.deleteDeviceMac()
-                            DataStoreManager.deleteStartTime()
-                            DataStoreManager.deleteEndTime()
-                            // 1. 서비스 종료
-                            stopSelf()
-                            // 앱 강제종료
-                            android.os.Process.killProcess(android.os.Process.myPid())
-                            exitProcess(0)
+                            Log.d("SERVICE", "측정종료 프로세스 작동!")
+                            sendNotification(baseContext, "측정이 종료되었습니다", "앱을 확인해주세요", 94)
+                            BleBridge.showEndMeasurementDialog(true)
+//                            sendNotification(baseContext, "측정이 종료되었습니다", "앱을 확인해주세요", 94)
+//                            DataStoreManager.saveIsMain(false)
+//                            DataStoreManager.deleteRoute()
+//                            DataStoreManager.saveRoute("Splash")
+//                            Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
+//                            Log.e("TEST", "DS에 저장된 Route는${DataStoreManager.getRoute().first()}")
+//                            DataStoreManager.deleteAccessToken()
+//                            DataStoreManager.deleteRefreshToken()
+//                            DataStoreManager.deleteUserId()
+//                            DataStoreManager.deleteDeviceMac()
+//                            DataStoreManager.deleteStartTime()
+//                            DataStoreManager.deleteEndTime()
+//                            // 1. 서비스 종료
+//                            stopSelf()
+//                            // 앱 강제종료
+//                            android.os.Process.killProcess(android.os.Process.myPid())
+//                            exitProcess(0)
                         }
 
 

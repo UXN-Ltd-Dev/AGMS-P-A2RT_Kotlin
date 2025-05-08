@@ -83,6 +83,13 @@ class BleViewModel(application: Application) : AndroidViewModel(application) {
             initialValue = false
         )
 
+    var showEndMeasurementDialog: StateFlow<Boolean> = BleBridge.showEndMeasurementDialog
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
+
 
 
     suspend fun emit(event: String) {

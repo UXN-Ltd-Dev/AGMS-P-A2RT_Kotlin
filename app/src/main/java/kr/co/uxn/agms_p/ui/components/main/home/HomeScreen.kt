@@ -1,13 +1,10 @@
 package kr.co.uxn.agms_p.ui.components.main.home
 
-import android.graphics.Color.toArgb
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.MutatePriority
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,14 +17,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsEndWidth
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -40,7 +34,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -58,7 +51,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.font.Typeface
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -74,27 +66,21 @@ import com.patrykandpatrick.vico.compose.chart.line.lineChart
 import com.patrykandpatrick.vico.compose.chart.scroll.rememberChartScrollSpec
 import com.patrykandpatrick.vico.compose.chart.scroll.rememberChartScrollState
 import com.patrykandpatrick.vico.compose.component.shape.shader.fromBrush
-import com.patrykandpatrick.vico.compose.component.textComponent
-import com.patrykandpatrick.vico.compose.dimensions.dimensionsOf
 import com.patrykandpatrick.vico.compose.style.ProvideChartStyle
-import com.patrykandpatrick.vico.compose.style.currentChartStyle
 import com.patrykandpatrick.vico.core.DefaultAlpha
 import com.patrykandpatrick.vico.core.axis.AxisItemPlacer
-import com.patrykandpatrick.vico.core.axis.AxisManager
 import com.patrykandpatrick.vico.core.chart.line.LineChart
 import com.patrykandpatrick.vico.core.chart.values.AxisValuesOverrider
-import com.patrykandpatrick.vico.core.chart.values.ChartValuesProvider
-import com.patrykandpatrick.vico.core.component.shape.ShapeComponent
 import com.patrykandpatrick.vico.core.component.shape.shader.DynamicShaders
 import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
 import com.patrykandpatrick.vico.core.entry.FloatEntry
-import com.patrykandpatrick.vico.core.entry.entriesOf
 import com.patrykandpatrick.vico.core.scroll.InitialScroll
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kr.co.uxn.agms_p.CustomXAxisFormatter
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.BleBridge
@@ -109,6 +95,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import kotlin.system.exitProcess
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -133,6 +120,7 @@ fun HomeScreen(
     var showCaliDialog =  bleViewModel.showCaliDialog.collectAsState()
     var showBleConnectDialog =  bleViewModel.showBleConnectDialog.collectAsState()
     var showModeDialog = remember { mutableStateOf(false) }
+    var showEndMeasurementDialog = bleViewModel.showEndMeasurementDialog.collectAsState()
     var selectedChartOption by remember { mutableStateOf("혈당") }
 
     val glucoseTrend = remember { mutableStateOf("유지 중") }
@@ -468,7 +456,7 @@ fun HomeScreen(
         )
     }
 
-    // 3. 그래프 노드 다이얼로그
+    // 3. 그래프 모드 다이얼로그
     if (showModeDialog.value) {
         ModeDialog(
             options = listOf("혈당", "WEO1", "WEO2"),
@@ -479,6 +467,38 @@ fun HomeScreen(
                     selectedChartOption = it
                 },
             onDismissRequest = { showModeDialog.value = false}
+        )
+    }
+
+    // 4. 측정종료 다이얼로그
+    if (showEndMeasurementDialog.value) {
+        NotiDialog(
+            onDismiss = { BleBridge.showBleConnectDialog(false) },
+            onConfirm = {
+                BleBridge.showBleConnectDialog(false)
+                coroutineScope.launch(Dispatchers.IO) {
+                    DataStoreManager.saveIsMain(false)
+                    DataStoreManager.deleteRoute()
+                    DataStoreManager.saveRoute("Splash")
+                    Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
+                    Log.e("TEST", "DS에 저장된 Route는${DataStoreManager.getRoute().first()}")
+                    DataStoreManager.deleteAccessToken()
+                    DataStoreManager.deleteRefreshToken()
+                    DataStoreManager.deleteUserId()
+                    DataStoreManager.deleteDeviceMac()
+                    DataStoreManager.deleteStartTime()
+                    DataStoreManager.deleteEndTime()
+
+                    delay(500)
+                    // 1. 서비스 종료
+//                            stopSelf()
+                    // 앱 강제종료
+                    android.os.Process.killProcess(android.os.Process.myPid())
+                    exitProcess(0)
+                }
+            },
+            title = "센서의 사용 기간이 종료되었습니다.",
+            content = "센서의 사용 기간이 만료되어 더 이상 측정이 불가합니다. 새 센서를 연결해주세요.",
         )
     }
 
