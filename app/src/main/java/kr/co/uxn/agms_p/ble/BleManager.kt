@@ -27,6 +27,7 @@ import androidx.core.app.NotificationManagerCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -108,6 +109,7 @@ class BleManager(
             BluetoothProfile.STATE_CONNECTED -> {
                 Log.e("gatt", "gatt connected!")
 
+
                 // BleBridge에 상태 연결완료 전송
                 BleBridge.updateState(BleConnectionState.CONNECTED)
 
@@ -140,16 +142,32 @@ class BleManager(
 
                 Log.d(TEST, "disconnect 콜백 내부 : ${gatt?.device?.name}")
 
-                reconnectHandler.postDelayed({
-                    // BleBridege에 Connecting 상태 전송
-                    BleBridge.updateState(BleConnectionState.CONNECTING)
-                    reconnect(gatt, mac)
-                }, 3000) // 일반 모드일 때, 재연결 3초 뒤에 실행
+                // 기존 핸들러 코드
+//                reconnectHandler.postDelayed({
+//                    Log.d(TEST, "Disconnect 핸들러 내부")
+//                    // BleBridege에 Connecting 상태 전송
+//                    BleBridge.updateState(BleConnectionState.CONNECTING)
+//                    reconnect(gatt, mac)
+//                }, 3000) // 일반 모드일 때, 재연결 3초 뒤에 실행
+
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    delay(3000L)
+                    Log.d(TEST, "Disconnect 코루틴 내부")
+
+                    // BleBridge에 Connecting 상태 전송 (메인 스레드에서 실행해야 하는 경우 아래처럼 처리)
+                    withContext(Dispatchers.Main) {
+                        BleBridge.updateState(BleConnectionState.CONNECTING)
+                    }
+
+                    reconnect(gatt, mac) // 이 함수는 IO-safe해야 함
+                }
+
             }
 
 
             BluetoothProfile.STATE_CONNECTING -> {
-                // 인식 못함
+
             }
 
         }
@@ -337,6 +355,7 @@ class BleManager(
     private fun reconnect(gatt: BluetoothGatt?, address: String) {
         Log.d("TEST",  "======BLE reconnect() 진입 ======")
         gatt?.close()
+
         refreshDeviceCache(gatt)
 
         // 스캔 방식
