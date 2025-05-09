@@ -337,7 +337,7 @@ fun HomeScreen(
                 val timeDiffMinutes =
                     (timeDiffMillis / 1000 / 60).toFloat()  // millis → seconds → minutes
 
-                Log.d("TEST", "timeDiffMinutes : ${timeDiffMinutes}")
+//                Log.d("TEST", "timeDiffMinutes : ${timeDiffMinutes}")
 
 
 
@@ -470,7 +470,7 @@ fun HomeScreen(
         )
     }
 
-    // 4. 측정종료 다이얼로그
+    // 4. 측정 종료 다이얼로그
     if (showEndMeasurementDialog.value) {
         NotiDialog(
             onDismiss = { BleBridge.showBleConnectDialog(false) },

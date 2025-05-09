@@ -114,7 +114,6 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                             Log.w("TEST", "sensorOff responseBody : ${sensorOffBody}")
                             if (sensorOffBody.isSuccess) {
                                 // userId의 db삭제
-
                                 localDbRepository?.dataDao()?.deleteUserValueTable(userId)
                                 localDbRepository?.dataDao()?.deleteUserGlucoseTable(userId)
                                 localDbRepository?.dataDao()?.deleteUserCalibrationTable(userId)
