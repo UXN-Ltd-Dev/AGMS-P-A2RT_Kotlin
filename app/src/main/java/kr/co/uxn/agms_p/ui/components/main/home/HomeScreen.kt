@@ -1,5 +1,7 @@
 package kr.co.uxn.agms_p.ui.components.main.home
 
+import android.graphics.Paint
+import android.graphics.Typeface
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.MutatePriority
@@ -52,6 +54,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -69,9 +73,12 @@ import com.patrykandpatrick.vico.compose.component.shape.shader.fromBrush
 import com.patrykandpatrick.vico.compose.style.ProvideChartStyle
 import com.patrykandpatrick.vico.core.DefaultAlpha
 import com.patrykandpatrick.vico.core.axis.AxisItemPlacer
+import com.patrykandpatrick.vico.core.chart.dimensions.HorizontalDimensions
+import com.patrykandpatrick.vico.core.chart.draw.ChartDrawContext
 import com.patrykandpatrick.vico.core.chart.line.LineChart
 import com.patrykandpatrick.vico.core.chart.values.AxisValuesOverrider
 import com.patrykandpatrick.vico.core.component.shape.shader.DynamicShaders
+import com.patrykandpatrick.vico.core.context.MeasureContext
 import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
 import com.patrykandpatrick.vico.core.entry.FloatEntry
 import com.patrykandpatrick.vico.core.scroll.InitialScroll
@@ -155,6 +162,45 @@ fun HomeScreen(
     val halfRange = ((baseMaxY - baseMinY) / 2f) / zoomFactor.coerceIn(1f, 5f)
     val minY = centerY - halfRange
     val maxY = centerY + halfRange
+
+    val customItemPlacer = object : AxisItemPlacer.Horizontal {
+        override fun getLabelValues(
+            context: ChartDrawContext,
+            visibleXRange: ClosedFloatingPointRange<Float>,
+            fullXRange: ClosedFloatingPointRange<Float>,
+        ): List<Float> {
+            val start = visibleXRange.start
+            val end = visibleXRange.endInclusive
+            val mid = (start + end) / 2f
+            return listOf(start, mid, end)
+        }
+
+        override fun getMeasuredLabelValues(
+            context: MeasureContext,
+            horizontalDimensions: HorizontalDimensions,
+            fullXRange: ClosedFloatingPointRange<Float>,
+        ): List<Float> {
+            // 측정 단계에서는 fullXRange를 기준으로 해야 함 (visibleXRange는 없음)
+            val start = fullXRange.start
+            val end = fullXRange.endInclusive
+            val mid = (start + end) / 2f
+            return listOf(start, mid, end)
+        }
+
+        override fun getStartHorizontalAxisInset(
+            context: MeasureContext,
+            horizontalDimensions: HorizontalDimensions,
+            tickThickness: Float,
+        ): Float = 0f
+
+        override fun getEndHorizontalAxisInset(
+            context: MeasureContext,
+            horizontalDimensions: HorizontalDimensions,
+            tickThickness: Float,
+        ): Float = 0f
+
+    }
+
 
 
     // RadioButton
@@ -263,7 +309,7 @@ fun HomeScreen(
                 }
             }
 
-            // 트림추가 코드
+            // 트림 추가 코드
 //            val trimmedDataPoints =
 //                if (dataPoints.size > 500) dataPoints.takeLast(500) else dataPoints
 //            Log.e("CHART", "trimmedDataPoints size: ${trimmedDataPoints.size}")
@@ -287,7 +333,8 @@ fun HomeScreen(
     LaunchedEffect(chartTrigger, selectedChartOption) {
         withContext(Dispatchers.IO) {
             // delay는 추후에 ANR이 발생하면 다시 활성화할 것!!
-            delay(2000)
+//            delay(2000)
+            delay(500)
             dataSetForModel.clear()
 //            dataSetLineSpec.clear()
             val dataPoints = arrayListOf<FloatEntry>()
@@ -341,7 +388,7 @@ fun HomeScreen(
 
 
 
-                when(selectedChartOption) {
+                when (selectedChartOption) {
                     "혈당" -> {
                         dataPoints.add(
                             FloatEntry(
@@ -410,7 +457,6 @@ fun HomeScreen(
                 "하강 중" -> R.drawable.level2
                 else -> R.drawable.level1//"급하강"
             }
-
         }
     }
 
@@ -605,8 +651,7 @@ fun HomeScreen(
                 Image(
                     modifier = Modifier
                         .size(32.dp)
-                        .align(Alignment.TopEnd)
-                    ,
+                        .align(Alignment.TopEnd),
 //                    painter = painterResource(R.drawable.level3),
                     painter = painterResource(glucoseTrendImgResource.value),
                     contentDescription = "glucose_trend_img"
@@ -726,6 +771,8 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     if (dataSetForModel.isNotEmpty() && isLoading.value == true) {
+
+
                         ProvideChartStyle {
                             val marker = rememberMarker()
 //                            val (minY, maxY) = when (selectedChartOption) {
@@ -733,60 +780,60 @@ fun HomeScreen(
 //                                "WEO1" -> 24f to 26f
 //                                else -> 24f to 26f
 //                            }
-                            Chart(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f),
+
+                            if (totalEntryCount.value < 6) {
+                                Chart(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .weight(1f),
 //                            .padding(start = 5.dp, end = 10.dp),
+                                    chart = lineChart(
+                                        lines = dataSetLineSpec,
+                                        axisValuesOverrider = AxisValuesOverrider.fixed(
+                                            minY = minY,
+                                            maxY = maxY
+                                        )
+                                    ),
+                                    chartModelProducer = modelProducer,
+                                    chartScrollState = scrollState,
+                                    chartScrollSpec = rememberChartScrollSpec(initialScroll = InitialScroll.End), // 우측부터 최신값추가
 
-                                chart = lineChart(
-                                    lines = dataSetLineSpec,
-                                    axisValuesOverrider = AxisValuesOverrider.fixed(
-                                        minY = minY,
-                                        maxY = maxY
-                                    )
-                                ),
-                                chartModelProducer = modelProducer,
-                                chartScrollState = scrollState,
-                                chartScrollSpec = rememberChartScrollSpec(initialScroll = InitialScroll.End), // 우측부터 최신값추가
+                                    // y축
+                                    startAxis = rememberStartAxis(
+                                        title = "Top values",
+                                        tickLength = 0.dp,
+                                        valueFormatter = { value, _ ->
+                                            value.toInt().toString()
+                                        },
+                                        label = axisLabelComponent(color = Color.Black),
+                                        // y축 레이블 갯수
+                                        itemPlacer = AxisItemPlacer.Vertical.default(
+                                            maxItemCount = 6,
+                                            shiftTopLines = true
+                                        )
+                                    ),
+                                    marker = marker,
+                                    isZoomEnabled = true,
+                                    // x축
+                                    bottomAxis = rememberBottomAxis(
+                                        title = "Count of values",
+                                        tickLength = 0.dp,
+                                        valueFormatter = { value, _ ->
 
-                                // y축
-                                startAxis = rememberStartAxis(
-                                    title = "Top values",
-                                    tickLength = 0.dp,
-                                    valueFormatter = { value, _ ->
-                                        value.toInt().toString()
-                                    },
-                                    label = axisLabelComponent(color = Color.Black),
-                                    // y축 레이블 갯수
-                                    itemPlacer = AxisItemPlacer.Vertical.default(
-                                        maxItemCount = 6,
-                                        shiftTopLines = true
-                                    )
-                                ),
-
-                                // x축
-                                bottomAxis = rememberBottomAxis(
-                                    title = "Count of values",
-                                    tickLength = 0.dp,
-                                    valueFormatter = { value, _ ->
-                                        val baseTime = 1743442801000L // 25년 4월 1일 00시 00분 00초
-                                        val actualTimeMillis =
-                                            baseTime + (value * 60 * 1000).toLong()
+                                            val baseTime = 1743442801000L // 25년 4월 1일 00시 00분 00초
+                                            val actualTimeMillis =
+                                                baseTime + (value * 60 * 1000).toLong()
 //                                        val formatter = SimpleDateFormat("HH:mm:ss", Locale.KOREAN)
-                                        val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
-                                        formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
-                                        formatter.format(Date(actualTimeMillis))
-                                    },
-                                    label = axisLabelComponent(color = Color.Black),
-                                    guideline = null,
-                                    itemPlacer = AxisItemPlacer.Horizontal.default(
-                                        spacing = 1,  // x축 라벨 간격을 더 촘촘히 (기본은 자동)
-                                    )
-                                ),
-
-
-
+                                            val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
+                                            formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
+                                            formatter.format(Date(actualTimeMillis))
+                                        },
+                                        itemPlacer = AxisItemPlacer.Horizontal.default(
+                                            spacing = 1,  // x축 라벨 간격을 더 촘촘히 (기본은 자동)
+                                        ),
+                                        label = axisLabelComponent(color = Color.Black),
+                                        guideline = null,
+                                    ),
 
 //                            bottomAxis = rememberBottomAxis(
 //                                title = "Count of values",
@@ -802,11 +849,95 @@ fun HomeScreen(
 //                                guideline = null,
 //                                itemPlacer = AxisItemPlacer.Horizontal.default(1) // 여기도 일치시켜야 간격 정확
 //                            ),
+                                )
+                            } else {
+                                Chart(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .weight(1f),
+//                            .padding(start = 5.dp, end = 10.dp),
+                                    chart = lineChart(
+                                        lines = dataSetLineSpec,
+                                        axisValuesOverrider = AxisValuesOverrider.fixed(
+                                            minY = minY,
+                                            maxY = maxY
+                                        )
+                                    ),
+                                    chartModelProducer = modelProducer,
+                                    chartScrollState = scrollState,
+                                    chartScrollSpec = rememberChartScrollSpec(initialScroll = InitialScroll.End), // 우측부터 최신값추가
+
+                                    // y축
+                                    startAxis = rememberStartAxis(
+                                        title = "Top values",
+                                        tickLength = 0.dp,
+                                        valueFormatter = { value, _ ->
+                                            value.toInt().toString()
+                                        },
+                                        label = axisLabelComponent(color = Color.Black),
+                                        // y축 레이블 갯수
+                                        itemPlacer = AxisItemPlacer.Vertical.default(
+                                            maxItemCount = 6,
+                                            shiftTopLines = true
+                                        )
+                                    ),
+                                    marker = marker,
+                                    isZoomEnabled = true,
+
+                                    // x축
+                                    bottomAxis = rememberBottomAxis(
+                                        title = "Count of values",
+                                        tickLength = 0.dp,
+                                        itemPlacer = customItemPlacer,
+                                        valueFormatter = { value, _ ->
+                                            val baseTime = 1743442801000L
+                                            val actualTimeMillis = baseTime + (value * 60 * 1000).toLong()
+                                            val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
+                                            formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
+                                            formatter.format(Date(actualTimeMillis))
+                                        },
+                                        label = axisLabelComponent(color = Color.Black),
+                                        guideline = null,
+                                    )
 
 
-                                marker = marker,
-                                isZoomEnabled = true
-                            )
+//                                    bottomAxis = rememberBottomAxis(
+//                                        title = "Count of values",
+//                                        tickLength = 0.dp,
+//                                        valueFormatter = { value, _ ->
+//
+//                                            val baseTime = 1743442801000L // 25년 4월 1일 00시 00분 00초
+//                                            val actualTimeMillis =
+//                                                baseTime + (value * 60 * 1000).toLong()
+////                                        val formatter = SimpleDateFormat("HH:mm:ss", Locale.KOREAN)
+//                                            val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
+//                                            formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
+//                                            formatter.format(Date(actualTimeMillis))
+//                                        },
+//                                        itemPlacer = AxisItemPlacer.Horizontal.default(
+//                                            spacing = 5,  // x축 라벨 간격을 더 촘촘히 (기본은 자동)
+//                                        ),
+//                                        label = axisLabelComponent(color = Color.Black),
+//                                        guideline = null,
+//                                    ),
+
+//                            bottomAxis = rememberBottomAxis(
+//                                title = "Count of values",
+//                                tickLength = 0.dp,
+//                                valueFormatter = CustomXAxisFormatter(
+//                                    baseTime = 1743442800000L,
+//                                    interval = 5,
+//                                    totalEntryCount = totalEntryCount.value
+//                                ),
+//                                label = axisLabelComponent(
+//                                    color = Color.Black
+//                                ),
+//                                guideline = null,
+//                                itemPlacer = AxisItemPlacer.Horizontal.default(1) // 여기도 일치시켜야 간격 정확
+//                            ),
+                                )
+                            }
+
                         }
                     } else {
                         Box(
@@ -830,7 +961,6 @@ fun HomeScreen(
                     )
                 }
             }
-
         }
 
         // 3. 센서 정보 표시 카드
@@ -881,8 +1011,8 @@ fun HomeScreen(
                     .padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                for (i in 0 until 10) {
-                    val painter = if (i < 10 - day + 1) {
+                for (i in 0 until 14) {
+                    val painter = if (i < 14 - day + 1) {
                         R.drawable.sensor_progress_on
                     } else {
                         R.drawable.sensor_progress_off
@@ -890,7 +1020,8 @@ fun HomeScreen(
                     Image(
                         painter = painterResource(painter),
                         contentDescription = "센서 진행률",
-                        modifier = Modifier.size(25.dp, 10.dp)
+//                        modifier = Modifier.size(15.dp, 10.dp)
+                        modifier = Modifier.size(19.dp, 10.dp)
                     )
                 }
             }
@@ -903,13 +1034,15 @@ fun HomeScreen(
             ) {
                 if ((10 - day + 1) < 11) {
                     Text(
-                        text = "${10 - day + 1}/10일",
+//                        text = "${10 - day + 1}/10일",
+                        text = "${14 - day + 1}/14일",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium
                     )
                 } else {
                     Text(
-                        text = "10/10일",
+//                        text = "10/10일",
+                        text = "14/14일",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -1009,3 +1142,5 @@ fun getTrendStatus(glucoseValueList: List<UserGlucose>): String {
         else -> "유지 중"
     }
 }
+
+

@@ -149,7 +149,8 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
         Log.e("TEST", "startTimeFromDS : $startTimeFromDS")
 
         // 2. 측정 시간 설정
-        val measurementTime: Long = 1000 * 60 * 60 * 24 * 10 // 측정일 10일
+//        val measurementTime: Long = 1000 * 60 * 60 * 24 * 10 // 측정일 10일
+        val measurementTime: Long = 1000 * 60 * 60 * 24 * 14 // 측정일 14일
 //        val measurementTime: Long = 1000 * 60 * 3 // 테스트 3분
 
         DataStoreManager.deleteMeasurementTime()
