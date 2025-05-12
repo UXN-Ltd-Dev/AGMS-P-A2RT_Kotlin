@@ -2,6 +2,7 @@ package kr.co.uxn.agms_p.ui.components.main.home
 
 import android.graphics.Paint
 import android.graphics.Typeface
+import android.text.TextUtils
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.MutatePriority
@@ -70,6 +71,8 @@ import com.patrykandpatrick.vico.compose.chart.line.lineChart
 import com.patrykandpatrick.vico.compose.chart.scroll.rememberChartScrollSpec
 import com.patrykandpatrick.vico.compose.chart.scroll.rememberChartScrollState
 import com.patrykandpatrick.vico.compose.component.shape.shader.fromBrush
+import com.patrykandpatrick.vico.compose.component.shape.textComponent
+import com.patrykandpatrick.vico.compose.dimensions.dimensionsOf
 import com.patrykandpatrick.vico.compose.style.ProvideChartStyle
 import com.patrykandpatrick.vico.core.DefaultAlpha
 import com.patrykandpatrick.vico.core.axis.AxisItemPlacer
@@ -77,10 +80,12 @@ import com.patrykandpatrick.vico.core.chart.dimensions.HorizontalDimensions
 import com.patrykandpatrick.vico.core.chart.draw.ChartDrawContext
 import com.patrykandpatrick.vico.core.chart.line.LineChart
 import com.patrykandpatrick.vico.core.chart.values.AxisValuesOverrider
+import com.patrykandpatrick.vico.core.component.shape.ShapeComponent
 import com.patrykandpatrick.vico.core.component.shape.shader.DynamicShaders
 import com.patrykandpatrick.vico.core.context.MeasureContext
 import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
 import com.patrykandpatrick.vico.core.entry.FloatEntry
+import com.patrykandpatrick.vico.core.scroll.AutoScrollCondition
 import com.patrykandpatrick.vico.core.scroll.InitialScroll
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -144,6 +149,12 @@ fun HomeScreen(
     val dataSetLineSpec = remember { arrayListOf<LineChart.LineSpec>() }
     val scrollState = rememberChartScrollState()
 
+    val oldModel = remember { mutableStateOf(modelProducer.getModel()) } // ← 추가!
+    val scrollSpec = rememberChartScrollSpec(
+        initialScroll = InitialScroll.End,
+        autoScrollCondition = AutoScrollCondition.OnModelSizeIncreased
+    )
+
     val isLoading = remember { mutableStateOf(false) }
 
     // Zoom 변수
@@ -169,8 +180,14 @@ fun HomeScreen(
             visibleXRange: ClosedFloatingPointRange<Float>,
             fullXRange: ClosedFloatingPointRange<Float>,
         ): List<Float> {
-            val start = visibleXRange.start
-            val end = visibleXRange.endInclusive
+            val range = visibleXRange.endInclusive - visibleXRange.start
+            val offset = range * 0.1f
+
+//            val rawOffset = range * 0.1f
+//            val offset = rawOffset.coerceIn(0.5f, 5f) // 최소 0.5, 최대 10으로 제한
+
+            val start = visibleXRange.start + offset
+            val end = visibleXRange.endInclusive - offset
             val mid = (start + end) / 2f
             return listOf(start, mid, end)
         }
@@ -191,6 +208,7 @@ fun HomeScreen(
             context: MeasureContext,
             horizontalDimensions: HorizontalDimensions,
             tickThickness: Float,
+//        ): Float = context.dpToPx(30f)
         ): Float = 0f
 
         override fun getEndHorizontalAxisInset(
@@ -219,7 +237,7 @@ fun HomeScreen(
 
 
 
-    LaunchedEffect(selectedOption) {
+    LaunchedEffect(selectedOption, selectedChartOption) {
         withContext(Dispatchers.IO) {
             dataSetForModel.clear()
 //            dataSetLineSpec.clear()
@@ -320,17 +338,17 @@ fun HomeScreen(
                 modelProducer.setEntries(dataSetForModel)
                 isLoading.value = true
                 delay(100)
-                scrollState.scroll(MutatePriority.Default) {
-                    // 강제로 끝까지 스크롤
-                    val delta = scrollState.maxValue
-                    scrollBy(delta)
-                }
+//                scrollState.scroll(MutatePriority.Default) {
+//                    // 강제로 끝까지 스크롤
+//                    val delta = scrollState.maxValue
+//                    scrollBy(delta)
+//                }
             }
         }
     }
 
 
-    LaunchedEffect(chartTrigger, selectedChartOption) {
+    LaunchedEffect(chartTrigger) {
         withContext(Dispatchers.IO) {
             // delay는 추후에 ANR이 발생하면 다시 활성화할 것!!
 //            delay(2000)
@@ -339,6 +357,9 @@ fun HomeScreen(
 //            dataSetLineSpec.clear()
             val dataPoints = arrayListOf<FloatEntry>()
 
+            withContext(Dispatchers.Main) {
+                oldModel.value = modelProducer.getModel()
+            }
             // 차트 디자인 옵션
             dataSetLineSpec.add(
                 LineChart.LineSpec(
@@ -430,25 +451,33 @@ fun HomeScreen(
 
 
             withContext(Dispatchers.Main) {
+
+                delay(100)
                 modelProducer.setEntries(dataSetForModel)
+
+//                oldModel.value = modelProducer.getModel()
+
+                scrollSpec.performAutoScroll(
+                    model = modelProducer.getModel(),
+                    oldModel = oldModel.value,
+                    chartScrollState = scrollState
+                )
+
                 isLoading.value = true
                 delay(100)
-                scrollState.scroll(MutatePriority.Default) {
-                    // 강제로 끝까지 스크롤
-                    val delta = scrollState.maxValue
-                    scrollBy(delta)
+                if (!scrollState.isScrollInProgress) {
+                    Log.e("TEST", "scrollState.isScrollInProgress : ${scrollState.isScrollInProgress}")
+                    scrollState.scroll(MutatePriority.Default) {
+                        // 강제로 끝까지 스크롤
+                        scrollBy(scrollState.maxValue)
+                    }
+                } else {
+                    Log.e("TEST", "scrollState.isScrollInProgress : ${scrollState.isScrollInProgress}")
                 }
             }
 
             // 추세 변화 알고리즘
             glucoseTrend.value = getTrendStatus(localDBDataListAfterLastTime)
-
-//            slope >= 10.0 -> "급상승"
-//            slope in 1.0..4.9 -> "상승 중"
-//            slope in -0.9..0.9 -> "유지 중"
-//            slope in -4.9..-1.0 -> "하강 중"
-//            slope <= -10.0 -> "급하강"
-//            else -> "유지 중"
 
             glucoseTrendImgResource.value = when (glucoseTrend.value) {
                 "급상승" -> R.drawable.level5
@@ -560,9 +589,6 @@ fun HomeScreen(
                 .fillMaxWidth()
                 .height(130.dp)
                 .padding(10.dp)
-//                .clickable {
-//                    chartDisplayMode = (chartDisplayMode + 1) % 3
-//                },
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onLongPress = {
@@ -601,7 +627,6 @@ fun HomeScreen(
 //                }
 
                 Text(
-//                    text = mode,
                     text = "현재 혈당",
                     fontSize = fontSize,
                     fontWeight = FontWeight.Medium,
@@ -609,13 +634,13 @@ fun HomeScreen(
                     modifier = Modifier
                         .padding(start = 20.dp)
                 )
-                Image(
-                    modifier = Modifier
-                        .padding(start = 5.dp)
-                        .size(17.dp),
-                    painter = painterResource(R.drawable.glucose_reset),
-                    contentDescription = "glucoseReset"
-                )
+//                Image(
+//                    modifier = Modifier
+//                        .padding(start = 5.dp)
+//                        .size(17.dp),
+//                    painter = painterResource(R.drawable.glucose_reset),
+//                    contentDescription = "glucoseReset"
+//                )
             }
 
             // Box로 수정
@@ -771,8 +796,6 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     if (dataSetForModel.isNotEmpty() && isLoading.value == true) {
-
-
                         ProvideChartStyle {
                             val marker = rememberMarker()
 //                            val (minY, maxY) = when (selectedChartOption) {
@@ -781,7 +804,7 @@ fun HomeScreen(
 //                                else -> 24f to 26f
 //                            }
 
-                            if (totalEntryCount.value < 6) {
+                            if (totalEntryCount.value < 5) {
                                 Chart(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -796,8 +819,9 @@ fun HomeScreen(
                                     ),
                                     chartModelProducer = modelProducer,
                                     chartScrollState = scrollState,
-                                    chartScrollSpec = rememberChartScrollSpec(initialScroll = InitialScroll.End), // 우측부터 최신값추가
+//                                    chartScrollSpec = rememberChartScrollSpec(initialScroll = InitialScroll.End), // 우측부터 최신값추가
 
+                                    chartScrollSpec = scrollSpec,
                                     // y축
                                     startAxis = rememberStartAxis(
                                         title = "Top values",
@@ -819,11 +843,8 @@ fun HomeScreen(
                                         title = "Count of values",
                                         tickLength = 0.dp,
                                         valueFormatter = { value, _ ->
-
                                             val baseTime = 1743442801000L // 25년 4월 1일 00시 00분 00초
-                                            val actualTimeMillis =
-                                                baseTime + (value * 60 * 1000).toLong()
-//                                        val formatter = SimpleDateFormat("HH:mm:ss", Locale.KOREAN)
+                                            val actualTimeMillis = baseTime + (value * 60 * 1000).toLong()
                                             val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
                                             formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
                                             formatter.format(Date(actualTimeMillis))
@@ -831,24 +852,12 @@ fun HomeScreen(
                                         itemPlacer = AxisItemPlacer.Horizontal.default(
                                             spacing = 1,  // x축 라벨 간격을 더 촘촘히 (기본은 자동)
                                         ),
-                                        label = axisLabelComponent(color = Color.Black),
+                                        label = axisLabelComponent(
+                                            color = Color.Black,
+//                                            background = ShapeComponent(color = R.color.teal_200)
+                                        ),
                                         guideline = null,
                                     ),
-
-//                            bottomAxis = rememberBottomAxis(
-//                                title = "Count of values",
-//                                tickLength = 0.dp,
-//                                valueFormatter = CustomXAxisFormatter(
-//                                    baseTime = 1743442800000L,
-//                                    interval = 5,
-//                                    totalEntryCount = totalEntryCount.value
-//                                ),
-//                                label = axisLabelComponent(
-//                                    color = Color.Black
-//                                ),
-//                                guideline = null,
-//                                itemPlacer = AxisItemPlacer.Horizontal.default(1) // 여기도 일치시켜야 간격 정확
-//                            ),
                                 )
                             } else {
                                 Chart(
@@ -865,7 +874,11 @@ fun HomeScreen(
                                     ),
                                     chartModelProducer = modelProducer,
                                     chartScrollState = scrollState,
-                                    chartScrollSpec = rememberChartScrollSpec(initialScroll = InitialScroll.End), // 우측부터 최신값추가
+//                                    chartScrollSpec = rememberChartScrollSpec(
+//                                        initialScroll = InitialScroll.End,
+//                                        autoScrollCondition = AutoScrollCondition.OnModelSizeIncreased
+//                                    ), // 우측부터 최신값추가
+                                    chartScrollSpec = scrollSpec,
 
                                     // y축
                                     startAxis = rememberStartAxis(
@@ -896,45 +909,14 @@ fun HomeScreen(
                                             formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
                                             formatter.format(Date(actualTimeMillis))
                                         },
-                                        label = axisLabelComponent(color = Color.Black),
+                                        label = axisLabelComponent(
+                                            color = Color.Black,
+//                                            horizontalMargin = 20.dp,
+//                                            textSize = 10.sp,
+//                                            background = ShapeComponent(color = R.color.teal_200)
+                                        ),
                                         guideline = null,
                                     )
-
-
-//                                    bottomAxis = rememberBottomAxis(
-//                                        title = "Count of values",
-//                                        tickLength = 0.dp,
-//                                        valueFormatter = { value, _ ->
-//
-//                                            val baseTime = 1743442801000L // 25년 4월 1일 00시 00분 00초
-//                                            val actualTimeMillis =
-//                                                baseTime + (value * 60 * 1000).toLong()
-////                                        val formatter = SimpleDateFormat("HH:mm:ss", Locale.KOREAN)
-//                                            val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
-//                                            formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
-//                                            formatter.format(Date(actualTimeMillis))
-//                                        },
-//                                        itemPlacer = AxisItemPlacer.Horizontal.default(
-//                                            spacing = 5,  // x축 라벨 간격을 더 촘촘히 (기본은 자동)
-//                                        ),
-//                                        label = axisLabelComponent(color = Color.Black),
-//                                        guideline = null,
-//                                    ),
-
-//                            bottomAxis = rememberBottomAxis(
-//                                title = "Count of values",
-//                                tickLength = 0.dp,
-//                                valueFormatter = CustomXAxisFormatter(
-//                                    baseTime = 1743442800000L,
-//                                    interval = 5,
-//                                    totalEntryCount = totalEntryCount.value
-//                                ),
-//                                label = axisLabelComponent(
-//                                    color = Color.Black
-//                                ),
-//                                guideline = null,
-//                                itemPlacer = AxisItemPlacer.Horizontal.default(1) // 여기도 일치시켜야 간격 정확
-//                            ),
                                 )
                             }
 
@@ -943,7 +925,6 @@ fun HomeScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-//                        .height(200.dp),
                                 .weight(1f),
                             contentAlignment = Alignment.Center
                         ) {
@@ -955,6 +936,7 @@ fun HomeScreen(
                             )
                         }
                     }
+
                     RadioButtonSingleSelection(
                         selectedOption = selectedOption,
                         onOptionSelected = { selectedOption = it }

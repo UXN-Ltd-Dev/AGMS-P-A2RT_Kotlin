@@ -21,8 +21,8 @@ class HomeViewModel : ViewModel() {
     val DAY_MILLISECONDS: Long = 1000 * 60 * 60 * 24 // 1일
     val HOUR_MILLISECONDS: Long = 1000 * 60 * 60     // 1시간
 
-        private val _day = MutableStateFlow(10)  // 시연용
-//    private val _day = MutableStateFlow(0) // 실제
+    private val _day = MutableStateFlow(14)  // 시연용
+    //    private val _day = MutableStateFlow(0) // 실제
     val day: StateFlow<Int> = _day.asStateFlow()
 
     private var daySchedulerJob: Job? = null
