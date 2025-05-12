@@ -568,7 +568,7 @@ fun HomeScreen(
                         onLongPress = {
                             // 롱클릭 시 실행할 코드
                             Log.d("TEST", "롱클릭됨!")
-//                            showModeDialog.value = true
+                            showModeDialog.value = true
 
                         },
                         onTap = {

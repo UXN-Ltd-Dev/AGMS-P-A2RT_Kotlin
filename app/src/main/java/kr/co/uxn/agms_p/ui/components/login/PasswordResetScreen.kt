@@ -535,7 +535,8 @@ fun PassWordResetScreen(navController: NavController) {
                         )
 
                         // 다음 버튼
-                        Spacer(modifier = Modifier.height(250.dp))
+//                        Spacer(modifier = Modifier.height(250.dp))
+                        Spacer(modifier = Modifier.weight(1f))
 
                         Box(
                             modifier = Modifier
@@ -589,6 +590,10 @@ fun PassWordResetScreen(navController: NavController) {
                                     }
                             )
                         }
+
+
+                        Spacer(modifier = Modifier.height(33.dp))
+
                     }
                 }
             }

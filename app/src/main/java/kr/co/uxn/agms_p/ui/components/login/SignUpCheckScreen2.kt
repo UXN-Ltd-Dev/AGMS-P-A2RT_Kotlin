@@ -688,7 +688,8 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                             )
 
                             // 다음 버튼
-                            Spacer(modifier = Modifier.height(78.dp))
+//                            Spacer(modifier = Modifier.height(250.dp))
+                            Spacer(modifier = Modifier.weight(1f))
 
                             Box(
                                 modifier = Modifier
@@ -717,6 +718,9 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                         }
                                 )
                             }
+
+                            Spacer(modifier = Modifier.height(33.dp))
+
                         }
 
                     }
