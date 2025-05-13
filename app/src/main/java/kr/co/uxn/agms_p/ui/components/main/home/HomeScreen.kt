@@ -7,7 +7,10 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.forEachGesture
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -167,11 +170,11 @@ fun HomeScreen(
     }
     baseMaxY = when (selectedChartOption) {
         "혈당" -> 250f
-        "WEO1", "WEO2" -> 30f
+        "WEO1", "WEO2" -> 50f
         else -> 250f
     }
     val centerY = (baseMinY + baseMaxY) / 2f
-    val halfRange = ((baseMaxY - baseMinY) / 2f) / zoomFactor.coerceIn(1f, 5f)
+    val halfRange = ((baseMaxY - baseMinY) / 2f) / zoomFactor.coerceIn(1f, 10f)
     val minY = centerY - halfRange
     val maxY = centerY + halfRange
 
@@ -336,15 +339,31 @@ fun HomeScreen(
             dataSetForModel.add(dataPoints)
 
             withContext(Dispatchers.Main) {
+                delay(100)
                 modelProducer.setEntries(dataSetForModel)
+
+//                oldModel.value = modelProducer.getModel()
+
+                scrollSpec.performAutoScroll(
+                    model = modelProducer.getModel(),
+                    oldModel = oldModel.value,
+                    chartScrollState = scrollState
+                )
+
                 isLoading.value = true
                 delay(100)
-//                scrollState.scroll(MutatePriority.Default) {
-//                    // 강제로 끝까지 스크롤
-//                    val delta = scrollState.maxValue
-//                    scrollBy(delta)
-//                }
+                if (!scrollState.isScrollInProgress) {
+                    Log.e("TEST", "scrollState.isScrollInProgress : ${scrollState.isScrollInProgress}")
+                    scrollState.scroll(MutatePriority.Default) {
+                        // 강제로 끝까지 스크롤
+                        scrollBy(scrollState.maxValue)
+                    }
+                } else {
+                    Log.e("TEST", "scrollState.isScrollInProgress : ${scrollState.isScrollInProgress}")
+                }
             }
+
+
         }
     }
 
@@ -787,9 +806,40 @@ fun HomeScreen(
 //                    .pointerInput(Unit) {
 //                        detectTransformGestures { _, _, zoom, _ ->
 //                            zoomFactor *= zoom
-//                            zoomFactor = zoomFactor.coerceIn(0.5f, 5f)
+//                            zoomFactor = zoomFactor.coerceIn(1f, 10f)
 //                        }
 //                    }
+
+                    .pointerInput(Unit) {
+                        forEachGesture {
+                            awaitPointerEventScope {
+                                val down = awaitFirstDown(requireUnconsumed = false)
+                                var zooming = false
+                                var initialDistance = 0f
+
+                                do {
+                                    val event = awaitPointerEvent()
+                                    val pointers = event.changes
+
+                                    if (pointers.size == 2) {
+                                        val distance = (pointers[0].position - pointers[1].position).getDistance()
+
+                                        if (!zooming) {
+                                            zooming = true
+                                            initialDistance = distance
+                                        } else {
+                                            val zoom = distance / initialDistance
+                                            zoomFactor *= zoom
+                                            zoomFactor = zoomFactor.coerceIn(1f, 10f)
+                                            initialDistance = distance
+                                        }
+
+                                        pointers.forEach { it.consume() }
+                                    }
+                                } while (event.changes.any { it.pressed })
+                            }
+                        }
+                    }
                     .weight(1f),
                 color = Color.Transparent
             ) {
@@ -839,6 +889,7 @@ fun HomeScreen(
                                     ),
                                     marker = marker,
                                     isZoomEnabled = true,
+
                                     // x축
                                     bottomAxis = rememberBottomAxis(
                                         title = "Count of values",
