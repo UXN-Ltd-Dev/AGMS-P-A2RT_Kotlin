@@ -129,6 +129,7 @@ fun HomeScreen(
     val weo1 by bleViewModel.weo1.collectAsState()
     val glucose by bleViewModel.glucose.collectAsState()
     val chartTrigger by bleViewModel.chartTrigger.collectAsState()
+
     var showCaliDialog =  bleViewModel.showCaliDialog.collectAsState()
     var showBleConnectDialog =  bleViewModel.showBleConnectDialog.collectAsState()
     var showModeDialog = remember { mutableStateOf(false) }
