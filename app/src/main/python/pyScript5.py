@@ -1,4 +1,8 @@
-# 20250502 version, bypass rate limit filter
+# 20250514
+# kalmafilter reset routine added for calibration and start time
+# bypass rate limit filter
+# process raw data every 1min not 10sec
+
 import numpy as np
 import pandas as pd
 import math
@@ -80,6 +84,21 @@ class DP:
     # Define the initial covariance matrix
     P = np.array([[3, 0, 0], [0, 3, 0], [0, 0, 3]])
 
+    def kalman_filter_reset (tempinit):
+        #Define the initial state (position and velocity)
+        DP.x = np.array([[tempinit], [tempinit], [0]])  # Initial values
+        # Define the state transition matrix
+        DP.F = np.array([[0.92, 0.08, 0], [0, 1, 1], [0, 0, 1] ])
+        # Define the observation matrix
+        DP.H = np.array([[1, 0, 0]])
+        # Define the process noise covariance matrix
+        DP.Q = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1] ])
+        # Define the measurement noise covariance matrix
+        DP.R = np.array([[10000]])
+        # Define the initial covariance matrix
+        DP.P = np.array([[3, 0, 0],[0, 3, 0], [0, 0, 3] ])
+
+
     def kalman_filter(z):
 
         # Prediction step
@@ -96,9 +115,9 @@ class DP:
 
     def get_cbuffer(nparray):
         if DP.startidx <= DP.currentidx:
-            return nparray[DP.startidx: DP.currentidx + 1]
+            return nparray [DP.startidx: DP.currentidx + 1]
         else:
-            return np.concatenate((nparray[DP.startidx:200], nparray[0:DP.currentidx + 1]))
+            return np.concatenate((nparray [DP.startidx:200], nparray[0:DP.currentidx + 1]))
 
     def get_cbuffer_length():
         if DP.startidx <= DP.currentidx:
@@ -115,22 +134,22 @@ class DP:
         return
 
     def get_cbuffer4(nparray):
-        if DP.startidx4 <= DP.currentidx4:
-            return nparray[DP.startidx4: DP.currentidx4 + 1]
-        else:
-            return np.concatenate((nparray[DP.startidx4:200], nparray[0:DP.currentidx4 + 1]))
+        if DP.startidx4 <= DP.currentidx4 :
+            return nparray [DP.startidx4 : DP.currentidx4 + 1]
+        else :
+            return np.concatenate((nparray[DP.startidx4:200], nparray[0:DP.currentidx4+1]))
 
-    def get_cbuffer4_length():
+    def get_cbuffer4_length ():
         if DP.startidx4 <= DP.currentidx4:
             return DP.currentidx4 - DP.startidx4 + 1
         else:
             return (200 - DP.startidx4) + (DP.currentidx4 + 1)
 
-    def insert_into_cbuffer4(timestamp, wraw, nperm, lengthinmin):
+    def insert_into_cbuffer4(timestamp, wraw, nperm, lengthinmin) :
         DP.currentidx4 = (DP.currentidx4 + 1) % 200
         DP.tstampcbuffer4[DP.currentidx4] = timestamp
         DP.rdatacbuffer4[DP.currentidx4] = wraw
-        if DP.get_cbuffer4_length() > lengthinmin * nperm:
+        if DP.get_cbuffer4_length() > lengthinmin * nperm :
             DP.startidx4 = (DP.startidx4 + 1) % 200
         return
 
@@ -144,20 +163,19 @@ class DP:
         max_temprdata = np.max(temprdata)
         min_temprdata = np.min(temprdata)
 
-        if max_temprdata - min_temprdata < 30:
-            W = (max_temprdata + min_temprdata) / 2
-        else:
+        if max_temprdata - min_temprdata < 30 :
+            W = ( max_temprdata + min_temprdata ) / 2
+        else :
             W = tempglucose
 
         return W
 
-    def insert_into_cbuffer2_3(timestamp, wtemp2, nperm, lengthinmin):
+    def insert_into_cbuffer2_3(timestamp, wtemp2, nperm, lengthinmin) :
         DP.tstampcbuffer2[DP.currentidx2] = timestamp - 150
         DP.rdatacbuffer2[DP.currentidx2] = wtemp2
 
-        if DP.currentidx2 == 0 or DP.calibrating == 1:
+        if DP.currentidx2 == 0 :
             DP.rdatacbuffer3[DP.currentidx2] = wtemp2
-            DP.calibrating = 0
         else:
             tempdiff = DP.rdatacbuffer2[DP.currentidx2] - DP.rdatacbuffer2[DP.currentidx2 - 1]
             tempinterval = DP.tstampcbuffer2[DP.currentidx2] - DP.tstampcbuffer2[DP.currentidx2 - 1]
@@ -167,6 +185,10 @@ class DP:
             elif tempdiff / tempinterval <= -3 / 60:
                 tempdiff = (-3 / 60) * tempinterval
             DP.rdatacbuffer3[DP.currentidx2] = DP.rdatacbuffer3[DP.currentidx2 - 1] + tempdiff
+
+        # if DP.calibrating == 1 :
+        # DP.rdatacbuffer3[DP.currentidx2] = wtemp2
+        # DP.calibrating = 0
 
         return_tstamp = DP.tstampcbuffer2[DP.currentidx2]
         return_glucose = DP.rdatacbuffer3[DP.currentidx2]
@@ -196,12 +218,12 @@ class DP:
 
         # Wtemp = W1raw - 3 * W2raw
         Wtemp = W2raw
-        if DP.starttime == -1:
+        if DP.starttime == -1 :
             DP.starttime = timestamp
         Wtemp2 = DP.smoothe_data(timestamp, Wtemp, 1, 5)
 
         DP.global_counter = DP.global_counter + 1
-        if DP.global_counter % 1 == 0:
+        if DP.global_counter % 1 == 0 :
 
             dayidx = (timestamp - DP.starttime) // 86400
 
@@ -209,6 +231,11 @@ class DP:
             Wtemp2 = (Wtemp2 - baseline) * DP.scale[dayidx] + DP.offset[dayidx] + DP.calvalue
 
             # call kalman filter
+
+            if DP.calibrating == 1 or DP.starttime == timestamp:
+                DP.kalman_filter_reset(Wtemp2)
+                DP.calibrating = 0
+
             Wtemp2 = DP.kalman_filter(Wtemp2)
 
             # insert into 1min interval buffer
@@ -221,7 +248,7 @@ class DP:
             # for calibration point calc
             DP.insert_into_cbuffer4(tstamp, DP.glucose, 1, 60)
 
-            if DP.glucose <= 40 and DP.global_counter != 0:
+            if DP.glucose <= 40 and DP.global_counter != 0 :
                 return [tstamp, 40]
 
             return [tstamp, DP.glucose]
@@ -229,7 +256,7 @@ class DP:
             return [-200, -1]
 
     def onepoint_calibration_check(y, yp):
-        if (180 > y > 40):
+        if ( 180 > y > 40 ):
             return 1
         else:
             return 0
@@ -241,6 +268,7 @@ class DP:
             return 0
         else:
             calpoint = DP.get_cal_point(timestamp, DP.glucose)
+            #calpoint = DP.glucose
             DP.calvalue = DP.calvalue + bloodglucose - calpoint
 
             DP.calibrating = 1

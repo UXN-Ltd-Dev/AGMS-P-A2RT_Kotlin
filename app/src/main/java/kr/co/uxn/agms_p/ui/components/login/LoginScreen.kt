@@ -96,6 +96,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Spacer(modifier = Modifier.size(40.dp))
+//                    Spacer(modifier = Modifier.weight(1f))
                     // UXN로고
                     Image(
                         modifier = Modifier.size(150.dp),
@@ -232,6 +233,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
             }
 
             Spacer(modifier = Modifier.height(40.dp))
+//            Spacer(modifier = Modifier.weight(1f))
 
             // 이메일로 시작하기 버튼
             Box(
@@ -388,7 +390,6 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     )
                 }
             }
-
         }
     }
 }

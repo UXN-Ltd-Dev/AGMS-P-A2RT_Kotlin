@@ -106,7 +106,6 @@ android {
         buildConfig = true
         viewBinding = true
     }
-
 }
 
 dependencies {

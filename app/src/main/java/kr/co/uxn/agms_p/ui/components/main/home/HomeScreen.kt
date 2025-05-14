@@ -339,6 +339,7 @@ fun HomeScreen(
             dataSetForModel.add(dataPoints)
 
             withContext(Dispatchers.Main) {
+
                 delay(100)
                 modelProducer.setEntries(dataSetForModel)
 
@@ -362,8 +363,6 @@ fun HomeScreen(
                     Log.e("TEST", "scrollState.isScrollInProgress : ${scrollState.isScrollInProgress}")
                 }
             }
-
-
         }
     }
 
