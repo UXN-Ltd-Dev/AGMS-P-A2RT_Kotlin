@@ -926,8 +926,8 @@ fun HomeScreen(
                                         label = axisLabelComponent(
                                             color = Color.Black,
 //                                            horizontalMargin = 20.dp,
-                                            textSize = 10.sp,
-                                            background = ShapeComponent(color = R.color.teal_200),
+//                                            textSize = 10.sp,
+//                                            background = ShapeComponent(color = R.color.teal_200),
                                             ellipsize = TextUtils.TruncateAt.START,
                                         ),
                                         guideline = null,
