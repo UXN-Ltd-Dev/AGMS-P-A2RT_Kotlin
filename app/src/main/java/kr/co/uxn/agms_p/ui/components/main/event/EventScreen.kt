@@ -366,14 +366,24 @@ fun Item(itemData: ItemData) {
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = itemData.content,
-//                fontSize = 16.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(3f),
-                fontWeight = FontWeight.Medium
-            )
+            if (itemData.eventType == 1403) {
+                Text(
+                    text = itemData.content + " mg/dL",
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(3f),
+                    fontWeight = FontWeight.Medium
+                )
+            } else {
+                Text(
+                    text = itemData.content,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(3f),
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
             Text(
                 text = itemData.time,
                 fontSize = 12.sp,

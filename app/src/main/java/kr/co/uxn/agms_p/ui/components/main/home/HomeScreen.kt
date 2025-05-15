@@ -29,11 +29,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -110,6 +113,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import kotlin.math.absoluteValue
 import kotlin.system.exitProcess
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -127,9 +131,6 @@ fun HomeScreen(
 
     val totalEntryCount = remember { mutableStateOf(0) }
 
-//    var chartDisplayMode by remember { mutableStateOf(0)}
-
-    val weo1 by bleViewModel.weo1.collectAsState()
     val glucose by bleViewModel.glucose.collectAsState()
     val chartTrigger by bleViewModel.chartTrigger.collectAsState()
 
@@ -144,8 +145,6 @@ fun HomeScreen(
 
     var baseMinY by remember {mutableStateOf(0f)}
     var baseMaxY by remember {mutableStateOf(0f)}
-
-//    val randomLevel = remember(chartTrigger) { (1..5).random() }
 
     // Vico Chart
     val modelProducer = remember { ChartEntryModelProducer() }
@@ -165,18 +164,23 @@ fun HomeScreen(
     var zoomFactor by remember { mutableStateOf(1f) }
     baseMinY = when (selectedChartOption) {
         "혈당" -> 0f
-        "WEO1", "WEO2" -> 0f
         else -> 0f
     }
     baseMaxY = when (selectedChartOption) {
         "혈당" -> 250f
-        "WEO1", "WEO2" -> 50f
-        else -> 250f
+        else -> {
+            if (zoomFactor == 1f) {
+                50f
+            } else if (zoomFactor == 2f) {
+                10f
+            } else {
+                5f
+            }
+        }
     }
-    val centerY = (baseMinY + baseMaxY) / 2f
-    val halfRange = ((baseMaxY - baseMinY) / 2f) / zoomFactor.coerceIn(1f, 10f)
-    val minY = centerY - halfRange
-    val maxY = centerY + halfRange
+
+    val minY = baseMinY
+    val maxY = baseMaxY
 
     val customItemPlacer = object : AxisItemPlacer.Horizontal {
         override fun getLabelValues(
@@ -186,6 +190,7 @@ fun HomeScreen(
         ): List<Float> {
             val range = visibleXRange.endInclusive - visibleXRange.start
             val offset = range * 0.1f
+//            val offset = range
 
 //            val rawOffset = range * 0.1f
 //            val offset = rawOffset.coerceIn(0.5f, 5f) // 최소 0.5, 최대 10으로 제한
@@ -220,6 +225,7 @@ fun HomeScreen(
             horizontalDimensions: HorizontalDimensions,
             tickThickness: Float,
         ): Float = 0f
+//        ): Float = context.dpToPx(24f)
 
     }
 
@@ -287,15 +293,6 @@ fun HomeScreen(
 
             Log.d("TEST", "localDbList : ${localDBDataListAfterLastTime}")
 
-//            for (i in 0 until localDBDataListAfterLastTime!!.size) {
-//                dataPoints.add(
-//                    FloatEntry(
-//                        x = (localDBDataListAfterLastTime[i].createdAtLong / 1000).toFloat(),
-//                        y = localDBDataListAfterLastTime[i].glucose.toFloat()
-//                    )
-//                )
-//            }
-
             val baseTime = 1743442800000L // 25년 4월 1일 00시 00분 00초
             for (i in 0 until localDBDataListAfterLastTime!!.size) {
                 val timeDiffMillis = localDBDataListAfterLastTime[i].createdAtLong - baseTime
@@ -331,11 +328,6 @@ fun HomeScreen(
                 }
             }
 
-            // 트림 추가 코드
-//            val trimmedDataPoints =
-//                if (dataPoints.size > 500) dataPoints.takeLast(500) else dataPoints
-//            Log.e("CHART", "trimmedDataPoints size: ${trimmedDataPoints.size}")
-//            dataSetForModel.add(trimmedDataPoints)
             dataSetForModel.add(dataPoints)
 
             withContext(Dispatchers.Main) {
@@ -426,8 +418,6 @@ fun HomeScreen(
 
 //                Log.d("TEST", "timeDiffMinutes : ${timeDiffMinutes}")
 
-
-
                 when (selectedChartOption) {
                     "혈당" -> {
                         dataPoints.add(
@@ -461,13 +451,8 @@ fun HomeScreen(
             Log.e("DB", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
 
             Log.d("CHART", "dataPoints size: ${dataPoints.size}")
-            // 트림추가 코드
-//            val trimmedDataPoints =
-//                if (dataPoints.size > 500) dataPoints.takeLast(500) else dataPoints
-//            Log.e("CHART", "trimmedDataPoints size: ${trimmedDataPoints.size}")
-//            dataSetForModel.add(trimmedDataPoints)
-            dataSetForModel.add(dataPoints)
 
+            dataSetForModel.add(dataPoints)
 
             withContext(Dispatchers.Main) {
 
@@ -638,13 +623,6 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
-//                val mode = when (selectedChartOption) {
-//                    "혈당" -> "현재 혈당"
-//                    "WEO1" -> "WEO1"
-//                    else -> "WEO2"
-//                }
-
                 Text(
                     text = "현재 혈당",
                     fontSize = fontSize,
@@ -737,67 +715,64 @@ fun HomeScreen(
                 else -> "WEO2 그래프"
             }
 
-            Text(
-//                text = "혈당 그래프",
-                text = mode,
-                fontWeight = FontWeight.Bold,
-                fontSize = fontSize,
-                modifier = Modifier
-                    .padding(start = 20.dp)
-            )
 
-//            Row(
-//                modifier = Modifier.fillMaxWidth()
-//                    .padding(start = 20.dp),
-//                horizontalArrangement = Arrangement.SpaceBetween,
-//                verticalAlignment = Alignment.CenterVertically
-//            ) {
-//                Text(
-////                text = "혈당 그래프",
-//                    text = mode,
-//                    fontWeight = FontWeight.Bold,
-//                    fontSize = fontSize,
-//                    modifier = Modifier
-//                )
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = mode,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = fontSize
+                )
 
-//                when (selectedChartOption) {
-//                    "혈당" -> {
-//                        Text(
-////                text = "혈당 그래프",
-//                            text = "       ",
-//                            fontWeight = FontWeight.Bold,
-//                            fontSize = fontSize,
-//                            modifier = Modifier
-//                        )
-//
-//                    } else -> { // WEO1, WEO2
-//                    Icon(
-//                        Icons.Filled.Add,
-//                        contentDescription = "확대 아이콘",
-//                        modifier = Modifier
-//                            .size(20.dp)
-//                            .clickable {
-//                                baseMaxY += 10f
-//                                baseMinY -= 10f
-//                            }
-//                    )
-//                    Icon(
-//                        Icons.Filled.ArrowDropDown,
-//                        contentDescription = "축소 아이콘",
-//                        modifier = Modifier
-//                            .size(20.dp)
-//                            .clickable {
-//
-//                            }
-//                    )
-//                    }
-//                }
+                if (selectedChartOption != "혈당") {
 
-//            }
+                        Spacer(modifier = Modifier.width(50.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                                .padding(top = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceAround
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.zoom_in),
+                                contentDescription = "확대 줌",
+                                modifier = Modifier.size(20.dp)
+                                    .clickable {
+                                        if (zoomFactor < 3){
+                                            zoomFactor += 1f
+                                        }
+//                                        zoomFactor = zoomFactor.coerceIn(1f, 10f)
+                                    }
+                            )
 
+                            Image(
+                                painter = painterResource(R.drawable.zoom_out),
+                                contentDescription = "축소 줌",
+                                modifier = Modifier.size(20.dp)
+                                    .clickable {
+                                        if (zoomFactor > 1){
+                                            zoomFactor -= 1f
+                                        }
+//                                        zoomFactor = zoomFactor.coerceIn(1f, 10f)
+                                    }
+                            )
 
+                            Image(
+                                painter = painterResource(R.drawable.zoom_reset),
+                                contentDescription = "리셋 줌",
+                                modifier = Modifier.size(20.dp)
+                                    .clickable {
+                                        zoomFactor = 1f
+                                    }
+                            )
+                        }
+                    }
+                }
 
-            // TODO VICO CHART
+            // VICO 그래프
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -809,36 +784,36 @@ fun HomeScreen(
 //                        }
 //                    }
 
-                    .pointerInput(Unit) {
-                        forEachGesture {
-                            awaitPointerEventScope {
-                                val down = awaitFirstDown(requireUnconsumed = false)
-                                var zooming = false
-                                var initialDistance = 0f
-
-                                do {
-                                    val event = awaitPointerEvent()
-                                    val pointers = event.changes
-
-                                    if (pointers.size == 2) {
-                                        val distance = (pointers[0].position - pointers[1].position).getDistance()
-
-                                        if (!zooming) {
-                                            zooming = true
-                                            initialDistance = distance
-                                        } else {
-                                            val zoom = distance / initialDistance
-                                            zoomFactor *= zoom
-                                            zoomFactor = zoomFactor.coerceIn(1f, 10f)
-                                            initialDistance = distance
-                                        }
-
-                                        pointers.forEach { it.consume() }
-                                    }
-                                } while (event.changes.any { it.pressed })
-                            }
-                        }
-                    }
+//                    .pointerInput(Unit) {
+//                        forEachGesture {
+//                            awaitPointerEventScope {
+//                                val down = awaitFirstDown(requireUnconsumed = false)
+//                                var zooming = false
+//                                var initialDistance = 0f
+//
+//                                do {
+//                                    val event = awaitPointerEvent()
+//                                    val pointers = event.changes
+//
+//                                    if (pointers.size == 2) {
+//                                        val distance = (pointers[0].position - pointers[1].position).getDistance()
+//
+//                                        if (!zooming) {
+//                                            zooming = true
+//                                            initialDistance = distance
+//                                        } else {
+//                                            val zoom = distance / initialDistance
+//                                            zoomFactor *= zoom
+//                                            zoomFactor = zoomFactor.coerceIn(1f, 10f)
+//                                            initialDistance = distance
+//                                        }
+//
+//                                        pointers.forEach { it.consume() }
+//                                    }
+//                                } while (event.changes.any { it.pressed })
+//                            }
+//                        }
+//                    }
                     .weight(1f),
                 color = Color.Transparent
             ) {
@@ -848,18 +823,11 @@ fun HomeScreen(
                     if (dataSetForModel.isNotEmpty() && isLoading.value == true) {
                         ProvideChartStyle {
                             val marker = rememberMarker()
-//                            val (minY, maxY) = when (selectedChartOption) {
-//                                "혈당" -> 0f to 250f
-//                                "WEO1" -> 24f to 26f
-//                                else -> 24f to 26f
-//                            }
-
                             if (totalEntryCount.value < 5) {
                                 Chart(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .weight(1f),
-//                            .padding(start = 5.dp, end = 10.dp),
                                     chart = lineChart(
                                         lines = dataSetLineSpec,
                                         axisValuesOverrider = AxisValuesOverrider.fixed(
@@ -869,8 +837,6 @@ fun HomeScreen(
                                     ),
                                     chartModelProducer = modelProducer,
                                     chartScrollState = scrollState,
-//                                    chartScrollSpec = rememberChartScrollSpec(initialScroll = InitialScroll.End), // 우측부터 최신값추가
-
                                     chartScrollSpec = scrollSpec,
                                     // y축
                                     startAxis = rememberStartAxis(
@@ -902,6 +868,8 @@ fun HomeScreen(
                                         },
                                         itemPlacer = AxisItemPlacer.Horizontal.default(
                                             spacing = 1,  // x축 라벨 간격을 더 촘촘히 (기본은 자동)
+                                            shiftExtremeTicks = true
+
                                         ),
                                         label = axisLabelComponent(
                                             color = Color.Black,
@@ -915,7 +883,6 @@ fun HomeScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .weight(1f),
-//                            .padding(start = 5.dp, end = 10.dp),
                                     chart = lineChart(
                                         lines = dataSetLineSpec,
                                         axisValuesOverrider = AxisValuesOverrider.fixed(
@@ -925,10 +892,6 @@ fun HomeScreen(
                                     ),
                                     chartModelProducer = modelProducer,
                                     chartScrollState = scrollState,
-//                                    chartScrollSpec = rememberChartScrollSpec(
-//                                        initialScroll = InitialScroll.End,
-//                                        autoScrollCondition = AutoScrollCondition.OnModelSizeIncreased
-//                                    ), // 우측부터 최신값추가
                                     chartScrollSpec = scrollSpec,
 
                                     // y축
@@ -963,8 +926,9 @@ fun HomeScreen(
                                         label = axisLabelComponent(
                                             color = Color.Black,
 //                                            horizontalMargin = 20.dp,
-//                                            textSize = 10.sp,
-//                                            background = ShapeComponent(color = R.color.teal_200)
+                                            textSize = 10.sp,
+                                            background = ShapeComponent(color = R.color.teal_200),
+                                            ellipsize = TextUtils.TruncateAt.START,
                                         ),
                                         guideline = null,
                                     )

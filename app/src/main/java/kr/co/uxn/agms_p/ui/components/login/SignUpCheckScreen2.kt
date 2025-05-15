@@ -517,6 +517,11 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                                                 "인증 실패",
                                                                 Toast.LENGTH_SHORT
                                                             ).show()
+
+                                                            // 인증없이 회원가입을 위한 코드
+                                                            isShowResetPwd.value = true
+                                                            isEmailVerified.value = true
+
                                                         }
                                                     }
                                                 }

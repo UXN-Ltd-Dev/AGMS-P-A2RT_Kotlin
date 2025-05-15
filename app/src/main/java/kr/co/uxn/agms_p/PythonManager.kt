@@ -6,19 +6,15 @@ import com.chaquo.python.PyObject
 import com.chaquo.python.Python
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestDataValue
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEventListData
-import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDataValue
-import kr.co.uxn.agms_p.api.model.responseDTO.ResponseEventData
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseGetGlucose
 import java.util.Objects
-
 
 class PythonManager {
     private val mPythonModule: PyObject
 
-
     init {
         val mPython = Python.getInstance()
-        mPythonModule = mPython.getModule("pyScript5")
+        mPythonModule = mPython.getModule("pyScript2")
     }
 
     fun calculateGlucose(glucoseList: List<RequestDataValue>, eventList: List<RequestEventListData>): List<ResponseGetGlucose> {

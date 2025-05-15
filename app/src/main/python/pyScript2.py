@@ -1,8 +1,3 @@
-# 20250514
-# kalmafilter reset routine added for calibration and start time
-# bypass rate limit filter
-# process raw data every 1min not 10sec
-
 import numpy as np
 import pandas as pd
 import math
@@ -11,37 +6,38 @@ from dateutil import tz
 from pytz import timezone
 
 
+# 20250514
+# kalmafilter reset routine added for calibration and start time
+# bypass rate limit filter
+# process raw data every 1min not 10sec
+
+import numpy as np
+
 def check_data_wrapper2(timestamp, W1, W2):
     return DP.check_data2(timestamp, W1, W2)
-
 
 def onepoint_calibration_wrapper(timestamp, bloodglucose):
     return DP.onepoint_calibration(timestamp, bloodglucose)
 
+def input_scale(alist) :
+    DP.scale=np.array(alist)
 
-def input_scale(alist):
-    DP.scale = np.array(alist)
+def input_a(alist) :
+    DP.a=np.array(alist)
 
+def input_b(blist) :
+    DP.b=np.array(blist)
 
-def input_a(alist):
-    DP.a = np.array(alist)
-
-
-def input_b(blist):
-    DP.b = np.array(blist)
-
-
-def input_offset(offsetlist):
-    DP.offset = np.array(offsetlist)
-
+def input_offset(offsetlist) :
+    DP.offset=np.array(offsetlist)
 
 class DP:
-    scale = np.zeros(20)
-    a = np.zeros(20)
-    b = np.zeros(20)
-    offset = np.zeros(20)
+    scale=np.zeros(20)
+    a=np.zeros(20)
+    b=np.zeros(20)
+    offset=np.zeros(20)
 
-    calvalue = 0
+    calvalue=0
 
     glucose = 0
 
@@ -52,7 +48,7 @@ class DP:
     currentidx = -1
     W = -200
 
-    # 
+    #
     global_counter = -1
     tstampcbuffer2 = np.zeros(200)
     rdatacbuffer2 = np.zeros(200)
@@ -66,23 +62,23 @@ class DP:
     startidx4 = 0
     currentidx4 = 0
 
-    calibrating = 0
-    calforminus = 0
+    calibrating=0
+    calforminus=0
 
     # kalman filter matrices
 
-    # Define the initial state (position and velocity)
+    #Define the initial state (position and velocity)
     x = np.array([[100], [100], [0]])  # Initial values
     # Define the state transition matrix
-    F = np.array([[0.92, 0.08, 0], [0, 1, 1], [0, 0, 1]])
+    F = np.array([[0.92, 0.08, 0], [0, 1, 1], [0, 0, 1] ])
     # Define the observation matrix
     H = np.array([[1, 0, 0]])
     # Define the process noise covariance matrix
-    Q = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    Q = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1] ])
     # Define the measurement noise covariance matrix
     R = np.array([[10000]])
     # Define the initial covariance matrix
-    P = np.array([[3, 0, 0], [0, 3, 0], [0, 0, 3]])
+    P = np.array([[3, 0, 0],[0, 3, 0], [0, 0, 3] ])
 
     def kalman_filter_reset (tempinit):
         #Define the initial state (position and velocity)
@@ -98,7 +94,6 @@ class DP:
         # Define the initial covariance matrix
         DP.P = np.array([[3, 0, 0],[0, 3, 0], [0, 0, 3] ])
 
-
     def kalman_filter(z):
 
         # Prediction step
@@ -111,42 +106,42 @@ class DP:
         K = np.dot(DP.P, np.dot(DP.H.T, np.linalg.inv(S)))  # Kalman gain
         DP.x = DP.x + np.dot(K, y)  # Updated state estimate
         DP.P = DP.P - np.dot(K, np.dot(DP.H, DP.P))  # Updated estimate covariance
-        return DP.x[0, 0]
+        return DP.x[0,0]
 
     def get_cbuffer(nparray):
-        if DP.startidx <= DP.currentidx:
-            return nparray [DP.startidx: DP.currentidx + 1]
-        else:
-            return np.concatenate((nparray [DP.startidx:200], nparray[0:DP.currentidx + 1]))
+        if DP.startidx <= DP.currentidx :
+            return nparray [DP.startidx : DP.currentidx+1]
+        else :
+            return np.concatenate((nparray [DP.startidx:200], nparray[0:DP.currentidx+1]))
 
-    def get_cbuffer_length():
-        if DP.startidx <= DP.currentidx:
+    def get_cbuffer_length () :
+        if DP.startidx <= DP.currentidx :
             return DP.currentidx - DP.startidx + 1
-        else:
+        else :
             return (200 - DP.startidx) + (DP.currentidx + 1)
 
-    def insert_into_cbuffer(timestamp, wraw, nperm, lengthinmin):
-        DP.currentidx = (DP.currentidx + 1) % 200
+    def insert_into_cbuffer(timestamp, wraw, nperm, lengthinmin) :
+        DP.currentidx = (DP.currentidx+1) % 200
         DP.tstampcbuffer[DP.currentidx] = timestamp
         DP.rdatacbuffer[DP.currentidx] = wraw
-        if DP.get_cbuffer_length() > lengthinmin * nperm:
+        if DP.get_cbuffer_length() > lengthinmin * nperm :
             DP.startidx = (DP.startidx + 1) % 200
         return
 
     def get_cbuffer4(nparray):
         if DP.startidx4 <= DP.currentidx4 :
-            return nparray [DP.startidx4 : DP.currentidx4 + 1]
+            return nparray [DP.startidx4 : DP.currentidx4+1]
         else :
-            return np.concatenate((nparray[DP.startidx4:200], nparray[0:DP.currentidx4+1]))
+            return np.concatenate((nparray [DP.startidx4:200], nparray[0:DP.currentidx4+1]))
 
-    def get_cbuffer4_length ():
-        if DP.startidx4 <= DP.currentidx4:
+    def get_cbuffer4_length () :
+        if DP.startidx4 <= DP.currentidx4 :
             return DP.currentidx4 - DP.startidx4 + 1
-        else:
+        else :
             return (200 - DP.startidx4) + (DP.currentidx4 + 1)
 
     def insert_into_cbuffer4(timestamp, wraw, nperm, lengthinmin) :
-        DP.currentidx4 = (DP.currentidx4 + 1) % 200
+        DP.currentidx4 = (DP.currentidx4+1) % 200
         DP.tstampcbuffer4[DP.currentidx4] = timestamp
         DP.rdatacbuffer4[DP.currentidx4] = wraw
         if DP.get_cbuffer4_length() > lengthinmin * nperm :
@@ -170,21 +165,22 @@ class DP:
 
         return W
 
+
     def insert_into_cbuffer2_3(timestamp, wtemp2, nperm, lengthinmin) :
         DP.tstampcbuffer2[DP.currentidx2] = timestamp - 150
         DP.rdatacbuffer2[DP.currentidx2] = wtemp2
 
         if DP.currentidx2 == 0 :
             DP.rdatacbuffer3[DP.currentidx2] = wtemp2
-        else:
-            tempdiff = DP.rdatacbuffer2[DP.currentidx2] - DP.rdatacbuffer2[DP.currentidx2 - 1]
-            tempinterval = DP.tstampcbuffer2[DP.currentidx2] - DP.tstampcbuffer2[DP.currentidx2 - 1]
+        else :
+            tempdiff = DP.rdatacbuffer2[DP.currentidx2] - DP.rdatacbuffer2[DP.currentidx2-1]
+            tempinterval = DP.tstampcbuffer2[DP.currentidx2] - DP.tstampcbuffer2[DP.currentidx2-1]
 
-            if tempdiff / tempinterval >= (3 / 60):
-                tempdiff = (3 / 60) * tempinterval
-            elif tempdiff / tempinterval <= -3 / 60:
-                tempdiff = (-3 / 60) * tempinterval
-            DP.rdatacbuffer3[DP.currentidx2] = DP.rdatacbuffer3[DP.currentidx2 - 1] + tempdiff
+            if tempdiff / tempinterval >=  (3 /60) :
+                tempdiff = (3/60) * tempinterval
+            elif tempdiff / tempinterval <=  -3 /60 :
+                tempdiff = (-3/60) * tempinterval
+            DP.rdatacbuffer3[DP.currentidx2] = DP.rdatacbuffer3[DP.currentidx2-1] + tempdiff
 
         # if DP.calibrating == 1 :
         # DP.rdatacbuffer3[DP.currentidx2] = wtemp2
@@ -193,30 +189,30 @@ class DP:
         return_tstamp = DP.tstampcbuffer2[DP.currentidx2]
         return_glucose = DP.rdatacbuffer3[DP.currentidx2]
 
-        DP.currentidx2 = (DP.currentidx2 + 1)
-        if DP.currentidx2 > lengthinmin * nperm:
+        DP.currentidx2 = (DP.currentidx2+1)
+        if DP.currentidx2 > lengthinmin * nperm :
             DP.currentidx2 = 0
 
         return [return_tstamp, return_glucose]
 
     def smoothe_data(timestamp, wraw, nperm, lengthinmin):
-        # insert into circular buffer
+        #insert into circular buffer
         DP.insert_into_cbuffer(timestamp, wraw, nperm, lengthinmin)
 
-        # get mean and std from circular buffer from the elements within time range
+        #get mean and std from circular buffer from the elements within time range
         temptstamps = DP.get_cbuffer(DP.tstampcbuffer)
         temprdata = DP.get_cbuffer(DP.rdatacbuffer)
-        tempidxs = timestamp - temptstamps <= lengthinmin * 60
+        tempidxs = timestamp - temptstamps <= lengthinmin *60
         temptstamps = temptstamps[tempidxs]
         temprdata = temprdata[tempidxs]
 
-        W = np.median(temprdata)
+        W=np.median(temprdata)
 
         return W
 
     def check_data2(timestamp, W1raw, W2raw):
 
-        # Wtemp = W1raw - 3 * W2raw
+        #Wtemp = W1raw - 3 * W2raw
         Wtemp = W2raw
         if DP.starttime == -1 :
             DP.starttime = timestamp
@@ -225,9 +221,11 @@ class DP:
         DP.global_counter = DP.global_counter + 1
         if DP.global_counter % 1 == 0 :
 
-            dayidx = (timestamp - DP.starttime) // 86400
 
-            baseline = DP.a[dayidx] * (timestamp - DP.starttime) + DP.b[dayidx]
+            dayidx = (timestamp-DP.starttime) // 86400
+
+            baseline = DP.a[dayidx] * (timestamp-DP.starttime) + DP.b[dayidx]
+
             Wtemp2 = (Wtemp2 - baseline) * DP.scale[dayidx] + DP.offset[dayidx] + DP.calvalue
 
             # call kalman filter
@@ -243,7 +241,7 @@ class DP:
 
             tstamp = timestamp
             DP.glucose = Wtemp2
-            # [tstamp, DP.glucose] = DP.insert_into_cbuffer2_3(timestamp, Wtemp2, 1, 120)
+            #[tstamp, DP.glucose] = DP.insert_into_cbuffer2_3(timestamp, Wtemp2, 1, 120)
 
             # for calibration point calc
             DP.insert_into_cbuffer4(tstamp, DP.glucose, 1, 60)
@@ -252,26 +250,26 @@ class DP:
                 return [tstamp, 40]
 
             return [tstamp, DP.glucose]
-        else:
+        else :
             return [-200, -1]
 
     def onepoint_calibration_check(y, yp):
         if ( 180 > y > 40 ):
             return 1
-        else:
+        else :
             return 0
 
     def onepoint_calibration(timestamp, bloodglucose):
         tempresult = DP.onepoint_calibration_check(bloodglucose, DP.glucose)
 
-        if tempresult == 0:
+        if tempresult==0 :
             return 0
-        else:
+        else :
             calpoint = DP.get_cal_point(timestamp, DP.glucose)
             #calpoint = DP.glucose
             DP.calvalue = DP.calvalue + bloodglucose - calpoint
 
-            DP.calibrating = 1
+            DP.calibrating=1
             return 1
 
 def getGlucoseList(current_list, event_list):
