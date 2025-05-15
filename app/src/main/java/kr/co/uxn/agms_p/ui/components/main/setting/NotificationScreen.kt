@@ -403,7 +403,7 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                         horizontalArrangement = Arrangement.Start
                     ) {
                         Text(
-                            text = "목표 혈당 범위",
+                            text = "알림 혈당 범위",
                             fontSize = 16.sp,
                             modifier = Modifier.weight(1.5f)
                         )

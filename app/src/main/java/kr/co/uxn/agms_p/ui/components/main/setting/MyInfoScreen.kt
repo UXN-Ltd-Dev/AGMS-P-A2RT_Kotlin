@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -90,6 +91,10 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
     val weight = remember { mutableStateOf("") }
     val diabetesType = remember { mutableStateOf("") }
 
+    // 목표 혈당범위
+    val targetMinRange = remember { mutableStateOf("80") }
+    val targetMaxRange = remember { mutableStateOf("150") }
+
     var expandedForSex by remember { mutableStateOf(false) }
     var expandedForDiabetesType by remember { mutableStateOf(false) }
 
@@ -167,7 +172,8 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 30.dp)
-                        .padding(top = 60.dp)
+//                        .padding(top = 60.dp)
+                        .padding(top = 30.dp)
                 ) {
                     // 내 정보를 입력하세요.
                     Text(
@@ -189,7 +195,8 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(modifier = Modifier.height(70.dp))
+//                    Spacer(modifier = Modifier.height(70.dp))
+                    Spacer(modifier = Modifier.height(40.dp))
 
                     // 1. 이름
                     Row(
@@ -646,14 +653,161 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                         }
                     }
 
+//                    Spacer(modifier = Modifier.height(120.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    Spacer(modifier = Modifier.height(120.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(start = 50.dp)
+                    ) {
+                        Text(
+                            text = "목표 혈당 범위",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(horizontal = 50.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .width(60.dp)
+                                .drawBehind {
+                                    val strokeWidth = 1.dp.toPx()  // 선 굵기
+                                    val y = size.height - strokeWidth / 2
+                                    drawLine(
+                                        color = Color.Gray,
+                                        start = Offset(0f, y),
+                                        end = Offset(size.width, y),
+                                        strokeWidth = strokeWidth
+                                    )
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            BasicTextField(
+                                value = targetMinRange.value,
+                                onValueChange = { targetMinRange.value = it },
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(onDone = {
+                                    keyboardController?.hide()
+                                }),
+                                decorationBox = { innerTextField ->
+                                    Box(
+                                        modifier = Modifier
+                                            .width(60.dp)
+                                            .height(27.dp)
+                                            .drawBehind {
+                                                val strokeWidth = 0.dp.toPx() // 선 두께 설정
+                                                val y = size.height - strokeWidth / 2 // 선을 하단에 위치
+                                                drawLine(
+                                                    color = Color.White,
+                                                    start = Offset(0f, y),
+                                                    end = Offset(size.width, y),
+                                                    strokeWidth = strokeWidth
+                                                )
+                                            },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        innerTextField()
+                                    }
+                                },
+                                textStyle = TextStyle(
+                                    fontSize = 20.sp,
+                                    textAlign = TextAlign.Center
+                                ),
+                                singleLine = true
+                            )
+                        }
+
+                        Text(
+                            text = " ~ "
+                        )
+
+
+                        Box(
+                            modifier = Modifier
+                                .width(60.dp)
+                                .drawBehind {
+                                    val strokeWidth = 1.dp.toPx()  // 선 굵기
+                                    val y = size.height - strokeWidth / 2
+                                    drawLine(
+                                        color = Color.Gray,
+                                        start = Offset(0f, y),
+                                        end = Offset(size.width, y),
+                                        strokeWidth = strokeWidth
+                                    )
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            BasicTextField(
+                                value = targetMaxRange.value,
+                                onValueChange = { targetMaxRange.value = it },
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(onDone = {
+                                    keyboardController?.hide()
+                                }),
+                                decorationBox = { innerTextField ->
+                                    Box(
+                                        modifier = Modifier
+                                            .width(60.dp)
+                                            .height(27.dp)
+                                            .drawBehind {
+                                                val strokeWidth = 0.dp.toPx() // 선 두께 설정
+                                                val y = size.height - strokeWidth / 2 // 선을 하단에 위치
+                                                drawLine(
+                                                    color = Color.White,
+                                                    start = Offset(0f, y),
+                                                    end = Offset(size.width, y),
+                                                    strokeWidth = strokeWidth
+                                                )
+                                            },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        innerTextField()
+                                    }
+                                },
+                                textStyle = TextStyle(
+                                    fontSize = 20.sp,
+                                    textAlign = TextAlign.Center
+                                ),
+                                singleLine = true
+                            )
+                        }
+                    }
+
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(horizontal = 50.dp)
+                            .padding(top = 10.dp)
+                    ) {
+                        Text(
+                            text = "일반적인 목표 혈당범위는 80~150mg/dL이며, 식후 최대 혈당은 180 mg/dL 미만으로 권장됩니다.",
+                            fontSize = 13.sp,
+                            color = Color.Gray
+                        )
+                    }
 
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(70.dp)
-                            .padding(bottom = 20.dp)
+                            .padding(top = 10.dp)
                     ) {
                         Image(
                             painter = painterResource(R.drawable.btn_save),
