@@ -18,6 +18,6 @@ data class ResponseSignInNormal(
     @SerializedName("result_code")
     val resultCode: Int,
 
-    @SerializedName("id")
+    @SerializedName("user_id")
     val userId: Int
 )

@@ -245,8 +245,13 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                 CoroutineScope(Dispatchers.IO).launch {
                                     try {
                                         // 로그인
+
+                                        // 이메일 공백 처리
+                                        val trimEmail = email.value.trim()
+                                        Log.d("TEST", "originalEmail : ${email.value}\ntrimEmail : $trimEmail")
+
                                         val login =
-                                            emptyRetrofit.uxnLogin(signInInfo = RequestSignInNormal(email.value, pwd.value))
+                                            emptyRetrofit.uxnLogin(signInInfo = RequestSignInNormal(trimEmail, pwd.value))
                                         if (login.isSuccessful) {
                                             val loginResult = login.body()
                                             // 로그인이 성공적으로 되었을 때

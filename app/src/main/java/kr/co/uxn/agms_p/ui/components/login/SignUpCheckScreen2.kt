@@ -209,30 +209,6 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                             }
                         } else {
                             // 카카오 회원 가입
-//                if(email.value.contains("@")) {
-//                    Box(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .drawBehind {
-//                                val strokeWidth = 3.dp.toPx()  // 선 굵기
-//                                val y = size.height - strokeWidth / 2
-//                                drawLine(
-//                                    color = Color(0xFFEEEEEF), // 원하는 색상
-//                                    start = Offset(0f, y),
-//                                    end = Offset(size.width, y),
-//                                    strokeWidth = strokeWidth
-//                                )
-//                            }
-//                            .padding(start = 5.dp, end = 40.dp),
-//                        contentAlignment = Alignment.Center
-//                    ) {
-////                        email.value = oAuthEmail
-//                        Text(
-//                            text = email.value,
-//                            modifier = Modifier.align(Alignment.CenterStart)
-//                        )
-//                    }
-//                } else {
                             BasicTextField(
                                 value = email.value,
                                 onValueChange = { email.value = it },
@@ -295,8 +271,12 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                     // 서버에 이메일 인증하기 요청
                                     CoroutineScope(Dispatchers.IO).launch {
                                         try {
+                                            // 이메일 공백 처리
+                                            val trimEmail = email.value.trim()
+                                            Log.d("TEST", "originalEmail : ${email.value}\ntrimEmail : $trimEmail")
+
                                             val result =
-                                                emptyRetrofit.requestVerficationCode(email.value)
+                                                emptyRetrofit.requestVerficationCode(trimEmail)
                                             if (result.isSuccessful) {
                                                 Log.d("TAG", "인증하기 서버 응답: ${result.body()}")
                                                 val resultBody = result.body()
@@ -718,7 +698,11 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                                 Toast.makeText(context, "이메일 인증을 해주세요.", Toast.LENGTH_SHORT).show()
                                             } else {
                                                 // 인증 성공시
-                                                navController.navigate("SignUpInfoScreen3/${email.value}/${pwd1.value}/${type}")
+                                                // 이메일 공백 처리
+                                                val trimEmail = email.value.trim()
+                                                Log.d("TEST", "originalEmail : ${email.value}\ntrimEmail : $trimEmail")
+
+                                                navController.navigate("SignUpInfoScreen3/${trimEmail}/${pwd1.value}/${type}")
                                             }
                                         }
                                 )

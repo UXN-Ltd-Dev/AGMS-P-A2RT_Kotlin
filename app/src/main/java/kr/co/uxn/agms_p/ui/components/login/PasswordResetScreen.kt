@@ -207,7 +207,10 @@ fun PassWordResetScreen(navController: NavController) {
                                     // 서버에 이메일 인증하기 요청
                                     CoroutineScope(Dispatchers.IO).launch {
                                         try {
-                                            val result = emptyRetrofit.requestVerficationCode(email.value)
+                                            // 이메일 공백 처리
+                                            val trimEmail = email.value.trim()
+
+                                            val result = emptyRetrofit.requestVerficationCode(trimEmail)
                                             if (result.isSuccessful) {
                                                 Log.d("TAG", "인증하기 서버 응답: ${result.body()}")
                                                 val resultBody = result.body()

@@ -244,7 +244,7 @@ class AlwaysService() : Service() {
                             val lastTimeBody = lastTime.body()
                             if (lastTimeBody != null) {
                                 Log.e("SERVICE", "서비스 코루틴에서 호출한 lastTime (isSuccessful) : ${lastTimeBody.toString()}")
-                                if(lastTimeBody.isSuccess == false) {
+                                if (lastTimeBody.isSuccess == false) {
                                     val userId2 = DataStoreManager.getUserId().first() ?: -1
                                     val localDBDataList = localDbRepository?.dataDao()?.getListAfterLastTime(userId = userId2, lastTime = 0)
 
