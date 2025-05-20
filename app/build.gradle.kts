@@ -196,11 +196,17 @@ dependencies {
     val workVersion = "2.10.0"
     implementation("androidx.work:work-runtime-ktx:${workVersion}")
 
-    val vicoVersion = "1.11.1"
-    implementation("com.patrykandpatrick.vico:core:$vicoVersion")
-    implementation("com.patrykandpatrick.vico:compose:$vicoVersion")
-    implementation("com.patrykandpatrick.vico:compose-m2:$vicoVersion")
-    implementation("com.patrykandpatrick.vico:compose-m3:$vicoVersion")
+//    val vicoVersion = "1.11.1"
+//    implementation("com.patrykandpatrick.vico:core:$vicoVersion")
+//    implementation("com.patrykandpatrick.vico:compose:$vicoVersion")
+//    implementation("com.patrykandpatrick.vico:compose-m2:$vicoVersion")
+//    implementation("com.patrykandpatrick.vico:compose-m3:$vicoVersion")
+
+    implementation(libs.vico.compose)
+    implementation(libs.vico.compose.m2)
+    implementation(libs.vico.compose.m3)
+    implementation(libs.vico.multiplatform)
+    implementation(libs.vico.views)
 
     // 앱 업데이트 확인
     implementation("com.google.android.play:app-update-ktx:2.1.0")

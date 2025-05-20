@@ -72,6 +72,10 @@ import androidx.navigation.NavController
 import com.patrykandpatrick.vico.compose.axis.axisLabelComponent
 import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
 import com.patrykandpatrick.vico.compose.axis.vertical.rememberStartAxis
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.chart.Chart
 import com.patrykandpatrick.vico.compose.chart.line.lineChart
 import com.patrykandpatrick.vico.compose.chart.scroll.rememberChartScrollSpec
@@ -82,6 +86,10 @@ import com.patrykandpatrick.vico.compose.dimensions.dimensionsOf
 import com.patrykandpatrick.vico.compose.style.ProvideChartStyle
 import com.patrykandpatrick.vico.core.DefaultAlpha
 import com.patrykandpatrick.vico.core.axis.AxisItemPlacer
+import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.core.chart.dimensions.HorizontalDimensions
 import com.patrykandpatrick.vico.core.chart.draw.ChartDrawContext
 import com.patrykandpatrick.vico.core.chart.line.LineChart
@@ -147,9 +155,21 @@ fun HomeScreen(
     var baseMaxY by remember {mutableStateOf(0f)}
 
     // Vico Chart
-    val modelProducer = remember { ChartEntryModelProducer() }
+//    val modelProducer = remember { ChartEntryModelProducer() }
+    val modelProducer = remember { CartesianChartModelProducer() }
     val dataSetForModel = remember { mutableStateListOf(listOf<FloatEntry>()) }
-    val dataSetLineSpec = remember { arrayListOf<LineChart.LineSpec>() }
+//    val dataSetLineSpec = remember { arrayListOf<LineChart.LineSpec>() }
+    val lineSpec = rememberLineSpec(
+        shader = DynamicShaders.fromBrush(
+            Brush.verticalGradient(
+                listOf(
+                    Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_END),
+                    Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_START)
+                )
+            )
+        ),
+        color = Color(0xFF6FB0E5).toArgb()
+    )
     val scrollState = rememberChartScrollState()
 
     val oldModel = remember { mutableStateOf(modelProducer.getModel()) } // ← 추가!
@@ -157,6 +177,19 @@ fun HomeScreen(
         initialScroll = InitialScroll.End,
         autoScrollCondition = AutoScrollCondition.OnModelSizeIncreased
     )
+
+    val lineSpec = rememberLineSpec(
+        shader = DynamicShaders.fromBrush(
+            Brush.verticalGradient(
+                listOf(
+                    Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_END),
+                    Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_START)
+                )
+            )
+        ),
+        color = Color(0xFF6FB0E5).toArgb(),
+    )
+
 
     val isLoading = remember { mutableStateOf(false) }
 
@@ -191,7 +224,7 @@ fun HomeScreen(
             val range = visibleXRange.endInclusive - visibleXRange.start
             val offset = range * 0.1f
 //            val offset = range
-
+//
 //            val rawOffset = range * 0.1f
 //            val offset = rawOffset.coerceIn(0.5f, 5f) // 최소 0.5, 최대 10으로 제한
 
@@ -247,116 +280,116 @@ fun HomeScreen(
 
 
 
-    LaunchedEffect(selectedOption, selectedChartOption) {
-        withContext(Dispatchers.IO) {
-            dataSetForModel.clear()
-//            dataSetLineSpec.clear()
-            val dataPoints = arrayListOf<FloatEntry>()
-
-            // 차트 디자인 옵션
-            dataSetLineSpec.add(
-                LineChart.LineSpec(
-                    lineColor = Color(0xFF6FB0E5).toArgb(),
-                    lineBackgroundShader = DynamicShaders.fromBrush(
-                        brush = Brush.verticalGradient(
-                            listOf(
-                                Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_END),
-                                Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_START)
-                            )
-                        )
-                    )
-                )
-            )
-
-            val userId = DataStoreManager.getUserId().first() ?: -1
-
-            Log.e("TEST", "selectedOption : ${selectedOption}")
-            val lastTime = when (selectedOption) {
-                "3시간" -> System.currentTimeMillis() - (3 * 60 * 60 * 1000L)
-                "6시간" -> System.currentTimeMillis() - (6 * 60 * 60 * 1000L)
-                else -> System.currentTimeMillis() - (12 * 60 * 60 * 1000L)
-            }
-            Log.e("DB", "lastTime : ${lastTime}")
-            val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA)
-            formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
-            val convertedLastTime = formatter.format(Date(lastTime))
-
-            Log.e("DB", "converted : ${convertedLastTime}")
-
-            val localDBDataListAfterLastTime =
-                localDbRepository?.dataDao()
-                    ?.getGlucoseListAfterLastTime(userId = userId, lastTime = lastTime)
-
-            if (localDBDataListAfterLastTime != null) {
-                totalEntryCount.value = localDBDataListAfterLastTime.size
-            }
-
-            Log.d("TEST", "localDbList : ${localDBDataListAfterLastTime}")
-
-            val baseTime = 1743442800000L // 25년 4월 1일 00시 00분 00초
-            for (i in 0 until localDBDataListAfterLastTime!!.size) {
-                val timeDiffMillis = localDBDataListAfterLastTime[i].createdAtLong - baseTime
-                val timeDiffMinutes =
-                    (timeDiffMillis / 1000 / 60).toFloat()  // millis → seconds → minutes
-
-//                Log.d("TEST", "timeDiffMinutes : ${timeDiffMinutes}")
-                when(selectedChartOption) {
-                    "혈당" -> {
-                        dataPoints.add(
-                            FloatEntry(
-                                x = (timeDiffMinutes),
-                                y = localDBDataListAfterLastTime[i].glucose.toFloat()
-                            )
-                        )
-                    }
-                    "WEO1" -> {
-                        dataPoints.add(
-                            FloatEntry(
-                                x = (timeDiffMinutes),
-                                y = localDBDataListAfterLastTime[i].weo1.toFloat()
-                            )
-                        )
-                    }
-                    else -> {
-                        dataPoints.add(
-                            FloatEntry(
-                                x = (timeDiffMinutes),
-                                y = localDBDataListAfterLastTime[i].weo2.toFloat()
-                            )
-                        )
-                    }
-                }
-            }
-
-            dataSetForModel.add(dataPoints)
-
-            withContext(Dispatchers.Main) {
-
-                delay(100)
-                modelProducer.setEntries(dataSetForModel)
-
-//                oldModel.value = modelProducer.getModel()
-
-                scrollSpec.performAutoScroll(
-                    model = modelProducer.getModel(),
-                    oldModel = oldModel.value,
-                    chartScrollState = scrollState
-                )
-
-                isLoading.value = true
-                delay(100)
-                if (!scrollState.isScrollInProgress) {
-                    Log.e("TEST", "scrollState.isScrollInProgress : ${scrollState.isScrollInProgress}")
-                    scrollState.scroll(MutatePriority.Default) {
-                        // 강제로 끝까지 스크롤
-                        scrollBy(scrollState.maxValue)
-                    }
-                } else {
-                    Log.e("TEST", "scrollState.isScrollInProgress : ${scrollState.isScrollInProgress}")
-                }
-            }
-        }
-    }
+//    LaunchedEffect(selectedOption, selectedChartOption) {
+//        withContext(Dispatchers.IO) {
+//            dataSetForModel.clear()
+////            dataSetLineSpec.clear()
+//            val dataPoints = arrayListOf<FloatEntry>()
+//
+//            // 차트 디자인 옵션
+//            dataSetLineSpec.add(
+//                LineChart.LineSpec(
+//                    lineColor = Color(0xFF6FB0E5).toArgb(),
+//                    lineBackgroundShader = DynamicShaders.fromBrush(
+//                        brush = Brush.verticalGradient(
+//                            listOf(
+//                                Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_END),
+//                                Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_START)
+//                            )
+//                        )
+//                    )
+//                )
+//            )
+//
+//            val userId = DataStoreManager.getUserId().first() ?: -1
+//
+//            Log.e("TEST", "selectedOption : ${selectedOption}")
+//            val lastTime = when (selectedOption) {
+//                "3시간" -> System.currentTimeMillis() - (3 * 60 * 60 * 1000L)
+//                "6시간" -> System.currentTimeMillis() - (6 * 60 * 60 * 1000L)
+//                else -> System.currentTimeMillis() - (12 * 60 * 60 * 1000L)
+//            }
+//            Log.e("DB", "lastTime : ${lastTime}")
+//            val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA)
+//            formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
+//            val convertedLastTime = formatter.format(Date(lastTime))
+//
+//            Log.e("DB", "converted : ${convertedLastTime}")
+//
+//            val localDBDataListAfterLastTime =
+//                localDbRepository?.dataDao()
+//                    ?.getGlucoseListAfterLastTime(userId = userId, lastTime = lastTime)
+//
+//            if (localDBDataListAfterLastTime != null) {
+//                totalEntryCount.value = localDBDataListAfterLastTime.size
+//            }
+//
+//            Log.d("TEST", "localDbList : ${localDBDataListAfterLastTime}")
+//
+//            val baseTime = 1743442800000L // 25년 4월 1일 00시 00분 00초
+//            for (i in 0 until localDBDataListAfterLastTime!!.size) {
+//                val timeDiffMillis = localDBDataListAfterLastTime[i].createdAtLong - baseTime
+//                val timeDiffMinutes =
+//                    (timeDiffMillis / 1000 / 60).toFloat()  // millis → seconds → minutes
+//
+////                Log.d("TEST", "timeDiffMinutes : ${timeDiffMinutes}")
+//                when(selectedChartOption) {
+//                    "혈당" -> {
+//                        dataPoints.add(
+//                            FloatEntry(
+//                                x = (timeDiffMinutes),
+//                                y = localDBDataListAfterLastTime[i].glucose.toFloat()
+//                            )
+//                        )
+//                    }
+//                    "WEO1" -> {
+//                        dataPoints.add(
+//                            FloatEntry(
+//                                x = (timeDiffMinutes),
+//                                y = localDBDataListAfterLastTime[i].weo1.toFloat()
+//                            )
+//                        )
+//                    }
+//                    else -> {
+//                        dataPoints.add(
+//                            FloatEntry(
+//                                x = (timeDiffMinutes),
+//                                y = localDBDataListAfterLastTime[i].weo2.toFloat()
+//                            )
+//                        )
+//                    }
+//                }
+//            }
+//
+//            dataSetForModel.add(dataPoints)
+//
+//            withContext(Dispatchers.Main) {
+//
+//                delay(100)
+//                modelProducer.setEntries(dataSetForModel)
+//
+////                oldModel.value = modelProducer.getModel()
+//
+//                scrollSpec.performAutoScroll(
+//                    model = modelProducer.getModel(),
+//                    oldModel = oldModel.value,
+//                    chartScrollState = scrollState
+//                )
+//
+//                isLoading.value = true
+//                delay(100)
+//                if (!scrollState.isScrollInProgress) {
+//                    Log.e("TEST", "scrollState.isScrollInProgress : ${scrollState.isScrollInProgress}")
+//                    scrollState.scroll(MutatePriority.Default) {
+//                        // 강제로 끝까지 스크롤
+//                        scrollBy(scrollState.maxValue)
+//                    }
+//                } else {
+//                    Log.e("TEST", "scrollState.isScrollInProgress : ${scrollState.isScrollInProgress}")
+//                }
+//            }
+//        }
+//    }
 
 
     LaunchedEffect(chartTrigger) {
@@ -366,10 +399,11 @@ fun HomeScreen(
             delay(500)
             dataSetForModel.clear()
 //            dataSetLineSpec.clear()
-            val dataPoints = arrayListOf<FloatEntry>()
+//            val dataPoints = arrayListOf<FloatEntry>()
+            val dataPoints = mutableListOf<Pair<Float, Float>>()
 
             withContext(Dispatchers.Main) {
-                oldModel.value = modelProducer.getModel()
+//                oldModel.value = modelProducer.getModel()
             }
             // 차트 디자인 옵션
             dataSetLineSpec.add(
@@ -421,26 +455,17 @@ fun HomeScreen(
                 when (selectedChartOption) {
                     "혈당" -> {
                         dataPoints.add(
-                            FloatEntry(
-                                x = (timeDiffMinutes),
-                                y = localDBDataListAfterLastTime[i].glucose.toFloat()
-                            )
+                                timeDiffMinutes to localDBDataListAfterLastTime[i].glucose.toFloat()
                         )
                     }
                     "WEO1" -> {
                         dataPoints.add(
-                            FloatEntry(
-                                x = (timeDiffMinutes),
-                                y = localDBDataListAfterLastTime[i].weo1.toFloat()
-                            )
+                                timeDiffMinutes to localDBDataListAfterLastTime[i].weo1.toFloat()
                         )
                     }
                     else -> {
                         dataPoints.add(
-                            FloatEntry(
-                                x = (timeDiffMinutes),
-                                y = localDBDataListAfterLastTime[i].weo2.toFloat()
-                            )
+                            timeDiffMinutes to localDBDataListAfterLastTime[i].weo2.toFloat()
                         )
                     }
                 }
@@ -457,27 +482,39 @@ fun HomeScreen(
             withContext(Dispatchers.Main) {
 
                 delay(100)
-                modelProducer.setEntries(dataSetForModel)
+//                modelProducer.setEntries(dataSetForModel)
 
-//                oldModel.value = modelProducer.getModel()
-
-                scrollSpec.performAutoScroll(
-                    model = modelProducer.getModel(),
-                    oldModel = oldModel.value,
-                    chartScrollState = scrollState
-                )
-
-                isLoading.value = true
-                delay(100)
-                if (!scrollState.isScrollInProgress) {
-                    Log.e("TEST", "scrollState.isScrollInProgress : ${scrollState.isScrollInProgress}")
-                    scrollState.scroll(MutatePriority.Default) {
-                        // 강제로 끝까지 스크롤
-                        scrollBy(scrollState.maxValue)
+                modelProducer.runTransaction {
+                    val xValues = dataPoints.map { it.first }
+                    val yValues = dataPoints.map { it.second }
+                    // Learn more: https://patrykandpatrick.com/vmml6t.
+                    lineSeries{
+                        lineSeries {
+                            series(xValues,  yValues)
+                        }
                     }
-                } else {
-                    Log.e("TEST", "scrollState.isScrollInProgress : ${scrollState.isScrollInProgress}")
                 }
+
+
+
+
+//                scrollSpec.performAutoScroll(
+//                    model = modelProducer.getModel(),
+//                    oldModel = oldModel.value,
+//                    chartScrollState = scrollState
+//                )
+//
+//                isLoading.value = true
+//                delay(100)
+//                if (!scrollState.isScrollInProgress) {
+//                    Log.e("TEST", "scrollState.isScrollInProgress : ${scrollState.isScrollInProgress}")
+//                    scrollState.scroll(MutatePriority.Default) {
+//                        // 강제로 끝까지 스크롤
+//                        scrollBy(scrollState.maxValue)
+//                    }
+//                } else {
+//                    Log.e("TEST", "scrollState.isScrollInProgress : ${scrollState.isScrollInProgress}")
+//                }
             }
 
             // 추세 변화 알고리즘
@@ -821,6 +858,23 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     if (dataSetForModel.isNotEmpty() && isLoading.value == true) {
+
+
+                        CartesianChartHost(
+                            chart = rememberCartesianChart(
+                                lineLayer,
+                                startAxis = VerticalAxis.rememberStart(),
+                                bottomAxis = HorizontalAxis.rememberBottom()
+                            ),
+                            modelProducer = modelProducer,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+//                            marker = rememberMarker(),
+//                            chartScrollState = scrollState,
+                        )
+
+
                         ProvideChartStyle {
                             val marker = rememberMarker()
                             if (totalEntryCount.value < 5) {
