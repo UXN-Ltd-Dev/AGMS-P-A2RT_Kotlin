@@ -1,16 +1,10 @@
 package kr.co.uxn.agms_p.ui.components.main.home
 
-import android.graphics.Paint
-import android.graphics.Typeface
-import android.text.TextUtils
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.gestures.forEachGesture
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,14 +23,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -44,16 +35,13 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -61,47 +49,30 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
-import com.patrykandpatrick.vico.compose.axis.axisLabelComponent
-import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
-import com.patrykandpatrick.vico.compose.axis.vertical.rememberStartAxis
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
-import com.patrykandpatrick.vico.compose.chart.Chart
-import com.patrykandpatrick.vico.compose.chart.line.lineChart
-import com.patrykandpatrick.vico.compose.chart.scroll.rememberChartScrollSpec
-import com.patrykandpatrick.vico.compose.chart.scroll.rememberChartScrollState
-import com.patrykandpatrick.vico.compose.component.shape.shader.fromBrush
-import com.patrykandpatrick.vico.compose.component.shape.textComponent
-import com.patrykandpatrick.vico.compose.dimensions.dimensionsOf
-import com.patrykandpatrick.vico.compose.style.ProvideChartStyle
-import com.patrykandpatrick.vico.core.DefaultAlpha
-import com.patrykandpatrick.vico.core.axis.AxisItemPlacer
+import com.patrykandpatrick.vico.compose.common.fill
+import com.patrykandpatrick.vico.compose.common.shader.verticalGradient
+import com.patrykandpatrick.vico.core.cartesian.FadingEdges
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
-import com.patrykandpatrick.vico.core.chart.dimensions.HorizontalDimensions
-import com.patrykandpatrick.vico.core.chart.draw.ChartDrawContext
-import com.patrykandpatrick.vico.core.chart.line.LineChart
-import com.patrykandpatrick.vico.core.chart.values.AxisValuesOverrider
-import com.patrykandpatrick.vico.core.component.shape.ShapeComponent
-import com.patrykandpatrick.vico.core.component.shape.shader.DynamicShaders
-import com.patrykandpatrick.vico.core.context.MeasureContext
-import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
-import com.patrykandpatrick.vico.core.entry.FloatEntry
-import com.patrykandpatrick.vico.core.scroll.AutoScrollCondition
-import com.patrykandpatrick.vico.core.scroll.InitialScroll
-import kotlinx.coroutines.CoroutineScope
+import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
+import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
+import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -117,13 +88,14 @@ import kr.co.uxn.agms_p.ui.components.main.ModeDialog
 import kr.co.uxn.agms_p.ui.components.main.NotiDialog
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
+import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
-import kotlin.math.absoluteValue
 import kotlin.system.exitProcess
 
+@SuppressLint("RestrictedApi")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -142,8 +114,8 @@ fun HomeScreen(
     val glucose by bleViewModel.glucose.collectAsState()
     val chartTrigger by bleViewModel.chartTrigger.collectAsState()
 
-    var showCaliDialog =  bleViewModel.showCaliDialog.collectAsState()
-    var showBleConnectDialog =  bleViewModel.showBleConnectDialog.collectAsState()
+    var showCaliDialog = bleViewModel.showCaliDialog.collectAsState()
+    var showBleConnectDialog = bleViewModel.showBleConnectDialog.collectAsState()
     var showModeDialog = remember { mutableStateOf(false) }
     var showEndMeasurementDialog = bleViewModel.showEndMeasurementDialog.collectAsState()
     var selectedChartOption by remember { mutableStateOf("혈당") }
@@ -151,44 +123,26 @@ fun HomeScreen(
     val glucoseTrend = remember { mutableStateOf("유지 중") }
     val glucoseTrendImgResource = remember { mutableStateOf(R.drawable.level3) }
 
-    var baseMinY by remember {mutableStateOf(0f)}
-    var baseMaxY by remember {mutableStateOf(0f)}
+    var baseMinY by remember { mutableStateOf(0f) }
+    var baseMaxY by remember { mutableStateOf(0f) }
 
     // Vico Chart
-//    val modelProducer = remember { ChartEntryModelProducer() }
     val modelProducer = remember { CartesianChartModelProducer() }
-    val dataSetForModel = remember { mutableStateListOf(listOf<FloatEntry>()) }
+
+    val x = mutableListOf<Number>()
+    val y = mutableListOf<Number>()
+//    val dataSetForModel = remember { mutableStateListOf(listOf<FloatEntry>()) }
 //    val dataSetLineSpec = remember { arrayListOf<LineChart.LineSpec>() }
-    val lineSpec = rememberLineSpec(
-        shader = DynamicShaders.fromBrush(
-            Brush.verticalGradient(
-                listOf(
-                    Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_END),
-                    Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_START)
-                )
-            )
-        ),
-        color = Color(0xFF6FB0E5).toArgb()
-    )
-    val scrollState = rememberChartScrollState()
+//    val scrollState = rememberChartScrollState()
 
-    val oldModel = remember { mutableStateOf(modelProducer.getModel()) } // ← 추가!
-    val scrollSpec = rememberChartScrollSpec(
-        initialScroll = InitialScroll.End,
-        autoScrollCondition = AutoScrollCondition.OnModelSizeIncreased
-    )
+//    val oldModel = remember { mutableStateOf(modelProducer.getModel()) } // ← 추가!
+//    val scrollSpec = rememberChartScrollSpec(
+//        initialScroll = InitialScroll.End,
+//        autoScrollCondition = AutoScrollCondition.OnModelSizeIncreased
+//    )
 
-    val lineSpec = rememberLineSpec(
-        shader = DynamicShaders.fromBrush(
-            Brush.verticalGradient(
-                listOf(
-                    Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_END),
-                    Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_START)
-                )
-            )
-        ),
-        color = Color(0xFF6FB0E5).toArgb(),
-    )
+
+
 
 
     val isLoading = remember { mutableStateOf(false) }
@@ -215,57 +169,56 @@ fun HomeScreen(
     val minY = baseMinY
     val maxY = baseMaxY
 
-    val customItemPlacer = object : AxisItemPlacer.Horizontal {
-        override fun getLabelValues(
-            context: ChartDrawContext,
-            visibleXRange: ClosedFloatingPointRange<Float>,
-            fullXRange: ClosedFloatingPointRange<Float>,
-        ): List<Float> {
-            val range = visibleXRange.endInclusive - visibleXRange.start
-            val offset = range * 0.1f
-//            val offset = range
+//    val customItemPlacer = object : AxisItemPlacer.Horizontal {
+//        override fun getLabelValues(
+//            context: ChartDrawContext,
+//            visibleXRange: ClosedFloatingPointRange<Float>,
+//            fullXRange: ClosedFloatingPointRange<Float>,
+//        ): List<Float> {
+//            val range = visibleXRange.endInclusive - visibleXRange.start
+//            val offset = range * 0.1f
+////            val offset = range
+////
+////            val rawOffset = range * 0.1f
+////            val offset = rawOffset.coerceIn(0.5f, 5f) // 최소 0.5, 최대 10으로 제한
 //
-//            val rawOffset = range * 0.1f
-//            val offset = rawOffset.coerceIn(0.5f, 5f) // 최소 0.5, 최대 10으로 제한
-
-            val start = visibleXRange.start + offset
-            val end = visibleXRange.endInclusive - offset
-            val mid = (start + end) / 2f
-            return listOf(start, mid, end)
-        }
-
-        override fun getMeasuredLabelValues(
-            context: MeasureContext,
-            horizontalDimensions: HorizontalDimensions,
-            fullXRange: ClosedFloatingPointRange<Float>,
-        ): List<Float> {
-            // 측정 단계에서는 fullXRange를 기준으로 해야 함 (visibleXRange는 없음)
-            val start = fullXRange.start
-            val end = fullXRange.endInclusive
-            val mid = (start + end) / 2f
-            return listOf(start, mid, end)
-        }
-
-        override fun getStartHorizontalAxisInset(
-            context: MeasureContext,
-            horizontalDimensions: HorizontalDimensions,
-            tickThickness: Float,
-//        ): Float = context.dpToPx(30f)
-        ): Float = 0f
-
-        override fun getEndHorizontalAxisInset(
-            context: MeasureContext,
-            horizontalDimensions: HorizontalDimensions,
-            tickThickness: Float,
-        ): Float = 0f
-//        ): Float = context.dpToPx(24f)
-
-    }
-
+//            val start = visibleXRange.start + offset
+//            val end = visibleXRange.endInclusive - offset
+//            val mid = (start + end) / 2f
+//            return listOf(start, mid, end)
+//        }
+//
+//        override fun getMeasuredLabelValues(
+//            context: MeasureContext,
+//            horizontalDimensions: HorizontalDimensions,
+//            fullXRange: ClosedFloatingPointRange<Float>,
+//        ): List<Float> {
+//            // 측정 단계에서는 fullXRange를 기준으로 해야 함 (visibleXRange는 없음)
+//            val start = fullXRange.start
+//            val end = fullXRange.endInclusive
+//            val mid = (start + end) / 2f
+//            return listOf(start, mid, end)
+//        }
+//
+//        override fun getStartHorizontalAxisInset(
+//            context: MeasureContext,
+//            horizontalDimensions: HorizontalDimensions,
+//            tickThickness: Float,
+////        ): Float = context.dpToPx(30f)
+//        ): Float = 0f
+//
+//        override fun getEndHorizontalAxisInset(
+//            context: MeasureContext,
+//            horizontalDimensions: HorizontalDimensions,
+//            tickThickness: Float,
+//        ): Float = 0f
+////        ): Float = context.dpToPx(24f)
+//
+//    }
 
 
     // RadioButton
-    var selectedOption by remember { mutableStateOf("3시간") }
+    var selectedOption by remember { mutableStateOf("6시간") }
 
     val localDbRepository by lazy {
         AppDatabase.getInstance(context)
@@ -279,7 +232,6 @@ fun HomeScreen(
     }
 
 
-
 //    LaunchedEffect(selectedOption, selectedChartOption) {
 //        withContext(Dispatchers.IO) {
 //            dataSetForModel.clear()
@@ -288,7 +240,7 @@ fun HomeScreen(
 //
 //            // 차트 디자인 옵션
 //            dataSetLineSpec.add(
-//                LineChart.LineSpec(
+//                 .LineSpec(
 //                    lineColor = Color(0xFF6FB0E5).toArgb(),
 //                    lineBackgroundShader = DynamicShaders.fromBrush(
 //                        brush = Brush.verticalGradient(
@@ -395,38 +347,37 @@ fun HomeScreen(
     LaunchedEffect(chartTrigger) {
         withContext(Dispatchers.IO) {
             // delay는 추후에 ANR이 발생하면 다시 활성화할 것!!
-//            delay(2000)
             delay(500)
-            dataSetForModel.clear()
+//            dataSetForModel.clear()
 //            dataSetLineSpec.clear()
 //            val dataPoints = arrayListOf<FloatEntry>()
-            val dataPoints = mutableListOf<Pair<Float, Float>>()
+//            val dataPoints = mutableListOf<Pair<Float, Float>>()
 
             withContext(Dispatchers.Main) {
 //                oldModel.value = modelProducer.getModel()
             }
             // 차트 디자인 옵션
-            dataSetLineSpec.add(
-                LineChart.LineSpec(
-                    lineColor = Color(0xFF6FB0E5).toArgb(),
-                    lineBackgroundShader = DynamicShaders.fromBrush(
-                        brush = Brush.verticalGradient(
-                            listOf(
-                                Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_END),
-                                Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_START)
-                            )
-                        )
-                    )
-                )
-            )
+//            dataSetLineSpec.add(
+//                LineChart.LineSpec(
+//                    lineColor = Color(0xFF6FB0E5).toArgb(),
+//                    lineBackgroundShader = DynamicShaders.fromBrush(
+//                        brush = Brush.verticalGradient(
+//                            listOf(
+//                                Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_END),
+//                                Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_START)
+//                            )
+//                        )
+//                    )
+//                )
+//            )
 
             val userId = DataStoreManager.getUserId().first() ?: -1
 
             Log.e("TEST", "selectedOption : ${selectedOption}")
             val lastTime = when (selectedOption) {
-                "3시간" -> System.currentTimeMillis() - (3 * 60 * 60 * 1000L)
                 "6시간" -> System.currentTimeMillis() - (6 * 60 * 60 * 1000L)
-                else -> System.currentTimeMillis() - (12 * 60 * 60 * 1000L)
+                "12시간" -> System.currentTimeMillis() - (12 * 60 * 60 * 1000L)
+                else -> System.currentTimeMillis() - (24 * 60 * 60 * 1000L)
             }
             Log.e("DB", "lastTime : ${lastTime}")
             val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA)
@@ -454,18 +405,29 @@ fun HomeScreen(
 
                 when (selectedChartOption) {
                     "혈당" -> {
-                        dataPoints.add(
-                                timeDiffMinutes to localDBDataListAfterLastTime[i].glucose.toFloat()
+                        x.add(
+                            timeDiffMinutes
+                        )
+                        y.add(
+                            localDBDataListAfterLastTime[i].glucose.toFloat()
                         )
                     }
+
                     "WEO1" -> {
-                        dataPoints.add(
-                                timeDiffMinutes to localDBDataListAfterLastTime[i].weo1.toFloat()
+                        x.add(
+                            timeDiffMinutes
+                        )
+                        y.add(
+                            localDBDataListAfterLastTime[i].weo1.toFloat()
                         )
                     }
+
                     else -> {
-                        dataPoints.add(
-                            timeDiffMinutes to localDBDataListAfterLastTime[i].weo2.toFloat()
+                        x.add(
+                            timeDiffMinutes
+                        )
+                        y.add(
+                            localDBDataListAfterLastTime[i].weo2.toFloat()
                         )
                     }
                 }
@@ -475,24 +437,22 @@ fun HomeScreen(
 
             Log.e("DB", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
 
-            Log.d("CHART", "dataPoints size: ${dataPoints.size}")
 
-            dataSetForModel.add(dataPoints)
+//            dataSetForModel.add(dataPoints)
 
             withContext(Dispatchers.Main) {
 
                 delay(100)
 //                modelProducer.setEntries(dataSetForModel)
 
-                modelProducer.runTransaction {
-                    val xValues = dataPoints.map { it.first }
-                    val yValues = dataPoints.map { it.second }
-                    // Learn more: https://patrykandpatrick.com/vmml6t.
-                    lineSeries{
-                        lineSeries {
-                            series(xValues,  yValues)
-                        }
+                if (x.isNotEmpty() && y.isNotEmpty()) {
+                    modelProducer.runTransaction {
+                        lineSeries { series(x, y) }
                     }
+                    isLoading.value = true
+                } else {
+                    Log.e("VICO", "Empty dataset! Skipping model update.")
+                    isLoading.value = false
                 }
 
 
@@ -504,7 +464,7 @@ fun HomeScreen(
 //                    chartScrollState = scrollState
 //                )
 //
-//                isLoading.value = true
+                isLoading.value = true
 //                delay(100)
 //                if (!scrollState.isScrollInProgress) {
 //                    Log.e("TEST", "scrollState.isScrollInProgress : ${scrollState.isScrollInProgress}")
@@ -582,7 +542,7 @@ fun HomeScreen(
                     showModeDialog.value = false
                     selectedChartOption = it
                 },
-            onDismissRequest = { showModeDialog.value = false}
+            onDismissRequest = { showModeDialog.value = false }
         )
     }
 
@@ -765,231 +725,228 @@ fun HomeScreen(
                 )
 
                 if (selectedChartOption != "혈당") {
-
-                        Spacer(modifier = Modifier.width(50.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth()
-                                .padding(top = 5.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceAround
-                        ) {
-                            Image(
-                                painter = painterResource(R.drawable.zoom_in),
-                                contentDescription = "확대 줌",
-                                modifier = Modifier.size(20.dp)
-                                    .clickable {
-                                        if (zoomFactor < 3){
-                                            zoomFactor += 1f
-                                        }
+                    Spacer(modifier = Modifier.width(50.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(top = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceAround
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.zoom_in),
+                            contentDescription = "확대 줌",
+                            modifier = Modifier.size(20.dp)
+                                .clickable {
+                                    if (zoomFactor < 3) {
+                                        zoomFactor += 1f
+                                    }
 //                                        zoomFactor = zoomFactor.coerceIn(1f, 10f)
-                                    }
-                            )
+                                }
+                        )
 
-                            Image(
-                                painter = painterResource(R.drawable.zoom_out),
-                                contentDescription = "축소 줌",
-                                modifier = Modifier.size(20.dp)
-                                    .clickable {
-                                        if (zoomFactor > 1){
-                                            zoomFactor -= 1f
-                                        }
+                        Image(
+                            painter = painterResource(R.drawable.zoom_out),
+                            contentDescription = "축소 줌",
+                            modifier = Modifier.size(20.dp)
+                                .clickable {
+                                    if (zoomFactor > 1) {
+                                        zoomFactor -= 1f
+                                    }
 //                                        zoomFactor = zoomFactor.coerceIn(1f, 10f)
-                                    }
-                            )
+                                }
+                        )
 
-                            Image(
-                                painter = painterResource(R.drawable.zoom_reset),
-                                contentDescription = "리셋 줌",
-                                modifier = Modifier.size(20.dp)
-                                    .clickable {
-                                        zoomFactor = 1f
-                                    }
-                            )
-                        }
+                        Image(
+                            painter = painterResource(R.drawable.zoom_reset),
+                            contentDescription = "리셋 줌",
+                            modifier = Modifier.size(20.dp)
+                                .clickable {
+                                    zoomFactor = 1f
+                                }
+                        )
                     }
                 }
+            }
 
             // VICO 그래프
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp)
-//                    .pointerInput(Unit) {
-//                        detectTransformGestures { _, _, zoom, _ ->
-//                            zoomFactor *= zoom
-//                            zoomFactor = zoomFactor.coerceIn(1f, 10f)
-//                        }
-//                    }
-
-//                    .pointerInput(Unit) {
-//                        forEachGesture {
-//                            awaitPointerEventScope {
-//                                val down = awaitFirstDown(requireUnconsumed = false)
-//                                var zooming = false
-//                                var initialDistance = 0f
-//
-//                                do {
-//                                    val event = awaitPointerEvent()
-//                                    val pointers = event.changes
-//
-//                                    if (pointers.size == 2) {
-//                                        val distance = (pointers[0].position - pointers[1].position).getDistance()
-//
-//                                        if (!zooming) {
-//                                            zooming = true
-//                                            initialDistance = distance
-//                                        } else {
-//                                            val zoom = distance / initialDistance
-//                                            zoomFactor *= zoom
-//                                            zoomFactor = zoomFactor.coerceIn(1f, 10f)
-//                                            initialDistance = distance
-//                                        }
-//
-//                                        pointers.forEach { it.consume() }
-//                                    }
-//                                } while (event.changes.any { it.pressed })
-//                            }
-//                        }
-//                    }
                     .weight(1f),
                 color = Color.Transparent
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (dataSetForModel.isNotEmpty() && isLoading.value == true) {
+                    val lineColor = Color(0xFF6FB0E5)
+                    val RangeProvider = CartesianLayerRangeProvider.fixed(maxY = 250.0)
+                    val markerDecimalFormat = DecimalFormat("# mg/dL")
+                    val yDecimalFormat = DecimalFormat("#")
+                    val StartAxisValueFormatter = CartesianValueFormatter.decimal(yDecimalFormat)
+                    val MarkerValueFormatter =
+                        DefaultCartesianMarker.ValueFormatter.default(markerDecimalFormat)
 
-
+//                    if (dataSetForModel.isNotEmpty() && isLoading.value == true) {
+                    if (isLoading.value == true) {
                         CartesianChartHost(
-                            chart = rememberCartesianChart(
-                                lineLayer,
-                                startAxis = VerticalAxis.rememberStart(),
-                                bottomAxis = HorizontalAxis.rememberBottom()
+                            rememberCartesianChart(
+                                rememberLineCartesianLayer(
+                                    lineProvider =
+                                        LineCartesianLayer.LineProvider.series(
+                                            LineCartesianLayer.rememberLine(
+                                                fill = LineCartesianLayer.LineFill.single(
+                                                    fill(
+                                                        lineColor
+                                                    )
+                                                ),
+                                                areaFill =
+                                                    LineCartesianLayer.AreaFill.single(
+                                                        fill(
+                                                            ShaderProvider.verticalGradient(
+                                                                arrayOf(
+                                                                    lineColor.copy(alpha = 0.8f),
+                                                                    Color.Transparent
+                                                                )
+                                                            )
+                                                        )
+                                                    ),
+                                                pointConnector = LineCartesianLayer.PointConnector.cubic(curvature = 1f)
+                                            )
+                                        ),
+                                    rangeProvider = RangeProvider,
+                                ),
+                                startAxis = VerticalAxis.rememberStart(valueFormatter = StartAxisValueFormatter),
+                                bottomAxis = HorizontalAxis.rememberBottom(),
+                                marker = rememberMarker(MarkerValueFormatter),
+                                fadingEdges = FadingEdges( // 또는 FadingEdges.horizontal() 도 가능
+                                    startWidthDp = 0f,
+                                    endWidthDp = 0f,
+                                    visibilityThresholdDp = 15f
+                                )
                             ),
                             modelProducer = modelProducer,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f),
-//                            marker = rememberMarker(),
 //                            chartScrollState = scrollState,
                         )
 
+//                        ProvideChartStyle {
+//                            val marker = rememberMarker()
+//                            if (totalEntryCount.value < 5) {
+//                                Chart(
+//                                    modifier = Modifier
+//                                        .fillMaxWidth()
+//                                        .weight(1f),
+//                                    chart = lineChart(
+//                                        lines = dataSetLineSpec,
+//                                        axisValuesOverrider = AxisValuesOverrider.fixed(
+//                                            minY = minY,
+//                                            maxY = maxY
+//                                        )
+//                                    ),
+//                                    chartModelProducer = modelProducer,
+//                                    chartScrollState = scrollState,
+//                                    chartScrollSpec = scrollSpec,
+//                                    // y축
+//                                    startAxis = rememberStartAxis(
+//                                        title = "Top values",
+//                                        tickLength = 0.dp,
+//                                        valueFormatter = { value, _ ->
+//                                            value.toInt().toString()
+//                                        },
+//                                        label = axisLabelComponent(color = Color.Black),
+//                                        // y축 레이블 갯수
+//                                        itemPlacer = AxisItemPlacer.Vertical.default(
+//                                            maxItemCount = 6,
+//                                            shiftTopLines = true
+//                                        )
+//                                    ),
+//                                    marker = marker,
+//                                    isZoomEnabled = true,
+//
+//                                    // x축
+//                                    bottomAxis = rememberBottomAxis(
+//                                        title = "Count of values",
+//                                        tickLength = 0.dp,
+//                                        valueFormatter = { value, _ ->
+//                                            val baseTime = 1743442801000L // 25년 4월 1일 00시 00분 00초
+//                                            val actualTimeMillis = baseTime + (value * 60 * 1000).toLong()
+//                                            val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
+//                                            formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
+//                                            formatter.format(Date(actualTimeMillis))
+//                                        },
+//                                        itemPlacer = AxisItemPlacer.Horizontal.default(
+//                                            spacing = 1,  // x축 라벨 간격을 더 촘촘히 (기본은 자동)
+//                                            shiftExtremeTicks = true
+//
+//                                        ),
+//                                        label = axisLabelComponent(
+//                                            color = Color.Black,
+////                                            background = ShapeComponent(color = R.color.teal_200)
+//                                        ),
+//                                        guideline = null,
+//                                    ),
+//                                )
+//                            } else {
+//                                Chart(
+//                                    modifier = Modifier
+//                                        .fillMaxWidth()
+//                                        .weight(1f),
+//                                    chart = lineChart(
+//                                        lines = dataSetLineSpec,
+//                                        axisValuesOverrider = AxisValuesOverrider.fixed(
+//                                            minY = minY,
+//                                            maxY = maxY
+//                                        )
+//                                    ),
+//                                    chartModelProducer = modelProducer,
+//                                    chartScrollState = scrollState,
+//                                    chartScrollSpec = scrollSpec,
+//
+//                                    // y축
+//                                    startAxis = rememberStartAxis(
+//                                        title = "Top values",
+//                                        tickLength = 0.dp,
+//                                        valueFormatter = { value, _ ->
+//                                            value.toInt().toString()
+//                                        },
+//                                        label = axisLabelComponent(color = Color.Black),
+//                                        // y축 레이블 갯수
+//                                        itemPlacer = AxisItemPlacer.Vertical.default(
+//                                            maxItemCount = 6,
+//                                            shiftTopLines = true
+//                                        )
+//                                    ),
+//                                    marker = marker,
+//                                    isZoomEnabled = true,
+//
+//                                    // x축
+//                                    bottomAxis = rememberBottomAxis(
+//                                        title = "Count of values",
+//                                        tickLength = 0.dp,
+//                                        itemPlacer = customItemPlacer,
+//                                        valueFormatter = { value, _ ->
+//                                            val baseTime = 1743442801000L
+//                                            val actualTimeMillis = baseTime + (value * 60 * 1000).toLong()
+//                                            val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
+//                                            formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
+//                                            formatter.format(Date(actualTimeMillis))
+//                                        },
+//                                        label = axisLabelComponent(
+//                                            color = Color.Black,
+////                                            horizontalMargin = 20.dp,
+////                                            textSize = 10.sp,
+////                                            background = ShapeComponent(color = R.color.teal_200),
+//                                            ellipsize = TextUtils.TruncateAt.START,
+//                                        ),
+//                                        guideline = null,
+//                                    )
+//                                )
+//                            }
 
-                        ProvideChartStyle {
-                            val marker = rememberMarker()
-                            if (totalEntryCount.value < 5) {
-                                Chart(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .weight(1f),
-                                    chart = lineChart(
-                                        lines = dataSetLineSpec,
-                                        axisValuesOverrider = AxisValuesOverrider.fixed(
-                                            minY = minY,
-                                            maxY = maxY
-                                        )
-                                    ),
-                                    chartModelProducer = modelProducer,
-                                    chartScrollState = scrollState,
-                                    chartScrollSpec = scrollSpec,
-                                    // y축
-                                    startAxis = rememberStartAxis(
-                                        title = "Top values",
-                                        tickLength = 0.dp,
-                                        valueFormatter = { value, _ ->
-                                            value.toInt().toString()
-                                        },
-                                        label = axisLabelComponent(color = Color.Black),
-                                        // y축 레이블 갯수
-                                        itemPlacer = AxisItemPlacer.Vertical.default(
-                                            maxItemCount = 6,
-                                            shiftTopLines = true
-                                        )
-                                    ),
-                                    marker = marker,
-                                    isZoomEnabled = true,
 
-                                    // x축
-                                    bottomAxis = rememberBottomAxis(
-                                        title = "Count of values",
-                                        tickLength = 0.dp,
-                                        valueFormatter = { value, _ ->
-                                            val baseTime = 1743442801000L // 25년 4월 1일 00시 00분 00초
-                                            val actualTimeMillis = baseTime + (value * 60 * 1000).toLong()
-                                            val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
-                                            formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
-                                            formatter.format(Date(actualTimeMillis))
-                                        },
-                                        itemPlacer = AxisItemPlacer.Horizontal.default(
-                                            spacing = 1,  // x축 라벨 간격을 더 촘촘히 (기본은 자동)
-                                            shiftExtremeTicks = true
-
-                                        ),
-                                        label = axisLabelComponent(
-                                            color = Color.Black,
-//                                            background = ShapeComponent(color = R.color.teal_200)
-                                        ),
-                                        guideline = null,
-                                    ),
-                                )
-                            } else {
-                                Chart(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .weight(1f),
-                                    chart = lineChart(
-                                        lines = dataSetLineSpec,
-                                        axisValuesOverrider = AxisValuesOverrider.fixed(
-                                            minY = minY,
-                                            maxY = maxY
-                                        )
-                                    ),
-                                    chartModelProducer = modelProducer,
-                                    chartScrollState = scrollState,
-                                    chartScrollSpec = scrollSpec,
-
-                                    // y축
-                                    startAxis = rememberStartAxis(
-                                        title = "Top values",
-                                        tickLength = 0.dp,
-                                        valueFormatter = { value, _ ->
-                                            value.toInt().toString()
-                                        },
-                                        label = axisLabelComponent(color = Color.Black),
-                                        // y축 레이블 갯수
-                                        itemPlacer = AxisItemPlacer.Vertical.default(
-                                            maxItemCount = 6,
-                                            shiftTopLines = true
-                                        )
-                                    ),
-                                    marker = marker,
-                                    isZoomEnabled = true,
-
-                                    // x축
-                                    bottomAxis = rememberBottomAxis(
-                                        title = "Count of values",
-                                        tickLength = 0.dp,
-                                        itemPlacer = customItemPlacer,
-                                        valueFormatter = { value, _ ->
-                                            val baseTime = 1743442801000L
-                                            val actualTimeMillis = baseTime + (value * 60 * 1000).toLong()
-                                            val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
-                                            formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
-                                            formatter.format(Date(actualTimeMillis))
-                                        },
-                                        label = axisLabelComponent(
-                                            color = Color.Black,
-//                                            horizontalMargin = 20.dp,
-//                                            textSize = 10.sp,
-//                                            background = ShapeComponent(color = R.color.teal_200),
-                                            ellipsize = TextUtils.TruncateAt.START,
-                                        ),
-                                        guideline = null,
-                                    )
-                                )
-                            }
-
-                        }
                     } else {
                         Box(
                             modifier = Modifier
@@ -1020,8 +977,7 @@ fun HomeScreen(
                 .fillMaxWidth()
                 .height(140.dp)
                 .padding(horizontal = 10.dp)
-                .padding(top = 10.dp, bottom = 20.dp)
-            ,
+                .padding(top = 10.dp, bottom = 20.dp),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.White, // 카드 배경색 설정
@@ -1118,80 +1074,83 @@ fun HomeScreen(
 }
 
 
-@Composable
-fun RadioButtonSingleSelection(
-    selectedOption: String,
-    onOptionSelected: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val radioOptions = listOf("3시간", "6시간", "12시간")
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .selectableGroup()
-            .height(60.dp)
-            .padding(horizontal = 30.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
+
+    @Composable
+    fun RadioButtonSingleSelection(
+        selectedOption: String,
+        onOptionSelected: (String) -> Unit,
+        modifier: Modifier = Modifier
     ) {
-        radioOptions.forEach { text ->
-            Row(
-                Modifier
-                    .weight(1f)
-                    .height(56.dp)
-                    .selectable(
+        val radioOptions = listOf("6시간", "12시간", "24시간")
+
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .selectableGroup()
+                .height(60.dp)
+                .padding(horizontal = 30.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            radioOptions.forEach { text ->
+                Row(
+                    Modifier
+                        .weight(1f)
+                        .height(56.dp)
+                        .selectable(
+                            selected = (text == selectedOption),
+                            onClick = { onOptionSelected(text) },
+                            role = Role.RadioButton
+                        ),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    RadioButton(
                         selected = (text == selectedOption),
-                        onClick = { onOptionSelected(text) },
-                        role = Role.RadioButton
-                    ),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                RadioButton(
-                    selected = (text == selectedOption),
-                    onClick = null
-                )
-                Text(
-                    text = text,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(start = 10.dp)
-                )
+                        onClick = null
+                    )
+                    Text(
+                        text = text,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(start = 10.dp)
+                    )
+                }
             }
         }
     }
-}
 
-fun getTrendStatus(glucoseValueList: List<UserGlucose>): String {
-    if (glucoseValueList.size < 4) return "유지 중"
+    fun getTrendStatus(glucoseValueList: List<UserGlucose>): String {
+        if (glucoseValueList.size < 4) return "유지 중"
 
-    val list = glucoseValueList.takeLast(5)
+        val list = glucoseValueList.takeLast(5)
 
-    Log.d("TEST", "glucoseValeList : ${glucoseValueList}")
-    Log.d("TEST", "glucoseValeList last 5 : ${list}")
-    val n = list.size
-    val x = (0 until n).toList()
-    val y = list.map { it.glucose }
+        Log.d("TEST", "glucoseValeList : ${glucoseValueList}")
+        Log.d("TEST", "glucoseValeList last 5 : ${list}")
+        val n = list.size
+        val x = (0 until n).toList()
+        val y = list.map { it.glucose }
 
-    val sumX = x.sum()
-    val sumY = y.sum()
-    val sumXY = x.zip(y) { xi, yi -> xi * yi }.sum()
-    val sumXSquare = x.sumOf { it * it }
+        val sumX = x.sum()
+        val sumY = y.sum()
+        val sumXY = x.zip(y) { xi, yi -> xi * yi }.sum()
+        val sumXSquare = x.sumOf { it * it }
 
-    val numerator = n * sumXY - sumX * sumY
-    val denominator = n * sumXSquare - sumX * sumX
+        val numerator = n * sumXY - sumX * sumY
+        val denominator = n * sumXSquare - sumX * sumX
 
-    val slope = if (denominator != 0) numerator.toDouble() / denominator else 0.0
-    Log.d("TEST", "slope : $slope")
+        val slope = if (denominator != 0) numerator.toDouble() / denominator else 0.0
+        Log.d("TEST", "slope : $slope")
 
-    return when {
-        slope >= 10.0 -> "급상승"
-        slope in 2.1..4.9 -> "상승 중"
-        slope in -2.0..2.0 -> "유지 중"
-        slope in -4.9..-2.1 -> "하강 중"
-        slope <= -10.0 -> "급하강"
-        else -> "유지 중"
+        return when {
+            slope >= 10.0 -> "급상승"
+            slope in 2.1..4.9 -> "상승 중"
+            slope in -2.0..2.0 -> "유지 중"
+            slope in -4.9..-2.1 -> "하강 중"
+            slope <= -10.0 -> "급하강"
+            else -> "유지 중"
+        }
     }
-}
+
 
 

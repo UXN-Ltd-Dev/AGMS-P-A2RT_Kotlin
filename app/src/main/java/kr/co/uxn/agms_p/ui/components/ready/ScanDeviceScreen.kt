@@ -56,6 +56,7 @@ import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestLinkDevice
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.Device
+import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 
 @Composable
@@ -70,8 +71,12 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
         speed = 0.2f
     )
 
+
     val context = LocalContext.current
     val data by bleViewModel.isFindDevice.collectAsState()
+    val localDbRepository by lazy {
+        AppDatabase.getInstance(context)
+    }
     val bleManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     val bluetoothAdapter = bleManager.adapter
     val scanCallback: ScanCallback = object : ScanCallback() {
@@ -83,7 +88,6 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
             Log.d("SCAN", "mac : ${deviceInfo?.address}, id : ${deviceInfo?.name}, rssi : ${rssi}")
             bleViewModel.updateIsFindDevice(true)
             DataStoreManager.getUserId()
-//            bleViewModel.insertDevice(Device(mac, deviceInfo))
             coroutineScope.launch(Dispatchers.IO) {
                 DataStoreManager.deleteDeviceMac()
                 DataStoreManager.saveDeviceMac(mac)
@@ -93,27 +97,34 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
 
                 val userId = DataStoreManager.getUserId().first() ?: -1
 
-
                 // 서버에 유저와 디바이스 링크
                 try {
-                    val linkDevice = tokenRetrofit.linkDevice(RequestLinkDevice(userId = userId, serialNumber = serialNumber))
-                    if (linkDevice.isSuccessful) {
-                        val linkDeviceBody = linkDevice.body()
-                        if (linkDeviceBody != null) {
-                            Log.e("TEST", "linkDeviceBody : ${linkDeviceBody}")
-                            if (linkDeviceBody.isSuccess) {
-                                Log.e("TEST", "링크 성공!")
-                            } else {
-                                Log.e("TEST", "링크 실패 : ${linkDeviceBody.message}")
+                    val detectorList = localDbRepository?.dataDao()?.getListAfterLastTime(userId, 0)
+                    Log.e("TEST", "스캔화면에서 저장한 datastore 맥 주소 : ${verifiedDeviceMac}")
+                    if (detectorList.isNullOrEmpty()) {
+                        Log.d("TEST", "detectorList is null or empty!")
+                        val linkDevice = tokenRetrofit.linkDevice(RequestLinkDevice(userId = userId, serialNumber = serialNumber))
+                        if (linkDevice.isSuccessful) {
+                            val linkDeviceBody = linkDevice.body()
+                            if (linkDeviceBody != null) {
+                                Log.e("TEST", "linkDeviceBody : ${linkDeviceBody}")
+                                if (linkDeviceBody.isSuccess) {
+                                    Log.e("TEST", "링크 성공!")
+                                } else {
+                                    Log.e("TEST", "링크 실패 : ${linkDeviceBody.message}")
+                                }
                             }
+                        } else {
+                            Log.e("TEST", "API 에러 : ${linkDevice.errorBody()?.string()}")
                         }
                     } else {
-                        Log.e("TEST", "API 에러 : ${linkDevice.errorBody()?.string()}")
+                        Log.d("TEST", "detectorList is exist : ${detectorList}")
                     }
                 } catch (e: Exception) {
                     Log.e("TEST","네트워크 에러 : ${e.message}")
                 }
             }
+
             // 성공시, 안정화 화면으로 이동
             navController.navigate("StabilizationScreen")
         }

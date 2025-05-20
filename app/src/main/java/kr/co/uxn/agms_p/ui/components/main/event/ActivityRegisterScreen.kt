@@ -172,12 +172,14 @@ fun ActivityRegisterScreen(navController: NavController, eventScreenViewModel: E
                         onValueChange = { memo.value = it },
                         value = memo.value,
                         modifier = Modifier.fillMaxSize(),
-                        colors = TextFieldDefaults.textFieldColors(
-                            containerColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
+                        colors = TextFieldDefaults.colors( // ✅ Material3 방식
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,    // 포커스 시 밑줄 제거
+                            unfocusedIndicatorColor = Color.Transparent,  // 포커스 안됐을 때 밑줄 제거
                             disabledIndicatorColor = Color.Transparent
-                        ),
+                        )
 //                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
 //                        keyboardActions = KeyboardActions(onDone = {
 //                            keyboardController?.hide()
