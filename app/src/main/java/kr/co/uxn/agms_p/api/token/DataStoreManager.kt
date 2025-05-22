@@ -1,6 +1,7 @@
 package kr.co.uxn.agms_p.api.token
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
@@ -11,6 +12,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kr.co.uxn.agms_p.ble.Device
 
@@ -40,6 +42,7 @@ object DataStoreManager {
     private val TARGET_HIGH_GLUCOSE = intPreferencesKey("target_high_glucose")
     private val TARGET_LOW_GLUCOSE = intPreferencesKey("target_low_glucose")
     private val DAILY_CALIBRATION_TIME = stringPreferencesKey("daily_calibration_time")
+    private val LANDSCAPE_MODE = booleanPreferencesKey("landscape_mode")
 
     fun init(context: Context) {
         dataStore = PreferenceDataStoreFactory.create {
@@ -296,7 +299,7 @@ object DataStoreManager {
     }
 
     fun getNotiCalibration(): Flow<Boolean?> {
-        return notiStore.data.map { prefs ->
+        return dataStore.data.map { prefs ->
             prefs[NOTI_CALIBRATION]
         }
     }
@@ -316,6 +319,12 @@ object DataStoreManager {
     fun getDailyCalibrationTime(): Flow<String?> {
         return notiStore.data.map { prefs ->
             prefs[DAILY_CALIBRATION_TIME]
+        }
+    }
+
+    fun getLandScapeMode(): Flow<Boolean?> {
+        return dataStore.data.map { prefs ->
+            prefs[LANDSCAPE_MODE]
         }
     }
 
@@ -370,5 +379,12 @@ object DataStoreManager {
         notiStore.edit { prefs ->
             prefs[DAILY_CALIBRATION_TIME] = time
         }
+    }
+
+    suspend fun setLandScapeMode(isCheck: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[LANDSCAPE_MODE] = isCheck
+        }
+        Log.d("TEST", "landScapeMode : ${getLandScapeMode().first()}")
     }
 }

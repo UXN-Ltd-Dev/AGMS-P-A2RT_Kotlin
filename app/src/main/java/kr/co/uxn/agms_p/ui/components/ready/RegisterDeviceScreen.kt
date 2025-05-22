@@ -9,6 +9,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,6 +24,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -31,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -60,6 +63,16 @@ fun RegisterDeviceScreen(navController: NavController) {
     // 터치 시, 힌트를 지우기 위한 용도
     val interactionSource = remember { MutableInteractionSource() }
     val hint = remember { mutableStateOf("") }
+
+    val configuration = LocalConfiguration.current
+    val screenHeightDp = configuration.screenHeightDp
+    val fontSize = when {
+        screenHeightDp == 777 -> 15.sp // s21
+        else -> 16.sp
+    }
+    LaunchedEffect(Unit) {
+        Log.d("TEST", "screenHeightDP : $screenHeightDp")
+    }
 
     Surface(
         modifier = Modifier
@@ -134,6 +147,7 @@ fun RegisterDeviceScreen(navController: NavController) {
                             hint.value = "기기 번호를 입력해주세요." // 포커스를 잃고 입력값이 비어있다면 힌트를 다시 보여줍니다.
                         }
                     },
+
                 textStyle = TextStyle(
                     textAlign = TextAlign.Center,
                     fontSize = 20.sp
@@ -145,7 +159,7 @@ fun RegisterDeviceScreen(navController: NavController) {
                         text = hint.value,
                         textAlign = TextAlign.Center,
                         color = Color.Gray,
-                        fontSize = 18.sp
+                        fontSize = fontSize
                     )
                 },
                 interactionSource = interactionSource, // 터치 이벤트 감지
@@ -155,7 +169,7 @@ fun RegisterDeviceScreen(navController: NavController) {
                 ),
                 keyboardActions = KeyboardActions(
                     onDone = { focusManager.clearFocus() }
-                )
+                ),
             )
 
             Spacer(modifier = Modifier.height(54.dp))
@@ -169,7 +183,8 @@ fun RegisterDeviceScreen(navController: NavController) {
                 Image(
                     painter = painterResource(R.drawable.btn_next),
                     contentDescription = "다음 버튼",
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier
+                        .align(Alignment.Center)
                         .clickable {
                             if (deviceNumber.value != "") {
                                 try {
@@ -189,15 +204,20 @@ fun RegisterDeviceScreen(navController: NavController) {
                                         } else {
                                             Log.e("TAG", "API 에러 : ${result.errorBody()}")
                                             withContext(Dispatchers.Main) {
-                                                Toast.makeText(context, "시리얼 넘버를 다시 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(
+                                                    context,
+                                                    "시리얼 넘버를 다시 확인해 주세요.",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
                                             }
                                         }
                                     }
                                 } catch (e: Exception) {
-                                    Log.e("TAG","네트워크 에러 : $e")
+                                    Log.e("TAG", "네트워크 에러 : $e")
                                 }
                             } else {
-                                Toast.makeText(context, "시리얼 넘버를 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "시리얼 넘버를 입력해 주세요.", Toast.LENGTH_SHORT)
+                                    .show()
                             }
                         }
                 )

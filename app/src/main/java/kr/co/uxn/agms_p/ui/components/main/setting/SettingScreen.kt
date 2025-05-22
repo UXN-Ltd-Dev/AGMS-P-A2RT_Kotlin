@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -31,6 +33,7 @@ import androidx.navigation.NavOptionsBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ui.components.main.AlwaysDialog
 import kr.co.uxn.agms_p.ui.theme.AGMSPTheme
@@ -43,6 +46,15 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
     val context = LocalContext.current
     val showDialog = remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    val checkedForLandscapeMode = remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            val verifiedDSLandscapeMode = DataStoreManager.getLandScapeMode().first() ?: false
+            checkedForLandscapeMode.value = verifiedDSLandscapeMode
+        }
+    }
+
 
     if (showDialog.value) {
         AlwaysDialog(
@@ -261,6 +273,57 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
             }
         }
 
+        Divider()
+
+        Divider(color = Color.Transparent, thickness = 20.dp)
+
+        Divider()
+        Box(
+            modifier = Modifier.clickable {
+                navController.navigate("DeleteAccountScreen")
+            }
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .height(50.dp)
+                    .padding(horizontal = 30.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "계정 삭제",
+                    fontSize = 16.sp
+                )
+            }
+        }
+        Divider()
+        Box() {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .height(50.dp)
+                    .padding(horizontal = 30.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "그래프 가로모드",
+                    fontSize = 16.sp
+                )
+                Switch(
+                    checked = checkedForLandscapeMode.value,
+                    onCheckedChange = {
+                        checkedForLandscapeMode.value = it
+                        coroutineScope.launch(Dispatchers.IO) {
+                            DataStoreManager.setLandScapeMode(it)
+                        }
+                    }
+                )
+            }
+        }
         Divider()
     }
 }

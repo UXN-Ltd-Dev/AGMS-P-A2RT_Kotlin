@@ -7,10 +7,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -41,7 +43,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -61,9 +65,14 @@ import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
 import com.patrykandpatrick.vico.compose.common.fill
 import com.patrykandpatrick.vico.compose.common.shader.verticalGradient
+import com.patrykandpatrick.vico.core.cartesian.AutoScrollCondition
 import com.patrykandpatrick.vico.core.cartesian.FadingEdges
+import com.patrykandpatrick.vico.core.cartesian.Scroll
+import com.patrykandpatrick.vico.core.cartesian.Zoom
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
@@ -94,6 +103,12 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import kotlin.system.exitProcess
+import androidx.compose.runtime.*
+import androidx.compose.runtime.key
+import com.patrykandpatrick.vico.compose.cartesian.VicoZoomState
+import com.patrykandpatrick.vico.core.cartesian.CartesianDrawingContext
+import com.patrykandpatrick.vico.core.cartesian.CartesianMeasuringContext
+import com.patrykandpatrick.vico.core.cartesian.layer.CartesianLayerDimensions
 
 @SuppressLint("RestrictedApi")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -125,49 +140,92 @@ fun HomeScreen(
 
     var baseMinY by remember { mutableStateOf(0f) }
     var baseMaxY by remember { mutableStateOf(0f) }
+    var baseCurrentMaxY by remember { mutableStateOf(0f) }
 
     // Vico Chart
     val modelProducer = remember { CartesianChartModelProducer() }
 
-    val x = mutableListOf<Number>()
-    val y = mutableListOf<Number>()
+    val chartScrollSpec = rememberVicoScrollState(
+        scrollEnabled = true,
+        initialScroll = Scroll.Absolute.End,
+        autoScroll = Scroll.Absolute.End,
+        autoScrollCondition = AutoScrollCondition.OnModelGrowth
+    )
+    val (yMax, setYMax) = remember { mutableStateOf(250.0) }
+    val currentYMax by rememberUpdatedState(yMax)
+    var forceRecompose by remember { mutableStateOf(0) }
+    val rangeProvider = remember (yMax) {
+        CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = yMax)
+    }
+
+    val x = remember { mutableListOf<Number>() }
+    val y = remember { mutableListOf<Number>() }
 //    val dataSetForModel = remember { mutableStateListOf(listOf<FloatEntry>()) }
 //    val dataSetLineSpec = remember { arrayListOf<LineChart.LineSpec>() }
 //    val scrollState = rememberChartScrollState()
 
-//    val oldModel = remember { mutableStateOf(modelProducer.getModel()) } // ← 추가!
-//    val scrollSpec = rememberChartScrollSpec(
-//        initialScroll = InitialScroll.End,
-//        autoScrollCondition = AutoScrollCondition.OnModelSizeIncreased
-//    )
-
-
-
-
-
     val isLoading = remember { mutableStateOf(false) }
 
     // Zoom 변수
+    var glucoseZoomFactor by remember { mutableStateOf(1f) }
+    var currentZoomFactor by remember { mutableStateOf(1) }
     var zoomFactor by remember { mutableStateOf(1f) }
+
+    // 가로 모드 변수
+    val checkedForLandscapeMode = remember { mutableStateOf(false) }
+
     baseMinY = when (selectedChartOption) {
         "혈당" -> 0f
         else -> 0f
     }
-    baseMaxY = when (selectedChartOption) {
-        "혈당" -> 250f
-        else -> {
-            if (zoomFactor == 1f) {
-                50f
-            } else if (zoomFactor == 2f) {
-                10f
-            } else {
-                5f
-            }
-        }
-    }
+//    baseMaxY = when (selectedChartOption) {
+//        "혈당" -> {
+//            if (glucoseZoomFactor == 1f) {
+//                250f
+//            } else {
+//                500f
+//            }
+//        }
+//        else -> {
+//            when (currentZoomFactor % 3) {
+//                1 -> 50f
+//                2 -> 10f
+//                else -> 5f
+//            }
+//        }
+//    }
 
-    val minY = baseMinY
-    val maxY = baseMaxY
+//    rangeProviderState.value = when (selectedChartOption) {
+//        "혈당" -> {
+//            if (glucoseZoomFactor == 1f) {
+//                CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 250.0)
+//            } else {
+//                CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 500.0)
+//            }
+//        }
+//
+//        else -> {
+//            when (currentZoomFactor % 3) {
+//                1 -> CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 50.0)
+//                2 -> CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 10.0)
+//                else -> CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 5.0)
+//            }
+//        }
+//    }
+//    baseMaxY = if (glucoseZoomFactor == 1f) {
+//        250f
+//    } else {
+//        500f
+//    }
+//
+//    baseCurrentMaxY = when (currentZoomFactor % 3) {
+//        1 -> 50f
+//        2 -> 10f
+//        else -> 5f
+//    }
+
+//    val minY = baseMinY
+//    val maxY = baseMaxY
 
 //    val customItemPlacer = object : AxisItemPlacer.Horizontal {
 //        override fun getLabelValues(
@@ -216,9 +274,64 @@ fun HomeScreen(
 //
 //    }
 
+//    val customItemPlacer2 = object : HorizontalAxis.ItemPlacer {
+//        override fun getLabelValues(
+//            context: CartesianDrawingContext,
+//            visibleXRange: ClosedFloatingPointRange<Double>,
+//            fullXRange: ClosedFloatingPointRange<Double>,
+//            maxLabelWidth: Float,
+//        ): List<Double> {
+//            // x 리스트에서 최소, 중간, 최대 값 사용
+//            val start = visibleXRange.start
+//            val end = visibleXRange.endInclusive
+//            val mid = (start + end) / 2
+//            return listOf(start, mid, end)
+//        }
+//
+//        override fun getStartLayerMargin(
+//            context: CartesianMeasuringContext,
+//            layerDimensions: CartesianLayerDimensions,
+//            tickThickness: Float,
+//            maxLabelWidth: Float
+//        ): Float = 0f
+//
+//        override fun getWidthMeasurementLabelValues(
+//            context: CartesianMeasuringContext,
+//            layerDimensions: CartesianLayerDimensions,
+//            fullXRange: ClosedFloatingPointRange<Double>,
+//        ): List<Double> {
+//            val start = fullXRange.start
+//            val end = fullXRange.endInclusive
+//            val mid = (start + end) / 2
+//            return listOf(start, mid, end)
+//        }
+//
+//        override fun getEndLayerMargin(
+//            context: CartesianMeasuringContext,
+//            layerDimensions: CartesianLayerDimensions,
+//            tickThickness: Float,
+//            maxLabelWidth: Float
+//        ): Float = 0f
+//
+//        override fun getHeightMeasurementLabelValues(
+//            context: CartesianMeasuringContext,
+//            layerDimensions: CartesianLayerDimensions,
+//            fullXRange: ClosedFloatingPointRange<Double>,
+//            maxLabelWidth: Float
+//        ): List<Double> {
+//            val start = fullXRange.start
+//            val end = fullXRange.endInclusive
+//            val mid = (start + end) / 2
+//            return listOf(start, mid, end)
+//        }
+//
+//        // margin은 기본값 쓰면 됨
+////        override fun getStartLayerMargin(...) = 0f
+////        override fun getEndLayerMargin(...) = 0f
+//    }
 
     // RadioButton
-    var selectedOption by remember { mutableStateOf("6시간") }
+    var selectedTimeOption by remember { mutableStateOf("6시간") }
 
     val localDbRepository by lazy {
         AppDatabase.getInstance(context)
@@ -343,38 +456,57 @@ fun HomeScreen(
 //        }
 //    }
 
+    LaunchedEffect(Unit) {
+        val verifiedDSLandscapeMode = DataStoreManager.getLandScapeMode().first() ?: false
+        checkedForLandscapeMode.value = verifiedDSLandscapeMode
+    }
 
-    LaunchedEffect(chartTrigger) {
+//    LaunchedEffect(selectedChartOption, glucoseZoomFactor, currentZoomFactor) {
+//        rangeProviderState.value = when (selectedChartOption) {
+//            "혈당" -> {
+//                if (glucoseZoomFactor == 1f) {
+//                    CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 250.0)
+//                } else {
+//                    CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 500.0)
+//                }
+//            }
+//
+//            else -> {
+//                when (currentZoomFactor % 3) {
+//                    1 -> CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 50.0)
+//                    2 -> CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 10.0)
+//                    else -> CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 5.0)
+//                }
+//            }
+//        }
+//    }
+
+    // 시간 옵션, 차트 옵션 변경 시 줌 리셋
+    LaunchedEffect(selectedTimeOption) {
+        forceRecompose++
+    }
+
+    LaunchedEffect(selectedChartOption) {
+        when (selectedChartOption) {
+            "혈당" -> setYMax(250.0)
+            "WEO1", "WEO2" -> setYMax(50.0) // 시작은 50.0, 필요시 5.0/10.0 등으로 조정
+        }
+        forceRecompose++
+    }
+
+    LaunchedEffect(chartTrigger, selectedTimeOption, selectedChartOption) {
         withContext(Dispatchers.IO) {
             // delay는 추후에 ANR이 발생하면 다시 활성화할 것!!
             delay(500)
+            x.clear()
+            y.clear()
 //            dataSetForModel.clear()
 //            dataSetLineSpec.clear()
 //            val dataPoints = arrayListOf<FloatEntry>()
-//            val dataPoints = mutableListOf<Pair<Float, Float>>()
-
-            withContext(Dispatchers.Main) {
-//                oldModel.value = modelProducer.getModel()
-            }
-            // 차트 디자인 옵션
-//            dataSetLineSpec.add(
-//                LineChart.LineSpec(
-//                    lineColor = Color(0xFF6FB0E5).toArgb(),
-//                    lineBackgroundShader = DynamicShaders.fromBrush(
-//                        brush = Brush.verticalGradient(
-//                            listOf(
-//                                Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_END),
-//                                Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_START)
-//                            )
-//                        )
-//                    )
-//                )
-//            )
-
             val userId = DataStoreManager.getUserId().first() ?: -1
 
-            Log.e("TEST", "selectedOption : ${selectedOption}")
-            val lastTime = when (selectedOption) {
+            Log.e("TEST", "selectedOption : ${selectedTimeOption}")
+            val lastTime = when (selectedTimeOption) {
                 "6시간" -> System.currentTimeMillis() - (6 * 60 * 60 * 1000L)
                 "12시간" -> System.currentTimeMillis() - (12 * 60 * 60 * 1000L)
                 else -> System.currentTimeMillis() - (24 * 60 * 60 * 1000L)
@@ -399,10 +531,7 @@ fun HomeScreen(
             for (i in 0 until localDBDataListAfterLastTime!!.size) {
                 val timeDiffMillis = localDBDataListAfterLastTime[i].createdAtLong - baseTime
                 val timeDiffMinutes =
-                    (timeDiffMillis / 1000 / 60).toFloat()  // millis → seconds → minutes
-
-//                Log.d("TEST", "timeDiffMinutes : ${timeDiffMinutes}")
-
+                    (timeDiffMillis / 1000 / 60).toDouble() // millis → seconds → minutes
                 when (selectedChartOption) {
                     "혈당" -> {
                         x.add(
@@ -411,6 +540,7 @@ fun HomeScreen(
                         y.add(
                             localDBDataListAfterLastTime[i].glucose.toFloat()
                         )
+
                     }
 
                     "WEO1" -> {
@@ -433,18 +563,12 @@ fun HomeScreen(
                 }
             }
 
-
-
             Log.e("DB", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
-
-
-//            dataSetForModel.add(dataPoints)
+            Log.e("TEST", "x : ${x}  y : ${y.size}")
 
             withContext(Dispatchers.Main) {
-
                 delay(100)
 //                modelProducer.setEntries(dataSetForModel)
-
                 if (x.isNotEmpty() && y.isNotEmpty()) {
                     modelProducer.runTransaction {
                         lineSeries { series(x, y) }
@@ -452,34 +576,17 @@ fun HomeScreen(
                     isLoading.value = true
                 } else {
                     Log.e("VICO", "Empty dataset! Skipping model update.")
-                    isLoading.value = false
                 }
 
-
-
-
-//                scrollSpec.performAutoScroll(
-//                    model = modelProducer.getModel(),
-//                    oldModel = oldModel.value,
-//                    chartScrollState = scrollState
-//                )
-//
                 isLoading.value = true
-//                delay(100)
-//                if (!scrollState.isScrollInProgress) {
-//                    Log.e("TEST", "scrollState.isScrollInProgress : ${scrollState.isScrollInProgress}")
-//                    scrollState.scroll(MutatePriority.Default) {
-//                        // 강제로 끝까지 스크롤
-//                        scrollBy(scrollState.maxValue)
-//                    }
-//                } else {
-//                    Log.e("TEST", "scrollState.isScrollInProgress : ${scrollState.isScrollInProgress}")
-//                }
+                delay(100)
+                chartScrollSpec.animateScroll(
+                    Scroll.Absolute.End,
+                )
             }
 
             // 추세 변화 알고리즘
             glucoseTrend.value = getTrendStatus(localDBDataListAfterLastTime)
-
             glucoseTrendImgResource.value = when (glucoseTrend.value) {
                 "급상승" -> R.drawable.level5
                 "상승 중" -> R.drawable.level4
@@ -499,9 +606,7 @@ fun HomeScreen(
                 Log.e("TEST", "홈 화면에서 타이머 실행")
             }
         }
-
         lifecycleOwner.lifecycle.addObserver(observer)
-
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
@@ -583,18 +688,18 @@ fun HomeScreen(
             .fillMaxSize()
             .padding(paddingValues)
     ) {
-
         // 1. 혈당 표시 카드
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(130.dp)
                 .padding(10.dp)
+//                .weight(1f)
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onLongPress = {
                             // 롱클릭 시 실행할 코드
-                            Log.d("TEST", "롱클릭됨!")
+                            Log.d("TEST", "롱 클릭됨!")
                             showModeDialog.value = true
 
                         },
@@ -612,7 +717,6 @@ fun HomeScreen(
                 defaultElevation = 10.dp
             )
         ) {
-
             Spacer(modifier = Modifier.height(10.dp))
 
             Row(
@@ -628,13 +732,6 @@ fun HomeScreen(
                     modifier = Modifier
                         .padding(start = 20.dp)
                 )
-//                Image(
-//                    modifier = Modifier
-//                        .padding(start = 5.dp)
-//                        .size(17.dp),
-//                    painter = painterResource(R.drawable.glucose_reset),
-//                    contentDescription = "glucoseReset"
-//                )
             }
 
             // Box로 수정
@@ -685,472 +782,717 @@ fun HomeScreen(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium
                 )
-
             }
         }
 
-
-        // 2. 그래프 표시 카드
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp)
-                .weight(1f),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White, // 카드 배경색 설정
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 10.dp
-            )
-        ) {
-            Spacer(modifier = Modifier.height(10.dp))
-
-            val mode = when (selectedChartOption) {
-                "혈당" -> "혈당 그래프"
-                "WEO1" -> "WEO1 그래프"
-                else -> "WEO2 그래프"
-            }
-
-
-            Row(
-                modifier = Modifier.fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = mode,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = fontSize
-                )
-
-                if (selectedChartOption != "혈당") {
-                    Spacer(modifier = Modifier.width(50.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth()
-                            .padding(top = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceAround
-                    ) {
-                        Image(
-                            painter = painterResource(R.drawable.zoom_in),
-                            contentDescription = "확대 줌",
-                            modifier = Modifier.size(20.dp)
-                                .clickable {
-                                    if (zoomFactor < 3) {
-                                        zoomFactor += 1f
-                                    }
-//                                        zoomFactor = zoomFactor.coerceIn(1f, 10f)
-                                }
-                        )
-
-                        Image(
-                            painter = painterResource(R.drawable.zoom_out),
-                            contentDescription = "축소 줌",
-                            modifier = Modifier.size(20.dp)
-                                .clickable {
-                                    if (zoomFactor > 1) {
-                                        zoomFactor -= 1f
-                                    }
-//                                        zoomFactor = zoomFactor.coerceIn(1f, 10f)
-                                }
-                        )
-
-                        Image(
-                            painter = painterResource(R.drawable.zoom_reset),
-                            contentDescription = "리셋 줌",
-                            modifier = Modifier.size(20.dp)
-                                .clickable {
-                                    zoomFactor = 1f
-                                }
-                        )
-                    }
-                }
-            }
-
-            // VICO 그래프
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp)
-                    .weight(1f),
-                color = Color.Transparent
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
+        // 가로 모드
+        if (checkedForLandscapeMode.value) {
+            val configuration = LocalConfiguration.current
+            val screenWidth = configuration.screenWidthDp.dp
+            val screenHeight = configuration.screenHeightDp.dp
+                // 2. 그래프 표시 카드 90도
+                Card(
+                    modifier = Modifier
+                        .rotate(90f)
+//                        .fillMaxHeight()
+//                        .fillMaxWidth()
+                        .width(1200.dp )
+                        .height(1200.dp)
+                        .padding(vertical = 55.dp)
+//                        .pointerInput(Unit) {
+//                            detectTapGestures(
+//                                onDoubleTap = {
+//                                    val newMax = if(selectedChartOption == "혈당" ) {
+//                                        if (currentYMax == 250.0) 500.0 else 250.0
+//                                    } else {
+//                                        if (currentYMax == 250.0) 50.0 else 10.0
+//                                    }
+//                                    Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
+//                                    setYMax(newMax)
+//                                    forceRecompose++
+//                                },
+//                                onTap = {
+//                                    // 짧은 클릭 (탭) 시 실행할 코드 (선택사항)
+////                                Log.d("TEST", "일반탭 감지됨!")
+//                                }
+//                            )
+//                        }
+                    ,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White, // 카드 배경색 설정
+                    ),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 10.dp
+                    )
                 ) {
-                    val lineColor = Color(0xFF6FB0E5)
-                    val RangeProvider = CartesianLayerRangeProvider.fixed(maxY = 250.0)
-                    val markerDecimalFormat = DecimalFormat("# mg/dL")
-                    val yDecimalFormat = DecimalFormat("#")
-                    val StartAxisValueFormatter = CartesianValueFormatter.decimal(yDecimalFormat)
-                    val MarkerValueFormatter =
-                        DefaultCartesianMarker.ValueFormatter.default(markerDecimalFormat)
+//                Spacer(modifier = Modifier.height(10.dp))
+                    val mode = when (selectedChartOption) {
+                        "혈당" -> "혈당 그래프"
+                        "WEO1" -> "WEO1 그래프"
+                        else -> "WEO2 그래프"
+                    }
+//                Row(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(horizontal = 20.dp),
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    Text(
+//                        text = mode,
+//                        fontWeight = FontWeight.Bold,
+//                        fontSize = fontSize
+//                    )
+//                    if (selectedChartOption == "혈당") {
+//                        Spacer(modifier = Modifier.width(50.dp))
+//                        Row(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .padding(top = 5.dp)
+//                                .padding(start = 20.dp),
+//                            verticalAlignment = Alignment.CenterVertically,
+//                            horizontalArrangement = Arrangement.Start
+//                        ) {
+//                            Image(
+//                                painter = painterResource(R.drawable.arows_vertical),
+//                                contentDescription = "확대 줌",
+//                                modifier = Modifier
+//                                    .size(20.dp)
+//                                    .clickable {
+//                                        if (glucoseZoomFactor == 1f) {
+//                                            glucoseZoomFactor = 2f
+//                                            Log.d("TEST", "glucoseZoomFactor 1: ${glucoseZoomFactor}")
+//                                        } else {
+//                                            glucoseZoomFactor = 1f
+//                                            Log.d("TEST", "glucoseZoomFactor 2: ${glucoseZoomFactor}")
+//                                        }
+//                                    }
+//                            )
+//                        }
+//                    } else {
+//                        Spacer(modifier = Modifier.width(50.dp))
+//                        Row(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .padding(top = 5.dp)
+//                                .padding(start = 20.dp),
+//                            verticalAlignment = Alignment.CenterVertically,
+//                            horizontalArrangement = Arrangement.Start
+//                        ) {
+//                            Image(
+//                                painter = painterResource(R.drawable.arows_vertical),
+//                                contentDescription = "전류 확대 줌",
+//                                modifier = Modifier
+//                                    .size(20.dp)
+//                                    .clickable {
+//                                        currentZoomFactor += 1
+//                                    }
+//                            )
+//                        }
+//                    }
+//                }
 
-//                    if (dataSetForModel.isNotEmpty() && isLoading.value == true) {
-                    if (isLoading.value == true) {
-                        CartesianChartHost(
-                            rememberCartesianChart(
-                                rememberLineCartesianLayer(
-                                    lineProvider =
-                                        LineCartesianLayer.LineProvider.series(
-                                            LineCartesianLayer.rememberLine(
-                                                fill = LineCartesianLayer.LineFill.single(
-                                                    fill(
-                                                        lineColor
-                                                    )
-                                                ),
-                                                areaFill =
-                                                    LineCartesianLayer.AreaFill.single(
-                                                        fill(
-                                                            ShaderProvider.verticalGradient(
-                                                                arrayOf(
-                                                                    lineColor.copy(alpha = 0.8f),
-                                                                    Color.Transparent
-                                                                )
-                                                            )
-                                                        )
-                                                    ),
-                                                pointConnector = LineCartesianLayer.PointConnector.cubic(curvature = 1f)
-                                            )
-                                        ),
-                                    rangeProvider = RangeProvider,
-                                ),
-                                startAxis = VerticalAxis.rememberStart(valueFormatter = StartAxisValueFormatter),
-                                bottomAxis = HorizontalAxis.rememberBottom(),
-                                marker = rememberMarker(MarkerValueFormatter),
-                                fadingEdges = FadingEdges( // 또는 FadingEdges.horizontal() 도 가능
-                                    startWidthDp = 0f,
-                                    endWidthDp = 0f,
-                                    visibilityThresholdDp = 15f
-                                )
-                            ),
-                            modelProducer = modelProducer,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-//                            chartScrollState = scrollState,
-                        )
-
-//                        ProvideChartStyle {
-//                            val marker = rememberMarker()
-//                            if (totalEntryCount.value < 5) {
-//                                Chart(
-//                                    modifier = Modifier
-//                                        .fillMaxWidth()
-//                                        .weight(1f),
-//                                    chart = lineChart(
-//                                        lines = dataSetLineSpec,
-//                                        axisValuesOverrider = AxisValuesOverrider.fixed(
-//                                            minY = minY,
-//                                            maxY = maxY
-//                                        )
-//                                    ),
-//                                    chartModelProducer = modelProducer,
-//                                    chartScrollState = scrollState,
-//                                    chartScrollSpec = scrollSpec,
-//                                    // y축
-//                                    startAxis = rememberStartAxis(
-//                                        title = "Top values",
-//                                        tickLength = 0.dp,
-//                                        valueFormatter = { value, _ ->
-//                                            value.toInt().toString()
-//                                        },
-//                                        label = axisLabelComponent(color = Color.Black),
-//                                        // y축 레이블 갯수
-//                                        itemPlacer = AxisItemPlacer.Vertical.default(
-//                                            maxItemCount = 6,
-//                                            shiftTopLines = true
-//                                        )
-//                                    ),
-//                                    marker = marker,
-//                                    isZoomEnabled = true,
-//
-//                                    // x축
-//                                    bottomAxis = rememberBottomAxis(
-//                                        title = "Count of values",
-//                                        tickLength = 0.dp,
-//                                        valueFormatter = { value, _ ->
-//                                            val baseTime = 1743442801000L // 25년 4월 1일 00시 00분 00초
-//                                            val actualTimeMillis = baseTime + (value * 60 * 1000).toLong()
-//                                            val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
-//                                            formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
-//                                            formatter.format(Date(actualTimeMillis))
-//                                        },
-//                                        itemPlacer = AxisItemPlacer.Horizontal.default(
-//                                            spacing = 1,  // x축 라벨 간격을 더 촘촘히 (기본은 자동)
-//                                            shiftExtremeTicks = true
-//
-//                                        ),
-//                                        label = axisLabelComponent(
-//                                            color = Color.Black,
-////                                            background = ShapeComponent(color = R.color.teal_200)
-//                                        ),
-//                                        guideline = null,
-//                                    ),
-//                                )
-//                            } else {
-//                                Chart(
-//                                    modifier = Modifier
-//                                        .fillMaxWidth()
-//                                        .weight(1f),
-//                                    chart = lineChart(
-//                                        lines = dataSetLineSpec,
-//                                        axisValuesOverrider = AxisValuesOverrider.fixed(
-//                                            minY = minY,
-//                                            maxY = maxY
-//                                        )
-//                                    ),
-//                                    chartModelProducer = modelProducer,
-//                                    chartScrollState = scrollState,
-//                                    chartScrollSpec = scrollSpec,
-//
-//                                    // y축
-//                                    startAxis = rememberStartAxis(
-//                                        title = "Top values",
-//                                        tickLength = 0.dp,
-//                                        valueFormatter = { value, _ ->
-//                                            value.toInt().toString()
-//                                        },
-//                                        label = axisLabelComponent(color = Color.Black),
-//                                        // y축 레이블 갯수
-//                                        itemPlacer = AxisItemPlacer.Vertical.default(
-//                                            maxItemCount = 6,
-//                                            shiftTopLines = true
-//                                        )
-//                                    ),
-//                                    marker = marker,
-//                                    isZoomEnabled = true,
-//
-//                                    // x축
-//                                    bottomAxis = rememberBottomAxis(
-//                                        title = "Count of values",
-//                                        tickLength = 0.dp,
-//                                        itemPlacer = customItemPlacer,
-//                                        valueFormatter = { value, _ ->
-//                                            val baseTime = 1743442801000L
-//                                            val actualTimeMillis = baseTime + (value * 60 * 1000).toLong()
-//                                            val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
-//                                            formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
-//                                            formatter.format(Date(actualTimeMillis))
-//                                        },
-//                                        label = axisLabelComponent(
-//                                            color = Color.Black,
-////                                            horizontalMargin = 20.dp,
-////                                            textSize = 10.sp,
-////                                            background = ShapeComponent(color = R.color.teal_200),
-//                                            ellipsize = TextUtils.TruncateAt.START,
-//                                        ),
-//                                        guideline = null,
-//                                    )
+                    // VICO 그래프
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 10.dp)
+//                            .pointerInput(Unit) {
+//                                detectTapGestures(
+//                                    onDoubleTap = {
+//                                        val newMax = if(selectedChartOption == "혈당" ) {
+//                                            if (currentYMax == 250.0) 500.0 else 250.0
+//                                        } else {
+//                                            if (currentYMax == 250.0) 50.0 else 10.0
+//                                        }
+//                                        Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
+//                                        setYMax(newMax)
+//                                        forceRecompose++
+//                                    },
+//                                    onTap = {
+//                                        // 짧은 클릭 (탭) 시 실행할 코드 (선택사항)
+////                                Log.d("TEST", "일반탭 감지됨!")
+//                                    }
 //                                )
 //                            }
+                            .weight(1f),
+                        color = Color.Transparent
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            val lineColor = Color(0xFF6FB0E5)
+//                    val rangeProvider = when (selectedChartOption) {
+//                        "혈당" -> {
+//                            CartesianLayerRangeProvider.fixed(
+//                                maxY = baseMaxY.toDouble(),
+//                                minY = baseMinY.toDouble()
+//                            )
+//                        }
+//                        else -> {
+//                            CartesianLayerRangeProvider.fixed(
+//                                maxY = baseCurrentMaxY.toDouble(),
+//                                minY = baseMinY.toDouble()
+//                            )
+//                        }
+//                    }
+                            val markerDecimalFormat =
+                                when (selectedChartOption) {
+                                    "혈당" -> DecimalFormat("# mg/dL")
+                                    else -> DecimalFormat("##.## nA")
+                                }
+                            val yDecimalFormat = DecimalFormat("#")
+                            val startAxisValueFormatter =
+                                CartesianValueFormatter.decimal(yDecimalFormat)
+                            val bottomAxisFormatter = CartesianValueFormatter { _, value, _ ->
+                                val baseTime = 1743442801000L
+                                val timeMillis = baseTime + (value * 60 * 1000).toLong()
+                                val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
+                                formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
+                                formatter.format(Date(timeMillis))
+                            }
+                            val MarkerValueFormatter =
+                                DefaultCartesianMarker.ValueFormatter.default(markerDecimalFormat)
 
 
-                    } else {
-                        Box(
+                            if (isLoading.value == true && x.isNotEmpty() && y.isNotEmpty()) {
+                                CartesianChartHost(
+                                    chart = rememberCartesianChart(
+                                        rememberLineCartesianLayer(
+                                            lineProvider =
+                                                LineCartesianLayer.LineProvider.series(
+                                                    LineCartesianLayer.rememberLine(
+                                                        fill = LineCartesianLayer.LineFill.single(
+                                                            fill(
+                                                                lineColor
+                                                            )
+                                                        ),
+                                                        areaFill =
+                                                            LineCartesianLayer.AreaFill.single(
+                                                                fill(
+                                                                    ShaderProvider.verticalGradient(
+                                                                        arrayOf(
+                                                                            lineColor.copy(alpha = 0.8f),
+                                                                            Color.Transparent
+                                                                        )
+                                                                    )
+                                                                )
+                                                            ),
+                                                        pointConnector = LineCartesianLayer.PointConnector.cubic(
+                                                            curvature = 0.8f
+                                                        )
+                                                    )
+                                                ),
+                                            rangeProvider = rangeProvider
+                                        ),
+                                        startAxis = VerticalAxis.rememberStart(
+                                            valueFormatter = startAxisValueFormatter,
+                                            itemPlacer = VerticalAxis.ItemPlacer.count({ 6 })
+                                        ),
+                                        bottomAxis = HorizontalAxis.rememberBottom(
+                                            valueFormatter = bottomAxisFormatter,
+                                            itemPlacer = HorizontalAxis.ItemPlacer.aligned(
+                                                spacing = { 20 }, // 5개의 xStep마다 하나의 라벨
+                                                offset = { 0 },
+                                                shiftExtremeLines = true,
+                                                addExtremeLabelPadding = true
+                                            )
+                                        ),
+                                        marker = rememberMarker(MarkerValueFormatter),
+                                        fadingEdges = FadingEdges( // 또는 FadingEdges.horizontal() 도 가능
+                                            startWidthDp = 0f,
+                                            endWidthDp = 0f,
+                                            visibilityThresholdDp = 15f
+                                        )
+                                    ),
+                                    modelProducer = modelProducer,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .weight(1f),
+                                    scrollState = chartScrollSpec,
+
+                                    zoomState = rememberVicoZoomState(
+                                        zoomEnabled = true,
+                                        initialZoom = Zoom.Content
+                                    )
+
+
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .weight(1f),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "잠시만 기다려주세요...",
+                                        color = Color(0xFF385DAB),
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+
+                            RadioButtonSingleSelection(
+                                selectedOption = selectedTimeOption,
+                                onOptionSelected = { selectedTimeOption = it }
+                            )
+                        } // column
+                    } // surface
+                } // Card (Column)
+        } else { // 세로 모드
+            // 2. 그래프 표시 카드
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp)
+                    .weight(1f)
+                ,
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White, // 카드 배경색 설정
+                ),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 10.dp
+                )
+            ) {
+                Spacer(modifier = Modifier.height(10.dp))
+                val mode = when (selectedChartOption) {
+                    "혈당" -> "혈당 그래프"
+                    "WEO1" -> "WEO1 그래프"
+                    else -> "WEO2 그래프"
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = mode,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = fontSize
+                    )
+                    if (selectedChartOption == "혈당") {
+                        Spacer(modifier = Modifier.width(50.dp))
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .weight(1f),
-                            contentAlignment = Alignment.Center
+                                .padding(top = 5.dp)
+                                .padding(start = 20.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Start
                         ) {
-                            Text(
-                                text = "",
-                                color = Color(0xFF385DAB),
-                                fontSize = 17.sp,
-                                fontWeight = FontWeight.Medium
+                            Image(
+                                painter = painterResource(R.drawable.arows_vertical),
+                                contentDescription = "확대 줌",
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clickable {
+//                                        if (glucoseZoomFactor == 1f) {
+//                                            glucoseZoomFactor = 2f
+//                                            Log.d("TEST", "glucoseZoomFactor 1: ${glucoseZoomFactor}")
+//                                        } else {
+//                                            glucoseZoomFactor = 1f
+//                                            Log.d("TEST", "glucoseZoomFactor 2: ${glucoseZoomFactor}")
+//                                        }
+
+                                        setYMax(if (yMax == 250.0) 500.0 else 250.0)
+                                        forceRecompose++
+                                    }
+                            )
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.width(50.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 5.dp)
+                                .padding(start = 20.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.arows_vertical),
+                                contentDescription = "전류 확대 줌",
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clickable {
+                                        currentZoomFactor += 1
+                                    }
                             )
                         }
                     }
 
-                    RadioButtonSingleSelection(
-                        selectedOption = selectedOption,
-                        onOptionSelected = { selectedOption = it }
-                    )
                 }
-            }
-        }
 
-        // 3. 센서 정보 표시 카드
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(140.dp)
-                .padding(horizontal = 10.dp)
-                .padding(top = 10.dp, bottom = 20.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White, // 카드 배경색 설정
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 10.dp
-            )
-        ) {
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-//                    .padding(top = 10.dp, start = 15.dp, end = 10.dp),
-                    .padding(top = 10.dp, start = 20.dp, end = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-
-                Text(
-                    text = "센서 정보",
-                    fontSize = fontSize,
-                    fontWeight = FontWeight.Bold,
-                )
-                Icon(
-                    Icons.Filled.MoreVert,
-                    contentDescription = "더보기 아이콘",
+                // VICO 그래프
+                Surface(
                     modifier = Modifier
-                        .size(20.dp)
-                        .clickable {
-                            navController.navigate("SensorInfoScreen")
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp)
+//                        .rotate(90f)
+                        .weight(1f)
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onDoubleTap = {
+//                                    val newMax = if(selectedChartOption == "혈당" ) {
+//                                        if (currentYMax == 250.0) 500.0 else 250.0
+//                                    } else {
+//                                        if (currentYMax == 250.0) {
+//                                            50.0
+//                                        } else if (currentYMax == 50.0) {
+//                                            10.0
+//                                        } else if (currentYMax == 10.0) {
+//                                            5.0
+//                                        } else {
+//                                            50.0
+//                                        }
+//                                    }
+//                                    Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
+//                                    setYMax(newMax)
+//                                    forceRecompose++
+                                },
+                                onTap = {
+                                    // 짧은 클릭 (탭) 시 실행할 코드 (선택사항)
+//                                Log.d("TEST", "일반탭 감지됨!")
+//                                    val newMax = if(selectedChartOption == "혈당" ) {
+//                                        if (currentYMax == 250.0) 500.0 else 250.0
+//                                    } else {
+//                                        if (currentYMax == 250.0) {
+//                                            50.0
+//                                        } else if (currentYMax == 50.0) {
+//                                            10.0
+//                                        } else if (currentYMax == 10.0) {
+//                                            5.0
+//                                        } else {
+//                                            50.0
+//                                        }
+//                                    }
+//                                    Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
+//                                    setYMax(newMax)
+//                                    forceRecompose++
+                                },
+                                onLongPress = {
+                                    // 짧은 클릭 (탭) 시 실행할 코드 (선택사항)
+//                                Log.d("TEST", "일반탭 감지됨!")
+                                    val newMax = if(selectedChartOption == "혈당" ) {
+                                        if (currentYMax == 250.0) 500.0 else 250.0
+                                    } else {
+                                        if (currentYMax == 250.0) {
+                                            50.0
+                                        } else if (currentYMax == 50.0) {
+                                            10.0
+                                        } else if (currentYMax == 10.0) {
+                                            5.0
+                                        } else {
+                                            50.0
+                                        }
+                                    }
+                                    Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
+                                    setYMax(newMax)
+                                    forceRecompose++
+                                }
+                            )
                         }
+                    ,
+                    color = Color.Transparent
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        val lineColor = Color(0xFF6FB0E5)
+                        val markerDecimalFormat =
+                            when (selectedChartOption) {
+                                "혈당" -> DecimalFormat("# mg/dL")
+                                else -> DecimalFormat("##.## nA")
+                            }
+                        val yDecimalFormat = DecimalFormat("#")
+                        val startAxisValueFormatter =
+                            CartesianValueFormatter.decimal(yDecimalFormat)
+                        val bottomAxisFormatter = CartesianValueFormatter { _, value, _ ->
+                            val baseTime = 1743442801000L
+                            val timeMillis = baseTime + (value * 60 * 1000).toLong()
+                            val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
+                            formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
+                            formatter.format(Date(timeMillis))
+                        }
+                        val MarkerValueFormatter =
+                            DefaultCartesianMarker.ValueFormatter.default(markerDecimalFormat)
+
+
+                        if (isLoading.value == true && x.isNotEmpty() && y.isNotEmpty()) {
+                            key(yMax, forceRecompose) {
+                                CartesianChartHost(
+                                    chart = rememberCartesianChart(
+                                        rememberLineCartesianLayer(
+                                            lineProvider =
+                                                LineCartesianLayer.LineProvider.series(
+                                                    LineCartesianLayer.rememberLine(
+                                                        fill = LineCartesianLayer.LineFill.single(
+                                                            fill(
+                                                                lineColor
+                                                            )
+                                                        ),
+                                                        areaFill =
+                                                            LineCartesianLayer.AreaFill.single(
+                                                                fill(
+                                                                    ShaderProvider.verticalGradient(
+                                                                        arrayOf(
+                                                                            lineColor.copy(alpha = 0.8f),
+                                                                            Color.Transparent
+                                                                        )
+                                                                    )
+                                                                )
+                                                            ),
+                                                        pointConnector = LineCartesianLayer.PointConnector.cubic(
+                                                            curvature = 0.8f
+                                                        )
+                                                    )
+                                                ),
+                                            rangeProvider = rangeProvider,
+                                        ),
+                                        startAxis = VerticalAxis.rememberStart(
+                                            valueFormatter = startAxisValueFormatter,
+                                            itemPlacer = if (yMax == 500.0) {
+                                            VerticalAxis.ItemPlacer.count({ 6 })
+                                            } else {
+                                            VerticalAxis.ItemPlacer.count({ 6 })
+                                            },
+//                                            guideline = null
+                                        ),
+                                        bottomAxis = HorizontalAxis.rememberBottom(
+                                            valueFormatter = bottomAxisFormatter,
+                                            itemPlacer = HorizontalAxis.ItemPlacer.aligned(
+                                                spacing = { 20 }, // 5개의 xStep마다 하나의 라벨
+                                                offset = { 0 },
+                                                shiftExtremeLines = true,
+                                                addExtremeLabelPadding = true
+                                            ),
+//                                            itemPlacer = customItemPlacer2
+//                                            guideline = null
+                                        ),
+                                        marker = rememberMarker(MarkerValueFormatter),
+                                        fadingEdges = FadingEdges( // 또는 FadingEdges.horizontal() 도 가능
+                                            startWidthDp = 0f,
+                                            endWidthDp = 0f,
+                                            visibilityThresholdDp = 15f
+                                        )
+                                    ),
+                                    modelProducer = modelProducer,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .weight(1f),
+                                    scrollState = chartScrollSpec,
+                                    zoomState = rememberVicoZoomState(
+                                        zoomEnabled = true,
+                                        initialZoom = Zoom.Content
+                                    )
+                                )
+                            }
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "잠시만 기다려주세요...",
+                                    color = Color(0xFF385DAB),
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+
+                        RadioButtonSingleSelection(
+                            selectedOption = selectedTimeOption,
+                            onOptionSelected = { selectedTimeOption = it }
+                        )
+                    } // column
+                } // surface
+            }
+            // 3. 센서 정보 표시 카드
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+                    .padding(horizontal = 10.dp)
+                    .padding(top = 10.dp, bottom = 20.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White, // 카드 배경색 설정
+                ),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 10.dp
                 )
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 15.dp)
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                for (i in 0 until 14) {
-                    val painter = if (i < 14 - day + 1) {
-                        R.drawable.sensor_progress_on
-                    } else {
-                        R.drawable.sensor_progress_off
-                    }
-                    Image(
-                        painter = painterResource(painter),
-                        contentDescription = "센서 진행률",
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+//                    .padding(top = 10.dp, start = 15.dp, end = 10.dp),
+                        .padding(top = 10.dp, start = 20.dp, end = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+
+                    Text(
+                        text = "센서 정보",
+                        fontSize = fontSize,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Icon(
+                        Icons.Filled.MoreVert,
+                        contentDescription = "더보기 아이콘",
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable {
+                                navController.navigate("SensorInfoScreen")
+                            }
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 15.dp)
+                        .padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    for (i in 0 until 14) {
+                        val painter = if (i < 14 - day + 1) {
+                            R.drawable.sensor_progress_on
+                        } else {
+                            R.drawable.sensor_progress_off
+                        }
+                        Image(
+                            painter = painterResource(painter),
+                            contentDescription = "센서 진행률",
 //                        modifier = Modifier.size(15.dp, 10.dp)
-                        modifier = Modifier.size(19.dp, 10.dp)
-                    )
+                            modifier = Modifier.size(19.dp, 10.dp)
+                        )
+                    }
                 }
-            }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                if ((10 - day + 1) < 11) {
-                    Text(
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    if ((10 - day + 1) < 11) {
+                        Text(
 //                        text = "${10 - day + 1}/10일",
-                        text = "${14 - day + 1}/14일",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                } else {
-                    Text(
+                            text = "${14 - day + 1}/14일",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    } else {
+                        Text(
 //                        text = "10/10일",
-                        text = "14/14일",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                            text = "14/14일",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
 
-                if (day - 1 > 0) {
-                    Text(
-                        text = "${day - 1}일 남았어요",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                } else {
-                    Text(
-                        text = "마지막 날이에요",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+                    if (day - 1 > 0) {
+                        Text(
+                            text = "${day - 1}일 남았어요",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    } else {
+                        Text(
+                            text = "마지막 날이에요",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
+
         }
     }
 }
 
 
+@Composable
+fun RadioButtonSingleSelection(
+    selectedOption: String,
+    onOptionSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val radioOptions = listOf("6시간", "12시간", "24시간")
 
-
-    @Composable
-    fun RadioButtonSingleSelection(
-        selectedOption: String,
-        onOptionSelected: (String) -> Unit,
-        modifier: Modifier = Modifier
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .selectableGroup()
+            .height(60.dp)
+            .padding(horizontal = 30.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        val radioOptions = listOf("6시간", "12시간", "24시간")
-
-        Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .selectableGroup()
-                .height(60.dp)
-                .padding(horizontal = 30.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            radioOptions.forEach { text ->
-                Row(
-                    Modifier
-                        .weight(1f)
-                        .height(56.dp)
-                        .selectable(
-                            selected = (text == selectedOption),
-                            onClick = { onOptionSelected(text) },
-                            role = Role.RadioButton
-                        ),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    RadioButton(
+        radioOptions.forEach { text ->
+            Row(
+                Modifier
+                    .weight(1f)
+                    .height(56.dp)
+                    .selectable(
                         selected = (text == selectedOption),
-                        onClick = null
-                    )
-                    Text(
-                        text = text,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(start = 10.dp)
-                    )
-                }
+                        onClick = { onOptionSelected(text) },
+                        role = Role.RadioButton
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                RadioButton(
+                    selected = (text == selectedOption),
+                    onClick = null
+                )
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 10.dp)
+                )
             }
         }
     }
+}
 
-    fun getTrendStatus(glucoseValueList: List<UserGlucose>): String {
-        if (glucoseValueList.size < 4) return "유지 중"
+fun getTrendStatus(glucoseValueList: List<UserGlucose>): String {
+    if (glucoseValueList.size < 4) return "유지 중"
 
-        val list = glucoseValueList.takeLast(5)
+    val list = glucoseValueList.takeLast(5)
 
-        Log.d("TEST", "glucoseValeList : ${glucoseValueList}")
-        Log.d("TEST", "glucoseValeList last 5 : ${list}")
-        val n = list.size
-        val x = (0 until n).toList()
-        val y = list.map { it.glucose }
+    Log.d("TEST", "glucoseValeList : ${glucoseValueList}")
+    Log.d("TEST", "glucoseValeList last 5 : ${list}")
+    val n = list.size
+    val x = (0 until n).toList()
+    val y = list.map { it.glucose }
 
-        val sumX = x.sum()
-        val sumY = y.sum()
-        val sumXY = x.zip(y) { xi, yi -> xi * yi }.sum()
-        val sumXSquare = x.sumOf { it * it }
+    val sumX = x.sum()
+    val sumY = y.sum()
+    val sumXY = x.zip(y) { xi, yi -> xi * yi }.sum()
+    val sumXSquare = x.sumOf { it * it }
 
-        val numerator = n * sumXY - sumX * sumY
-        val denominator = n * sumXSquare - sumX * sumX
+    val numerator = n * sumXY - sumX * sumY
+    val denominator = n * sumXSquare - sumX * sumX
 
-        val slope = if (denominator != 0) numerator.toDouble() / denominator else 0.0
-        Log.d("TEST", "slope : $slope")
+    val slope = if (denominator != 0) numerator.toDouble() / denominator else 0.0
+    Log.d("TEST", "slope : $slope")
 
-        return when {
-            slope >= 10.0 -> "급상승"
-            slope in 2.1..4.9 -> "상승 중"
-            slope in -2.0..2.0 -> "유지 중"
-            slope in -4.9..-2.1 -> "하강 중"
-            slope <= -10.0 -> "급하강"
-            else -> "유지 중"
-        }
+    return when {
+        slope >= 10.0 -> "급상승"
+        slope in 2.1..4.9 -> "상승 중"
+        slope in -2.0..2.0 -> "유지 중"
+        slope in -4.9..-2.1 -> "하강 중"
+        slope <= -10.0 -> "급하강"
+        else -> "유지 중"
     }
+}
 
 
 
