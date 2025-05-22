@@ -7,12 +7,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -105,13 +103,8 @@ import java.util.TimeZone
 import kotlin.system.exitProcess
 import androidx.compose.runtime.*
 import androidx.compose.runtime.key
-import com.patrykandpatrick.vico.compose.cartesian.VicoZoomState
-import com.patrykandpatrick.vico.core.cartesian.CartesianDrawingContext
-import com.patrykandpatrick.vico.core.cartesian.CartesianMeasuringContext
-import com.patrykandpatrick.vico.core.cartesian.layer.CartesianLayerDimensions
 
 @SuppressLint("RestrictedApi")
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
@@ -137,10 +130,6 @@ fun HomeScreen(
 
     val glucoseTrend = remember { mutableStateOf("유지 중") }
     val glucoseTrendImgResource = remember { mutableStateOf(R.drawable.level3) }
-
-    var baseMinY by remember { mutableStateOf(0f) }
-    var baseMaxY by remember { mutableStateOf(0f) }
-    var baseCurrentMaxY by remember { mutableStateOf(0f) }
 
     // Vico Chart
     val modelProducer = remember { CartesianChartModelProducer() }
@@ -173,59 +162,6 @@ fun HomeScreen(
 
     // 가로 모드 변수
     val checkedForLandscapeMode = remember { mutableStateOf(false) }
-
-    baseMinY = when (selectedChartOption) {
-        "혈당" -> 0f
-        else -> 0f
-    }
-//    baseMaxY = when (selectedChartOption) {
-//        "혈당" -> {
-//            if (glucoseZoomFactor == 1f) {
-//                250f
-//            } else {
-//                500f
-//            }
-//        }
-//        else -> {
-//            when (currentZoomFactor % 3) {
-//                1 -> 50f
-//                2 -> 10f
-//                else -> 5f
-//            }
-//        }
-//    }
-
-//    rangeProviderState.value = when (selectedChartOption) {
-//        "혈당" -> {
-//            if (glucoseZoomFactor == 1f) {
-//                CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 250.0)
-//            } else {
-//                CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 500.0)
-//            }
-//        }
-//
-//        else -> {
-//            when (currentZoomFactor % 3) {
-//                1 -> CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 50.0)
-//                2 -> CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 10.0)
-//                else -> CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 5.0)
-//            }
-//        }
-//    }
-//    baseMaxY = if (glucoseZoomFactor == 1f) {
-//        250f
-//    } else {
-//        500f
-//    }
-//
-//    baseCurrentMaxY = when (currentZoomFactor % 3) {
-//        1 -> 50f
-//        2 -> 10f
-//        else -> 5f
-//    }
-
-//    val minY = baseMinY
-//    val maxY = baseMaxY
 
 //    val customItemPlacer = object : AxisItemPlacer.Horizontal {
 //        override fun getLabelValues(
@@ -345,117 +281,6 @@ fun HomeScreen(
     }
 
 
-//    LaunchedEffect(selectedOption, selectedChartOption) {
-//        withContext(Dispatchers.IO) {
-//            dataSetForModel.clear()
-////            dataSetLineSpec.clear()
-//            val dataPoints = arrayListOf<FloatEntry>()
-//
-//            // 차트 디자인 옵션
-//            dataSetLineSpec.add(
-//                 .LineSpec(
-//                    lineColor = Color(0xFF6FB0E5).toArgb(),
-//                    lineBackgroundShader = DynamicShaders.fromBrush(
-//                        brush = Brush.verticalGradient(
-//                            listOf(
-//                                Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_END),
-//                                Color(0xFF6FB0E5).copy(DefaultAlpha.LINE_BACKGROUND_SHADER_START)
-//                            )
-//                        )
-//                    )
-//                )
-//            )
-//
-//            val userId = DataStoreManager.getUserId().first() ?: -1
-//
-//            Log.e("TEST", "selectedOption : ${selectedOption}")
-//            val lastTime = when (selectedOption) {
-//                "3시간" -> System.currentTimeMillis() - (3 * 60 * 60 * 1000L)
-//                "6시간" -> System.currentTimeMillis() - (6 * 60 * 60 * 1000L)
-//                else -> System.currentTimeMillis() - (12 * 60 * 60 * 1000L)
-//            }
-//            Log.e("DB", "lastTime : ${lastTime}")
-//            val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA)
-//            formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
-//            val convertedLastTime = formatter.format(Date(lastTime))
-//
-//            Log.e("DB", "converted : ${convertedLastTime}")
-//
-//            val localDBDataListAfterLastTime =
-//                localDbRepository?.dataDao()
-//                    ?.getGlucoseListAfterLastTime(userId = userId, lastTime = lastTime)
-//
-//            if (localDBDataListAfterLastTime != null) {
-//                totalEntryCount.value = localDBDataListAfterLastTime.size
-//            }
-//
-//            Log.d("TEST", "localDbList : ${localDBDataListAfterLastTime}")
-//
-//            val baseTime = 1743442800000L // 25년 4월 1일 00시 00분 00초
-//            for (i in 0 until localDBDataListAfterLastTime!!.size) {
-//                val timeDiffMillis = localDBDataListAfterLastTime[i].createdAtLong - baseTime
-//                val timeDiffMinutes =
-//                    (timeDiffMillis / 1000 / 60).toFloat()  // millis → seconds → minutes
-//
-////                Log.d("TEST", "timeDiffMinutes : ${timeDiffMinutes}")
-//                when(selectedChartOption) {
-//                    "혈당" -> {
-//                        dataPoints.add(
-//                            FloatEntry(
-//                                x = (timeDiffMinutes),
-//                                y = localDBDataListAfterLastTime[i].glucose.toFloat()
-//                            )
-//                        )
-//                    }
-//                    "WEO1" -> {
-//                        dataPoints.add(
-//                            FloatEntry(
-//                                x = (timeDiffMinutes),
-//                                y = localDBDataListAfterLastTime[i].weo1.toFloat()
-//                            )
-//                        )
-//                    }
-//                    else -> {
-//                        dataPoints.add(
-//                            FloatEntry(
-//                                x = (timeDiffMinutes),
-//                                y = localDBDataListAfterLastTime[i].weo2.toFloat()
-//                            )
-//                        )
-//                    }
-//                }
-//            }
-//
-//            dataSetForModel.add(dataPoints)
-//
-//            withContext(Dispatchers.Main) {
-//
-//                delay(100)
-//                modelProducer.setEntries(dataSetForModel)
-//
-////                oldModel.value = modelProducer.getModel()
-//
-//                scrollSpec.performAutoScroll(
-//                    model = modelProducer.getModel(),
-//                    oldModel = oldModel.value,
-//                    chartScrollState = scrollState
-//                )
-//
-//                isLoading.value = true
-//                delay(100)
-//                if (!scrollState.isScrollInProgress) {
-//                    Log.e("TEST", "scrollState.isScrollInProgress : ${scrollState.isScrollInProgress}")
-//                    scrollState.scroll(MutatePriority.Default) {
-//                        // 강제로 끝까지 스크롤
-//                        scrollBy(scrollState.maxValue)
-//                    }
-//                } else {
-//                    Log.e("TEST", "scrollState.isScrollInProgress : ${scrollState.isScrollInProgress}")
-//                }
-//            }
-//        }
-//    }
-
     LaunchedEffect(Unit) {
         val verifiedDSLandscapeMode = DataStoreManager.getLandScapeMode().first() ?: false
         checkedForLandscapeMode.value = verifiedDSLandscapeMode
@@ -500,9 +325,6 @@ fun HomeScreen(
             delay(500)
             x.clear()
             y.clear()
-//            dataSetForModel.clear()
-//            dataSetLineSpec.clear()
-//            val dataPoints = arrayListOf<FloatEntry>()
             val userId = DataStoreManager.getUserId().first() ?: -1
 
             Log.e("TEST", "selectedOption : ${selectedTimeOption}")
@@ -563,8 +385,8 @@ fun HomeScreen(
                 }
             }
 
-            Log.e("DB", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
-            Log.e("TEST", "x : ${x}  y : ${y.size}")
+            Log.d("DB", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
+            Log.d("TEST", "x : ${x}  y : ${y.size}")
 
             withContext(Dispatchers.Main) {
                 delay(100)
@@ -575,7 +397,7 @@ fun HomeScreen(
                     }
                     isLoading.value = true
                 } else {
-                    Log.e("VICO", "Empty dataset! Skipping model update.")
+                    Log.d("VICO", "Empty dataset! Skipping model update.")
                 }
 
                 isLoading.value = true
@@ -661,8 +483,8 @@ fun HomeScreen(
                     DataStoreManager.saveIsMain(false)
                     DataStoreManager.deleteRoute()
                     DataStoreManager.saveRoute("Splash")
-                    Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
-                    Log.e("TEST", "DS에 저장된 Route는${DataStoreManager.getRoute().first()}")
+                    Log.d("TEST", "${DataStoreManager.getIsMain().first()}")
+                    Log.d("TEST", "DS에 저장된 Route는${DataStoreManager.getRoute().first()}")
                     DataStoreManager.deleteAccessToken()
                     DataStoreManager.deleteRefreshToken()
                     DataStoreManager.deleteUserId()
@@ -794,29 +616,9 @@ fun HomeScreen(
                 Card(
                     modifier = Modifier
                         .rotate(90f)
-//                        .fillMaxHeight()
-//                        .fillMaxWidth()
                         .width(1200.dp )
                         .height(1200.dp)
                         .padding(vertical = 55.dp)
-//                        .pointerInput(Unit) {
-//                            detectTapGestures(
-//                                onDoubleTap = {
-//                                    val newMax = if(selectedChartOption == "혈당" ) {
-//                                        if (currentYMax == 250.0) 500.0 else 250.0
-//                                    } else {
-//                                        if (currentYMax == 250.0) 50.0 else 10.0
-//                                    }
-//                                    Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
-//                                    setYMax(newMax)
-//                                    forceRecompose++
-//                                },
-//                                onTap = {
-//                                    // 짧은 클릭 (탭) 시 실행할 코드 (선택사항)
-////                                Log.d("TEST", "일반탭 감지됨!")
-//                                }
-//                            )
-//                        }
                     ,
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
@@ -827,22 +629,7 @@ fun HomeScreen(
                     )
                 ) {
 //                Spacer(modifier = Modifier.height(10.dp))
-                    val mode = when (selectedChartOption) {
-                        "혈당" -> "혈당 그래프"
-                        "WEO1" -> "WEO1 그래프"
-                        else -> "WEO2 그래프"
-                    }
-//                Row(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(horizontal = 20.dp),
-//                    verticalAlignment = Alignment.CenterVertically
-//                ) {
-//                    Text(
-//                        text = mode,
-//                        fontWeight = FontWeight.Bold,
-//                        fontSize = fontSize
-//                    )
+
 //                    if (selectedChartOption == "혈당") {
 //                        Spacer(modifier = Modifier.width(50.dp))
 //                        Row(
@@ -1074,85 +861,33 @@ fun HomeScreen(
                         fontWeight = FontWeight.Bold,
                         fontSize = fontSize
                     )
-                    if (selectedChartOption == "혈당") {
-                        Spacer(modifier = Modifier.width(50.dp))
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 5.dp)
-                                .padding(start = 20.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Start
-                        ) {
-                            Image(
-                                painter = painterResource(R.drawable.arows_vertical),
-                                contentDescription = "확대 줌",
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .clickable {
-//                                        if (glucoseZoomFactor == 1f) {
-//                                            glucoseZoomFactor = 2f
-//                                            Log.d("TEST", "glucoseZoomFactor 1: ${glucoseZoomFactor}")
-//                                        } else {
-//                                            glucoseZoomFactor = 1f
-//                                            Log.d("TEST", "glucoseZoomFactor 2: ${glucoseZoomFactor}")
-//                                        }
-
-                                        setYMax(if (yMax == 250.0) 500.0 else 250.0)
-                                        forceRecompose++
-                                    }
-                            )
-                        }
-                    } else {
-                        Spacer(modifier = Modifier.width(50.dp))
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 5.dp)
-                                .padding(start = 20.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Start
-                        ) {
-                            Image(
-                                painter = painterResource(R.drawable.arows_vertical),
-                                contentDescription = "전류 확대 줌",
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .clickable {
-                                        currentZoomFactor += 1
-                                    }
-                            )
-                        }
-                    }
-
                 }
 
                 // VICO 그래프
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 10.dp)
-//                        .rotate(90f)
+                        .padding(start = 10.dp, end = 30.dp)
                         .weight(1f)
                         .pointerInput(Unit) {
                             detectTapGestures(
                                 onDoubleTap = {
-//                                    val newMax = if(selectedChartOption == "혈당" ) {
-//                                        if (currentYMax == 250.0) 500.0 else 250.0
-//                                    } else {
-//                                        if (currentYMax == 250.0) {
-//                                            50.0
-//                                        } else if (currentYMax == 50.0) {
-//                                            10.0
-//                                        } else if (currentYMax == 10.0) {
-//                                            5.0
-//                                        } else {
-//                                            50.0
-//                                        }
-//                                    }
-//                                    Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
-//                                    setYMax(newMax)
-//                                    forceRecompose++
+                                    val newMax = if(selectedChartOption == "혈당" ) {
+                                        if (currentYMax == 250.0) 500.0 else 250.0
+                                    } else {
+                                        if (currentYMax == 250.0) {
+                                            50.0
+                                        } else if (currentYMax == 50.0) {
+                                            10.0
+                                        } else if (currentYMax == 10.0) {
+                                            5.0
+                                        } else {
+                                            50.0
+                                        }
+                                    }
+                                    Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
+                                    setYMax(newMax)
+                                    forceRecompose++
                                 },
                                 onTap = {
                                     // 짧은 클릭 (탭) 시 실행할 코드 (선택사항)
@@ -1177,22 +912,22 @@ fun HomeScreen(
                                 onLongPress = {
                                     // 짧은 클릭 (탭) 시 실행할 코드 (선택사항)
 //                                Log.d("TEST", "일반탭 감지됨!")
-                                    val newMax = if(selectedChartOption == "혈당" ) {
-                                        if (currentYMax == 250.0) 500.0 else 250.0
-                                    } else {
-                                        if (currentYMax == 250.0) {
-                                            50.0
-                                        } else if (currentYMax == 50.0) {
-                                            10.0
-                                        } else if (currentYMax == 10.0) {
-                                            5.0
-                                        } else {
-                                            50.0
-                                        }
-                                    }
-                                    Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
-                                    setYMax(newMax)
-                                    forceRecompose++
+//                                    val newMax = if(selectedChartOption == "혈당" ) {
+//                                        if (currentYMax == 250.0) 500.0 else 250.0
+//                                    } else {
+//                                        if (currentYMax == 250.0) {
+//                                            50.0
+//                                        } else if (currentYMax == 50.0) {
+//                                            10.0
+//                                        } else if (currentYMax == 10.0) {
+//                                            5.0
+//                                        } else {
+//                                            50.0
+//                                        }
+//                                    }
+//                                    Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
+//                                    setYMax(newMax)
+//                                    forceRecompose++
                                 }
                             )
                         }
@@ -1412,7 +1147,6 @@ fun HomeScreen(
                     }
                 }
             }
-
         }
     }
 }
