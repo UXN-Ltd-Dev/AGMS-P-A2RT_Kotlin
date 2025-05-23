@@ -278,27 +278,6 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
         Divider(color = Color.Transparent, thickness = 20.dp)
 
         Divider()
-        Box(
-            modifier = Modifier.clickable {
-                navController.navigate("DeleteAccountScreen")
-            }
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .height(50.dp)
-                    .padding(horizontal = 30.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "계정 삭제",
-                    fontSize = 16.sp
-                )
-            }
-        }
-        Divider()
         Box() {
             Row(
                 modifier = Modifier
