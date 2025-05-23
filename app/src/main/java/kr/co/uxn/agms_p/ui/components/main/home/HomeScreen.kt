@@ -103,6 +103,7 @@ import java.util.TimeZone
 import kotlin.system.exitProcess
 import androidx.compose.runtime.*
 import androidx.compose.runtime.key
+import kr.co.uxn.agms_p.room.UserValue
 
 @SuppressLint("RestrictedApi")
 @Composable
@@ -343,10 +344,44 @@ fun HomeScreen(
             // db로부터 불러오기
             val localDBDataListAfterLastTime =
                 localDbRepository?.dataDao()
-                    ?.getGlucoseListAfterLastTime(userId = userId, lastTime = lastTime)
+                    ?.getGlucoseListAfterLastTime(userId = userId, lastTime = lastTime)?.toMutableList()
 
             if (localDBDataListAfterLastTime != null) {
                 totalEntryCount.value = localDBDataListAfterLastTime.size
+            }
+
+            when(selectedTimeOption) {
+                "6시간" -> {
+                    if (totalEntryCount.value < 360) {
+                        val str = localDBDataListAfterLastTime?.last()?.createdAt
+                        Log.e("TEST", "str : ${str}")
+                        val time = str?.takeLast(5)
+                        Log.e("TEST", "추출한 time : ${time}")
+                        val minute = if(time != null) {
+                            time.split(":")[0].toInt() // 2
+                        } else {
+                            0
+                        }
+                        val lastCount = 360 - totalEntryCount.value
+                        Log.e("TEST", "추출한 minute : ${minute}")
+                        if (!localDBDataListAfterLastTime.isNullOrEmpty()) {
+                            for( i in 0 until lastCount) {
+
+                                localDBDataListAfterLastTime.add(UserGlucose(userId = userId, glucose = 0.0, weo1 = 0.0, weo2 = 0.0, createdAt = time!!, createdAtLong = System.currentTimeMillis()))
+                            }
+                        }
+                    }
+                }
+                "12시간" -> {
+                    if (totalEntryCount.value < 720) {
+
+                    }
+                }
+                else -> {
+                    if (totalEntryCount.value < 1440) {
+
+                    }
+                }
             }
 
             val baseTime = 1743442800000L // 25년 4월 1일 00시 00분 00초
@@ -362,7 +397,6 @@ fun HomeScreen(
                         y.add(
                             localDBDataListAfterLastTime[i].glucose.toFloat()
                         )
-
                     }
 
                     "WEO1" -> {
@@ -391,6 +425,7 @@ fun HomeScreen(
             withContext(Dispatchers.Main) {
                 delay(100)
 //                modelProducer.setEntries(dataSetForModel)
+
                 if (x.isNotEmpty() && y.isNotEmpty()) {
                     modelProducer.runTransaction {
                         lineSeries { series(x, y) }
@@ -417,6 +452,7 @@ fun HomeScreen(
                 else -> R.drawable.level1//"급하강"
             }
         }
+        forceRecompose++
     }
 
     // 실제 타이머
@@ -797,13 +833,10 @@ fun HomeScreen(
                                         .fillMaxWidth()
                                         .weight(1f),
                                     scrollState = chartScrollSpec,
-
                                     zoomState = rememberVicoZoomState(
                                         zoomEnabled = true,
                                         initialZoom = Zoom.Content
                                     )
-
-
                                 )
                             } else {
                                 Box(
@@ -820,7 +853,6 @@ fun HomeScreen(
                                     )
                                 }
                             }
-
                             RadioButtonSingleSelection(
                                 selectedOption = selectedTimeOption,
                                 onOptionSelected = { selectedTimeOption = it }
@@ -834,8 +866,7 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(10.dp)
-                    .weight(1f)
-                ,
+                    .weight(1f),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = Color.White, // 카드 배경색 설정
@@ -955,7 +986,6 @@ fun HomeScreen(
                         }
                         val MarkerValueFormatter =
                             DefaultCartesianMarker.ValueFormatter.default(markerDecimalFormat)
-
 
                         if (isLoading.value == true && x.isNotEmpty() && y.isNotEmpty()) {
                             key(yMax, forceRecompose) {
