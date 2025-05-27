@@ -287,26 +287,6 @@ fun HomeScreen(
         checkedForLandscapeMode.value = verifiedDSLandscapeMode
     }
 
-//    LaunchedEffect(selectedChartOption, glucoseZoomFactor, currentZoomFactor) {
-//        rangeProviderState.value = when (selectedChartOption) {
-//            "혈당" -> {
-//                if (glucoseZoomFactor == 1f) {
-//                    CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 250.0)
-//                } else {
-//                    CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 500.0)
-//                }
-//            }
-//
-//            else -> {
-//                when (currentZoomFactor % 3) {
-//                    1 -> CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 50.0)
-//                    2 -> CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 10.0)
-//                    else -> CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 5.0)
-//                }
-//            }
-//        }
-//    }
-
     // 시간 옵션, 차트 옵션 변경 시 줌 리셋
     LaunchedEffect(selectedTimeOption) {
         forceRecompose++
@@ -350,35 +330,67 @@ fun HomeScreen(
                 totalEntryCount.value = localDBDataListAfterLastTime.size
             }
 
-            when(selectedTimeOption) {
+            when (selectedTimeOption) {
                 "6시간" -> {
-                    if (totalEntryCount.value < 360) {
+                    if (totalEntryCount.value < 360 && totalEntryCount.value > 0) {
                         val str = localDBDataListAfterLastTime?.last()?.createdAt
-                        Log.e("TEST", "str : ${str}")
-                        val time = str?.takeLast(5)
-                        Log.e("TEST", "추출한 time : ${time}")
-                        val minute = if(time != null) {
-                            time.split(":")[0].toInt() // 2
-                        } else {
-                            0
-                        }
-                        val lastCount = 360 - totalEntryCount.value
-                        Log.e("TEST", "추출한 minute : ${minute}")
-                        if (!localDBDataListAfterLastTime.isNullOrEmpty()) {
-                            for( i in 0 until lastCount) {
+                        val lastTimeLong = localDBDataListAfterLastTime?.last()?.createdAtLong!!
+                        Log.e("TEST", "first str : ${str}, last str : ${localDBDataListAfterLastTime.last().createdAt}")
 
-                                localDBDataListAfterLastTime.add(UserGlucose(userId = userId, glucose = 0.0, weo1 = 0.0, weo2 = 0.0, createdAt = time!!, createdAtLong = System.currentTimeMillis()))
+//                        val time = str?.takeLast(5)
+//                        Log.e("TEST", "추출한 time : ${time}")
+
+//                        val minute = if (time != null) {
+//                            time.split(":")[0].toInt() // 2
+//                        } else {
+//                            0
+//                        }
+                        val lastCount = 360 - totalEntryCount.value
+//                        Log.e("TEST", "추출한 minute : ${minute}")
+                        if (!localDBDataListAfterLastTime.isNullOrEmpty()) {
+                            for( i in 1 .. lastCount) {
+                                val time = lastTimeLong - (1000L * 60 * i)
+                                localDBDataListAfterLastTime.add(
+                                    UserGlucose(userId = userId, glucose = 0.0, weo1 = 0.0, weo2 = 0.0, createdAt = "I'm dummy!", createdAtLong = time)
+                                )
                             }
                         }
+                        Log.e("TEST", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
                     }
                 }
                 "12시간" -> {
-                    if (totalEntryCount.value < 720) {
-
+                    if (totalEntryCount.value < 720 && totalEntryCount.value > 0) {
+                        val str = localDBDataListAfterLastTime?.last()?.createdAt
+                        val lastTimeLong = localDBDataListAfterLastTime?.last()?.createdAtLong!!
+                        Log.e("TEST", "first str : ${str}, last str : ${localDBDataListAfterLastTime.last().createdAt}")
+                        val lastCount = 720 - totalEntryCount.value
+                        if (!localDBDataListAfterLastTime.isNullOrEmpty()) {
+                            for( i in 1 .. lastCount) {
+                                val time = lastTimeLong - (1000L * 60 * i)
+                                localDBDataListAfterLastTime.add(
+                                    UserGlucose(userId = userId, glucose = 0.0, weo1 = 0.0, weo2 = 0.0, createdAt = "I'm dummy!", createdAtLong = time)
+                                )
+                            }
+                        }
+                        Log.e("TEST", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
                     }
                 }
                 else -> {
-                    if (totalEntryCount.value < 1440) {
+                    if (totalEntryCount.value < 1440 && totalEntryCount.value > 0) {
+                        val str = localDBDataListAfterLastTime?.last()?.createdAt
+                        val lastTimeLong = localDBDataListAfterLastTime?.last()?.createdAtLong!!
+                        Log.e("TEST", "first str : ${str}, last str : ${localDBDataListAfterLastTime.last().createdAt}")
+                        val lastCount = 1440 - totalEntryCount.value
+                        if (!localDBDataListAfterLastTime.isNullOrEmpty()) {
+                            for( i in 1 .. lastCount) {
+                                val time = lastTimeLong - (1000L * 60 * i)
+                                localDBDataListAfterLastTime.add(
+                                    UserGlucose(userId = userId, glucose = 0.0, weo1 = 0.0, weo2 = 0.0, createdAt = "I'm dummy!", createdAtLong = time)
+                                )
+                            }
+                        }
+                        Log.e("TEST", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
+
 
                     }
                 }
@@ -562,8 +574,7 @@ fun HomeScreen(
 
                         },
                         onTap = {
-                            // 짧은 클릭 (탭) 시 실행할 코드 (선택사항)
-//                            Log.d("TEST", "터치됨!")
+                            // 짧은 클릭 (탭) 시 실행할 코드 (선택 사항)
                         }
                     )
                 },
@@ -720,24 +731,6 @@ fun HomeScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 10.dp)
-//                            .pointerInput(Unit) {
-//                                detectTapGestures(
-//                                    onDoubleTap = {
-//                                        val newMax = if(selectedChartOption == "혈당" ) {
-//                                            if (currentYMax == 250.0) 500.0 else 250.0
-//                                        } else {
-//                                            if (currentYMax == 250.0) 50.0 else 10.0
-//                                        }
-//                                        Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
-//                                        setYMax(newMax)
-//                                        forceRecompose++
-//                                    },
-//                                    onTap = {
-//                                        // 짧은 클릭 (탭) 시 실행할 코드 (선택사항)
-////                                Log.d("TEST", "일반탭 감지됨!")
-//                                    }
-//                                )
-//                            }
                             .weight(1f),
                         color = Color.Transparent
                     ) {
@@ -921,48 +914,11 @@ fun HomeScreen(
                                     forceRecompose++
                                 },
                                 onTap = {
-                                    // 짧은 클릭 (탭) 시 실행할 코드 (선택사항)
-//                                Log.d("TEST", "일반탭 감지됨!")
-//                                    val newMax = if(selectedChartOption == "혈당" ) {
-//                                        if (currentYMax == 250.0) 500.0 else 250.0
-//                                    } else {
-//                                        if (currentYMax == 250.0) {
-//                                            50.0
-//                                        } else if (currentYMax == 50.0) {
-//                                            10.0
-//                                        } else if (currentYMax == 10.0) {
-//                                            5.0
-//                                        } else {
-//                                            50.0
-//                                        }
-//                                    }
-//                                    Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
-//                                    setYMax(newMax)
-//                                    forceRecompose++
                                 },
                                 onLongPress = {
-                                    // 짧은 클릭 (탭) 시 실행할 코드 (선택사항)
-//                                Log.d("TEST", "일반탭 감지됨!")
-//                                    val newMax = if(selectedChartOption == "혈당" ) {
-//                                        if (currentYMax == 250.0) 500.0 else 250.0
-//                                    } else {
-//                                        if (currentYMax == 250.0) {
-//                                            50.0
-//                                        } else if (currentYMax == 50.0) {
-//                                            10.0
-//                                        } else if (currentYMax == 10.0) {
-//                                            5.0
-//                                        } else {
-//                                            50.0
-//                                        }
-//                                    }
-//                                    Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
-//                                    setYMax(newMax)
-//                                    forceRecompose++
                                 }
                             )
-                        }
-                    ,
+                        },
                     color = Color.Transparent
                 ) {
                     Column(
@@ -975,8 +931,7 @@ fun HomeScreen(
                                 else -> DecimalFormat("##.## nA")
                             }
                         val yDecimalFormat = DecimalFormat("#")
-                        val startAxisValueFormatter =
-                            CartesianValueFormatter.decimal(yDecimalFormat)
+                        val startAxisValueFormatter = CartesianValueFormatter.decimal(yDecimalFormat)
                         val bottomAxisFormatter = CartesianValueFormatter { _, value, _ ->
                             val baseTime = 1743442801000L
                             val timeMillis = baseTime + (value * 60 * 1000).toLong()
@@ -1079,6 +1034,7 @@ fun HomeScreen(
                     } // column
                 } // surface
             }
+
             // 3. 센서 정보 표시 카드
             Card(
                 modifier = Modifier
