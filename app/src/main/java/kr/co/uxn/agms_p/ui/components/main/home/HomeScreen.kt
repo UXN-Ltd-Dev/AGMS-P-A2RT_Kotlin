@@ -103,6 +103,9 @@ import java.util.TimeZone
 import kotlin.system.exitProcess
 import androidx.compose.runtime.*
 import androidx.compose.runtime.key
+import com.patrykandpatrick.vico.core.cartesian.CartesianDrawingContext
+import com.patrykandpatrick.vico.core.cartesian.CartesianMeasuringContext
+import com.patrykandpatrick.vico.core.cartesian.layer.CartesianLayerDimensions
 import kr.co.uxn.agms_p.room.UserValue
 
 @SuppressLint("RestrictedApi")
@@ -163,6 +166,61 @@ fun HomeScreen(
 
     // 가로 모드 변수
     val checkedForLandscapeMode = remember { mutableStateOf(false) }
+
+    val customItemPlacer = object : HorizontalAxis.ItemPlacer {
+        override fun getLabelValues(
+            context: CartesianDrawingContext,
+            visibleXRange: ClosedFloatingPointRange<Double>,
+            fullXRange: ClosedFloatingPointRange<Double>,
+            maxLabelWidth: Float
+        ): List<Double> {
+//            val start = fullXRange.start
+//            val end = fullXRange.endInclusive
+            val start = visibleXRange.start
+            val end = visibleXRange.endInclusive
+            val mid = (start + end) / 2
+            return listOf(start, mid, end)
+        }
+
+        // 그래프 좌측 마진
+        override fun getStartLayerMargin(
+            context: CartesianMeasuringContext,
+            layerDimensions: CartesianLayerDimensions,
+            tickThickness: Float,
+            maxLabelWidth: Float
+        ): Float = 120f
+
+        override fun getEndLayerMargin(
+            context: CartesianMeasuringContext,
+            layerDimensions: CartesianLayerDimensions,
+            tickThickness: Float,
+            maxLabelWidth: Float
+        ): Float = 120f
+
+
+        override fun getWidthMeasurementLabelValues(
+            context: CartesianMeasuringContext,
+            layerDimensions: CartesianLayerDimensions,
+            fullXRange: ClosedFloatingPointRange<Double>
+        ): List<Double> {
+            val start = fullXRange.start
+            val end = fullXRange.endInclusive
+            val mid = (start + end) / 2
+            return listOf(start, mid, end)
+        }
+
+        override fun getHeightMeasurementLabelValues(
+            context: CartesianMeasuringContext,
+            layerDimensions: CartesianLayerDimensions,
+            fullXRange: ClosedFloatingPointRange<Double>,
+            maxLabelWidth: Float
+        ): List<Double> {
+            val start = fullXRange.start
+            val end = fullXRange.endInclusive
+            val mid = (start + end) / 2
+            return listOf(start, mid, end)
+        }
+    }
 
 //    val customItemPlacer = object : AxisItemPlacer.Horizontal {
 //        override fun getLabelValues(
@@ -333,36 +391,36 @@ fun HomeScreen(
             when (selectedTimeOption) {
                 "6시간" -> {
                     if (totalEntryCount.value < 360 && totalEntryCount.value > 0) {
-                        val str = localDBDataListAfterLastTime?.last()?.createdAt
-                        val lastTimeLong = localDBDataListAfterLastTime?.last()?.createdAtLong!!
+                        val str = localDBDataListAfterLastTime?.first()?.createdAt
+                        val lastTimeLong = localDBDataListAfterLastTime?.first()?.createdAtLong!!
                         Log.e("TEST", "first str : ${str}, last str : ${localDBDataListAfterLastTime.last().createdAt}")
 
-//                        val time = str?.takeLast(5)
-//                        Log.e("TEST", "추출한 time : ${time}")
+                        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
 
-//                        val minute = if (time != null) {
-//                            time.split(":")[0].toInt() // 2
-//                        } else {
-//                            0
-//                        }
-                        val lastCount = 360 - totalEntryCount.value
+                        val lastCount = (360 + 0) - totalEntryCount.value
 //                        Log.e("TEST", "추출한 minute : ${minute}")
                         if (!localDBDataListAfterLastTime.isNullOrEmpty()) {
                             for( i in 1 .. lastCount) {
                                 val time = lastTimeLong - (1000L * 60 * i)
-                                localDBDataListAfterLastTime.add(
-                                    UserGlucose(userId = userId, glucose = 0.0, weo1 = 0.0, weo2 = 0.0, createdAt = "I'm dummy!", createdAtLong = time)
+
+                                val convertedTime = formatter.format(Date(time))
+                                localDBDataListAfterLastTime.add(UserGlucose(userId = userId, glucose = 0.0, weo1 = 0.0, weo2 = 0.0, createdAt = convertedTime, createdAtLong = time)
                                 )
                             }
                         }
-                        Log.e("TEST", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
+                        localDBDataListAfterLastTime.sortedBy { it.createdAtLong }
+//                        localDBDataListAfterLastTime.sortedByDescending { it.createdAtLong }
+                        Log.e("TEST", "localDBDataListAfterLastTime size: ${localDBDataListAfterLastTime.size}")
+                        Log.e("TEST", "localDBDataListAfterLastTime first : ${localDBDataListAfterLastTime.first()}, localDBDataListAfterLastTime last : ${localDBDataListAfterLastTime.last()}")
                     }
                 }
                 "12시간" -> {
                     if (totalEntryCount.value < 720 && totalEntryCount.value > 0) {
-                        val str = localDBDataListAfterLastTime?.last()?.createdAt
-                        val lastTimeLong = localDBDataListAfterLastTime?.last()?.createdAtLong!!
+                        val str = localDBDataListAfterLastTime?.first()?.createdAt
+                        val lastTimeLong = localDBDataListAfterLastTime?.first()?.createdAtLong!!
                         Log.e("TEST", "first str : ${str}, last str : ${localDBDataListAfterLastTime.last().createdAt}")
+
+
                         val lastCount = 720 - totalEntryCount.value
                         if (!localDBDataListAfterLastTime.isNullOrEmpty()) {
                             for( i in 1 .. lastCount) {
@@ -372,13 +430,15 @@ fun HomeScreen(
                                 )
                             }
                         }
+
+                        localDBDataListAfterLastTime.sortedBy { it.createdAtLong }
                         Log.e("TEST", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
                     }
                 }
                 else -> {
                     if (totalEntryCount.value < 1440 && totalEntryCount.value > 0) {
-                        val str = localDBDataListAfterLastTime?.last()?.createdAt
-                        val lastTimeLong = localDBDataListAfterLastTime?.last()?.createdAtLong!!
+                        val str = localDBDataListAfterLastTime?.first()?.createdAt
+                        val lastTimeLong = localDBDataListAfterLastTime?.first()?.createdAtLong!!
                         Log.e("TEST", "first str : ${str}, last str : ${localDBDataListAfterLastTime.last().createdAt}")
                         val lastCount = 1440 - totalEntryCount.value
                         if (!localDBDataListAfterLastTime.isNullOrEmpty()) {
@@ -389,8 +449,9 @@ fun HomeScreen(
                                 )
                             }
                         }
-                        Log.e("TEST", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
 
+                        localDBDataListAfterLastTime.sortedBy { it.createdAtLong }
+                        Log.e("TEST", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
 
                     }
                 }
@@ -464,7 +525,7 @@ fun HomeScreen(
                 else -> R.drawable.level1//"급하강"
             }
         }
-        forceRecompose++
+
     }
 
     // 실제 타이머
@@ -482,7 +543,7 @@ fun HomeScreen(
         }
     }
 
-    // 1. 노티 : 혈당입력
+    // 1. 노티 : 혈당 입력
     if (showCaliDialog.value) {
         NotiDialog(
             onDismiss = { BleBridge.showCaliDialog(false) },
@@ -891,7 +952,7 @@ fun HomeScreen(
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 10.dp, end = 30.dp)
+                        .padding(start = 10.dp)
                         .weight(1f)
                         .pointerInput(Unit) {
                             detectTapGestures(
@@ -971,7 +1032,7 @@ fun HomeScreen(
                                                         )
                                                     )
                                                 ),
-                                            rangeProvider = rangeProvider,
+                                            rangeProvider = rangeProvider
                                         ),
                                         startAxis = VerticalAxis.rememberStart(
                                             valueFormatter = startAxisValueFormatter,
@@ -984,14 +1045,15 @@ fun HomeScreen(
                                         ),
                                         bottomAxis = HorizontalAxis.rememberBottom(
                                             valueFormatter = bottomAxisFormatter,
-                                            itemPlacer = HorizontalAxis.ItemPlacer.aligned(
-                                                spacing = { 20 }, // 5개의 xStep마다 하나의 라벨
-                                                offset = { 0 },
-                                                shiftExtremeLines = true,
-                                                addExtremeLabelPadding = true
-                                            ),
-//                                            itemPlacer = customItemPlacer2
+//                                            itemPlacer = HorizontalAxis.ItemPlacer.aligned(
+//                                                spacing = { 20 }, // 5개의 xStep마다 하나의 라벨
+//                                                offset = { 0 },
+//                                                shiftExtremeLines = true,
+//                                                addExtremeLabelPadding = true
+//                                            ),
+                                            itemPlacer = customItemPlacer,
 //                                            guideline = null
+                                            labelRotationDegrees = 90f
                                         ),
                                         marker = rememberMarker(MarkerValueFormatter),
                                         fadingEdges = FadingEdges( // 또는 FadingEdges.horizontal() 도 가능
@@ -1185,7 +1247,8 @@ fun RadioButtonSingleSelection(
 fun getTrendStatus(glucoseValueList: List<UserGlucose>): String {
     if (glucoseValueList.size < 4) return "유지 중"
 
-    val list = glucoseValueList.takeLast(5)
+//    val list = glucoseValueList.takeLast(5)
+    val list = glucoseValueList.take(5)
 
     Log.d("TEST", "glucoseValeList : ${glucoseValueList}")
     Log.d("TEST", "glucoseValeList last 5 : ${list}")
