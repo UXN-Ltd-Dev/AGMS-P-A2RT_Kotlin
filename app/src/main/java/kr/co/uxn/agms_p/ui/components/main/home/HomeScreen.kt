@@ -440,6 +440,8 @@ fun HomeScreen(
                         val str = localDBDataListAfterLastTime?.first()?.createdAt
                         val lastTimeLong = localDBDataListAfterLastTime?.first()?.createdAtLong!!
                         Log.e("TEST", "first str : ${str}, last str : ${localDBDataListAfterLastTime.last().createdAt}")
+
+
                         val lastCount = 1440 - totalEntryCount.value
                         if (!localDBDataListAfterLastTime.isNullOrEmpty()) {
                             for( i in 1 .. lastCount) {
@@ -525,7 +527,6 @@ fun HomeScreen(
                 else -> R.drawable.level1//"급하강"
             }
         }
-
     }
 
     // 실제 타이머
@@ -1246,9 +1247,13 @@ fun RadioButtonSingleSelection(
 
 fun getTrendStatus(glucoseValueList: List<UserGlucose>): String {
     if (glucoseValueList.size < 4) return "유지 중"
-
 //    val list = glucoseValueList.takeLast(5)
-    val list = glucoseValueList.take(5)
+
+
+    val sorted = glucoseValueList.sortedBy { it.createdAtLong } // 시간 순 정렬 보장
+    val list = sorted.takeLast(5) // 최신 5개
+
+//    val list = glucoseValueList.take(5)
 
     Log.d("TEST", "glucoseValeList : ${glucoseValueList}")
     Log.d("TEST", "glucoseValeList last 5 : ${list}")
