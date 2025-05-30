@@ -222,109 +222,6 @@ fun HomeScreen(
         }
     }
 
-//    val customItemPlacer = object : AxisItemPlacer.Horizontal {
-//        override fun getLabelValues(
-//            context: ChartDrawContext,
-//            visibleXRange: ClosedFloatingPointRange<Float>,
-//            fullXRange: ClosedFloatingPointRange<Float>,
-//        ): List<Float> {
-//            val range = visibleXRange.endInclusive - visibleXRange.start
-//            val offset = range * 0.1f
-////            val offset = range
-////
-////            val rawOffset = range * 0.1f
-////            val offset = rawOffset.coerceIn(0.5f, 5f) // 최소 0.5, 최대 10으로 제한
-//
-//            val start = visibleXRange.start + offset
-//            val end = visibleXRange.endInclusive - offset
-//            val mid = (start + end) / 2f
-//            return listOf(start, mid, end)
-//        }
-//
-//        override fun getMeasuredLabelValues(
-//            context: MeasureContext,
-//            horizontalDimensions: HorizontalDimensions,
-//            fullXRange: ClosedFloatingPointRange<Float>,
-//        ): List<Float> {
-//            // 측정 단계에서는 fullXRange를 기준으로 해야 함 (visibleXRange는 없음)
-//            val start = fullXRange.start
-//            val end = fullXRange.endInclusive
-//            val mid = (start + end) / 2f
-//            return listOf(start, mid, end)
-//        }
-//
-//        override fun getStartHorizontalAxisInset(
-//            context: MeasureContext,
-//            horizontalDimensions: HorizontalDimensions,
-//            tickThickness: Float,
-////        ): Float = context.dpToPx(30f)
-//        ): Float = 0f
-//
-//        override fun getEndHorizontalAxisInset(
-//            context: MeasureContext,
-//            horizontalDimensions: HorizontalDimensions,
-//            tickThickness: Float,
-//        ): Float = 0f
-////        ): Float = context.dpToPx(24f)
-//
-//    }
-
-//    val customItemPlacer2 = object : HorizontalAxis.ItemPlacer {
-//        override fun getLabelValues(
-//            context: CartesianDrawingContext,
-//            visibleXRange: ClosedFloatingPointRange<Double>,
-//            fullXRange: ClosedFloatingPointRange<Double>,
-//            maxLabelWidth: Float,
-//        ): List<Double> {
-//            // x 리스트에서 최소, 중간, 최대 값 사용
-//            val start = visibleXRange.start
-//            val end = visibleXRange.endInclusive
-//            val mid = (start + end) / 2
-//            return listOf(start, mid, end)
-//        }
-//
-//        override fun getStartLayerMargin(
-//            context: CartesianMeasuringContext,
-//            layerDimensions: CartesianLayerDimensions,
-//            tickThickness: Float,
-//            maxLabelWidth: Float
-//        ): Float = 0f
-//
-//        override fun getWidthMeasurementLabelValues(
-//            context: CartesianMeasuringContext,
-//            layerDimensions: CartesianLayerDimensions,
-//            fullXRange: ClosedFloatingPointRange<Double>,
-//        ): List<Double> {
-//            val start = fullXRange.start
-//            val end = fullXRange.endInclusive
-//            val mid = (start + end) / 2
-//            return listOf(start, mid, end)
-//        }
-//
-//        override fun getEndLayerMargin(
-//            context: CartesianMeasuringContext,
-//            layerDimensions: CartesianLayerDimensions,
-//            tickThickness: Float,
-//            maxLabelWidth: Float
-//        ): Float = 0f
-//
-//        override fun getHeightMeasurementLabelValues(
-//            context: CartesianMeasuringContext,
-//            layerDimensions: CartesianLayerDimensions,
-//            fullXRange: ClosedFloatingPointRange<Double>,
-//            maxLabelWidth: Float
-//        ): List<Double> {
-//            val start = fullXRange.start
-//            val end = fullXRange.endInclusive
-//            val mid = (start + end) / 2
-//            return listOf(start, mid, end)
-//        }
-//
-//        // margin은 기본값 쓰면 됨
-////        override fun getStartLayerMargin(...) = 0f
-////        override fun getEndLayerMargin(...) = 0f
-//    }
-
     // RadioButton
     var selectedTimeOption by remember { mutableStateOf("6시간") }
 
@@ -1248,7 +1145,6 @@ fun RadioButtonSingleSelection(
 fun getTrendStatus(glucoseValueList: List<UserGlucose>): String {
     if (glucoseValueList.size < 4) return "유지 중"
 //    val list = glucoseValueList.takeLast(5)
-
 
     val sorted = glucoseValueList.sortedBy { it.createdAtLong } // 시간 순 정렬 보장
     val list = sorted.takeLast(5) // 최신 5개
