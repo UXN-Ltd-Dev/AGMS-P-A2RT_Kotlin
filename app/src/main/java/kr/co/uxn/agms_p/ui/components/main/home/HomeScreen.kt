@@ -3,6 +3,7 @@ package kr.co.uxn.agms_p.ui.components.main.home
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -153,16 +154,8 @@ fun HomeScreen(
 
     val x = remember { mutableListOf<Number>() }
     val y = remember { mutableListOf<Number>() }
-//    val dataSetForModel = remember { mutableStateListOf(listOf<FloatEntry>()) }
-//    val dataSetLineSpec = remember { arrayListOf<LineChart.LineSpec>() }
-//    val scrollState = rememberChartScrollState()
 
     val isLoading = remember { mutableStateOf(false) }
-
-    // Zoom 변수
-    var glucoseZoomFactor by remember { mutableStateOf(1f) }
-    var currentZoomFactor by remember { mutableStateOf(1) }
-    var zoomFactor by remember { mutableStateOf(1f) }
 
     // 가로 모드 변수
     val checkedForLandscapeMode = remember { mutableStateOf(false) }
@@ -236,7 +229,6 @@ fun HomeScreen(
         else -> 16.sp
     }
 
-
     LaunchedEffect(Unit) {
         val verifiedDSLandscapeMode = DataStoreManager.getLandScapeMode().first() ?: false
         checkedForLandscapeMode.value = verifiedDSLandscapeMode
@@ -307,8 +299,8 @@ fun HomeScreen(
                         }
                         localDBDataListAfterLastTime.sortedBy { it.createdAtLong }
 //                        localDBDataListAfterLastTime.sortedByDescending { it.createdAtLong }
-                        Log.e("TEST", "localDBDataListAfterLastTime size: ${localDBDataListAfterLastTime.size}")
-                        Log.e("TEST", "localDBDataListAfterLastTime first : ${localDBDataListAfterLastTime.first()}, localDBDataListAfterLastTime last : ${localDBDataListAfterLastTime.last()}")
+                        Log.d("TEST", "localDBDataListAfterLastTime size: ${localDBDataListAfterLastTime.size}")
+                        Log.d("TEST", "localDBDataListAfterLastTime first : ${localDBDataListAfterLastTime.first()}, localDBDataListAfterLastTime last : ${localDBDataListAfterLastTime.last()}")
                     }
                 }
                 "12시간" -> {
@@ -329,14 +321,14 @@ fun HomeScreen(
                         }
 
                         localDBDataListAfterLastTime.sortedBy { it.createdAtLong }
-                        Log.e("TEST", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
+                        Log.d("TEST", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
                     }
                 }
                 else -> {
                     if (totalEntryCount.value < 1440 && totalEntryCount.value > 0) {
                         val str = localDBDataListAfterLastTime?.first()?.createdAt
                         val lastTimeLong = localDBDataListAfterLastTime?.first()?.createdAtLong!!
-                        Log.e("TEST", "first str : ${str}, last str : ${localDBDataListAfterLastTime.last().createdAt}")
+                        Log.d("TEST", "first str : ${str}, last str : ${localDBDataListAfterLastTime.last().createdAt}")
 
 
                         val lastCount = 1440 - totalEntryCount.value
@@ -350,7 +342,7 @@ fun HomeScreen(
                         }
 
                         localDBDataListAfterLastTime.sortedBy { it.createdAtLong }
-                        Log.e("TEST", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
+                        Log.d("TEST", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
 
                     }
                 }
@@ -432,7 +424,7 @@ fun HomeScreen(
             if (event == Lifecycle.Event.ON_RESUME) {
                 // onResume 시점에만 실행!
                 homeViewModel.startTimer()
-                Log.e("TEST", "홈 화면에서 타이머 실행")
+                Log.d("TEST", "홈 화면에서 타이머 실행")
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -619,12 +611,40 @@ fun HomeScreen(
             val screenWidth = configuration.screenWidthDp.dp
             val screenHeight = configuration.screenHeightDp.dp
                 // 2. 그래프 표시 카드 90도
+            Box(
+                modifier = Modifier.fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onDoubleTap = {
+                                val newMax = if(selectedChartOption == "혈당" ) {
+                                    if (currentYMax == 250.0) 500.0 else 250.0
+                                } else {
+                                    if (currentYMax == 250.0) {
+                                        50.0
+                                    } else if (currentYMax == 50.0) {
+                                        10.0
+                                    } else if (currentYMax == 10.0) {
+                                        5.0
+                                    } else {
+                                        50.0
+                                    }
+                                }
+                                Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
+                                setYMax(newMax)
+                                forceRecompose++
+                            },
+                            onTap = {
+                            },
+                            onLongPress = {
+                            }
+                        )
+                    },
+            ) {
                 Card(
                     modifier = Modifier
-                        .rotate(90f)
-                        .width(1200.dp )
-                        .height(1200.dp)
-                        .padding(vertical = 55.dp)
+                        .fillMaxSize()
+                        .padding(horizontal = 10.dp)
+                        .padding(bottom = 10.dp)
                     ,
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
@@ -634,83 +654,16 @@ fun HomeScreen(
                         defaultElevation = 10.dp
                     )
                 ) {
-//                Spacer(modifier = Modifier.height(10.dp))
-
-//                    if (selectedChartOption == "혈당") {
-//                        Spacer(modifier = Modifier.width(50.dp))
-//                        Row(
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .padding(top = 5.dp)
-//                                .padding(start = 20.dp),
-//                            verticalAlignment = Alignment.CenterVertically,
-//                            horizontalArrangement = Arrangement.Start
-//                        ) {
-//                            Image(
-//                                painter = painterResource(R.drawable.arows_vertical),
-//                                contentDescription = "확대 줌",
-//                                modifier = Modifier
-//                                    .size(20.dp)
-//                                    .clickable {
-//                                        if (glucoseZoomFactor == 1f) {
-//                                            glucoseZoomFactor = 2f
-//                                            Log.d("TEST", "glucoseZoomFactor 1: ${glucoseZoomFactor}")
-//                                        } else {
-//                                            glucoseZoomFactor = 1f
-//                                            Log.d("TEST", "glucoseZoomFactor 2: ${glucoseZoomFactor}")
-//                                        }
-//                                    }
-//                            )
-//                        }
-//                    } else {
-//                        Spacer(modifier = Modifier.width(50.dp))
-//                        Row(
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .padding(top = 5.dp)
-//                                .padding(start = 20.dp),
-//                            verticalAlignment = Alignment.CenterVertically,
-//                            horizontalArrangement = Arrangement.Start
-//                        ) {
-//                            Image(
-//                                painter = painterResource(R.drawable.arows_vertical),
-//                                contentDescription = "전류 확대 줌",
-//                                modifier = Modifier
-//                                    .size(20.dp)
-//                                    .clickable {
-//                                        currentZoomFactor += 1
-//                                    }
-//                            )
-//                        }
-//                    }
-//                }
-
                     // VICO 그래프
-                    Surface(
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 10.dp)
-                            .weight(1f),
-                        color = Color.Transparent
+                            .fillMaxSize()
+                            .padding(top = 30.dp, bottom = 100.dp)
+                            .rotate(90f)
+                            .background(Color.Transparent)
                     ) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
+                        Column() {
                             val lineColor = Color(0xFF6FB0E5)
-//                    val rangeProvider = when (selectedChartOption) {
-//                        "혈당" -> {
-//                            CartesianLayerRangeProvider.fixed(
-//                                maxY = baseMaxY.toDouble(),
-//                                minY = baseMinY.toDouble()
-//                            )
-//                        }
-//                        else -> {
-//                            CartesianLayerRangeProvider.fixed(
-//                                maxY = baseCurrentMaxY.toDouble(),
-//                                minY = baseMinY.toDouble()
-//                            )
-//                        }
-//                    }
                             val markerDecimalFormat =
                                 when (selectedChartOption) {
                                     "혈당" -> DecimalFormat("# mg/dL")
@@ -772,6 +725,8 @@ fun HomeScreen(
                                                 shiftExtremeLines = true,
                                                 addExtremeLabelPadding = true
                                             )
+//                                            itemPlacer = customItemPlacer,
+//                                            labelRotationDegrees = 90f
                                         ),
                                         marker = rememberMarker(MarkerValueFormatter),
                                         fadingEdges = FadingEdges( // 또는 FadingEdges.horizontal() 도 가능
@@ -782,7 +737,7 @@ fun HomeScreen(
                                     ),
                                     modelProducer = modelProducer,
                                     modifier = Modifier
-                                        .fillMaxWidth()
+                                        .fillMaxSize()
                                         .weight(1f),
                                     scrollState = chartScrollSpec,
                                     zoomState = rememberVicoZoomState(
@@ -792,9 +747,7 @@ fun HomeScreen(
                                 )
                             } else {
                                 Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .weight(1f),
+                                    modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
@@ -805,13 +758,20 @@ fun HomeScreen(
                                     )
                                 }
                             }
-                            RadioButtonSingleSelection(
-                                selectedOption = selectedTimeOption,
-                                onOptionSelected = { selectedTimeOption = it }
-                            )
+
                         } // column
+
+
                     } // surface
+
                 } // Card (Column)
+                RadioButtonSingleSelection(
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                        .padding(bottom = 20.dp),
+                    selectedOption = selectedTimeOption,
+                    onOptionSelected = { selectedTimeOption = it }
+                )
+            } // Box
         } else { // 세로 모드
             // 2. 그래프 표시 카드
             Card(

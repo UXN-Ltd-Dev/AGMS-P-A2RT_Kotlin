@@ -73,8 +73,13 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
     val context = LocalContext.current
     var isNotiStabilization = false
 
+    /**
+     * 센서 안정화 시간 설정 변수
+     * totalTime
+     */
 //    val totalTime = 120 * 60 * 1000L // 120분
-    val totalTime = 1 * 10 * 1000L // 테스트용 초단위 초단위 설정
+    val totalTime = 1 * 10 * 1000L // 테스트용 10초
+
     val remainingTime = remember { mutableStateOf(totalTime) }
     val lifecycleOwner = LocalLifecycleOwner.current
     val coroutine = rememberCoroutineScope()
@@ -108,7 +113,7 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
                         launchSingleTop = true
                     }
                 } else {
-                    Log.e("NAVIGATION", "Navigation skipped - lifecycle not ready")
+                    Log.d("NAVIGATION", "Navigation skipped - lifecycle not ready")
                 }
 
                 coroutine.launch(Dispatchers.IO) {
@@ -146,12 +151,11 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
 
         // check
         val startTimeFromDS = DataStoreManager.getStartTime().first() ?: 0
-        Log.e("TEST", "startTimeFromDS : $startTimeFromDS")
+        Log.d("TEST", "startTimeFromDS : $startTimeFromDS")
 
         // 2. 측정 시간 설정
-//        val measurementTime: Long = 1000 * 60 * 60 * 24 * 10 // 측정일 10일
-        val measurementTime: Long = 1000 * 60 * 60 * 24 * 14 // 측정일 14일
-//        val measurementTime: Long = 1000 * 60 * 3 // 테스트 3분
+//        val measurementTime: Long = 1000 * 60 * 60 * 24 * 10 // 측정 기간 10일
+        val measurementTime: Long = 1000 * 60 * 60 * 24 * 14 // 측정 기간 14일
 
         DataStoreManager.deleteMeasurementTime()
         DataStoreManager.saveMeasurementTime(measurementTime)
