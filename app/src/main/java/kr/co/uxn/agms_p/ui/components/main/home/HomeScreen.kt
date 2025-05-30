@@ -279,19 +279,18 @@ fun HomeScreen(
 
             when (selectedTimeOption) {
                 "6시간" -> {
-                    if (totalEntryCount.value < 360 && totalEntryCount.value > 0) {
+                    if (totalEntryCount.value < 361 && totalEntryCount.value > 0) {
                         val str = localDBDataListAfterLastTime?.first()?.createdAt
                         val lastTimeLong = localDBDataListAfterLastTime?.first()?.createdAtLong!!
                         Log.e("TEST", "first str : ${str}, last str : ${localDBDataListAfterLastTime.last().createdAt}")
 
                         val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
 
-                        val lastCount = (360 + 0) - totalEntryCount.value
+                        val lastCount = (361 + 0) - totalEntryCount.value
 //                        Log.e("TEST", "추출한 minute : ${minute}")
                         if (!localDBDataListAfterLastTime.isNullOrEmpty()) {
                             for( i in 1 .. lastCount) {
                                 val time = lastTimeLong - (1000L * 60 * i)
-
                                 val convertedTime = formatter.format(Date(time))
                                 localDBDataListAfterLastTime.add(UserGlucose(userId = userId, glucose = 0.0, weo1 = 0.0, weo2 = 0.0, createdAt = convertedTime, createdAtLong = time)
                                 )
@@ -304,13 +303,13 @@ fun HomeScreen(
                     }
                 }
                 "12시간" -> {
-                    if (totalEntryCount.value < 720 && totalEntryCount.value > 0) {
+                    if (totalEntryCount.value < 721 && totalEntryCount.value > 0) {
                         val str = localDBDataListAfterLastTime?.first()?.createdAt
                         val lastTimeLong = localDBDataListAfterLastTime?.first()?.createdAtLong!!
                         Log.e("TEST", "first str : ${str}, last str : ${localDBDataListAfterLastTime.last().createdAt}")
 
 
-                        val lastCount = 720 - totalEntryCount.value
+                        val lastCount = 721 - totalEntryCount.value
                         if (!localDBDataListAfterLastTime.isNullOrEmpty()) {
                             for( i in 1 .. lastCount) {
                                 val time = lastTimeLong - (1000L * 60 * i)
@@ -325,13 +324,13 @@ fun HomeScreen(
                     }
                 }
                 else -> {
-                    if (totalEntryCount.value < 1440 && totalEntryCount.value > 0) {
+                    if (totalEntryCount.value < 1441 && totalEntryCount.value > 0) {
                         val str = localDBDataListAfterLastTime?.first()?.createdAt
                         val lastTimeLong = localDBDataListAfterLastTime?.first()?.createdAtLong!!
                         Log.d("TEST", "first str : ${str}, last str : ${localDBDataListAfterLastTime.last().createdAt}")
 
 
-                        val lastCount = 1440 - totalEntryCount.value
+                        val lastCount = 1441 - totalEntryCount.value
                         if (!localDBDataListAfterLastTime.isNullOrEmpty()) {
                             for( i in 1 .. lastCount) {
                                 val time = lastTimeLong - (1000L * 60 * i)
