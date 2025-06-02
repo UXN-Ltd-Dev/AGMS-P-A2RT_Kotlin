@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -65,6 +66,8 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
     val showDialog = remember { mutableStateOf(false) }
     val startTime = remember { mutableStateOf("") }
     val leftTime = remember { mutableStateOf(-1) }
+
+    var serialNumber = remember { mutableStateOf("")}
 
     val localDbRepository by lazy {
         AppDatabase.getInstance(context)
@@ -95,6 +98,11 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
 
         // 남은 사용 기간 설정
         leftTime.value = remainingDays
+
+        // 시리얼번호 가져오기
+        withContext(Dispatchers.IO) {
+            serialNumber.value = DataStoreManager.getSerialNumber().first() ?: "N/A"
+        }
     }
 
     if (showDialog.value) {
@@ -123,7 +131,10 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                                 DataStoreManager.deleteRoute()
                                 DataStoreManager.saveRoute("Splash")
                                 Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
-                                Log.e("TEST", "DS에 저장된 Route : ${DataStoreManager.getRoute().first()}")
+                                Log.e(
+                                    "TEST",
+                                    "DS에 저장된 Route : ${DataStoreManager.getRoute().first()}"
+                                )
                                 DataStoreManager.deleteAccessToken()
                                 DataStoreManager.deleteRefreshToken()
                                 DataStoreManager.deleteUserId()
@@ -177,9 +188,10 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                 }
             )
         },
-        ) { paddingValues ->
+    ) { paddingValues ->
         Surface(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
                 .pointerInput(Unit) {
                     detectTapGestures(onTap = { focusManager.clearFocus() })  // 🔹 터치 시 키보드 숨기기
                 }
@@ -248,6 +260,29 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
 
                 Divider()
 
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White)
+                        .height(50.dp)
+                        .padding(horizontal = 30.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "시리얼 번호",
+                        fontSize = 16.sp
+                    )
+
+                    Text(
+                        text = serialNumber.value,
+                        fontSize = 16.sp
+                    )
+                }
+
+
+                Divider()
+
                 Box(
                     modifier = Modifier.clickable {
                         showDialog.value = true
@@ -269,7 +304,7 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                     }
                 }
                 Divider()
-            }
-        }
-    }
+            } // Column
+        } // Surface
+    } // Scaffold
 }

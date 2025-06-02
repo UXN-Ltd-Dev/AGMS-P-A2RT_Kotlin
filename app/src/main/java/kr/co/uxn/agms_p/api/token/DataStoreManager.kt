@@ -19,6 +19,8 @@ import kr.co.uxn.agms_p.ble.Device
 object DataStoreManager {
     private lateinit var dataStore: DataStore<Preferences>
     private lateinit var notiStore: DataStore<Preferences>
+
+    // normal
     private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
     private val REFRESH_TOKEN_KEY = stringPreferencesKey("refresh_token")
     private val EMAIL = stringPreferencesKey("email")
@@ -31,6 +33,7 @@ object DataStoreManager {
     private val ROUTE = stringPreferencesKey("route")
     private val TYPE = intPreferencesKey("type")
     private val IS_STABILIZATION = booleanPreferencesKey("is_stabilization")
+    private val SERIAL_NUMBER = stringPreferencesKey("serial_number")
 
     // noti
     private val NOTI_HIGH_GLUCOSE = booleanPreferencesKey("noti_high_glucose")
@@ -126,7 +129,11 @@ object DataStoreManager {
         }
     }
 
-
+    fun getSerialNumber(): Flow<String?> {
+        return dataStore.data.map { prefs ->
+            prefs[SERIAL_NUMBER]
+        }
+    }
 
     suspend fun saveEmail(email: String) {
         dataStore.edit { prefs ->
@@ -200,7 +207,11 @@ object DataStoreManager {
         }
     }
 
-
+    suspend fun saveSerialNumber(serialNumber: String) {
+        dataStore.edit { prefs ->
+            prefs[SERIAL_NUMBER] = serialNumber
+        }
+    }
 
     suspend fun deleteAccessToken() {
         dataStore.edit { prefs ->
@@ -265,6 +276,12 @@ object DataStoreManager {
     suspend fun deleteIsStabilization() {
         dataStore.edit { prefs ->
             prefs.remove(IS_STABILIZATION)
+        }
+    }
+
+    suspend fun deleteSerialNumber() {
+        dataStore.edit { prefs ->
+            prefs.remove(SERIAL_NUMBER)
         }
     }
 

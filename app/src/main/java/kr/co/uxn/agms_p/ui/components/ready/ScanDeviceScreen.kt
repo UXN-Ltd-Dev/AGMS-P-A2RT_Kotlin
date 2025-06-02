@@ -92,7 +92,7 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
                 DataStoreManager.deleteDeviceMac()
                 DataStoreManager.saveDeviceMac(mac)
                 val verifiedDeviceMac = DataStoreManager.getDeviceMac().first()
-                Log.e("TEST", "스캔화면에서 저장한 datastore 맥 주소 : ${verifiedDeviceMac}")
+                Log.d("TEST", "스캔화면에서 저장한 datastore 맥 주소 : ${verifiedDeviceMac}")
 
 
                 val userId = DataStoreManager.getUserId().first() ?: -1
@@ -100,28 +100,33 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
                 // 서버에 유저와 디바이스 링크
                 try {
                     val detectorList = localDbRepository?.dataDao()?.getListAfterLastTime(userId, 0)
-                    Log.e("TEST", "스캔화면에서 저장한 datastore 맥 주소 : ${verifiedDeviceMac}")
+                    Log.d("TEST", "스캔화면에서 저장한 datastore 맥 주소 : ${verifiedDeviceMac}")
                     if (detectorList.isNullOrEmpty()) {
                         Log.d("TEST", "detectorList is null or empty!")
                         val linkDevice = tokenRetrofit.linkDevice(RequestLinkDevice(userId = userId, serialNumber = serialNumber))
                         if (linkDevice.isSuccessful) {
                             val linkDeviceBody = linkDevice.body()
                             if (linkDeviceBody != null) {
-                                Log.e("TEST", "linkDeviceBody : ${linkDeviceBody}")
+                                Log.d("TEST", "linkDeviceBody : ${linkDeviceBody}")
                                 if (linkDeviceBody.isSuccess) {
-                                    Log.e("TEST", "링크 성공!")
+                                    Log.d("TEST", "링크 성공!")
                                 } else {
-                                    Log.e("TEST", "링크 실패 : ${linkDeviceBody.message}")
+                                    Log.d("TEST", "링크 실패 : ${linkDeviceBody.message}")
                                 }
                             }
                         } else {
-                            Log.e("TEST", "API 에러 : ${linkDevice.errorBody()?.string()}")
+                            Log.d("TEST", "API 에러 : ${linkDevice.errorBody()?.string()}")
                         }
                     } else {
                         Log.d("TEST", "detectorList is exist : ${detectorList}")
                     }
+
+                    DataStoreManager.deleteSerialNumber()
+                    DataStoreManager.saveSerialNumber(serialNumber)
+
+
                 } catch (e: Exception) {
-                    Log.e("TEST","네트워크 에러 : ${e.message}")
+                    Log.d("TEST","네트워크 에러 : ${e.message}")
                 }
             }
 
@@ -164,6 +169,7 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
     LaunchedEffect(key1 = Unit) {
         var mScanFilter = mutableListOf<ScanFilter>()
         Log.e("TAG", "스캔에 쓰일 Mac : $mac")
+
         val scanFilter = ScanFilter
                 .Builder()
                 .setDeviceAddress(mac)
@@ -180,7 +186,7 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
                 Manifest.permission.BLUETOOTH_SCAN
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            // TODO : 권한 요청 로직 필요
+
         }
         // 스캔 시작
         bluetoothAdapter.bluetoothLeScanner.startScan(mScanFilter, scanSettings, scanCallback)
