@@ -256,14 +256,14 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
 
                         Spacer(Modifier.size(10.dp))
 
-                        // 이메일 인증하기 버튼
+                        // 인증 번호 전송 버튼
                         Button(
                             shape = RoundedCornerShape(10.dp),
                             onClick = {
                                 if (email.value != "" && email.value.contains("@")) {
                                     // 이메일 인증하기 타이머 초기화 코드
-                                    timerKey.value++
-                                    isTimerRunning.value = true
+//                                    timerKey.value++
+                                    isTimerRunning.value = false
 
                                     // 인증번호 입력란 초기화
                                     verificationCode.value = ""
@@ -275,8 +275,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                             val trimEmail = email.value.trim()
                                             Log.d("TEST", "originalEmail : ${email.value}\ntrimEmail : $trimEmail")
 
-                                            val result =
-                                                emptyRetrofit.requestVerficationCode(trimEmail)
+                                            val result = emptyRetrofit.requestVerficationCode(trimEmail)
                                             if (result.isSuccessful) {
                                                 Log.d("TAG", "인증하기 서버 응답: ${result.body()}")
                                                 val resultBody = result.body()
@@ -292,37 +291,40 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                                     } else { // isDuplicated = false
                                                         // 인증번호 전송
                                                         withContext(Dispatchers.Main) {
+
+                                                            timerKey.value++
+                                                            isTimerRunning.value = true
+
                                                             Toast.makeText(
                                                                 context,
                                                                 "인증번호가 전송되었습니다.\n메일을 확인해주세요.",
                                                                 Toast.LENGTH_SHORT
                                                             ).show()
                                                             // email_code_id 저장
-                                                            emailCodeId.value =
-                                                                resultBody.emailCodeId
+                                                            emailCodeId.value = resultBody.emailCodeId
                                                         }
-                                                        Log.e(
-                                                            "TAG",
-                                                            "emailCodeId : ${emailCodeId.value}"
-                                                        )
+                                                        Log.d("TAG", "emailCodeId : ${emailCodeId.value}")
                                                     }
                                                 } else {
-                                                    Log.e("TAG", "서버 응답이 null 입니다.")
+                                                    Log.d("TAG", "서버 응답이 null 입니다.")
                                                 }
                                             } else {
-                                                Log.e(
-                                                    "TAG",
-                                                    "API 실패: ${result.errorBody()?.string()}"
-                                                )
+                                                Log.d("TAG", "API 실패: ${result.errorBody()?.string()}")
+                                                withContext(Dispatchers.Main) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        "메일 주소를 올바르게 입력해주세요.",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
                                             }
                                         } catch (e: Exception) {
-                                            Log.e("TAG", "네트워크 오류 발생: ${e.message}")
+                                            Log.d("TAG", "네트워크 오류 발생: ${e.message}")
                                         }
                                     }
 
                                 } else {
-                                    Toast.makeText(context, "올바른 이메일을 입력해주세요.", Toast.LENGTH_SHORT)
-                                        .show()
+                                    Toast.makeText(context, "올바른 이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
                                 }
 
                             },
