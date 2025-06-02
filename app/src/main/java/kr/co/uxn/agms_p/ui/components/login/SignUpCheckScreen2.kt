@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -41,11 +42,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -82,6 +85,8 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
     val timerKey = remember { mutableStateOf(0) } // 트리거 역할
     val emailCodeId = remember { mutableStateOf(0) }
     val isShowResetPwd = remember { mutableStateOf(false) }
+
+    val fontSize = 18.sp
 
     LaunchedEffect(timerKey.value) {
         if (isTimerRunning.value) {
@@ -126,8 +131,6 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
 
             AnimatedVisibility(
                 visible = isShowResetPwd.value == false,
-//                enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
-//                exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 })
             ) {
 
                 Column(
@@ -138,7 +141,8 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                         // 이메일
                         Text(
                             text = "이메일",
-                            fontSize = 14.sp,
+                            fontSize = fontSize,
+                            fontWeight = FontWeight.Medium,
                             modifier = Modifier.align(Alignment.Start)
                                 .padding(start = 5.dp)
                         )
@@ -152,6 +156,11 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                 keyboardActions = KeyboardActions(onDone = {
                                     keyboardController?.hide()
                                 }),
+                                textStyle = TextStyle(
+                                    fontSize = 20.sp,
+                                    letterSpacing = 1.sp,
+                                    fontWeight = FontWeight.Medium,
+                                ),
                                 decorationBox = { innerTextField ->
                                     Box(
                                         modifier = Modifier
@@ -174,7 +183,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                             Text(
                                                 text = "이메일 주소를 입력해 주세요.",
                                                 color = Color.Gray,
-                                                fontSize = 13.sp
+                                                fontSize = 16.sp
                                             )
                                         }
                                         innerTextField()
@@ -204,7 +213,10 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                 }
                                 Text(
                                     text = email.value,
-                                    modifier = Modifier.align(Alignment.CenterStart)
+                                    modifier = Modifier.align(Alignment.CenterStart),
+                                    fontSize = 20.sp,
+                                    letterSpacing = 1.sp,
+                                    fontWeight = FontWeight.Medium,
                                 )
                             }
                         } else {
@@ -216,6 +228,11 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                 keyboardActions = KeyboardActions(onDone = {
                                     keyboardController?.hide()
                                 }),
+                                textStyle = TextStyle(
+                                    fontSize = 20.sp,
+                                    letterSpacing = 1.sp,
+                                    fontWeight = FontWeight.Medium
+                                ),
                                 decorationBox = { innerTextField ->
                                     Box(
                                         modifier = Modifier
@@ -235,23 +252,20 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                         contentAlignment = Alignment.CenterStart
                                     ) {
                                         if (!oAuthEmail.isNullOrEmpty()) {
-//                                    email.value = oAuthEmail
+
                                         }
 
                                         if (email.value == "") {
                                             Text(
                                                 text = "이메일 주소를 입력해 주세요.",
                                                 color = Color.Gray,
-                                                fontSize = 13.sp
+                                                fontSize = fontSize
                                             )
                                         }
-//                                }
-
                                         innerTextField()
                                     }
                                 },
                             )
-//                }
                         }
 
                         Spacer(Modifier.size(10.dp))
@@ -333,12 +347,13 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                             ),
                             modifier = Modifier
                                 .align(Alignment.End)
-                                .size(120.dp, 35.dp),
+                                .size(130.dp, 35.dp),
+//                                .wrapContentSize(),
                             enabled = !isEmailVerified.value,
                         ) {
                             Text(
                                 text = "인증번호 전송",
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -352,7 +367,8 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                         ) {
                             Text(
                                 text = "이메일 인증번호",
-                                fontSize = 14.sp,
+                                fontSize = fontSize,
+                                fontWeight = FontWeight.Medium,
                                 modifier = Modifier.align(Alignment.CenterVertically)
                                     .padding(start = 5.dp)
                             )
@@ -365,14 +381,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                     modifier = Modifier.size(20.dp)
                                 )
                             } else {
-                                // 한번 생긴 아이콘이 정말 사라지는지 확인 필요
-
-//                            Icon(
-//                                imageVector = Icons.Default.Check,
-//                                contentDescription = "Verified",
-//                                tint = Color.White, // 색상을 Green으로 변경,
-//                                modifier = Modifier.size(0.dp)
-//                            )
+                                // 공백 화면
                             }
                         }
                         BasicTextField(
@@ -385,6 +394,11 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                             keyboardActions = KeyboardActions(onDone = {
                                 keyboardController?.hide()
                             }),
+                            textStyle = TextStyle(
+                                fontSize = 20.sp,
+                                letterSpacing = 1.sp,
+                                fontWeight = FontWeight.Medium,
+                            ),
                             decorationBox = { innerTextField ->
                                 Box(
                                     modifier = Modifier
@@ -407,7 +421,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                         Text(
                                             text = "인증번호를 입력해 주세요.",
                                             color = Color.Gray,
-                                            fontSize = 13.sp
+                                            fontSize = 16.sp
                                         )
                                     }
                                     innerTextField()
@@ -416,8 +430,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                         )
                         Spacer(Modifier.size(10.dp))
 
-                        // 인증번호 전송 버튼
-
+                        // 인증번호 확인 버튼
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth(),
@@ -443,9 +456,8 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                     shape = RoundedCornerShape(10.dp),
                                     onClick = {
                                         // 실제 이메일 인증 로직 처리
-//                            isTimerRunning.value = true
                                         isEmailVerified.value = false
-                                        Log.e("TAG", "이메일 인증 시작, 타이머 시작됨.")
+                                        Log.d("TAG", "이메일 인증 시작, 타이머 시작됨.")
 
                                         // 서버 통신 시작
                                         CoroutineScope(Dispatchers.IO).launch {
@@ -517,11 +529,11 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = Color(0xFF385DAB)
                                     ),
-                                    modifier = Modifier.size(120.dp, 35.dp)
+                                    modifier = Modifier.size(130.dp, 35.dp),
                                 ) {
                                     Text(
                                         text = "확인",
-                                        fontSize = 12.sp,
+                                        fontSize = 14.sp,
                                         textAlign = TextAlign.Center
                                     )
                                 }
@@ -574,7 +586,8 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                             // 비밀번호
                             Text(
                                 text = "비밀번호",
-                                fontSize = 14.sp,
+                                fontSize = fontSize,
+                                fontWeight = FontWeight.Medium,
                                 modifier = Modifier.align(Alignment.Start)
                                     .padding(start = 5.dp)
                             )
@@ -586,6 +599,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                 keyboardActions = KeyboardActions(onDone = {
                                     keyboardController?.hide()
                                 }),
+                                textStyle = TextStyle(fontSize = fontSize),
                                 decorationBox = { innerTextField ->
                                     Box(
                                         modifier = Modifier
@@ -608,7 +622,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                             Text(
                                                 text = "비밀번호를 입력해 주세요.",
                                                 color = Color.Gray,
-                                                fontSize = 13.sp
+                                                fontSize = 16.sp
                                             )
                                         }
                                         innerTextField()
@@ -616,22 +630,21 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                 },
                             )
 
-//            Spacer(modifier= Modifier.size(10.dp))
-
-                            // TODO 입력된 값이 조건에 맞는지 체크하는 로직 필요
 
                             Text(
                                 text = "8~16자의 영문, 숫자, 특수문자를 조합해 사용해주세요.",
                                 color = Color.Gray,
-                                fontSize = 13.sp,
+                                fontSize = 12.sp,
                                 modifier = Modifier.padding(start = 8.dp)
                             )
-                            Spacer(modifier = Modifier.size(20.dp))
+
+                            Spacer(modifier = Modifier.size(65.dp))
 
                             // 비밀번호 확인
                             Text(
                                 text = "비밀번호 확인",
-                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = fontSize,
                                 modifier = Modifier.align(Alignment.Start)
                                     .padding(start = 5.dp)
                             )
@@ -644,6 +657,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                 keyboardActions = KeyboardActions(onDone = {
                                     keyboardController?.hide()
                                 }),
+                                textStyle = TextStyle(fontSize = fontSize),
                                 decorationBox = { innerTextField ->
                                     Box(
                                         modifier = Modifier
@@ -666,7 +680,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                             Text(
                                                 text = "비밀번호를 확인 해주세요.",
                                                 color = Color.Gray,
-                                                fontSize = 13.sp
+                                                fontSize = 16.sp
                                             )
                                         }
                                         innerTextField()
@@ -675,7 +689,6 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                             )
 
                             // 다음 버튼
-//                            Spacer(modifier = Modifier.height(250.dp))
                             Spacer(modifier = Modifier.weight(1f))
 
                             Box(
@@ -713,14 +726,9 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                             Spacer(modifier = Modifier.height(33.dp))
 
                         }
-
                     }
-
                 }
             }
-
-
-
         }
     }
 }

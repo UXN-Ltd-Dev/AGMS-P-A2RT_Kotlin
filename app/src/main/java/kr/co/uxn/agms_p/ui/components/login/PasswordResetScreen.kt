@@ -50,6 +50,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -93,6 +94,8 @@ fun PassWordResetScreen(navController: NavController) {
     val emailCodeId = remember { mutableStateOf(0) }
     val isShowResetPwd = remember { mutableStateOf(false) }
 
+    val fontSize = 18.sp
+
     LaunchedEffect(timerKey.value) {
         if (isTimerRunning.value) {
             timerSeconds.value = 300 // 5분 설정
@@ -135,8 +138,6 @@ fun PassWordResetScreen(navController: NavController) {
 
             AnimatedVisibility(
                 visible = isShowResetPwd.value == false,
-//                enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
-//                exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 })
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
@@ -145,7 +146,8 @@ fun PassWordResetScreen(navController: NavController) {
                         // 이메일
                         Text(
                             text = "이메일",
-                            fontSize = 14.sp,
+                            fontSize = fontSize,
+                            fontWeight = FontWeight.Medium,
                             modifier = Modifier
                                 .align(Alignment.Start)
                                 .padding(start = 5.dp)
@@ -159,6 +161,11 @@ fun PassWordResetScreen(navController: NavController) {
                             keyboardActions = KeyboardActions(onDone = {
                                 keyboardController?.hide()
                             }),
+                            textStyle = TextStyle(
+                                fontSize = 20.sp,
+                                letterSpacing = 1.sp,
+                                fontWeight = FontWeight.Medium,
+                            ),
                             decorationBox = { innerTextField ->
                                 Box(
                                     modifier = Modifier
@@ -181,7 +188,7 @@ fun PassWordResetScreen(navController: NavController) {
                                         Text(
                                             text = "이메일 주소를 입력해 주세요.",
                                             color = Color.Gray,
-                                            fontSize = 13.sp
+                                            fontSize = 16.sp
                                         )
                                     }
                                     innerTextField()
@@ -268,12 +275,13 @@ fun PassWordResetScreen(navController: NavController) {
                             ),
                             modifier = Modifier
                                 .align(Alignment.End)
-                                .size(120.dp, 35.dp),
+//                                .size(120.dp, 35.dp),
+                                .size(130.dp, 35.dp),
                             enabled = !isEmailVerified.value,
                         ) {
                             Text(
                                 text = "인증번호 전송",
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -287,7 +295,8 @@ fun PassWordResetScreen(navController: NavController) {
                         ) {
                             Text(
                                 text = "이메일 인증번호",
-                                fontSize = 14.sp,
+                                fontSize = fontSize,
+                                fontWeight = FontWeight.Medium,
                                 modifier = Modifier
                                     .align(Alignment.CenterVertically)
                                     .padding(start = 5.dp)
@@ -314,6 +323,11 @@ fun PassWordResetScreen(navController: NavController) {
                             keyboardActions = KeyboardActions(onDone = {
                                 keyboardController?.hide()
                             }),
+                            textStyle = TextStyle(
+                                fontSize = 20.sp,
+                                letterSpacing = 1.sp,
+                                fontWeight = FontWeight.Medium,
+                            ),
                             decorationBox = { innerTextField ->
                                 Box(
                                     modifier = Modifier
@@ -336,7 +350,7 @@ fun PassWordResetScreen(navController: NavController) {
                                         Text(
                                             text = "인증번호를 입력해 주세요.",
                                             color = Color.Gray,
-                                            fontSize = 13.sp
+                                            fontSize = 16.sp
                                         )
                                     }
                                     innerTextField()
@@ -424,11 +438,12 @@ fun PassWordResetScreen(navController: NavController) {
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = Color(0xFF385DAB)
                                     ),
-                                    modifier = Modifier.size(120.dp, 35.dp)
+//                                    modifier = Modifier.size(120.dp, 35.dp)
+                                    modifier = Modifier.size(130.dp, 35.dp)
                                 ) {
                                     Text(
                                         text = "확인",
-                                        fontSize = 12.sp,
+                                        fontSize = 14.sp,
                                         textAlign = TextAlign.Center
                                     )
                                 }
@@ -451,7 +466,8 @@ fun PassWordResetScreen(navController: NavController) {
                         // 비밀번호
                         Text(
                             text = "비밀번호",
-                            fontSize = 14.sp,
+                            fontSize = fontSize,
+                            fontWeight = FontWeight.Medium,
                             modifier = Modifier
                                 .align(Alignment.Start)
                                 .padding(start = 5.dp)
@@ -464,6 +480,7 @@ fun PassWordResetScreen(navController: NavController) {
                             keyboardActions = KeyboardActions(onDone = {
                                 keyboardController?.hide()
                             }),
+                            textStyle = TextStyle(fontSize = fontSize),
                             decorationBox = { innerTextField ->
                                 Box(
                                     modifier = Modifier
@@ -486,7 +503,7 @@ fun PassWordResetScreen(navController: NavController) {
                                         Text(
                                             text = "비밀번호를 입력해 주세요.",
                                             color = Color.Gray,
-                                            fontSize = 13.sp
+                                            fontSize = 16.sp
                                         )
                                     }
                                     innerTextField()
@@ -497,15 +514,17 @@ fun PassWordResetScreen(navController: NavController) {
                         Text(
                             text = "8~16자의 영문, 숫자, 특수문자를 조합해 사용해주세요.",
                             color = Color.Gray,
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             modifier = Modifier.padding(start = 8.dp)
                         )
-                        Spacer(modifier = Modifier.size(20.dp))
+
+                        Spacer(modifier = Modifier.size(65.dp))
 
                         // 비밀번호 확인
                         Text(
                             text = "비밀번호 확인",
-                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = fontSize,
                             modifier = Modifier
                                 .align(Alignment.Start)
                                 .padding(start = 5.dp)
@@ -519,6 +538,7 @@ fun PassWordResetScreen(navController: NavController) {
                             keyboardActions = KeyboardActions(onDone = {
                                 keyboardController?.hide()
                             }),
+                            textStyle = TextStyle(fontSize = fontSize),
                             decorationBox = { innerTextField ->
                                 Box(
                                     modifier = Modifier
@@ -541,7 +561,7 @@ fun PassWordResetScreen(navController: NavController) {
                                         Text(
                                             text = "비밀번호를 확인 해주세요.",
                                             color = Color.Gray,
-                                            fontSize = 13.sp
+                                            fontSize = 16.sp
                                         )
                                     }
                                     innerTextField()
@@ -550,7 +570,6 @@ fun PassWordResetScreen(navController: NavController) {
                         )
 
                         // 다음 버튼
-//                        Spacer(modifier = Modifier.height(250.dp))
                         Spacer(modifier = Modifier.weight(1f))
 
                         Box(
