@@ -104,6 +104,7 @@ import java.util.TimeZone
 import kotlin.system.exitProcess
 import androidx.compose.runtime.*
 import androidx.compose.runtime.key
+import com.patrykandpatrick.vico.compose.cartesian.cartesianLayerPadding
 import com.patrykandpatrick.vico.core.cartesian.CartesianDrawingContext
 import com.patrykandpatrick.vico.core.cartesian.CartesianMeasuringContext
 import com.patrykandpatrick.vico.core.cartesian.layer.CartesianLayerDimensions
@@ -169,9 +170,11 @@ fun HomeScreen(
         ): List<Double> {
 //            val start = fullXRange.start
 //            val end = fullXRange.endInclusive
+
             val start = visibleXRange.start
-            val end = visibleXRange.endInclusive
+            val end = visibleXRange.endInclusive + 1
             val mid = (start + end) / 2
+
             return listOf(start, mid, end)
         }
 
@@ -279,14 +282,14 @@ fun HomeScreen(
 
             when (selectedTimeOption) {
                 "6시간" -> {
-                    if (totalEntryCount.value < 361 && totalEntryCount.value > 0) {
+                    if (totalEntryCount.value < 360 && totalEntryCount.value > 0) {
                         val str = localDBDataListAfterLastTime?.first()?.createdAt
                         val lastTimeLong = localDBDataListAfterLastTime?.first()?.createdAtLong!!
                         Log.e("TEST", "first str : ${str}, last str : ${localDBDataListAfterLastTime.last().createdAt}")
 
                         val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
 
-                        val lastCount = (361 + 0) - totalEntryCount.value
+                        val lastCount = (360 + 0) - totalEntryCount.value
 //                        Log.e("TEST", "추출한 minute : ${minute}")
                         if (!localDBDataListAfterLastTime.isNullOrEmpty()) {
                             for( i in 1 .. lastCount) {
@@ -303,13 +306,13 @@ fun HomeScreen(
                     }
                 }
                 "12시간" -> {
-                    if (totalEntryCount.value < 721 && totalEntryCount.value > 0) {
+                    if (totalEntryCount.value < 720 && totalEntryCount.value > 0) {
                         val str = localDBDataListAfterLastTime?.first()?.createdAt
                         val lastTimeLong = localDBDataListAfterLastTime?.first()?.createdAtLong!!
                         Log.e("TEST", "first str : ${str}, last str : ${localDBDataListAfterLastTime.last().createdAt}")
 
 
-                        val lastCount = 721 - totalEntryCount.value
+                        val lastCount = 720 - totalEntryCount.value
                         if (!localDBDataListAfterLastTime.isNullOrEmpty()) {
                             for( i in 1 .. lastCount) {
                                 val time = lastTimeLong - (1000L * 60 * i)
@@ -324,13 +327,12 @@ fun HomeScreen(
                     }
                 }
                 else -> {
-                    if (totalEntryCount.value < 1441 && totalEntryCount.value > 0) {
+                    if (totalEntryCount.value < 1440 && totalEntryCount.value > 0) {
                         val str = localDBDataListAfterLastTime?.first()?.createdAt
                         val lastTimeLong = localDBDataListAfterLastTime?.first()?.createdAtLong!!
                         Log.d("TEST", "first str : ${str}, last str : ${localDBDataListAfterLastTime.last().createdAt}")
 
-
-                        val lastCount = 1441 - totalEntryCount.value
+                        val lastCount = 1440 - totalEntryCount.value
                         if (!localDBDataListAfterLastTime.isNullOrEmpty()) {
                             for( i in 1 .. lastCount) {
                                 val time = lastTimeLong - (1000L * 60 * i)
@@ -904,10 +906,11 @@ fun HomeScreen(
                                             valueFormatter = bottomAxisFormatter,
 //                                            itemPlacer = HorizontalAxis.ItemPlacer.aligned(
 //                                                spacing = { 20 }, // 5개의 xStep마다 하나의 라벨
-//                                                offset = { 0 },
+//                                                offset = { 2 },
 //                                                shiftExtremeLines = true,
 //                                                addExtremeLabelPadding = true
 //                                            ),
+//                                            itemPlacer = HorizontalAxis.ItemPlacer.segmented(false),
                                             itemPlacer = customItemPlacer,
 //                                            guideline = null
                                             labelRotationDegrees = 90f
@@ -917,7 +920,15 @@ fun HomeScreen(
                                             startWidthDp = 0f,
                                             endWidthDp = 0f,
                                             visibilityThresholdDp = 15f
-                                        )
+                                        ),
+//                                        layerPadding = {
+//                                            cartesianLayerPadding(
+//                                                scalableStart = 10.dp,
+//                                                unscalableStart = 10.dp,
+//                                                scalableEnd = 10.dp,
+//                                                unscalableEnd = 10.dp
+//                                            )
+//                                        }
                                     ),
                                     modelProducer = modelProducer,
                                     modifier = Modifier
