@@ -27,8 +27,8 @@ android {
         applicationId = "kr.co.uxn.agms_p"
         minSdk = 29
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.2.3(CEO)"
+        versionCode = 2
+        versionName = "0.2.4(C)"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -210,4 +210,10 @@ dependencies {
 
     // 앱 업데이트 확인
     implementation("com.google.android.play:app-update-ktx:2.1.0")
+
+    // 권한
+    implementation ("com.google.accompanist:accompanist-permissions:0.32.0")
+
+    // 권한 meticha 라이브러리
+    implementation(libs.permissions.compose)
 }

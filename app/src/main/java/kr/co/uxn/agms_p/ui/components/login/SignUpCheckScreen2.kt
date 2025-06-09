@@ -157,7 +157,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                     keyboardController?.hide()
                                 }),
                                 textStyle = TextStyle(
-                                    fontSize = 20.sp,
+                                    fontSize = fontSize,
                                     letterSpacing = 1.sp,
                                     fontWeight = FontWeight.Medium,
                                 ),
@@ -214,7 +214,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                 Text(
                                     text = email.value,
                                     modifier = Modifier.align(Alignment.CenterStart),
-                                    fontSize = 20.sp,
+                                    fontSize = fontSize,
                                     letterSpacing = 1.sp,
                                     fontWeight = FontWeight.Medium,
                                 )
@@ -229,7 +229,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                     keyboardController?.hide()
                                 }),
                                 textStyle = TextStyle(
-                                    fontSize = 20.sp,
+                                    fontSize = fontSize,
                                     letterSpacing = 1.sp,
                                     fontWeight = FontWeight.Medium
                                 ),
@@ -259,7 +259,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                             Text(
                                                 text = "이메일 주소를 입력해 주세요.",
                                                 color = Color.Gray,
-                                                fontSize = fontSize
+                                                fontSize = 16.sp
                                             )
                                         }
                                         innerTextField()
@@ -395,7 +395,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                 keyboardController?.hide()
                             }),
                             textStyle = TextStyle(
-                                fontSize = 20.sp,
+                                fontSize = fontSize,
                                 letterSpacing = 1.sp,
                                 fontWeight = FontWeight.Medium,
                             ),
@@ -470,10 +470,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                                 )
                                                 if (result.isSuccessful) {
                                                     val resultBody = result.body()
-                                                    Log.d(
-                                                        "TEST",
-                                                        "인증번호 result body : ${resultBody}"
-                                                    )
+                                                    Log.d("TEST", "인증번호 result body : ${resultBody}")
                                                     if (resultBody != null && resultBody.isSuccess) {
                                                         withContext(Dispatchers.Main) {
                                                             Toast.makeText(
@@ -555,33 +552,6 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     if (isShowResetPwd.value) {
-//                        if (type == 1801 || type == 1802) {
-//
-//                            // 다음 버튼
-//                            Spacer(modifier = Modifier.height(250.dp))
-//
-//                            Box(
-//                                modifier = Modifier
-//                                    .fillMaxWidth()
-//                                    .height(50.dp)
-//                            ) {
-//                                Image(
-//                                    painter = painterResource(R.drawable.btn_next),
-//                                    contentDescription = "다음 버튼",
-//                                    modifier = Modifier.align(Alignment.Center)
-//                                        .clickable {
-//                                            if (email.value.isEmpty()) {
-//                                                Toast.makeText(context, "이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
-//                                            } else if (!isEmailVerified.value) {
-//                                                Toast.makeText(context, "이메일 인증을 해주세요.", Toast.LENGTH_SHORT).show()
-//                                            } else {
-//                                                // 인증 성공시
-//                                                navController.navigate("SignUpInfoScreen3/${email.value}/${pwd1.value}/${type}")
-//                                            }
-//                                        }
-//                                )
-//                            }
-//                        }
                         if(type == 1803) {
                             // 비밀번호
                             Text(
@@ -645,7 +615,8 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                 text = "비밀번호 확인",
                                 fontWeight = FontWeight.Medium,
                                 fontSize = fontSize,
-                                modifier = Modifier.align(Alignment.Start)
+                                modifier = Modifier
+                                    .align(Alignment.Start)
                                     .padding(start = 5.dp)
                             )
 
@@ -699,7 +670,8 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                 Image(
                                     painter = painterResource(R.drawable.btn_next),
                                     contentDescription = "다음 버튼",
-                                    modifier = Modifier.align(Alignment.Center)
+                                    modifier = Modifier
+                                        .align(Alignment.Center)
                                         .clickable {
                                             if (email.value.isEmpty()) {
                                                 Toast.makeText(context, "이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -36,6 +37,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -107,7 +110,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     Text(
                         text = "이메일",
                         color = Color.Gray,
-                        fontSize = 14.sp,
+                        fontSize = 16.sp,
                         modifier = Modifier.align(Alignment.Start)
                             .padding(start = 5.dp)
                     )
@@ -120,11 +123,18 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                         keyboardActions = KeyboardActions(onDone = {
                             keyboardController?.hide()
                         }),
+                        textStyle = TextStyle(
+                            fontSize = 18.sp,
+                            letterSpacing = 1.sp,
+                            fontWeight = FontWeight.Medium,
+                        ),
+                        maxLines = 3,
                         decorationBox = { innerTextField ->
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(30.dp)
+                                    .wrapContentHeight()
+//                                    .height(30.dp)
 //                                    .focusRequester(focusRequester) // 포커스 요청
 //                                    .onFocusChanged { isFocused = !isFocused } // 포커스 감지
                                     .drawBehind {
@@ -145,7 +155,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                     Text(
                                         text = "이메일 주소를 입력해 주세요.",
                                         color = Color.Gray,
-                                        fontSize = 14.sp
+                                        fontSize = 16.sp
                                     )
                                 }
                                 innerTextField()
@@ -156,7 +166,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     Text(
                         text = "비밀번호",
                         color = Color.Gray,
-                        fontSize = 14.sp,
+                        fontSize = 16.sp,
                         modifier = Modifier.align(Alignment.Start)
                             .padding(start = 5.dp)
                     )
@@ -169,6 +179,11 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                         keyboardActions = KeyboardActions(onDone = {
                             keyboardController?.hide()
                         }),
+                        textStyle = TextStyle(
+                            fontSize = 18.sp,
+                            letterSpacing = 1.sp,
+                            fontWeight = FontWeight.Medium,
+                        ),
                         decorationBox = { innerTextField ->
                             Box(
                                 modifier = Modifier
@@ -192,7 +207,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                     Text(
                                         text = "비밀번호를 입력해 주세요.",
                                         color = Color.Gray,
-                                        fontSize = 14.sp
+                                        fontSize = 16.sp
                                     )
                                 }
                                 innerTextField()
@@ -211,7 +226,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
             ) {
                 Text(
                     text = "회원가입",
-                    fontSize = 14.sp,
+                    fontSize = 16.sp,
                     modifier = Modifier
                         // 1803 : uxn 회원가입
                         .clickable {
@@ -225,7 +240,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                 Spacer(modifier = Modifier.size(17.dp))
                 Text(
                     text = "비밀번호 찾기",
-                    fontSize = 14.sp,
+                    fontSize = 16.sp,
                     modifier = Modifier.clickable {
                         navController.navigate("PasswordResetScreen")
                     }
@@ -316,7 +331,10 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
 
             // 간편 로그인
             if (!isLoading) {
-                Text("또는")
+                Text(
+                    text = "또는",
+                    fontSize = 16.sp
+                )
 
                 Spacer(modifier = Modifier.size(50.dp))
             } else {

@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -18,11 +17,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -100,7 +98,7 @@ fun SignUpInfoScreen3(
 //        Log.e("SignUpInfoScreen3", "email: $email, pwd: $pwd")
     }
 
-    Surface(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .pointerInput(Unit) {
@@ -130,7 +128,7 @@ fun SignUpInfoScreen3(
             // 혈당, 혈당 추세 ..
             Text(
                 text = "혈당, 혈당 추세 등 더욱 정확한 결과를 제공할려면 이 정보가 필요합니다. Always가 제공하는 알고리즘을 적용하기 위해서는 나이 외에도 이러한 추가 정보를 입력해야 여러분에게 꼭 맞는 데이터를 제공할 수 있습니다. 자세히 보기",
-                fontSize = 15.sp,
+                fontSize = 16.sp,
                 color = Color(0xFF828282),
                 modifier = Modifier
                     .align(Alignment.Start)
@@ -145,7 +143,11 @@ fun SignUpInfoScreen3(
                 modifier = Modifier
                     .padding(start = 50.dp)
             ) {
-                Text(text = "이름")
+                Text(
+                    text = "이름",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium
+                    )
                 Spacer(modifier = Modifier.size(60.dp, 27.dp))
 
                 Box(
@@ -194,7 +196,7 @@ fun SignUpInfoScreen3(
                             }
                         },
                         textStyle = TextStyle(
-                            fontSize = 16.sp,
+                            fontSize = 20.sp,
                             textAlign = TextAlign.Center
                         ),
                         singleLine = true
@@ -202,13 +204,18 @@ fun SignUpInfoScreen3(
                 }
             }
 
+            Spacer(modifier = Modifier.height(10.dp))
 
             // 2. 성별
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 50.dp)
             ) {
-                Text(text = "성별")
+                Text(
+                    text = "성별",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium
+                )
                 Spacer(modifier = Modifier.size(60.dp, 27.dp))
                 var expanded by remember { mutableStateOf(false) }
                 Box(
@@ -231,6 +238,7 @@ fun SignUpInfoScreen3(
                 ) {
                     Text(
                         text = sex.value,
+                        fontSize = 20.sp,
                         modifier = Modifier.clickable {
                             expanded = !expanded
                         }
@@ -246,6 +254,7 @@ fun SignUpInfoScreen3(
                         text = {
                             Text(
                                 text = "남성",
+                                fontSize = 20.sp
                             )
                         },
                         onClick = {
@@ -255,7 +264,12 @@ fun SignUpInfoScreen3(
                     )
                     HorizontalDivider()
                     DropdownMenuItem(
-                        text = { Text("여성") },
+                        text = {
+                            androidx.compose.material.Text(
+                                text = "여성",
+                                fontSize = 20.sp
+                            )
+                        },
                         onClick = {
                             sex.value = "여성"
                             expanded = !expanded
@@ -263,7 +277,12 @@ fun SignUpInfoScreen3(
                     )
                     HorizontalDivider()
                     DropdownMenuItem(
-                        text = { Text("선택 안함") },
+                        text = {
+                            androidx.compose.material.Text(
+                                text = "선택 안함",
+                                fontSize = 20.sp
+                            )
+                        },
                         onClick = {
                             sex.value = "선택 안함"
                             expanded = !expanded
@@ -272,13 +291,18 @@ fun SignUpInfoScreen3(
                 }
             }
 
+            Spacer(modifier = Modifier.height(10.dp))
 
             // 3. 연령
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 50.dp)
             ) {
-                Text(text = "연령")
+                androidx.compose.material.Text(
+                    text = "연령",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium
+                )
                 Spacer(modifier = Modifier.size(60.dp, 27.dp))
 
                 Box(
@@ -327,30 +351,26 @@ fun SignUpInfoScreen3(
                             }
                         },
                         textStyle = TextStyle(
-                            fontSize = 16.sp,
+                            fontSize = 20.sp,
                             textAlign = TextAlign.Center
                         ),
                         singleLine = true
                     )
-
-//                    NumberPicker(
-//                        value = age.value,
-//                        range = 13 .. 120,
-//                        onValueChange = {
-//                            age.value = it
-//                        },
-//                        dividersColor = Color(0xFF828282)
-//                    )
-
                 }
             }
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             // 4. 신장
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 50.dp)
             ) {
-                Text(text = "신장")
+                androidx.compose.material.Text(
+                    text = "신장",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium
+                )
                 Spacer(modifier = Modifier.size(60.dp, 27.dp))
                 Box(
                     modifier = Modifier
@@ -398,7 +418,7 @@ fun SignUpInfoScreen3(
                             }
                         },
                         textStyle = TextStyle(
-                            fontSize = 16.sp,
+                            fontSize = 20.sp,
                             textAlign = TextAlign.Center
                         ),
                         singleLine = true
@@ -407,12 +427,18 @@ fun SignUpInfoScreen3(
             }
 
 
+            Spacer(modifier = Modifier.height(10.dp))
+
             // 5. 체중
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 50.dp)
             ) {
-                Text(text = "체중")
+                androidx.compose.material.Text(
+                    text = "체중",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium
+                )
                 Spacer(modifier = Modifier.size(60.dp, 27.dp))
 
                 Box(
@@ -461,7 +487,7 @@ fun SignUpInfoScreen3(
                             }
                         },
                         textStyle = TextStyle(
-                            fontSize = 16.sp,
+                            fontSize = 20.sp,
                             textAlign = TextAlign.Center
                         ),
                         singleLine = true
@@ -469,19 +495,25 @@ fun SignUpInfoScreen3(
                 }
             }
 
+            Spacer(modifier = Modifier.height(10.dp))
+
             // 6. 당뇨 정보
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 50.dp)
             ) {
-                Text(text = "당뇨 유형")
+                Text(
+                    text = "당뇨 유형",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium
+                )
                 // 제1형 당뇨병
                 // 제2형 당뇨병
                 // 임신성 당뇨병
                 // 당뇨 전단계
                 // LADA(Latent Autoimmune Diabetes in Adults)
                 // 정상
-                Spacer(modifier = Modifier.size(27.dp))
+                Spacer(modifier = Modifier.size(22.dp))
                 Box(
                     modifier = Modifier
                         .width(120.dp)
@@ -502,6 +534,7 @@ fun SignUpInfoScreen3(
                 ) {
                     Text(
                         text = diabetesType.value,
+                        fontSize = 20.sp,
                         modifier = Modifier.clickable {
                             expandedForDiabetesType = !expandedForDiabetesType
                         }
@@ -514,7 +547,12 @@ fun SignUpInfoScreen3(
                 ) {
                     // First section
                     DropdownMenuItem(
-                        text = { Text(text = "정상") },
+                        text = {
+                            Text(
+                                text = "정상",
+                                fontSize = 20.sp
+                            )
+                        },
                         onClick = {
                             diabetesType.value = "정상"
                             expandedForDiabetesType = !expandedForDiabetesType
@@ -522,7 +560,12 @@ fun SignUpInfoScreen3(
                     )
                     HorizontalDivider()
                     DropdownMenuItem(
-                        text = { Text("당뇨 전단계") },
+                        text = {
+                            androidx.compose.material.Text(
+                                text = "당뇨 전단계",
+                                fontSize = 20.sp
+                            )
+                        },
                         onClick = {
                             diabetesType.value = "당뇨 전단계"
                             expandedForDiabetesType = !expandedForDiabetesType
@@ -530,7 +573,12 @@ fun SignUpInfoScreen3(
                     )
                     HorizontalDivider()
                     DropdownMenuItem(
-                        text = { Text("제1형 당뇨병") },
+                        text = {
+                            Text(
+                                text = "제1형 당뇨병",
+                                fontSize = 20.sp
+                            )
+                        },
                         onClick = {
                             diabetesType.value = "제1형 당뇨병"
                             expandedForDiabetesType = !expandedForDiabetesType
@@ -538,7 +586,12 @@ fun SignUpInfoScreen3(
                     )
                     HorizontalDivider()
                     DropdownMenuItem(
-                        text = { Text("제2형 당뇨병") },
+                        text = {
+                            Text(
+                                text = "제2형 당뇨병",
+                                fontSize = 20.sp
+                            )
+                        },
                         onClick = {
                             diabetesType.value = "제2형 당뇨병"
                             expandedForDiabetesType = !expandedForDiabetesType
@@ -546,7 +599,12 @@ fun SignUpInfoScreen3(
                     )
                     HorizontalDivider()
                     DropdownMenuItem(
-                        text = { Text("임신성 당뇨병") },
+                        text = {
+                            Text(
+                                text = "임신성 당뇨병",
+                                fontSize = 20.sp
+                            )
+                        },
                         onClick = {
                             diabetesType.value = "임신성 당뇨병"
                             expandedForDiabetesType = !expandedForDiabetesType
@@ -554,7 +612,12 @@ fun SignUpInfoScreen3(
                     )
                     HorizontalDivider()
                     DropdownMenuItem(
-                        text = { Text("LADA") },
+                        text = {
+                            Text(
+                                text = "LADA",
+                                fontSize = 20.sp
+                            )
+                        },
                         onClick = {
                             diabetesType.value = "LADA"
                             expandedForDiabetesType = !expandedForDiabetesType
@@ -562,7 +625,12 @@ fun SignUpInfoScreen3(
                     )
                     HorizontalDivider()
                     DropdownMenuItem(
-                        text = { Text("모름") },
+                        text = {
+                            androidx.compose.material.Text(
+                                text = "모름",
+                                fontSize = 20.sp
+                            )
+                        },
                         onClick = {
                             diabetesType.value = "모름"
                             expandedForDiabetesType = !expandedForDiabetesType
@@ -571,13 +639,13 @@ fun SignUpInfoScreen3(
                 }
             }
 
-            Spacer(modifier = Modifier.height(93.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             // 개인정보 처리방침 및..
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(40.dp)
+                    .wrapContentHeight()
                     .clickable {
                         checked.value = !checked.value
                     },
@@ -592,19 +660,22 @@ fun SignUpInfoScreen3(
                 Spacer(modifier = Modifier.width(15.dp))
                 Text(
                     text = "개인정보 처리방침 및 이용약관에 동의합니다.",
-                    fontSize = 13.sp,
+                    fontSize = 14.sp,
                     color = Color.Gray
                 )
             }
 
-            Spacer(modifier = Modifier.height(21.dp))
-
             // 확인 버튼
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
+                    .fillMaxSize()
+                    .padding(bottom = 10.dp),
+                contentAlignment = Alignment.BottomCenter
             ) {
+
+
+
+
                 Image(
                     painter = painterResource(R.drawable.btn_confirm),
                     contentDescription = "확인 버튼",

@@ -16,6 +16,7 @@ navigationFragmentKtx = "2.8.8"
 navigationUiKtx = "2.8.8"
 googleid = "1.1.1"
 vico = "2.1.2"
+permissionsCompose = "0.0.1+4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -60,6 +61,8 @@ vico-multiplatform-m3 = { group = "com.patrykandpatrick.vico", name = "multiplat
 
 # For the Android view system.
 vico-views = { group = "com.patrykandpatrick.vico", name = "views", version.ref = "vico" }
+
+permissions-compose = { group = "com.meticha", name = "permissions_compose", version.ref = "permissionsCompose" }
 
 
 

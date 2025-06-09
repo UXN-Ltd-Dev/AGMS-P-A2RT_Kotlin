@@ -162,7 +162,7 @@ fun PassWordResetScreen(navController: NavController) {
                                 keyboardController?.hide()
                             }),
                             textStyle = TextStyle(
-                                fontSize = 20.sp,
+                                fontSize = fontSize,
                                 letterSpacing = 1.sp,
                                 fontWeight = FontWeight.Medium,
                             ),
@@ -324,7 +324,7 @@ fun PassWordResetScreen(navController: NavController) {
                                 keyboardController?.hide()
                             }),
                             textStyle = TextStyle(
-                                fontSize = 20.sp,
+                                fontSize = fontSize,
                                 letterSpacing = 1.sp,
                                 fontWeight = FontWeight.Medium,
                             ),
@@ -399,6 +399,7 @@ fun PassWordResetScreen(navController: NavController) {
                                                         emailCode = verificationCode.value
                                                     )
                                                 )
+
                                                 if (result.isSuccessful) {
                                                     val resultBody = result.body()
                                                     Log.d("TEST", "인증번호 result body : ${resultBody}")

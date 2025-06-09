@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -158,22 +159,20 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                     detectTapGestures(onTap = { focusManager.clearFocus() })  // 🔹 터치 시 키보드 숨기기
                 }
         ) {
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
                     .background(Color(0xFFF2F3F9)),
-                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Divider()
-
 
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 30.dp)
-//                        .padding(top = 60.dp)
-                        .padding(top = 30.dp)
+                        .padding(top = 30.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     // 내 정보를 입력하세요.
                     Text(
@@ -314,7 +313,10 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                             // First section
                             DropdownMenuItem(
                                 text = {
-                                    Text(text = "남성")
+                                    Text(
+                                        text = "남성",
+                                        fontSize = 20.sp
+                                    )
                                 },
                                 onClick = {
                                     sex.value = "남성"
@@ -323,7 +325,12 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                             )
                             HorizontalDivider()
                             DropdownMenuItem(
-                                text = { Text("여성") },
+                                text = {
+                                    Text(
+                                        text = "여성",
+                                        fontSize = 20.sp
+                                    )
+                                },
                                 onClick = {
                                     sex.value = "여성"
                                     expanded = !expanded
@@ -331,7 +338,12 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                             )
                             HorizontalDivider()
                             DropdownMenuItem(
-                                text = { Text("선택 안함") },
+                                text = {
+                                    Text(
+                                        text = "선택 안함",
+                                        fontSize = 20.sp
+                                    )
+                                },
                                 onClick = {
                                     sex.value = "선택 안함"
                                     expanded = !expanded
@@ -596,7 +608,12 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                         ) {
                             // First section
                             DropdownMenuItem(
-                                text = { androidx.compose.material3.Text(text = "정상") },
+                                text = {
+                                    Text(
+                                        text = "정상",
+                                        fontSize = 20.sp
+                                    )
+                               },
                                 onClick = {
                                     diabetesType.value = "정상"
                                     expandedForDiabetesType = !expandedForDiabetesType
@@ -604,7 +621,12 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                             )
                             HorizontalDivider()
                             DropdownMenuItem(
-                                text = { androidx.compose.material3.Text("당뇨 전단계") },
+                                text = {
+                                    Text(
+                                        text = "당뇨 전단계",
+                                        fontSize = 20.sp
+                                    )
+                                },
                                 onClick = {
                                     diabetesType.value = "당뇨 전단계"
                                     expandedForDiabetesType = !expandedForDiabetesType
@@ -612,7 +634,12 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                             )
                             HorizontalDivider()
                             DropdownMenuItem(
-                                text = { androidx.compose.material3.Text("제1형 당뇨병") },
+                                text = {
+                                    Text(
+                                        text = "제1형 당뇨병",
+                                        fontSize = 20.sp
+                                    )
+                                },
                                 onClick = {
                                     diabetesType.value = "제1형 당뇨병"
                                     expandedForDiabetesType = !expandedForDiabetesType
@@ -620,7 +647,12 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                             )
                             HorizontalDivider()
                             DropdownMenuItem(
-                                text = { androidx.compose.material3.Text("제2형 당뇨병") },
+                                text = {
+                                    Text(
+                                        text = "제2형 당뇨병",
+                                        fontSize = 20.sp
+                                    )
+                               },
                                 onClick = {
                                     diabetesType.value = "제2형 당뇨병"
                                     expandedForDiabetesType = !expandedForDiabetesType
@@ -628,7 +660,12 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                             )
                             HorizontalDivider()
                             DropdownMenuItem(
-                                text = { androidx.compose.material3.Text("임신성 당뇨병") },
+                                text = {
+                                    Text(
+                                        text = "임신성 당뇨병",
+                                        fontSize = 20.sp
+                                    )
+                               },
                                 onClick = {
                                     diabetesType.value = "임신성 당뇨병"
                                     expandedForDiabetesType = !expandedForDiabetesType
@@ -636,7 +673,12 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                             )
                             HorizontalDivider()
                             DropdownMenuItem(
-                                text = { androidx.compose.material3.Text("LADA") },
+                                text = {
+                                    Text(
+                                        text = "LADA",
+                                        fontSize = 20.sp
+                                    )
+                                },
                                 onClick = {
                                     diabetesType.value = "LADA"
                                     expandedForDiabetesType = !expandedForDiabetesType
@@ -644,7 +686,12 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                             )
                             HorizontalDivider()
                             DropdownMenuItem(
-                                text = { androidx.compose.material3.Text("모름") },
+                                text = {
+                                    Text(
+                                        text = "모름",
+                                        fontSize = 20.sp
+                                    )
+                                },
                                 onClick = {
                                     diabetesType.value = "모름"
                                     expandedForDiabetesType = !expandedForDiabetesType
@@ -654,12 +701,13 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                     }
 
 //                    Spacer(modifier = Modifier.height(120.dp))
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(15.dp))
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                            .padding(start = 50.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 65.dp)
                     ) {
                         Text(
                             text = "목표 혈당 범위",
@@ -793,21 +841,20 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
 
                     Row(
                         modifier = Modifier.fillMaxWidth()
-                            .padding(horizontal = 50.dp)
-                            .padding(top = 10.dp)
+                            .padding(top = 15.dp)
+                            .padding(horizontal = 40.dp),
                     ) {
                         Text(
                             text = "일반적인 목표 혈당범위는 80~150mg/dL이며, 식후 최대 혈당은 180 mg/dL 미만으로 권장됩니다.",
-                            fontSize = 13.sp,
+                            fontSize = 14.sp,
                             color = Color.Gray
                         )
                     }
 
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(70.dp)
-                            .padding(top = 10.dp)
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.BottomCenter
                     ) {
                         Image(
                             painter = painterResource(R.drawable.btn_save),
