@@ -2,7 +2,9 @@ package kr.co.uxn.agms_p
 
 import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -26,10 +28,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.model.UpdateAvailability
+import com.meticha.permissions_compose.CustomSettingsUI
+import com.meticha.permissions_compose.PermissionManagerConfig
+import com.meticha.permissions_compose.PermissionState
+import com.meticha.permissions_compose.rememberAppPermissionState
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.AlwaysService
+import kr.co.uxn.agms_p.ui.components.CustomRationaleDialog
+import kr.co.uxn.agms_p.ui.components.CustomSettingsDialog
 import kr.co.uxn.agms_p.ui.theme.AGMSPTheme
 import kr.co.uxn.agms_p.ui.components.login.LoginScreen
 import kr.co.uxn.agms_p.ui.components.login.PassWordResetScreen
@@ -89,7 +97,21 @@ class MainActivity : ComponentActivity() {
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = true
 
-
+//        PermissionManagerConfig.setCustomRationaleUI { permission, onDismiss, onConfirm ->
+//            CustomRationaleDialog(
+//                description = permission.description,
+//                onDismiss = onDismiss,
+//                onConfirm = onConfirm
+//            )
+//        }
+//
+//        PermissionManagerConfig.setCustomSettingsUI { permission, onDismiss, onConfirm ->
+//            CustomSettingsDialog(
+//                description = permission.description,
+//                onDismiss = onDismiss,
+//                onConfirm = onConfirm
+//            )
+//        }
 
         setContent {
             AGMSPTheme {
@@ -220,7 +242,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 composable("GuideScreen1") { backStackEntry ->
-                    GuideScreen1(navController)
+                    GuideScreen1(navController, this@MainActivity)
                 }
 
                 composable("GuideScreen2") { backStackEntry ->

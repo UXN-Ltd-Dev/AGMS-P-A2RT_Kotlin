@@ -1,5 +1,11 @@
 package kr.co.uxn.agms_p.ui.components.ready
 
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.PowerManager
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -20,9 +26,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -39,7 +47,30 @@ import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 
 @Composable
-fun GuideScreen1(navController: NavController) {
+fun GuideScreen1(
+    navController: NavController,
+    activity: Activity
+) {
+
+    val context = LocalContext.current
+    val activityContext = context as Activity
+
+    fun checkIgnoringBatteryOptimizations(activity: Activity): Boolean {
+        val pm = activity.getSystemService(Context.POWER_SERVICE) as PowerManager
+        return pm.isIgnoringBatteryOptimizations(activity.packageName)
+    }
+
+
+    LaunchedEffect(Unit) {
+        if(!checkIgnoringBatteryOptimizations(activityContext)) {
+            val intent =
+                Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                    data = Uri.parse("package:${activity.packageName}")
+                }
+            activityContext.startActivity(intent)
+        }
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -113,7 +144,8 @@ fun GuideScreen1(navController: NavController) {
                 Image(
                     painter = painterResource(R.drawable.btn_next),
                     contentDescription = "다음 버튼",
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier
+                        .align(Alignment.Center)
                         .clickable {
                             navController.navigate("GuideScreen2")
                         }

@@ -2,17 +2,14 @@ package kr.co.uxn.agms_p.ui.components.ready
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,160 +21,130 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import com.meticha.permissions_compose.AppPermission
+import com.meticha.permissions_compose.rememberAppPermissionState
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
-import kr.co.uxn.agms_p.api.RetrofitClient.emptyRetrofit
-import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
-import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignInNormal
-import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignUpNormal
-import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignUpOauthDetail
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ui.viewmodel.PermissionViewModel
 
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SettingPermissionScreen(
     navController: NavController,
     viewModel: PermissionViewModel,
     activity: Activity,
-    type : Int
+    type: Int
 ) {
-//    var timerWhenScan: Timer? = null
+
     val context = LocalContext.current
     val activityContext = context as Activity
     val isGrant by viewModel.isGrant.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
 
-    var showSettingsDialog by remember { mutableStateOf(false) }
-    val permissionStatuses = remember { mutableStateMapOf<String, Boolean>() }
-    var isPermissionRequestInProgress by remember { mutableStateOf(false) }
-
-    // SDK 버전에 따른 권한 배열 구성
+    // meticha
     val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        listOf(
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.BLUETOOTH_SCAN,
-            Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.POST_NOTIFICATIONS,
-            Manifest.permission.SCHEDULE_EXACT_ALARM,
-            Manifest.permission.USE_EXACT_ALARM
+        rememberAppPermissionState(
+            permissions = listOf(
+                AppPermission(
+                    permission = Manifest.permission.ACCESS_FINE_LOCATION,
+                    description = "BLE 연결을 위해 위치 권한을 허용해 주세요.",
+                    isRequired = true
+                ),
+                AppPermission(
+                    permission = Manifest.permission.BLUETOOTH_SCAN,
+                    description = "BLE 사용을 위해 근처 기기 권한을 허용해 주세요.",
+                    isRequired = true
+                ),
+                AppPermission(
+                    permission = Manifest.permission.BLUETOOTH_CONNECT,
+                    description = "BLE 권한을 허용해 주세요",
+                    isRequired = true
+                ),
+                AppPermission(
+                    permission = Manifest.permission.POST_NOTIFICATIONS,
+                    description = "알림 메시지 전송을 위해 권한을 허용해 주세요.",
+                    isRequired = true
+                ),
+//                AppPermission(
+//                    permission = Manifest.permission.SCHEDULE_EXACT_ALARM,
+//                    description = "SCHEDULE_EXACT_ALARM 허용해주세요.",
+//                    isRequired = true
+//                ),
+//                AppPermission(
+//                    permission = Manifest.permission.USE_EXACT_ALARM,
+//                    description = "USE_EXACT_ALARM 허용해주세요",
+//                    isRequired = true
+//                ),
+                AppPermission(
+                    permission = Manifest.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE,
+                    description = "FOREGROUND_SERVICE_CONNECTED_DEVICE 허용해 주세요",
+                    isRequired = true
+                ),
+                AppPermission(
+                    permission = Manifest.permission.FOREGROUND_SERVICE,
+                    description = "FOREGROUND_SERVICE 허용해 주세요",
+                    isRequired = true
+                )
+            )
         )
     } else {
-        listOf(
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
+        rememberAppPermissionState(
+            permissions = listOf(
+                AppPermission(
+                    permission = Manifest.permission.ACCESS_FINE_LOCATION,
+                    description = "BLE 사용을 위해 권한을 요청합니다.",
+                    isRequired = true
+                ),
+                AppPermission(
+                    permission = Manifest.permission.ACCESS_COARSE_LOCATION,
+                    description = "BLE 사용을 위해 권한을 요청합니다.",
+                    isRequired = false
+                ),
+                AppPermission(
+                    permission = Manifest.permission.BLUETOOTH_SCAN,
+                    description = "BLUETOOTH_SCAN을 요청합니다.",
+                    isRequired = false
+                ),
+                AppPermission(
+                    permission = Manifest.permission.BLUETOOTH_CONNECT,
+                    description = "BLUETOOTH_CONNECT권한을 요청합니다.",
+                    isRequired = false
+                )
+            )
         )
     }
 
-    val test = rememberMultiplePermissionsState(
-        permissions = permissions
-    )
-
-    // 권한 요청 런처
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { result ->
-        Log.d("PERMISSION", "permissionLauncher 호출")
-
-//        isPermissionRequestInProgress = false
-        result.forEach { (permission, isGranted) ->
-            permissionStatuses[permission] = isGranted
-        }
-
-        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-            data = Uri.parse("package:${activity.packageName}")
-        }
-        activityContext.startActivity(intent)
-
-        if (permissions.any { !permissionStatuses[it]!! && !ActivityCompat.shouldShowRequestPermissionRationale(context as Activity, it) }) {
-            showSettingsDialog = true
-        }
-
-    }
-
-    fun openAppSettings(activity: Activity) {
-        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-            Log.e("TEST", "TEST : ${activity.packageName}")
-            data = Uri.fromParts("package", activity.packageName, null)
-        }
-        activityContext.startActivity(intent)
-    }
-
     LaunchedEffect(Unit) {
-        permissions.forEach { permission ->
-            permissionStatuses[permission] = ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
-        }
+        while (true) {
+            if (permissions.allRequiredGranted() && !isGrant) {
+                navController.navigate("GuideScreen1")
+                Log.d("TEST", "모든 권한 허용됨!")
+                viewModel.changeGrantState(true)
 
-    }
-
-    LaunchedEffect(Unit) {
-        while(true) {
-            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                data = Uri.parse("package:${activity.packageName}")
             }
-            activityContext.startActivity(intent)
-            test.launchMultiplePermissionRequest()
-            delay(1000)
+            delay(500)
         }
     }
 
     LaunchedEffect(Unit) {
         DataStoreManager.deleteType()
         DataStoreManager.saveType(type)
-    }
-
-    // Show dialog if "Don't Ask Again" was selected
-    if (showSettingsDialog) {
-        AlertDialog(
-            onDismissRequest = { showSettingsDialog = false },
-            title = { Text("Permissions Required") },
-            text = { Text("Some permissions are permanently denied. Please enable them from app settings.") },
-            confirmButton = {
-                Button(onClick = {
-                    showSettingsDialog = false
-                    openAppSettings(context)
-                }) {
-                    Text("Open Settings")
-                }
-            },
-            dismissButton = {
-                Button(onClick = {
-                    showSettingsDialog = false
-                }) {
-                    Text("Cancel")
-                }
-            }
-        )
     }
 
     Surface {
@@ -240,7 +207,7 @@ fun SettingPermissionScreen(
                         text = "근처 기기(필수)"
                     )
                     Text(
-                        text = "근처기기 연결, 상대적 위치 파악",
+                        text = "근처 기기 연결, 상대적 위치 파악",
                         fontSize = 13.sp,
                         color = Color.Gray
                     )
@@ -260,7 +227,7 @@ fun SettingPermissionScreen(
                 Spacer(modifier = Modifier.width(15.dp))
                 Column() {
                     Text(
-                        text = "배터리 사용화 최적화 중지(필수)"
+                        text = "배터리 사용량 최적화 중지(필수)"
                     )
                     Text(
                         text = "백그라운드 배터리 사용량 제한",
@@ -279,39 +246,21 @@ fun SettingPermissionScreen(
                     .height(50.dp)
             ) {
                 Image(
-                    painter = painterResource(R.drawable.btn_confirm),
-                    contentDescription = "확인 버튼",
                     modifier = Modifier
                         .align(Alignment.Center)
                         .clickable {
-//                            test.launchMultiplePermissionRequest()
-                            when {
-                                test.allPermissionsGranted -> {
-                                    // 권한이 허용됨
-                                    navController.navigate("GuideScreen1")
-                                    Log.d("TEST", "1")
+                            val intent =
+                                Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                                    data = Uri.parse("package:${activity.packageName}")
                                 }
-                                test.shouldShowRationale -> {
-                                    // 권한이 거부됨
-                                    openAppSettings(activity)
-                                    Log.d("TEST", "2")
-                                }
-                                else -> {
-                                    // 권한이 요청됨
-                                    navController.navigate("GuideScreen1")
-//                                    test.launchMultiplePermissionRequest()
-                                    Log.d("TEST", "3")
-
-                                    test.revokedPermissions.forEach {
-                                        Log.d("TEST", "Revoked permission : ${it.permission}")
-                                    }
-
-                                    test.permissions.forEach {
-                                        Log.d("TEST", "granted Permissions : ${it.permission}")
-                                    }
-                                }
+                            activityContext.startActivity(intent)
+                            if (permissions.allRequiredGranted()) {
+                                navController.navigate("GuideScreen1")
                             }
-                        }
+                            permissions.requestPermission()
+                        },
+                    painter = painterResource(R.drawable.btn_confirm),
+                    contentDescription = "확인 버튼",
                 )
             }
         }

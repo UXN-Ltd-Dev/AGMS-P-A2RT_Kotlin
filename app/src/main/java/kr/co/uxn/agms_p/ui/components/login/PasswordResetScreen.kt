@@ -1,5 +1,7 @@
 package kr.co.uxn.agms_p.ui.components.login
 
+import android.Manifest
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -59,6 +61,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.meticha.permissions_compose.AppPermission
+import com.meticha.permissions_compose.rememberAppPermissionState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
@@ -107,6 +111,7 @@ fun PassWordResetScreen(navController: NavController) {
             isTimerRunning.value = false
         }
     }
+
 
     Surface(
         modifier = Modifier

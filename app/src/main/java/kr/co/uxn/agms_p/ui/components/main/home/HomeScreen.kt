@@ -985,7 +985,7 @@ fun HomeScreen(
                 ) {
 
                     Text(
-                        text = "센서 정보",
+                        text = "남은 사용 기간",
                         fontSize = fontSize,
                         fontWeight = FontWeight.Bold,
                     )
@@ -1028,22 +1028,8 @@ fun HomeScreen(
                         .padding(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    if ((10 - day + 1) < 11) {
-                        Text(
-//                        text = "${10 - day + 1}/10일",
-                            text = "${14 - day + 1}/14일",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    } else {
-                        Text(
-//                        text = "10/10일",
-                            text = "14/14일",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
 
+                    Spacer(modifier = Modifier.weight(1f))
                     if (day - 1 > 0) {
                         Text(
                             text = "${day - 1}일 남았어요",
@@ -1062,7 +1048,6 @@ fun HomeScreen(
         }
     }
 }
-
 
 @Composable
 fun RadioButtonSingleSelection(

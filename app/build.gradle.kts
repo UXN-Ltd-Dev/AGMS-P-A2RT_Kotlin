@@ -211,9 +211,7 @@ dependencies {
     // 앱 업데이트 확인
     implementation("com.google.android.play:app-update-ktx:2.1.0")
 
-    // 권한
-    implementation ("com.google.accompanist:accompanist-permissions:0.32.0")
-
     // 권한 meticha 라이브러리
     implementation(libs.permissions.compose)
+
 }
