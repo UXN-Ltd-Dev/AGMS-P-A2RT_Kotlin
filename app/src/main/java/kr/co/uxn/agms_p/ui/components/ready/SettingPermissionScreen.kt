@@ -57,8 +57,71 @@ fun SettingPermissionScreen(
     val isGrant by viewModel.isGrant.collectAsState()
     val coroutineScope = rememberCoroutineScope()
 
+    // SDK 버전에 따른 권한 배열 구성
+//    val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+//        arrayOf(
+//            Manifest.permission.ACCESS_FINE_LOCATION,
+//            Manifest.permission.BLUETOOTH_SCAN,
+//            Manifest.permission.BLUETOOTH_CONNECT,
+//            Manifest.permission.POST_NOTIFICATIONS,
+//            Manifest.permission.SCHEDULE_EXACT_ALARM,
+//            Manifest.permission.USE_EXACT_ALARM
+//        )
+//    } else {
+//        arrayOf(
+//            Manifest.permission.ACCESS_FINE_LOCATION,
+//            Manifest.permission.ACCESS_COARSE_LOCATION
+//        )
+//    }
+
     // meticha
-    val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+    val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        rememberAppPermissionState(
+            permissions = listOf(
+                AppPermission(
+                    permission = Manifest.permission.ACCESS_FINE_LOCATION,
+                    description = "BLE 연결을 위해 위치 권한을 허용해 주세요.",
+                    isRequired = true
+                ),
+                AppPermission(
+                    permission = Manifest.permission.BLUETOOTH_SCAN,
+                    description = "BLE 사용을 위해 근처 기기 권한을 허용해 주세요.",
+                    isRequired = true
+                ),
+                AppPermission(
+                    permission = Manifest.permission.BLUETOOTH_CONNECT,
+                    description = "BLE 권한을 허용해 주세요",
+                    isRequired = true
+                ),
+                AppPermission(
+                    permission = Manifest.permission.POST_NOTIFICATIONS,
+                    description = "알림 메시지 전송을 위해 권한을 허용해 주세요.",
+                    isRequired = true
+                ),
+//                AppPermission(
+//                    permission = Manifest.permission.SCHEDULE_EXACT_ALARM,
+//                    description = "SCHEDULE_EXACT_ALARM 허용해주세요.",
+//                    isRequired = true
+//                ),
+//                AppPermission(
+//                    permission = Manifest.permission.USE_EXACT_ALARM,
+//                    description = "USE_EXACT_ALARM 허용해주세요",
+//                    isRequired = true
+//                ),
+
+                AppPermission(
+                    permission = Manifest.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE,
+                    description = "FOREGROUND_SERVICE_CONNECTED_DEVICE 허용해 주세요",
+                    isRequired = true
+                ),
+                AppPermission(
+                    permission = Manifest.permission.FOREGROUND_SERVICE,
+                    description = "FOREGROUND_SERVICE 허용해 주세요",
+                    isRequired = true
+                )
+            )
+        )
+    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
         rememberAppPermissionState(
             permissions = listOf(
                 AppPermission(
@@ -92,10 +155,49 @@ fun SettingPermissionScreen(
 //                    isRequired = true
 //                ),
                 AppPermission(
-                    permission = Manifest.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE,
-                    description = "FOREGROUND_SERVICE_CONNECTED_DEVICE 허용해 주세요",
+                    permission = Manifest.permission.FOREGROUND_SERVICE,
+                    description = "FOREGROUND_SERVICE 허용해 주세요",
+                    isRequired = true
+                )
+            )
+        )
+    }
+
+
+
+    else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        rememberAppPermissionState(
+            permissions = listOf(
+                AppPermission(
+                    permission = Manifest.permission.ACCESS_FINE_LOCATION,
+                    description = "BLE 연결을 위해 위치 권한을 허용해 주세요.",
                     isRequired = true
                 ),
+                AppPermission(
+                    permission = Manifest.permission.BLUETOOTH_SCAN,
+                    description = "BLE 사용을 위해 근처 기기 권한을 허용해 주세요.",
+                    isRequired = true
+                ),
+                AppPermission(
+                    permission = Manifest.permission.BLUETOOTH_CONNECT,
+                    description = "BLE 권한을 허용해 주세요",
+                    isRequired = true
+                ),
+//                AppPermission(
+//                    permission = Manifest.permission.POST_NOTIFICATIONS,
+//                    description = "알림 메시지 전송을 위해 권한을 허용해 주세요.",
+//                    isRequired = true
+//                ),
+//                AppPermission(
+//                    permission = Manifest.permission.SCHEDULE_EXACT_ALARM,
+//                    description = "SCHEDULE_EXACT_ALARM 허용해주세요.",
+//                    isRequired = true
+//                ),
+//                AppPermission(
+//                    permission = Manifest.permission.USE_EXACT_ALARM,
+//                    description = "USE_EXACT_ALARM 허용해주세요",
+//                    isRequired = true
+//                ),
                 AppPermission(
                     permission = Manifest.permission.FOREGROUND_SERVICE,
                     description = "FOREGROUND_SERVICE 허용해 주세요",
@@ -103,6 +205,8 @@ fun SettingPermissionScreen(
                 )
             )
         )
+
+
     } else {
         rememberAppPermissionState(
             permissions = listOf(
@@ -116,16 +220,16 @@ fun SettingPermissionScreen(
                     description = "BLE 사용을 위해 권한을 요청합니다.",
                     isRequired = false
                 ),
-                AppPermission(
-                    permission = Manifest.permission.BLUETOOTH_SCAN,
-                    description = "BLUETOOTH_SCAN을 요청합니다.",
-                    isRequired = false
-                ),
-                AppPermission(
-                    permission = Manifest.permission.BLUETOOTH_CONNECT,
-                    description = "BLUETOOTH_CONNECT권한을 요청합니다.",
-                    isRequired = false
-                )
+//                AppPermission(
+//                    permission = Manifest.permission.BLUETOOTH_SCAN,
+//                    description = "BLUETOOTH_SCAN을 요청합니다.",
+//                    isRequired = false
+//                ),
+//                AppPermission(
+//                    permission = Manifest.permission.BLUETOOTH_CONNECT,
+//                    description = "BLUETOOTH_CONNECT권한을 요청합니다.",
+//                    isRequired = false
+//                )
             )
         )
     }
@@ -258,6 +362,7 @@ fun SettingPermissionScreen(
                                 navController.navigate("GuideScreen1")
                             }
                             permissions.requestPermission()
+                            Log.d("TEST", "요구된 권한은 : ")
                         },
                     painter = painterResource(R.drawable.btn_confirm),
                     contentDescription = "확인 버튼",
