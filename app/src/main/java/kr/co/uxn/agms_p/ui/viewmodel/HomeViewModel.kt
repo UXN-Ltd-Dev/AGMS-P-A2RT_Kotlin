@@ -19,7 +19,8 @@ class HomeViewModel : ViewModel() {
     var hour: Int = 0
 
     val DAY_MILLISECONDS: Long = 1000 * 60 * 60 * 24 // 1일
-    val HOUR_MILLISECONDS: Long = 1000 * 60 * 60     // 1시간
+//    val HOUR_MILLISECONDS: Long = 1000 * 60 * 60     // 1시간
+    val HOUR_MILLISECONDS: Long = 1000 * 60 * 30     // 30분
 
     private val _day = MutableStateFlow(14)  // 시연용
     //    private val _day = MutableStateFlow(0) // 실제

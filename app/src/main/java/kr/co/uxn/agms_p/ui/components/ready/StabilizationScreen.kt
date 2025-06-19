@@ -277,12 +277,12 @@ fun sendNotification(context: Context, title: String, message: String, notificat
 
 
     val notification = NotificationCompat.Builder(context, channelId)
-        .setOngoing(true)
+        .setOngoing(false)
+        .setAutoCancel(true)
         .setContentTitle(title)
         .setContentText(message)
         .setPriority(NotificationCompat.PRIORITY_HIGH)
         .setSmallIcon(R.mipmap.ic_launcher_round)
         .build()
-
     NotificationManagerCompat.from(context).notify(notificationId, notification)
 }

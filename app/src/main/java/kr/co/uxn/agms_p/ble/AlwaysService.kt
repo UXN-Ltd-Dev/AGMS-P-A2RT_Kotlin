@@ -50,6 +50,7 @@ import java.util.Locale
 import java.util.Timer
 import java.util.TimerTask
 import java.time.Duration
+import java.time.LocalDate
 import kotlin.math.abs
 
 class AlwaysService() : Service() {
@@ -74,7 +75,8 @@ class AlwaysService() : Service() {
     private var timerForNoti: Timer? = null
     private var timerTaskForNoti: TimerTask? = null
 
-    val NOTI_CHANNEL_ID: String = "NOTI_CHANNEL"
+//    val NOTI_CHANNEL_ID: String = "NOTI_CHANNEL"
+    val NOTI_CHANNEL_ID: String = "NOTI_CHANNEL_ID"
     val NOTI_CHANNEL_NAME: String = "FOREGROUND"
     val NOTI_ID: Int = 94
 
@@ -322,29 +324,35 @@ class AlwaysService() : Service() {
                         }
 
                         // 혈당값 매일 입력 알림
-                        val calibrationTime = DataStoreManager.getDailyCalibrationTime().first() ?: ""
-                        Log.d("CALI", "calibrationTime is : ${calibrationTime}")
-                        if (calibrationTime != "") {
-                            // a hh:mm 형태의 스트링 값을 현재 시간과 비교후 오차 간격 10분 이내면 알림 울림
-                            val formatter = DateTimeFormatter.ofPattern("a hh:mm", Locale.KOREAN)
-                            val targetTime = LocalTime.parse(calibrationTime, formatter)
+                        val isDailyCalibration = DataStoreManager.getNotiCalibration().first() ?: true
+                        val dailyCalibrationLastTime = DataStoreManager.getDailyCalibrationLastTime().first() ?: ""
+                        val today = LocalDate.now(ZoneId.of("Asia/Seoul")).toString()
+                        if (isDailyCalibration && dailyCalibrationLastTime != today) {
+                            val calibrationTime = DataStoreManager.getDailyCalibrationTime().first() ?: ""
+                            Log.d("CALI", "calibrationTime is : ${calibrationTime}")
+                            if (calibrationTime != "") {
+                                // a hh:mm 형태의 스트링 값을 현재 시간과 비교후 오차 간격 10분 이내면 알림 울림
+                                val formatter = DateTimeFormatter.ofPattern("a hh:mm", Locale.KOREAN)
+                                val targetTime = LocalTime.parse(calibrationTime, formatter)
 
-                            Log.d("CALI", "targetTime is : ${targetTime}")
+                                Log.d("CALI", "targetTime is : ${targetTime}")
 
-                            val nowTime = LocalTime.now(ZoneId.of("Asia/Seoul"))
-                            Log.d("CALI", "nowTime is : ${nowTime}")
+                                val nowTime = LocalTime.now(ZoneId.of("Asia/Seoul"))
+                                Log.d("CALI", "nowTime is : ${nowTime}")
 
-                            val diff = Duration.between(targetTime, nowTime).toMinutes().let { abs(it) }
-                            Log.d("CALI", "diff is : ${diff}")
+                                val diff = Duration.between(targetTime, nowTime).toMinutes().let { abs(it) }
+                                Log.d("CALI", "diff is : ${diff}")
 
-                            if (diff <= 1) {
-                                Log.d("CALI", "3분 이내! 알림 실행 diff : ${diff}")
-                                sendNotification(baseContext, "혈당 입력 시간입니다", "오늘의 혈당을 입력해주세요", 93)
-                                BleBridge.showCaliDialog(true)
-                            } else {
-                                Log.d("CALI", "캘리 알림 범위 아님 : ${diff}")
+                                if (diff <= 3) {
+                                    Log.d("CALI", "3분 이내! 알림 실행 diff : ${diff}")
+                                    sendNotification(baseContext, "혈당 입력 시간입니다", "오늘의 혈당을 입력해주세요", 93)
+                                    BleBridge.showCaliDialog(true)
+                                } else {
+                                    Log.d("CALI", "캘리 알림 범위 아님 : ${diff}")
+                                }
                             }
                         }
+
 
                         // 혈당 불러오기 (new)
                         val userValueList = localDbRepository?.dataDao()?.getListAfterLastTime(userId, 0)
@@ -542,8 +550,6 @@ class AlwaysService() : Service() {
 //                            android.os.Process.killProcess(android.os.Process.myPid())
 //                            exitProcess(0)
                         }
-
-
                         delay(1000 * 60 * 1)
 //                        delay(1000 * 1 * 5)
                     } catch (e: Exception) {
@@ -589,15 +595,14 @@ class AlwaysService() : Service() {
             notificationManager.createNotificationChannel(channel)
         }
 
-
-        val notification = NotificationCompat.Builder(context, NOTI_CHANNEL_ID)
-            .setOngoing(true)
+        val notification = NotificationCompat.Builder(context, channelId)
+            .setOngoing(false)
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setSmallIcon(R.mipmap.ic_launcher_round)
             .build()
-        NotificationManagerCompat.from(baseContext).notify(notificationId, notification)
+        NotificationManagerCompat.from(context).notify(notificationId, notification)
     }
 
     inner class LocalBinder : Binder() {

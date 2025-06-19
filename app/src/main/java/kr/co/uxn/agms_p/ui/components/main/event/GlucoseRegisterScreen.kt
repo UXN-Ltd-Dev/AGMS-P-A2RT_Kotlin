@@ -59,11 +59,18 @@ import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEventData
 import kr.co.uxn.agms_p.api.token.DataStoreManager
+import kr.co.uxn.agms_p.ble.BleBridge
 import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.room.UserCalibration
 import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
+import java.time.Duration
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Locale
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -264,6 +271,31 @@ fun GlucoseRegisterScreen(
                                                             UserCalibration(userId = userId, createdAt = newParsedTime, glucoseValue = glucoseDataFromUser.value.toDouble())
                                                         )
 
+                                                        val calibrationTime = DataStoreManager.getDailyCalibrationTime().first() ?: ""
+                                                        Log.d("GlucoseRegisterScreen", "calibrationTime is : ${calibrationTime}")
+
+
+                                                        val formatter = DateTimeFormatter.ofPattern("a hh:mm", Locale.KOREAN)
+                                                        val targetTime = LocalTime.parse(calibrationTime, formatter)
+
+                                                        Log.d("GlucoseRegisterScreen", "targetTime is : ${targetTime}")
+
+                                                        val nowTime = LocalTime.now(ZoneId.of("Asia/Seoul"))
+                                                        Log.d("GlucoseRegisterScreen", "nowTime is : ${nowTime}")
+
+                                                        val diff = Duration.between(targetTime, nowTime).toMinutes().let { abs(it) }
+                                                        Log.d("GlucoseRegisterScreen", "diff is : ${diff}")
+
+                                                        if (diff <= 3) {
+
+                                                            val today = LocalDate.now(ZoneId.of("Asia/Seoul")).toString()
+                                                            Log.d("GlucoseRegisterScreen", "today is : ${today}")
+
+                                                            DataStoreManager.setDailyCalibrationLastTime(today)
+
+                                                        } else {
+                                                            Log.d("GlucoseRegisterScreen", "캘리 알림 범위 아님 : ${diff}")
+                                                        }
 
                                                         withContext(Dispatchers.Main) {
                                                             val image =

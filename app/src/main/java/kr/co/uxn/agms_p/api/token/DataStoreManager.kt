@@ -46,6 +46,7 @@ object DataStoreManager {
     private val TARGET_LOW_GLUCOSE = intPreferencesKey("target_low_glucose")
     private val DAILY_CALIBRATION_TIME = stringPreferencesKey("daily_calibration_time")
     private val LANDSCAPE_MODE = booleanPreferencesKey("landscape_mode")
+    private val DAILY_LAST_CALIBRATION_TIME = stringPreferencesKey("daily_calibration_time")
 
     fun init(context: Context) {
         dataStore = PreferenceDataStoreFactory.create {
@@ -316,7 +317,7 @@ object DataStoreManager {
     }
 
     fun getNotiCalibration(): Flow<Boolean?> {
-        return dataStore.data.map { prefs ->
+        return notiStore.data.map { prefs ->
             prefs[NOTI_CALIBRATION]
         }
     }
@@ -336,6 +337,12 @@ object DataStoreManager {
     fun getDailyCalibrationTime(): Flow<String?> {
         return notiStore.data.map { prefs ->
             prefs[DAILY_CALIBRATION_TIME]
+        }
+    }
+
+    fun getDailyCalibrationLastTime(): Flow<String?> {
+        return notiStore.data.map { prefs ->
+            prefs[DAILY_LAST_CALIBRATION_TIME]
         }
     }
 
@@ -395,6 +402,12 @@ object DataStoreManager {
     suspend fun setDailyCalibrationTime(time: String) {
         notiStore.edit { prefs ->
             prefs[DAILY_CALIBRATION_TIME] = time
+        }
+    }
+
+    suspend fun setDailyCalibrationLastTime(time: String) {
+        notiStore.edit { prefs ->
+            prefs[DAILY_LAST_CALIBRATION_TIME] = time
         }
     }
 
