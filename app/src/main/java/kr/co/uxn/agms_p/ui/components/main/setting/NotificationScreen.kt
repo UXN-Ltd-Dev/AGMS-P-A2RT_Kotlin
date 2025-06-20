@@ -158,9 +158,7 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
             }
         ) {
             TimeInput(state = state)
-
         }
-
     }
 
     if (showGlucoseDialog.value) {

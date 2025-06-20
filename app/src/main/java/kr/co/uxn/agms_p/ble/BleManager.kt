@@ -123,19 +123,19 @@ class BleManager(
                 Log.e("gatt", "gatt disconnected!!!")
 
                 // 끊김 알림
-//                CoroutineScope(Dispatchers.IO).launch {
-//                    val isShowBleNoti = DataStoreManager.getNotiLostSignal().first() ?: false
-//                    Log.e("BLE", "BLE 연결 끊김 알림 DS로부터 불러온 설정값 : $isShowBleNoti")
-//                    if (isShowBleNoti) {
-//                        withContext(Dispatchers.Main) {
-//                            sendNotification(context, "센서와의 연결이 일시적으로 끊어졌어요",
-//                                "",
-//                                89
-//                            )
-//                            BleBridge.showBleConnectDialog(true )
-//                        }
-//                    }
-//                }
+                CoroutineScope(Dispatchers.IO).launch {
+                    val isShowBleNoti = DataStoreManager.getNotiLostSignal().first() ?: false
+                    Log.e("BLE", "BLE 연결 끊김 알림 DS로부터 불러온 설정값 : $isShowBleNoti")
+                    if (isShowBleNoti) {
+                        withContext(Dispatchers.Main) {
+                            sendNotification(context, "센서와의 연결이 일시적으로 끊어졌어요",
+                                "",
+                                89
+                            )
+                            BleBridge.showBleConnectDialog(true)
+                        }
+                    }
+                }
 
                 // BleBridege에 Disconnected 상태 전송
                 BleBridge.updateState(BleConnectionState.DISCONNECTED)
@@ -551,7 +551,6 @@ class BleManager(
         Log.d(TEST, "temperature : $temperature")
 
         // weo1, weo2
-
         val findBufferWeoCount: Int = (data.size - 18) / 6
         Log.d(TEST, "findBufferWeoCount : $findBufferWeoCount")
         Log.d(TEST, "nDataLength : $nDataLength")
@@ -746,7 +745,7 @@ class BleManager(
 
 
         val notification = NotificationCompat.Builder(context, channelId)
-            .setOngoing(true)
+            .setOngoing(false)
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
