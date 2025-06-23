@@ -1,6 +1,7 @@
 package kr.co.uxn.agms_p.ui.components.main.setting
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -925,6 +926,15 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                                             }
                                         } catch (e: Exception) {
                                             Log.e("TEST", "네트워크 에러 발생 : ${e.message}")
+
+                                            if(!e.message.isNullOrEmpty()) {
+                                                if(e.message!!.contains("For input string")) {
+                                                 Log.d("TEST", "입력 문구 확인")
+                                                    coroutineScope.launch(Dispatchers.Main) {
+                                                        Toast.makeText(context, "빈 값이 있습니다.\n모든 정보를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
