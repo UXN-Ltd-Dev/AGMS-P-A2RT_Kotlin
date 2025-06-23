@@ -234,7 +234,7 @@ class AlwaysService() : Service() {
                     try {
                         Log.e("SERVICE", "서비스 내 코루틴 실행")
 
-                        // 액세스토큰 변경 테스트
+                        // 액세스 토큰 변경 테스트
 //                        Log.d("TEST" , "현재 액세스 토큰 : ${DataStoreManager.getAccessToken().first()?:"비어잇음"}")
 
                         wl.acquire(1000 * 75) // 75초
@@ -250,7 +250,7 @@ class AlwaysService() : Service() {
                                     val userId2 = DataStoreManager.getUserId().first() ?: -1
                                     val localDBDataList = localDbRepository?.dataDao()?.getListAfterLastTime(userId = userId2, lastTime = 0)
 
-                                    Log.e("TEST", "DB로부터 가져온 리스트 : ${localDBDataList}")
+                                    Log.e("TEST", "DB 로부터 가져온 리스트 : ${localDBDataList}")
 
                                     val sendDataList = localDBDataList?.map {
                                         RequestDataValue(
@@ -267,18 +267,16 @@ class AlwaysService() : Service() {
                                         if (sendData.isSuccessful) {
                                             val sendDataBody = sendData.body()
                                             if (sendDataBody != null) {
-                                                Log.e("TEST", "SendDataBody : ${sendDataBody.toString()}")
+                                                Log.d("TEST", "SendDataBody : ${sendDataBody.toString()}")
                                             }
                                         } else {
-                                            Log.e(
+                                            Log.d(
                                                 "TEST",
                                                 "SendData API통신 실패 : ${sendData.errorBody()?.string()}"
                                             )
                                         }
                                     }
-
                                 } else {
-
                                     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                                     val convertToLocalDateTime = LocalDateTime.parse(lastTimeBody.recentTime, formatter)
                                     val zoneId = ZoneId.of("Asia/Seoul") // 타임존 설정 (필수!)
@@ -288,7 +286,7 @@ class AlwaysService() : Service() {
 
                                     val localDBDataList = localDbRepository?.dataDao()?.getListAfterLastTime(userId = userId2, lastTime = parsedLongTime)
 
-                                    Log.e("TEST", "DB로부터 가져온 리스트 : ${localDBDataList}")
+                                    Log.d("TEST", "DB로부터 가져온 리스트 : ${localDBDataList}")
 
                                     val sendDataList = localDBDataList?.map {
                                         RequestDataValue(
@@ -305,10 +303,10 @@ class AlwaysService() : Service() {
                                         if (sendData.isSuccessful) {
                                             val sendDataBody = sendData.body()
                                             if (sendDataBody != null) {
-                                                Log.e("TEST", "SendDataBody : ${sendDataBody.toString()}")
+                                                Log.d("TEST", "SendDataBody : ${sendDataBody.toString()}")
                                             }
                                         } else {
-                                            Log.e(
+                                            Log.d(
                                                 "TEST",
                                                 "SendData API통신 실패 : ${sendData.errorBody()?.string()}"
                                             )
@@ -317,7 +315,7 @@ class AlwaysService() : Service() {
                                 }
                             }
                         } else {
-                            Log.e(
+                            Log.d(
                                 "TEST",
                                 "recent time API통신 실패 : ${lastTime.errorBody()?.string()}"
                             )
@@ -419,14 +417,13 @@ class AlwaysService() : Service() {
                             localDbRepository?.dataDao()?.insertGlucose(insertDataList)
 
                             // ui에 마지막 글루코즈 값 갱신
-                            Log.e("TEST", "glucoseList first : ${glucoseList2.first().createdAt}, last : ${glucoseList2.last().createdAt}")
+                            Log.d("TEST", "glucoseList first : ${glucoseList2.first().createdAt}, last : ${glucoseList2.last().createdAt}")
                             BleBridge.updateGlucose(glucoseList2.last().glucose)
-
 
                             val lastGlucose = glucoseList2.last().glucose
 
 
-                            // 알람을 위한 target glucose 값 불러오기
+                            // 알람을 위한 target glucose 값 불러 오기
                             val targetHigh = DataStoreManager.getTargetHighGlucose().first() ?: -1
                             val targetLow = DataStoreManager.getTargetLowGlucose().first() ?: -1
 
@@ -451,6 +448,48 @@ class AlwaysService() : Service() {
                         } else {
                             Log.d("PYTHON", "glucoseLis is empty! ${glucoseList2.size}")
                         }
+
+                        // 측정 종료 알림
+                        val zoneId = ZoneId.of("Asia/Seoul")
+                        val now = LocalDateTime.now().atZone(zoneId).toInstant().toEpochMilli()
+                        val endTime = DataStoreManager.getEndTime().first()
+
+                        val convertedNow= Instant.ofEpochMilli(now)
+                            .atZone(ZoneId.of("Asia/Seoul"))
+                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+
+                        val convertedEndTime = endTime?.let {
+                            Instant.ofEpochMilli(it)
+                                .atZone(ZoneId.of("Asia/Seoul"))
+                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                        }
+
+                        Log.d("SERVICE", "now : $convertedNow \nendTime : $convertedEndTime")
+
+                        if (endTime != null && now > endTime) {
+                            Log.d("SERVICE", "측정종료 프로세스 작동!")
+                            sendNotification(baseContext, "측정이 종료되었습니다", "앱을 확인해주세요", 94)
+                            BleBridge.showEndMeasurementDialog(true)
+//                            sendNotification(baseContext, "측정이 종료되었습니다", "앱을 확인해주세요", 94)
+//                            DataStoreManager.saveIsMain(false)
+//                            DataStoreManager.deleteRoute()
+//                            DataStoreManager.saveRoute("Splash")
+//                            Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
+//                            Log.e("TEST", "DS에 저장된 Route는${DataStoreManager.getRoute().first()}")
+//                            DataStoreManager.deleteAccessToken()
+//                            DataStoreManager.deleteRefreshToken()
+//                            DataStoreManager.deleteUserId()
+//                            DataStoreManager.deleteDeviceMac()
+//                            DataStoreManager.deleteStartTime()
+//                            DataStoreManager.deleteEndTime()
+//                            // 1. 서비스 종료
+//                            stopSelf()
+//                            // 앱 강제종료
+//                            android.os.Process.killProcess(android.os.Process.myPid())
+//                            exitProcess(0)
+                        }
+
+
 
 
                         // dummy api
@@ -511,47 +550,8 @@ class AlwaysService() : Service() {
 //                            Log.e("TEST", "glucoseList API통신 실패 : ${glucoseDummyList.errorBody()?.string()}")
 //                        }
 
-                        // 측정 종료 로직
-                        val zoneId = ZoneId.of("Asia/Seoul")
-                        val now = LocalDateTime.now().atZone(zoneId).toInstant().toEpochMilli()
-                        val endTime = DataStoreManager.getEndTime().first()
 
-                        val convertedNow= Instant.ofEpochMilli(now)
-                            .atZone(ZoneId.of("Asia/Seoul"))
-                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-
-                        val convertedEndTime = endTime?.let {
-                            Instant.ofEpochMilli(it)
-                                .atZone(ZoneId.of("Asia/Seoul"))
-                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                        }
-
-                        Log.d("SERVICE", "now : $convertedNow \nendTime : $convertedEndTime")
-
-                        if (endTime != null && now > endTime) {
-                            Log.d("SERVICE", "측정종료 프로세스 작동!")
-                            sendNotification(baseContext, "측정이 종료되었습니다", "앱을 확인해주세요", 94)
-                            BleBridge.showEndMeasurementDialog(true)
-//                            sendNotification(baseContext, "측정이 종료되었습니다", "앱을 확인해주세요", 94)
-//                            DataStoreManager.saveIsMain(false)
-//                            DataStoreManager.deleteRoute()
-//                            DataStoreManager.saveRoute("Splash")
-//                            Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
-//                            Log.e("TEST", "DS에 저장된 Route는${DataStoreManager.getRoute().first()}")
-//                            DataStoreManager.deleteAccessToken()
-//                            DataStoreManager.deleteRefreshToken()
-//                            DataStoreManager.deleteUserId()
-//                            DataStoreManager.deleteDeviceMac()
-//                            DataStoreManager.deleteStartTime()
-//                            DataStoreManager.deleteEndTime()
-//                            // 1. 서비스 종료
-//                            stopSelf()
-//                            // 앱 강제종료
-//                            android.os.Process.killProcess(android.os.Process.myPid())
-//                            exitProcess(0)
-                        }
                         delay(1000 * 60 * 1)
-//                        delay(1000 * 1 * 5)
                     } catch (e: Exception) {
                         Log.e("SERVICE", "서비스 코루틴 에러 발생 : ${e.message}")
                     } finally {

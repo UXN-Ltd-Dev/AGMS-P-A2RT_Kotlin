@@ -708,15 +708,18 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 65.dp)
+//                            .fillMaxWidth()
+//                            .padding(start = 65.dp)
+                            .padding(start = 50.dp)
                     ) {
                         Text(
                             text = "목표 혈당 범위",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium
                         )
+                        Spacer(modifier = Modifier.width(100.dp))
                     }
+
 
 
 
@@ -843,7 +846,7 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                     Row(
                         modifier = Modifier.fillMaxWidth()
                             .padding(top = 15.dp)
-                            .padding(horizontal = 40.dp),
+                            .padding(horizontal = 30.dp),
                     ) {
                         Text(
                             text = "일반적인 목표 혈당범위는 80~130mg/dL이며, 식후 최대 혈당은 180mg/dL 미만입니다.",
