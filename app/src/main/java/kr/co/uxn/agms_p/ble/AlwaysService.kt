@@ -6,12 +6,15 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
 import android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
+import android.content.IntentFilter
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
 import android.os.Binder
 import android.os.Build
@@ -38,6 +41,7 @@ import kr.co.uxn.agms_p.api.model.requestDTO.RequestDataValue
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEventListData
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.BleManager.Companion.TEST
+import kr.co.uxn.agms_p.ble.BleUtils.TAG
 import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.room.UserGlucose
 import kr.co.uxn.agms_p.room.UserValue
@@ -81,6 +85,8 @@ class AlwaysService() : Service() {
     val NOTI_ID: Int = 94
 
 //    var manager: NotificationManager? = null
+
+    private var mBluetoothStateBroadcastReceiver: BroadcastReceiver? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -129,6 +135,10 @@ class AlwaysService() : Service() {
 
             Log.e("SERVICE", "onStartCommnad에서 DS로부터 불러온 userId : $userId")
             Log.e("SERVICE", "onStartCommnad에서 DS로부터 불러온 deviceMac : $deviceMac")
+
+            // 브로드캐스트 리시버 등록
+            registerBluetoothStateBroadcastReceiver()
+
 
             val mac = deviceMac
             bleManager = BleManager.getInstance(baseContext, mac, userId, applicationContext)
@@ -608,6 +618,67 @@ class AlwaysService() : Service() {
             .build()
         NotificationManagerCompat.from(context).notify(notificationId, notification)
     }
+
+    private fun registerBluetoothStateBroadcastReceiver() {
+        if (mBluetoothStateBroadcastReceiver == null) {
+            val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+            mBluetoothStateBroadcastReceiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context, intent: Intent) {
+                    val state = intent.getIntExtra(
+                        BluetoothAdapter.EXTRA_STATE,
+                        BluetoothAdapter.STATE_OFF
+                    )
+                    handleBLEStateChanged(state)
+                }
+            }
+            registerReceiver(mBluetoothStateBroadcastReceiver, filter)
+        }
+    }
+
+    private fun handleBLEStateChanged(state: Int) {
+        when (state) {
+            // 1
+            BluetoothAdapter.STATE_TURNING_OFF -> {
+                Log.e(TAG, "BLE 비활성화 중...")
+            }
+
+            // 2
+            BluetoothAdapter.STATE_OFF -> {
+                Log.e(TAG, "BLE OFF")
+//                createBleMessageNotificationChannel(this)
+//                createBleMessageNotification(this, getString(R.string.ble_enable))
+//                RxEventBus.INSTANCE.publish(BleState(BleManager.STATE_DISCONNECTED))
+//                resetDevice()
+            }
+
+            // 3
+            BluetoothAdapter.STATE_TURNING_ON -> {
+                Log.e(TAG, "BLE 활성화 중...")
+            }
+
+            // 4
+            BluetoothAdapter.STATE_ON -> {
+                Log.e(TAG, "BLE ON!")
+//                MessagePackNot()
+//                // 2406-ykw : 어떤 이유에서인지 BLE는 계속 활성화 상태였는데 반복적으로 들어옴 -> 정상 연결을 끊음
+//                setDeviceSetting()
+//                runFirstConnect()
+            }
+
+            BluetoothAdapter.STATE_DISCONNECTED -> {
+                Log.e(TAG, "BLE 연결 종료됨")
+            }
+
+            BluetoothAdapter.STATE_CONNECTED -> {
+                Log.e(TAG, "BLE 연결됨")
+            }
+
+            else -> {
+                Log.e(TAG, "알 수 없는 BLE 상태: $state")
+            }
+        }
+    }
+
 
     inner class LocalBinder : Binder() {
         fun getService(): AlwaysService = this@AlwaysService
