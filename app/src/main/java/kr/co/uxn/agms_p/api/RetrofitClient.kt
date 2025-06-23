@@ -53,11 +53,34 @@ object RetrofitClient {
             .build()
     }
 
+    private val okHttpClient3 by lazy {
+        OkHttpClient.Builder()
+            .addInterceptor(
+                HttpLoggingInterceptor(logger = HttpLoggingInterceptor.Logger.DEFAULT).apply {
+                    level = HttpLoggingInterceptor.Level.BODY
+                }
+            )
+            .build()
+    }
+
+    private val retrofit3 by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL_SERVER)
+            .client(okHttpClient3)
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
     val emptyRetrofit: RemoteDataSource by lazy {
         retrofit.create(RemoteDataSource::class.java)
     }
 
     val tokenRetrofit: RemoteDataSource by lazy {
         retrofit2.create(RemoteDataSource::class.java)
+    }
+
+    val refreshRetrofit: RemoteDataSource by lazy {
+        retrofit3.create(RemoteDataSource::class.java)
     }
 }

@@ -38,6 +38,7 @@ import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.Query
 
 interface RemoteDataSource {
@@ -128,6 +129,9 @@ interface RemoteDataSource {
 
     // 액세스 토큰 갱신
     @POST("/api/user/token")
-    suspend fun getNewAccessToken(@Body userInfo: RequestRefreshToken): Response<ResponseRefreshToken>
+    suspend fun getNewAccessToken(
+        @Header("Authorization") refreshToken: String,
+        @Body userInfo: RequestRefreshToken
+    ): Response<ResponseRefreshToken>
 }
 

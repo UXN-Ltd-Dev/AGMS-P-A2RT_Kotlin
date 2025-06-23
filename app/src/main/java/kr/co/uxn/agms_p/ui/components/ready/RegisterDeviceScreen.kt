@@ -47,10 +47,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestRefreshToken
+import kr.co.uxn.agms_p.api.token.DataStoreManager
 
 @Composable
 fun RegisterDeviceScreen(navController: NavController) {
@@ -211,6 +215,32 @@ fun RegisterDeviceScreen(navController: NavController) {
                                                 ).show()
                                             }
                                         }
+
+//                                        val refreshToken = runBlocking {
+//                                            DataStoreManager.getRefreshToken().first()
+//                                        }
+//                                        val userId = runBlocking {
+//                                            DataStoreManager.getUserId().first() ?: -1
+//                                        }
+//
+//
+//
+//                                        val response = tokenRetrofit.getNewAccessToken(
+//                                                refreshToken = "Bearer $refreshToken",
+//                                                userInfo = RequestRefreshToken(userId, refreshToken!!)
+//                                            )
+//                                            if (response.isSuccessful) {
+//                                                val responseBody = response.body()
+//                                                Log.d("TEST", "newRequestWithToken() 4 call!")
+//                                                if (responseBody != null) {
+//                                                    Log.d("TEST", "${responseBody.toString()}")
+//                                                }
+//                                            } else {
+//                                                Log.e("TEST", "API 에러 : ${response.errorBody()?.string()}")
+//                                            }
+
+
+
                                     }
                                 } catch (e: Exception) {
                                     Log.e("TAG", "네트워크 에러 : $e")

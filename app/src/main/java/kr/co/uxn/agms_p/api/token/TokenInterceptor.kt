@@ -18,34 +18,16 @@ class TokenInterceptor() : Interceptor {
     companion object {
         const val NETWORK_ERROR = 401
     }
+
     override fun intercept(chain: Interceptor.Chain): Response {
         val token: String = runBlocking {
             DataStoreManager.getAccessToken().first()
         } ?: return errorResponse(chain.request())
 
-        Log.e("TEST","DataStoreManager.getAcceesToken : ${token}")
+        Log.e("TEST", "DataStoreManager.getAcceesToken : ${token}")
 
-
-        // 새로 받아온 토큰이 있으면 저장하는 로직
-        val request = chain.request().newBuilder().header("AUTHORIZATION", "Bearer $token").build()
-
+        val request = chain.request().newBuilder().header("Authorization", "Bearer $token").build()
         val response = chain.proceed(request)
-        if (response.code == HTTP_OK) {
-            val newAccessToken: String = response.header("AUTHORIZATION", null) ?: return response
-            Log.e("TEST","new Access Token = ${newAccessToken}")
-
-            CoroutineScope(Dispatchers.IO).launch {
-                val existedAccessToken = DataStoreManager.getAccessToken().first()
-                if (existedAccessToken != newAccessToken) {
-                    DataStoreManager.deleteAccessToken()
-                    DataStoreManager.saveAccessToken(newAccessToken)
-                    Log.e("TEST","newAccessToken = ${newAccessToken}\nExistedAccessToken = ${existedAccessToken}")
-                }
-            }
-        } else {
-            Log.e("TEST","${response.code} : ${response.request} \n ${response.message}")
-        }
-
         return response
     }
 
@@ -54,7 +36,6 @@ class TokenInterceptor() : Interceptor {
         .protocol(Protocol.HTTP_2)
         .code(NETWORK_ERROR)
         .message("")
-//        .body(ResponseBody.create(null, ""))
         .body("".toResponseBody("text/plain".toMediaTypeOrNull()))
         .build()
 }
