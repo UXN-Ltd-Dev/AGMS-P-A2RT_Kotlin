@@ -29,5 +29,11 @@ data class ResponseUserData(
     val isSuccess: Boolean,
 
     @SerializedName("message")
-    val message: String
+    val message: String,
+
+    @SerializedName("target_glucose_low")
+    val targetGlucoseMin: Int,
+
+    @SerializedName("target_glucose_high")
+    val targetGlucoseMax: Int
 )

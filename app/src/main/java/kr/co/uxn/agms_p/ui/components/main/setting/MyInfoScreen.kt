@@ -93,8 +93,8 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
     val diabetesType = remember { mutableStateOf("") }
 
     // 목표 혈당범위
-    val targetMinRange = remember { mutableStateOf("80") }
-    val targetMaxRange = remember { mutableStateOf("150") }
+    val targetMinRange = remember { mutableStateOf("0") }
+    val targetMaxRange = remember { mutableStateOf("0") }
 
     var expandedForSex by remember { mutableStateOf(false) }
     var expandedForDiabetesType by remember { mutableStateOf(false) }
@@ -106,7 +106,7 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
             val getUserData = tokenRetrofit.getUser(userId)
             if (getUserData.isSuccessful) {
                 val userData = getUserData.body()
-                Log.e("TEST", "userDataBody : ${userData}")
+                Log.d("TEST", "userDataBody : ${userData}")
                 if (userData != null) {
                     if (userData.isSuccess) {
                         email.value = userData.email
@@ -116,6 +116,8 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                         height.value = userData.height.toString()
                         weight.value = userData.weight.toString()
                         diabetesType.value = userData.diabetesType
+                        targetMaxRange.value = userData.targetGlucoseMax.toString()
+                        targetMinRange.value = userData.targetGlucoseMin.toString()
                     }
                 }
             } else {
@@ -783,7 +785,6 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                             text = " ~ "
                         )
 
-
                         Box(
                             modifier = Modifier
                                 .width(60.dp)
@@ -845,7 +846,7 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                             .padding(horizontal = 40.dp),
                     ) {
                         Text(
-                            text = "일반적인 목표 혈당범위는 80~150mg/dL이며, 식후 최대 혈당은 180 mg/dL 미만으로 권장됩니다.",
+                            text = "일반적인 목표 혈당범위는 80~130mg/dL이며, 식후 최대 혈당은 180mg/dL 미만입니다.",
                             fontSize = 14.sp,
                             color = Color.Gray
                         )
@@ -862,10 +863,7 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                             modifier = Modifier
                                 .align(Alignment.Center)
                                 .clickable {
-                                    // TODO 서버에 저장 요청
-
                                     coroutineScope.launch(Dispatchers.IO) {
-
                                         try {
                                             val userId = DataStoreManager.getUserId().first() ?: -1
                                             Log.e("TEST", "저장버튼 에서 불러온 userId : ${userId}")
@@ -897,8 +895,11 @@ fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreen
                                                 age = age.value.toInt(),
                                                 height = height.value.toInt(),
                                                 weight = weight.value.toInt(),
-                                                diabetesType = diabetesType
+                                                diabetesType = diabetesType,
+                                                targetGlucoseMin = targetMinRange.value.toInt(),
+                                                targetGlucoseMax = targetMaxRange.value.toInt()
                                             )
+
                                             val getUserData =
                                                 tokenRetrofit.updateUser(requestUpdateUser)
                                             if (getUserData.isSuccessful) {

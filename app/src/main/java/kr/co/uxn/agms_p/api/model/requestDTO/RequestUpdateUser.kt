@@ -22,5 +22,11 @@ data class RequestUpdateUser(
     val weight: Int,
 
     @SerializedName("diabetes_type")
-    val diabetesType: Int
+    val diabetesType: Int,
+
+    @SerializedName("target_glucose_low")
+    val targetGlucoseMin: Int,
+
+    @SerializedName("target_glucose_high")
+    val targetGlucoseMax: Int
 )
