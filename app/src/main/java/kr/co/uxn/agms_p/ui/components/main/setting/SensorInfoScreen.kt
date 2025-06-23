@@ -101,7 +101,7 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
 
         // 시리얼번호 가져오기
         withContext(Dispatchers.IO) {
-            serialNumber.value = DataStoreManager.getSerialNumber().first() ?: "N/A"
+            serialNumber.value = DataStoreManager.getSerialNumber().first() ?: ""
         }
     }
 

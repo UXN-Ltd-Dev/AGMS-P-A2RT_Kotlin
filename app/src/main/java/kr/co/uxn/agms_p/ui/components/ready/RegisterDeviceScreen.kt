@@ -55,6 +55,9 @@ import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestRefreshToken
 import kr.co.uxn.agms_p.api.token.DataStoreManager
+import kr.co.uxn.agms_p.ble.BleUtils
+import kr.co.uxn.agms_p.ble.BleUtils.STATUS_BLE_ENABLED
+import kr.co.uxn.agms_p.ble.BleUtils.getBleStatus
 
 @Composable
 fun RegisterDeviceScreen(navController: NavController) {
@@ -191,59 +194,42 @@ fun RegisterDeviceScreen(navController: NavController) {
                         .align(Alignment.Center)
                         .clickable {
                             if (deviceNumber.value != "") {
-                                try {
-                                    coroutineScope.launch(Dispatchers.IO) {
-                                        val result = tokenRetrofit.getDeviceMac(deviceNumber.value)
-                                        if (result.isSuccessful) {
-                                            val resultBody = result.body()
-                                            if (resultBody != null) {
-                                                if (resultBody.isExists) {
-                                                    val mac = resultBody.deviceMac
-                                                    withContext(Dispatchers.Main) {
-                                                        navController.navigate("ScanDeviceScreen/$mac/${deviceNumber.value}")
-//                                                        Toast.makeText(context, "조회된 mac은\n$mac 입니다.", Toast.LENGTH_SHORT).show()
-                                                    }
-                                                }
-                                            }
-                                        } else {
-                                            Log.e("TAG", "API 에러 : ${result.errorBody()}")
-                                            withContext(Dispatchers.Main) {
-                                                Toast.makeText(
-                                                    context,
-                                                    "시리얼 넘버를 다시 확인해 주세요.",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                            }
-                                        }
 
-//                                        val refreshToken = runBlocking {
-//                                            DataStoreManager.getRefreshToken().first()
-//                                        }
-//                                        val userId = runBlocking {
-//                                            DataStoreManager.getUserId().first() ?: -1
-//                                        }
-//
-//
-//
-//                                        val response = tokenRetrofit.getNewAccessToken(
-//                                                refreshToken = "Bearer $refreshToken",
-//                                                userInfo = RequestRefreshToken(userId, refreshToken!!)
-//                                            )
-//                                            if (response.isSuccessful) {
-//                                                val responseBody = response.body()
-//                                                Log.d("TEST", "newRequestWithToken() 4 call!")
-//                                                if (responseBody != null) {
-//                                                    Log.d("TEST", "${responseBody.toString()}")
-//                                                }
-//                                            } else {
-//                                                Log.e("TEST", "API 에러 : ${response.errorBody()?.string()}")
-//                                            }
-
-
+                                if (getBleStatus(context) != STATUS_BLE_ENABLED) {
+                                    coroutineScope.launch(Dispatchers.Main) {
+                                        Toast.makeText(context, "블루투스가 꺼져있어요.\n블루투스를 켜주세요.", Toast.LENGTH_SHORT).show()
 
                                     }
-                                } catch (e: Exception) {
-                                    Log.e("TAG", "네트워크 에러 : $e")
+                                } else {
+                                    try {
+                                        coroutineScope.launch(Dispatchers.IO) {
+                                            val result = tokenRetrofit.getDeviceMac(deviceNumber.value)
+                                            if (result.isSuccessful) {
+                                                val resultBody = result.body()
+                                                if (resultBody != null) {
+                                                    if (resultBody.isExists) {
+                                                        val mac = resultBody.deviceMac
+                                                        withContext(Dispatchers.Main) {
+                                                            navController.navigate("ScanDeviceScreen/$mac/${deviceNumber.value}")
+//                                                        Toast.makeText(context, "조회된 mac은\n$mac 입니다.", Toast.LENGTH_SHORT).show()
+                                                        }
+                                                    }
+                                                }
+                                            } else {
+                                                Log.e("TAG", "API 에러 : ${result.errorBody()}")
+                                                withContext(Dispatchers.Main) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        "시리얼 넘버를 다시 확인해 주세요.",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                            }
+
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e("TAG", "네트워크 에러 : $e")
+                                    }
                                 }
                             } else {
                                 Toast.makeText(context, "시리얼 넘버를 입력해 주세요.", Toast.LENGTH_SHORT)
