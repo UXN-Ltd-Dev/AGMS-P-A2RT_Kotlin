@@ -76,8 +76,6 @@ fun ActivityRegisterScreen(navController: NavController, eventScreenViewModel: E
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-
-
     var interactionSource = remember { MutableInteractionSource() }
 
     Scaffold(

@@ -83,12 +83,35 @@ class BleViewModel(application: Application) : AndroidViewModel(application) {
             initialValue = false
         )
 
+    var showBluetoothOnDialog: StateFlow<Boolean> = BleBridge.showBluetoothOnDialog
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
+
     var showEndMeasurementDialog: StateFlow<Boolean> = BleBridge.showEndMeasurementDialog
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = false
         )
+
+    var showLowGlucoseDialog: StateFlow<Boolean> = BleBridge.showLowGlucoseDialog
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
+
+    var showHighGlucoseDialog: StateFlow<Boolean> = BleBridge.showHighGlucoseDialog
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
+
+
 
 
 

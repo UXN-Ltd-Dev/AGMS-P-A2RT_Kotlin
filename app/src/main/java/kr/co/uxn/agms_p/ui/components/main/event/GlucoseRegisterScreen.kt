@@ -32,6 +32,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -50,7 +51,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.NotificationManagerCompat
 import androidx.navigation.NavController
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -90,6 +93,11 @@ fun GlucoseRegisterScreen(
     val localDbRepository by lazy {
         AppDatabase.getInstance(context)
     }
+//    LaunchedEffect(Unit) {
+//        val now = LocalDateTime.now()
+//            .format(DateTimeFormatter.ofPattern("yyyy.MM.dd. a h:mm"))
+//        time.value = now
+//    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -293,6 +301,10 @@ fun GlucoseRegisterScreen(
 
                                                             DataStoreManager.setDailyCalibrationLastTime(today)
 
+//                                                            // 노티 제거
+                                                            CoroutineScope(Dispatchers.Main).launch {
+                                                                NotificationManagerCompat.from(context).cancel(93)
+                                                            }
                                                         } else {
                                                             Log.d("GlucoseRegisterScreen", "캘리 알림 범위 아님 : ${diff}")
                                                         }
@@ -310,13 +322,22 @@ fun GlucoseRegisterScreen(
                                             }
                                         } catch (e: Exception) {
                                             Log.e("EVENT", "네트워크 또는 userId null 에러 : ${e.message}")
-                                            withContext(Dispatchers.Main) {
-                                                Toast.makeText(
-                                                    context,
-                                                    "네트워크를 확인해주세요.",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                                Log.e("EVENT", "활동 이벤트 업로드 실패")
+
+                                            if(e.message!!.contains("Failed to connect")) {
+                                                withContext(Dispatchers.Main) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        "네트워크를 확인해주세요.",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                            } else {
+                                                withContext(Dispatchers.Main) {
+                                                    val image =
+                                                        R.drawable.event_calibration // 추후 혈당 이미지로 변경
+//                                                            eventScreenViewModel.addItem(ItemData(imageId = image, eventType = eventTypeCode, time = time.value, content = glucoseDataFromUser.value))
+                                                    navController.navigate("MainScreen/${1}")
+                                                }
                                             }
                                         }
                                     }

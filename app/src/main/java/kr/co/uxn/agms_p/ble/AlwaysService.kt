@@ -15,6 +15,7 @@ import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
 import android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
 import android.os.Binder
 import android.os.Build
@@ -22,6 +23,7 @@ import android.os.IBinder
 import android.os.PowerManager
 import android.util.Log
 import androidx.annotation.RequiresPermission
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import kotlinx.coroutines.CoroutineScope
@@ -33,6 +35,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import kr.co.uxn.agms_p.BleConnectionState
 import kr.co.uxn.agms_p.MainActivity
 import kr.co.uxn.agms_p.PythonManager
 import kr.co.uxn.agms_p.R
@@ -40,8 +44,12 @@ import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestDataValue
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEventListData
 import kr.co.uxn.agms_p.api.token.DataStoreManager
+import kr.co.uxn.agms_p.ble.BleBridge.showHighGlucoseDialog
+import kr.co.uxn.agms_p.ble.BleBridge.showLowGlucoseDialog
 import kr.co.uxn.agms_p.ble.BleManager.Companion.TEST
+import kr.co.uxn.agms_p.ble.BleUtils.STATUS_BLE_ENABLED
 import kr.co.uxn.agms_p.ble.BleUtils.TAG
+import kr.co.uxn.agms_p.ble.BleUtils.getBleStatus
 import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.room.UserGlucose
 import kr.co.uxn.agms_p.room.UserValue
@@ -126,6 +134,32 @@ class AlwaysService() : Service() {
             Log.d("SERVICE", "Service onStartCommand() call!")
             Log.d("SERVICE", "Service onStartCommand() localDbRepository  : ${localDbRepository}!")
 
+            // Bluetooth OFF 노티
+            Log.e(TAG, "======BLE OFF======")
+            if (getBleStatus(baseContext) != STATUS_BLE_ENABLED) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    withContext(Dispatchers.Main) {
+                        if (ActivityCompat.checkSelfPermission(
+                                baseContext,
+                                Manifest.permission.POST_NOTIFICATIONS
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            // here to request the missing permissions, and then overriding
+                            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                            //                                          int[] grantResults)
+                            // to handle the case where the user grants the permission. See the documentation
+                            // for ActivityCompat#requestPermissions for more details.
+                            Log.d("BLE", "BLE 권한 허용 안됨")
+                            return@withContext
+                        }
+                        sendBleConnectNotification(baseContext, "블루투스가 꺼져있습니다", "", 91)
+                        BleBridge.showBluetoothOnDialog(true)
+                    }
+                }
+            }
+            // 홈화면 연결 상태 UI 변경
+            BleBridge.updateState(BleConnectionState.DISCONNECTED)
+
             var deviceMac = ""
             var userId = -1
             runBlocking {
@@ -133,15 +167,14 @@ class AlwaysService() : Service() {
                 userId = DataStoreManager.getUserId().first() ?: -1
             }
 
-            Log.e("SERVICE", "onStartCommnad에서 DS로부터 불러온 userId : $userId")
-            Log.e("SERVICE", "onStartCommnad에서 DS로부터 불러온 deviceMac : $deviceMac")
-
-            // 브로드캐스트 리시버 등록
-            registerBluetoothStateBroadcastReceiver()
-
+            Log.d("SERVICE", "onStartCommnad에서 DS로부터 불러온 userId : $userId")
+            Log.d("SERVICE", "onStartCommnad에서 DS로부터 불러온 deviceMac : $deviceMac")
 
             val mac = deviceMac
             bleManager = BleManager.getInstance(baseContext, mac, userId, applicationContext)
+
+            // 브로드캐스트 리시버 등록
+            registerBluetoothStateBroadcastReceiver(mac)
 
             // 1. 노티 채널 생성
             createNotificationChannel()
@@ -448,12 +481,14 @@ class AlwaysService() : Service() {
                             if (highChecker) {
                                 if (lastGlucose > targetHigh) {
                                     sendNotification(baseContext, "고혈당 주의", "고혈당이 감지되었습니다. \n현재 혈당 : ${lastGlucose} mg/dL", 96)
+                                    showHighGlucoseDialog(true)
                                 }
                             }
 
                             if (lowChecker) {
                                 if (lastGlucose < targetLow) {
                                     sendNotification(baseContext, "저혈당 주의", "저혈당이 감지되었습니다 \n현재 혈당 : ${lastGlucose} mg/dL", 95)
+                                    showLowGlucoseDialog(true)
                                 }
                             }
                             // 그래프를 위한 트리거
@@ -484,6 +519,7 @@ class AlwaysService() : Service() {
                             Log.d("SERVICE", "측정종료 프로세스 작동!")
                             sendNotification(baseContext, "측정이 종료되었습니다", "앱을 확인해주세요", 94)
                             BleBridge.showEndMeasurementDialog(true)
+
 //                            sendNotification(baseContext, "측정이 종료되었습니다", "앱을 확인해주세요", 94)
 //                            DataStoreManager.saveIsMain(false)
 //                            DataStoreManager.deleteRoute()
@@ -619,7 +655,7 @@ class AlwaysService() : Service() {
         NotificationManagerCompat.from(context).notify(notificationId, notification)
     }
 
-    private fun registerBluetoothStateBroadcastReceiver() {
+    private fun registerBluetoothStateBroadcastReceiver(mac: String) {
         if (mBluetoothStateBroadcastReceiver == null) {
             val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
             mBluetoothStateBroadcastReceiver = object : BroadcastReceiver() {
@@ -628,41 +664,86 @@ class AlwaysService() : Service() {
                         BluetoothAdapter.EXTRA_STATE,
                         BluetoothAdapter.STATE_OFF
                     )
-                    handleBLEStateChanged(state)
+                    handleBLEStateChanged(state, mac)
                 }
             }
             registerReceiver(mBluetoothStateBroadcastReceiver, filter)
         }
     }
 
-    private fun handleBLEStateChanged(state: Int) {
+    private fun handleBLEStateChanged(state: Int, mac: String) {
         when (state) {
             // 1
             BluetoothAdapter.STATE_TURNING_OFF -> {
-                Log.e(TAG, "BLE 비활성화 중...")
+                Log.d(TAG, "======BLE 비활성화 중...======")
             }
 
             // 2
             BluetoothAdapter.STATE_OFF -> {
-                Log.e(TAG, "BLE OFF")
-//                createBleMessageNotificationChannel(this)
-//                createBleMessageNotification(this, getString(R.string.ble_enable))
-//                RxEventBus.INSTANCE.publish(BleState(BleManager.STATE_DISCONNECTED))
+                Log.e(TAG, "======BLE OFF======")
 //                resetDevice()
+                // 끊김 알림
+                CoroutineScope(Dispatchers.IO).launch {
+                    withContext(Dispatchers.Main) {
+                        if (ActivityCompat.checkSelfPermission(
+                                baseContext,
+                                Manifest.permission.POST_NOTIFICATIONS
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            // here to request the missing permissions, and then overriding
+                            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                            //                                          int[] grantResults)
+                            // to handle the case where the user grants the permission. See the documentation
+                            // for ActivityCompat#requestPermissions for more details.
+                            Log.d("BLE", "BLE 권한 허용 안됨")
+                            return@withContext
+                        }
+                        sendBleConnectNotification(baseContext, "블루투스가 꺼져있습니다", "", 91)
+                        BleBridge.showBluetoothOnDialog(true)
+                    }
+                }
+                // 홈화면 연결 상태 UI 변경
+                BleBridge.updateState(BleConnectionState.DISCONNECTED)
             }
 
             // 3
             BluetoothAdapter.STATE_TURNING_ON -> {
-                Log.e(TAG, "BLE 활성화 중...")
+                Log.d(TAG, "======BLE 활성화 중...======")
             }
 
             // 4
             BluetoothAdapter.STATE_ON -> {
-                Log.e(TAG, "BLE ON!")
-//                MessagePackNot()
-//                // 2406-ykw : 어떤 이유에서인지 BLE는 계속 활성화 상태였는데 반복적으로 들어옴 -> 정상 연결을 끊음
-//                setDeviceSetting()
-//                runFirstConnect()
+                Log.e(TAG, "======BLE ON!!======")
+                // 블루투스 연결
+                val bluetoothManager =
+                    baseContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+                val bluetoothAdapter = bluetoothManager.adapter
+                val bluetoothDevice = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    Log.e(TEST, "======BLE Remote 연결 안드로이드 13 이상 시작========")
+                    bluetoothAdapter.getRemoteLeDevice(mac, BluetoothDevice.ADDRESS_TYPE_PUBLIC)
+                } else {
+                    Log.e(TEST, "======BLE Remote 연결 안드로이드 10~12 시작========")
+                    bluetoothAdapter.getRemoteDevice(mac)
+                }
+
+
+//        if (bleManager.mGatt == null) {
+                CoroutineScope(Dispatchers.Main).launch {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        bluetoothDevice.connectGatt(
+                            baseContext,
+                            false,
+                            bleManager,
+                            BluetoothDevice.TRANSPORT_LE
+                        )
+                    } else {
+                        bluetoothDevice.connectGatt(baseContext, false, bleManager)
+                    }
+                }
+
+                // 기존 블루투스 On 노티 제거
+                NotificationManagerCompat.from(baseContext).cancel(91)
+                BleBridge.showBluetoothOnDialog(false)
             }
 
             BluetoothAdapter.STATE_DISCONNECTED -> {
@@ -677,6 +758,34 @@ class AlwaysService() : Service() {
                 Log.e(TAG, "알 수 없는 BLE 상태: $state")
             }
         }
+    }
+
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+    fun sendBleConnectNotification(context: Context, title: String, message: String, notificationId: Int) {
+        val channelId = "ble_connect_channel"
+
+        val channel = NotificationChannel(
+            channelId,
+            "ble disconnect alert",
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = "ble disconnect alert"
+        }
+
+        val notificationManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
+
+
+        Log.d("BLE", "알림 채널 상태: importance=${channel.importance}")
+
+        val notification = NotificationCompat.Builder(context, channelId)
+            .setOngoing(false)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setSmallIcon(R.mipmap.ic_launcher_round)
+            .build()
+        NotificationManagerCompat.from(context).notify(notificationId, notification)
     }
 
 

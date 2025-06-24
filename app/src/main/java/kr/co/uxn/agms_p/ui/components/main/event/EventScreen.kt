@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -49,6 +50,7 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kr.co.uxn.agms_p.NetworkUtil.isNetworkAvailable
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.token.DataStoreManager
@@ -65,6 +67,7 @@ fun EventScreen(
 ) {
     var interactionSource = remember { MutableInteractionSource() }
     val lifecycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current
     val eventList by eventScreenViewModel.eventItemList.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val configuration = LocalConfiguration.current
@@ -83,6 +86,7 @@ fun EventScreen(
     }
 
     val bgColor = MaterialTheme.colorScheme.background
+
     LaunchedEffect(Unit) {
         Log.e("COLOR", "배경 RGB = ${bgColor.red} ${bgColor.green} ${bgColor.blue}")
     }
@@ -317,7 +321,20 @@ fun EventScreen(
                 )
             }
 
-            if (eventList.isEmpty()) {
+            if (!isNetworkAvailable(context)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center // 중앙 정렬
+                ) {
+                    Text(
+                        text = "네트워크 상태를 확인해주세요",
+                        fontSize = fontSize,
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            } else if (eventList.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize(),
@@ -345,7 +362,6 @@ fun EventScreen(
 
 @Composable
 fun Item(itemData: ItemData) {
-
     val configuration = LocalConfiguration.current
     val screenHeightDp = configuration.screenHeightDp
     val endPadding = when {

@@ -80,9 +80,6 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
     val interactionSource = remember { MutableInteractionSource() }
 
     // notification swtich
-    val checkedForSound = remember { mutableStateOf(false) }
-    val checkedForVibration = remember { mutableStateOf(false) }
-    val checkedDoNotDisturbMode = remember { mutableStateOf(false) }
     val checkedForHighGlucose = remember { mutableStateOf(false) }
     val checkedForLowGlucose = remember { mutableStateOf(false) }
     val checkedForLostSignal = remember { mutableStateOf(false) }
@@ -232,8 +229,8 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                                     coroutineScope.launch(Dispatchers.Main) {
                                         DataStoreManager.setTargetHighGlucose(targetHighGlucose.value.toInt())
                                         DataStoreManager.setTargetLowGlucose(targetLowGlucose.value.toInt())
-                                        Log.e("TEST", "저장된 고혈당 : ${DataStoreManager.getTargetHighGlucose().first()}")
-                                        Log.e("TEST", "저장된 저혈당 : ${DataStoreManager.getTargetLowGlucose().first()}")
+                                        Log.d("TEST", "저장된 고혈당 : ${DataStoreManager.getTargetHighGlucose().first()}")
+                                        Log.d("TEST", "저장된 저혈당 : ${DataStoreManager.getTargetLowGlucose().first()}")
                                     }
                                 } else {
                                     Toast.makeText(context, "혈당을 입력해주세요.", Toast.LENGTH_SHORT).show()
@@ -302,88 +299,6 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-//                Divider()
-//
-//                Box() {
-//                    Row(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .background(Color.White)
-//                            .height(50.dp)
-//                            .padding(horizontal = 30.dp),
-//                        verticalAlignment = Alignment.CenterVertically,
-//                        horizontalArrangement = Arrangement.SpaceBetween
-//                    ) {
-//                        Text(
-//                            text = "소리",
-//                            fontSize = 16.sp
-//                        )
-//
-//                        Switch(
-//                            checked = checkedForSound.value,
-//                            onCheckedChange = {
-//                                checkedForSound.value = it
-//                            }
-//                        )
-//                    }
-//                }
-//
-//                Divider()
-//
-//                Box() {
-//                    Row(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .background(Color.White)
-//                            .height(50.dp)
-//                            .padding(horizontal = 30.dp),
-//                        verticalAlignment = Alignment.CenterVertically,
-//                        horizontalArrangement = Arrangement.SpaceBetween
-//                    ) {
-//                        Text(
-//                            text = "진동",
-//                            fontSize = 16.sp
-//                        )
-//
-//                        Switch(
-//                            checked = checkedForVibration.value,
-//                            onCheckedChange = {
-//                                checkedForVibration.value = it
-//                            }
-//                        )
-//                    }
-//                }
-//
-//                Divider()
-//
-//                Box() {
-//                    Row(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .background(Color.White)
-//                            .height(50.dp)
-//                            .padding(horizontal = 30.dp),
-//                        verticalAlignment = Alignment.CenterVertically,
-//                        horizontalArrangement = Arrangement.SpaceBetween
-//                    ) {
-//                        Text(
-//                            text = "방해금지 중 알림 허용",
-//                            fontSize = 16.sp
-//                        )
-//
-//                        Switch(
-//                            checked = checkedDoNotDisturbMode.value,
-//                            onCheckedChange = {
-//                                checkedDoNotDisturbMode.value = it
-//                            }
-//                        )
-//                    }
-//                }
-
-//                Divider()
-//
-//                Divider(color = Color.Transparent, thickness = 20.dp)
-
                 Divider()
 
                 Box(
@@ -407,7 +322,7 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                         )
 
                         Text(
-                            text = "${targetLowGlucose.value}" +  "~" + "${targetHighGlucose.value}" + "mg/dL",
+                            text = "${targetLowGlucose.value}" +  " ~ " + "${targetHighGlucose.value}" + "mg/dL",
                             fontSize = 15.sp,
                             color = Color(0xFF828282),
                             modifier = Modifier.weight(1f)
@@ -441,16 +356,15 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "고혈당 알림",
+                            text = "저혈당 알림",
                             fontSize = 16.sp
                         )
-
                         Switch(
-                            checked = checkedForHighGlucose.value,
+                            checked = checkedForLowGlucose.value,
                             onCheckedChange = {
-                                checkedForHighGlucose.value = it
+                                checkedForLowGlucose.value = it
                                 coroutineScope.launch(Dispatchers.IO) {
-                                    DataStoreManager.setNotiHighGlucose(it)
+                                    DataStoreManager.setNotiLowGlucose(it)
                                 }
                             }
                         )
@@ -470,15 +384,16 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "저혈당 알림",
+                            text = "고혈당 알림",
                             fontSize = 16.sp
                         )
+
                         Switch(
-                            checked = checkedForLowGlucose.value,
+                            checked = checkedForHighGlucose.value,
                             onCheckedChange = {
-                                checkedForLowGlucose.value = it
+                                checkedForHighGlucose.value = it
                                 coroutineScope.launch(Dispatchers.IO) {
-                                    DataStoreManager.setNotiLowGlucose(it)
+                                    DataStoreManager.setNotiHighGlucose(it)
                                 }
                             }
                         )

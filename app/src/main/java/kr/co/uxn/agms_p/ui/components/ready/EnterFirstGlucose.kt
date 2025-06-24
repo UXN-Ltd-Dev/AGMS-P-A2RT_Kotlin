@@ -162,7 +162,6 @@ fun EnterFirstGlucose(navController: NavController) {
                             if(glucoseDataFromUser.value.contains(".") || glucoseDataFromUser.value.contains("-") || glucoseDataFromUser.value.contains(",")) {
                                 Toast.makeText(context, "숫자만 입력해주세요.", Toast.LENGTH_SHORT).show()
                             } else if (glucoseDataFromUser.value != "") {
-                                // TODO : 서버에 혈당데이터 전송, 화면이동
                                 coroutineScope.launch(Dispatchers.IO) {
                                     val userId = DataStoreManager.getUserId().first() ?: -1
                                     Log.e("TEST", "userId : $userId")

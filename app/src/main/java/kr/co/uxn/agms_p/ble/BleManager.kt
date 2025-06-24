@@ -116,6 +116,9 @@ class BleManager(
                 // mtu 517로 요청
                 gatt?.requestMtu(517)
 
+                // 신호소실 노티 제거
+                NotificationManagerCompat.from(context).cancel(92)
+
             }
 
 
@@ -130,7 +133,7 @@ class BleManager(
                         withContext(Dispatchers.Main) {
                             sendNotification(context, "센서와의 연결이 일시적으로 끊어졌어요",
                                 "",
-                                89
+                                92
                             )
                             BleBridge.showBleConnectDialog(true)
                         }

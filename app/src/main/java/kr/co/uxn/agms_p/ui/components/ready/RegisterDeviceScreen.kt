@@ -197,8 +197,7 @@ fun RegisterDeviceScreen(navController: NavController) {
 
                                 if (getBleStatus(context) != STATUS_BLE_ENABLED) {
                                     coroutineScope.launch(Dispatchers.Main) {
-                                        Toast.makeText(context, "블루투스가 꺼져있어요.\n블루투스를 켜주세요.", Toast.LENGTH_SHORT).show()
-
+                                        Toast.makeText(context, "블루투스를 켜주세요.", Toast.LENGTH_SHORT).show()
                                     }
                                 } else {
                                     try {

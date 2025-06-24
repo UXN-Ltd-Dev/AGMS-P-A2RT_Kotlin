@@ -102,9 +102,12 @@ import java.util.TimeZone
 import kotlin.system.exitProcess
 import androidx.compose.runtime.*
 import androidx.compose.runtime.key
+import androidx.core.app.NotificationManagerCompat
 import com.patrykandpatrick.vico.core.cartesian.CartesianDrawingContext
 import com.patrykandpatrick.vico.core.cartesian.CartesianMeasuringContext
 import com.patrykandpatrick.vico.core.cartesian.layer.CartesianLayerDimensions
+import kr.co.uxn.agms_p.ble.BleBridge.showHighGlucoseDialog
+import kr.co.uxn.agms_p.ble.BleBridge.showLowGlucoseDialog
 
 @SuppressLint("RestrictedApi")
 @Composable
@@ -126,6 +129,9 @@ fun HomeScreen(
 
     var showCaliDialog = bleViewModel.showCaliDialog.collectAsState()
     var showBleConnectDialog = bleViewModel.showBleConnectDialog.collectAsState()
+    var showBluetoothOnDialog = bleViewModel.showBluetoothOnDialog.collectAsState()
+    var showLowGlucoseDialog = bleViewModel.showLowGlucoseDialog.collectAsState()
+    var showHighGlucoseDialog = bleViewModel.showHighGlucoseDialog.collectAsState()
     var showModeDialog = remember { mutableStateOf(false) }
     var showEndMeasurementDialog = bleViewModel.showEndMeasurementDialog.collectAsState()
     var selectedChartOption by remember { mutableStateOf("혈당") }
@@ -399,7 +405,7 @@ fun HomeScreen(
                 isLoading.value = true
                 delay(100)
                 chartScrollSpec.animateScroll(
-                    Scroll.Absolute.End,
+                    Scroll.Absolute.End
                 )
             }
 
@@ -430,7 +436,7 @@ fun HomeScreen(
         }
     }
 
-    // 1. 노티 : 혈당 입력
+    // 1. Dialog : 일일 혈당 입력
     if (showCaliDialog.value) {
         NotiDialog(
             onDismiss = { BleBridge.showCaliDialog(false) },
@@ -438,20 +444,20 @@ fun HomeScreen(
                 BleBridge.showCaliDialog(false)
                 navController.navigate("GlucoseRegisterScreen")
             },
-            title = "혈당 입력 시간입니다",
+            title = "혈당 입력 시간입니다.",
             content = "정확한 측정을 위해 공복 상태에서 자가 채혈한 혈당을 입력해주세요.",
         )
     }
 
-    // 2. 노티 : BLE 끊김
+    // 2. Dialog : BLE 끊김
     if (showBleConnectDialog.value) {
         NotiDialog(
             onDismiss = { BleBridge.showBleConnectDialog(false) },
             onConfirm = {
                 BleBridge.showBleConnectDialog(false)
             },
-            title = "블루투스 연결이 끊어졌습니다",
-            content = "센서와의 연결이 일시적으로 끊어졌어요\n스마트폰을 가까이 두고 앱을 다시 실행해보세요",
+            title = "블루투스 연결이 끊어졌습니다.",
+            content = "센서와의 연결이 일시적으로 끊어졌어요\n스마트폰을 가까이 두고 연결 상태를 확인해주세요.",
         )
     }
 
@@ -469,7 +475,19 @@ fun HomeScreen(
         )
     }
 
-    // 4. 측정 종료 다이얼로그
+    // 4. Dialog : 블루투스 ON
+    if (showBluetoothOnDialog.value) {
+        NotiDialog(
+            onDismiss = { BleBridge.showBluetoothOnDialog(false) },
+            onConfirm = {
+                BleBridge.showBluetoothOnDialog(false)
+            },
+            title = "블루투스가 꺼져있습니다.",
+            content = "블루투스를 켜고 연결 상태를 확인해주세요.",
+        )
+    }
+
+    // 5. Dialog : 측정 종료
     if (showEndMeasurementDialog.value) {
         NotiDialog(
             onDismiss = { BleBridge.showBleConnectDialog(false) },
@@ -480,7 +498,7 @@ fun HomeScreen(
                     DataStoreManager.deleteRoute()
                     DataStoreManager.saveRoute("Splash")
                     Log.d("TEST", "${DataStoreManager.getIsMain().first()}")
-                    Log.d("TEST", "DS에 저장된 Route는${DataStoreManager.getRoute().first()}")
+                    Log.d("TEST", "DS에 저장된 Route는 ${DataStoreManager.getRoute().first()}")
                     DataStoreManager.deleteAccessToken()
                     DataStoreManager.deleteRefreshToken()
                     DataStoreManager.deleteUserId()
@@ -491,13 +509,39 @@ fun HomeScreen(
                     delay(500)
                     // 1. 서비스 종료
 //                            stopSelf()
-                    // 앱 강제종료
+                    // 앱 강제 종료
                     android.os.Process.killProcess(android.os.Process.myPid())
                     exitProcess(0)
                 }
             },
             title = "센서의 사용 기간이 종료되었습니다.",
             content = "센서의 사용 기간이 만료되어 더 이상 측정이 불가합니다. 새 센서를 연결해주세요.",
+        )
+    }
+
+    // 6.1 Dialog : 저혈당
+    if (showLowGlucoseDialog.value) {
+        NotiDialog(
+            onDismiss = { showLowGlucoseDialog(false) },
+            onConfirm = {
+                showLowGlucoseDialog(false)
+                NotificationManagerCompat.from(context).cancel(95)
+            },
+            title = "혈당수치가 낮습니다.",
+            content = "저혈당 위험이 있어요. 필요시 조치를 취하고, 안정 후 수치를 다시 확인하세요.",
+        )
+    }
+
+    // 6.2 Dialog : 고혈당
+    if (showHighGlucoseDialog.value) {
+        NotiDialog(
+            onDismiss = { showHighGlucoseDialog(false) },
+            onConfirm = {
+                showHighGlucoseDialog(false)
+                NotificationManagerCompat.from(context).cancel(96)
+            },
+            title = "혈당수치가 높습니다.",
+            content = "현재 혈당이 설정 혈당 범위를 초과했어요. 식사나 활동 내용을 확인하세요.",
         )
     }
 

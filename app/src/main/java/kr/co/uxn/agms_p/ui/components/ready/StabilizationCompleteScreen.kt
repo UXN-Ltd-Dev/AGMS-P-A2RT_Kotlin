@@ -38,9 +38,11 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.navigation.NavController
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 
@@ -54,20 +56,6 @@ fun StabilizationCompleteScreen(navController: NavController) {
         DataStoreManager.saveRoute("StabilizationCompleteScreen")
         val route = DataStoreManager.getRoute().first()
         Log.e("TEST", "안정화 완료 화면에서 Route : ${route}")
-
-//        안정화 완료 노티
-//        coroutine.launch(Dispatchers.IO) {
-//            isNotiStabilization = DataStoreManager.getNotiStabilization().first() ?: false
-//            Log.d("TEST", "안정화 완료 화면에서 isNotiStabilization : ${isNotiStabilization}")
-//        }
-
-//        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
-//
-//            if (isNotiStabilization) {
-//                sendNotification(context,"센서가 준비되었습니다", "", 90)
-//            }
-//
-//        }
     }
 
     Surface(
@@ -131,6 +119,10 @@ fun StabilizationCompleteScreen(navController: NavController) {
                                 // 목표혈당 설정
                                 DataStoreManager.setTargetLowGlucose(70)
                                 DataStoreManager.setTargetHighGlucose(170)
+
+                                withContext(Dispatchers.Main){
+                                    NotificationManagerCompat.from(context).cancel(90)
+                                }
                             }
                         }
                 )

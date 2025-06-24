@@ -27,8 +27,17 @@ object BleBridge {
     private val _showBleConnectDialog = MutableStateFlow<Boolean>(false)
     val showBleConnectDialog: StateFlow<Boolean> = _showBleConnectDialog
 
+    private val _showBluetoothOnDialog = MutableStateFlow<Boolean>(false)
+    val showBluetoothOnDialog: StateFlow<Boolean> = _showBluetoothOnDialog
+
     private val _showEndMeasurementDialog = MutableStateFlow<Boolean>(false)
     val showEndMeasurementDialog: StateFlow<Boolean> = _showEndMeasurementDialog
+
+    private val _showLowGlucoseDialog = MutableStateFlow<Boolean>(false)
+    val showLowGlucoseDialog: StateFlow<Boolean> = _showLowGlucoseDialog
+
+    private val _showHighGlucoseDialog = MutableStateFlow<Boolean>(false)
+    val showHighGlucoseDialog: StateFlow<Boolean> = _showHighGlucoseDialog
 
     fun updateState(state: BleConnectionState) {
         _bleState.value = state
@@ -54,6 +63,19 @@ object BleBridge {
     fun showBleConnectDialog(value: Boolean) {
         _showBleConnectDialog.value = value
     }
+
+    fun showBluetoothOnDialog(value: Boolean) {
+        _showBluetoothOnDialog.value = value
+    }
+
+    fun showLowGlucoseDialog(value: Boolean) {
+        _showLowGlucoseDialog.value = value
+    }
+
+    fun showHighGlucoseDialog(value: Boolean) {
+        _showHighGlucoseDialog.value = value
+    }
+
 
     fun showEndMeasurementDialog(value: Boolean) {
         _showEndMeasurementDialog.value = value
