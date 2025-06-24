@@ -27,8 +27,8 @@ android {
         applicationId = "kr.co.uxn.agms_p"
         minSdk = 29
         targetSdk = 35
-        versionCode = 4
-        versionName = "0.2.4(C(P))"
+        versionCode = 5
+        versionName = "0.2.5(C)_RP"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
