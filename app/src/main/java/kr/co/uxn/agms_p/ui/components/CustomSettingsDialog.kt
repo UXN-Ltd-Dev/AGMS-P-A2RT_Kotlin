@@ -37,9 +37,6 @@ fun CustomSettingsDialog(
 ) {
 
 
-
-
-
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier

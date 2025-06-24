@@ -457,7 +457,7 @@ fun HomeScreen(
                 BleBridge.showBleConnectDialog(false)
             },
             title = "블루투스 연결이 끊어졌습니다.",
-            content = "센서와의 연결이 일시적으로 끊어졌어요\n스마트폰을 가까이 두고 연결 상태를 확인해주세요.",
+            content = "센서와의 연결이 일시적으로 끊어졌어요.\n스마트폰을 가까이 두고 연결 상태를 확인하세요.",
         )
     }
 
@@ -483,7 +483,7 @@ fun HomeScreen(
                 BleBridge.showBluetoothOnDialog(false)
             },
             title = "블루투스가 꺼져있습니다.",
-            content = "블루투스를 켜고 연결 상태를 확인해주세요.",
+            content = "블루투스를 켜고 연결 상태를 확인하세요.",
         )
     }
 
@@ -541,7 +541,7 @@ fun HomeScreen(
                 NotificationManagerCompat.from(context).cancel(96)
             },
             title = "혈당수치가 높습니다.",
-            content = "현재 혈당이 설정 혈당 범위를 초과했어요. 식사나 활동 내용을 확인하세요.",
+            content = "현재 혈당이 혈당 범위를 초과했어요. 식사나 활동 내용을 확인하세요.",
         )
     }
 
