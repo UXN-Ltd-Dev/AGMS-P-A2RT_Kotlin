@@ -147,7 +147,6 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
     }
 
     LaunchedEffect(Unit) {
-
         val userId = DataStoreManager.getUserId().first() ?: -1
         try {
             val detectorList = localDbRepository?.dataDao()?.getListAfterLastTime(userId, 0)
@@ -169,7 +168,8 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
                 // 2. 측정 기간 설정
     //        val measurementTime: Long = 1000 * 60 * 60 * 24 * 10 // 측정 기간 10일
     //        val measurementTime: Long = 1000 * 60 * 60 * 24 * 14 // 측정 기간 14일
-                val measurementTime: Long = 1000 * 60 * 30 // 측정 시간 30분
+                val measurementTime: Long = 1000 * 60 * 20 // 측정 시간 20분
+//                val measurementTime: Long = 1000 * 60 * 30 // 측정 시간 30분
 
                 DataStoreManager.deleteMeasurementTime()
                 DataStoreManager.saveMeasurementTime(measurementTime)
