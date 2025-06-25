@@ -102,7 +102,7 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
                     val detectorList = localDbRepository?.dataDao()?.getListAfterLastTime(userId, 0)
                     Log.d("TEST", "스캔화면에서 저장한 datastore 맥 주소 : ${verifiedDeviceMac}")
                     if (detectorList.isNullOrEmpty()) {
-                        Log.d("TEST", "detectorList is null or empty!")
+                        Log.d("ScanDeviceScreen, 링크 결정", "detectorList is null or empty!")
                         val linkDevice = tokenRetrofit.linkDevice(RequestLinkDevice(userId = userId, serialNumber = serialNumber))
                         if (linkDevice.isSuccessful) {
                             val linkDeviceBody = linkDevice.body()

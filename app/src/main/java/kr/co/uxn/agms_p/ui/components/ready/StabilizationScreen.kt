@@ -54,7 +54,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestLinkDevice
 import kr.co.uxn.agms_p.api.token.DataStoreManager
+import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -84,6 +87,9 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
     val lifecycleOwner = LocalLifecycleOwner.current
     val coroutine = rememberCoroutineScope()
 
+    val localDbRepository by lazy {
+        AppDatabase.getInstance(context)
+    }
 
     LaunchedEffect(Unit) {
         // 서비스 실행 이벤트 발행
@@ -141,39 +147,55 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
     }
 
     LaunchedEffect(Unit) {
-        // 1. 시작 시간 설정
-        val zoneId = ZoneId.of("Asia/Seoul")
-        val startTime = LocalDateTime.now().atZone(zoneId)
-            .toInstant().toEpochMilli()
 
-        DataStoreManager.deleteStartTime()
-        DataStoreManager.saveStartTime(startTime)
+        val userId = DataStoreManager.getUserId().first() ?: -1
+        try {
+            val detectorList = localDbRepository?.dataDao()?.getListAfterLastTime(userId, 0)
+            if (detectorList.isNullOrEmpty()) {
+                Log.d("StabilizationScreen, 시작,측정,종료시간 설정", "detectorList is null or empty!")
 
-        // check
-        val startTimeFromDS = DataStoreManager.getStartTime().first() ?: 0
-        Log.d("TEST", "startTimeFromDS : $startTimeFromDS")
+                // 1. 시작 시간 설정
+                val zoneId = ZoneId.of("Asia/Seoul")
+                val startTime = LocalDateTime.now().atZone(zoneId)
+                    .toInstant().toEpochMilli()
 
-        // 2. 측정 시간 설정
-//        val measurementTime: Long = 1000 * 60 * 60 * 24 * 10 // 측정 기간 10일
-//        val measurementTime: Long = 1000 * 60 * 60 * 24 * 14 // 측정 기간 14일
-        val measurementTime: Long = 1000 * 60 * 30 // 측정 시간 30분
+                DataStoreManager.deleteStartTime()
+                DataStoreManager.saveStartTime(startTime)
 
-        DataStoreManager.deleteMeasurementTime()
-        DataStoreManager.saveMeasurementTime(measurementTime)
+                // check
+                val startTimeFromDS = DataStoreManager.getStartTime().first() ?: 0
+                Log.d("TEST", "startTimeFromDS : $startTimeFromDS")
 
-        // check
-        val measurementTimeFromDS = DataStoreManager.getMeasurementTime().first() ?: 0
-        Log.e("TEST", "measurementTimeForDs : ${measurementTimeFromDS}")
+                // 2. 측정 기간 설정
+    //        val measurementTime: Long = 1000 * 60 * 60 * 24 * 10 // 측정 기간 10일
+    //        val measurementTime: Long = 1000 * 60 * 60 * 24 * 14 // 측정 기간 14일
+                val measurementTime: Long = 1000 * 60 * 30 // 측정 시간 30분
 
-        // 3. 종료 시간 설정
-        val endTime = startTime + measurementTime
+                DataStoreManager.deleteMeasurementTime()
+                DataStoreManager.saveMeasurementTime(measurementTime)
 
-        DataStoreManager.deleteEndTime()
-        DataStoreManager.saveEndTime(endTime)
+                // check
+                val measurementTimeFromDS = DataStoreManager.getMeasurementTime().first() ?: 0
+                Log.d("TEST", "measurementTimeForDs : ${measurementTimeFromDS}")
 
-        // check
-        val endTimeFromDS = DataStoreManager.getEndTime().first() ?: 0
-        Log.e("TEST", "endTimeFromDS : $endTimeFromDS")
+                // 3. 종료 시간 설정
+                val endTime = startTime + measurementTime
+
+                DataStoreManager.deleteEndTime()
+                DataStoreManager.saveEndTime(endTime)
+
+                // check
+                val endTimeFromDS = DataStoreManager.getEndTime().first() ?: 0
+                Log.d("TEST", "endTimeFromDS : $endTimeFromDS")
+
+
+            } else {
+                Log.d("TEST", "detectorList is exist : ${detectorList}")
+            }
+        } catch (e: Exception) {
+            Log.d("TEST","에러 : ${e.message}")
+        }
+
     }
 
 

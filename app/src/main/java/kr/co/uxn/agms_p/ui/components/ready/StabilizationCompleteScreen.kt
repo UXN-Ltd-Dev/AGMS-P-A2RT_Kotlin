@@ -127,6 +127,7 @@ fun StabilizationCompleteScreen(navController: NavController) {
                                 val userId = DataStoreManager.getUserId().first() ?: -1
                                 try {
                                     val detectorList = localDbRepository?.dataDao()?.getListAfterLastTime(userId, 0)
+                                    Log.d("StabilizationCompleteScreen, 알림혈당 기본값 설정", "detectorList is null or empty!")
                                     if (detectorList.isNullOrEmpty()) {
                                         DataStoreManager.setTargetLowGlucose(70)
                                         DataStoreManager.setTargetHighGlucose(170)
