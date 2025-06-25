@@ -83,7 +83,7 @@ fun DeleteAccountScreen(navController: NavController, eventScreenViewModel: Even
         AlwaysDialog(
             onConfirm = {
                 showDialog.value = false
-                // TODO 서버에 계정삭제 요청 및 로그인화면 이동 또는 앱 종료 + 데이터스토어 정리
+                // TODO 서버에 계정 삭제 요청 및 로그인 화면 이동 또는 앱 종료 + 데이터 스토어 정리
 
                 coroutineScope.launch(Dispatchers.IO) {
                     val type = DataStoreManager.getType().first() ?: -1

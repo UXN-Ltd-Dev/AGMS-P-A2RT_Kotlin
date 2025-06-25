@@ -44,13 +44,20 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
+import kr.co.uxn.agms_p.api.model.requestDTO.RequestLinkDevice
 import kr.co.uxn.agms_p.api.token.DataStoreManager
+import kr.co.uxn.agms_p.room.AppDatabase
 
 @Composable
 fun StabilizationCompleteScreen(navController: NavController) {
     val context = LocalContext.current
     val coroutine = rememberCoroutineScope()
     var isNotiStabilization = false
+    val localDbRepository by lazy {
+        AppDatabase.getInstance(context)
+    }
+
     LaunchedEffect(Unit) {
         DataStoreManager.deleteRoute()
         DataStoreManager.saveRoute("StabilizationCompleteScreen")
@@ -116,9 +123,20 @@ fun StabilizationCompleteScreen(navController: NavController) {
                                 Log.e("TEST", "안정화 화면에서 버튼 눌럿을시isMain : ${isMain}")
                                 Log.e("TEST", "안정화 화면에서 버튼 눌럿을시 Route : ${route}")
 
-                                // 목표혈당 설정
-                                DataStoreManager.setTargetLowGlucose(70)
-                                DataStoreManager.setTargetHighGlucose(170)
+                                // 알림 혈당 설정
+                                val userId = DataStoreManager.getUserId().first() ?: -1
+                                try {
+                                    val detectorList = localDbRepository?.dataDao()?.getListAfterLastTime(userId, 0)
+                                    if (detectorList.isNullOrEmpty()) {
+                                        DataStoreManager.setTargetLowGlucose(70)
+                                        DataStoreManager.setTargetHighGlucose(170)
+                                    } else {
+                                        Log.d("TEST", "detectorList is exist : ${detectorList}")
+                                    }
+
+                                } catch (e: Exception) {
+                                    Log.d("TEST","룸 DB에러 발생 : ${e.message}")
+                                }
 
                                 withContext(Dispatchers.Main){
                                     NotificationManagerCompat.from(context).cancel(90)

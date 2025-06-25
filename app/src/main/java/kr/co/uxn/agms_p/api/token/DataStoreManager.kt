@@ -32,7 +32,6 @@ object DataStoreManager {
     private val IS_MAIN = booleanPreferencesKey("is_main")
     private val ROUTE = stringPreferencesKey("route")
     private val TYPE = intPreferencesKey("type")
-    private val IS_STABILIZATION = booleanPreferencesKey("is_stabilization")
     private val SERIAL_NUMBER = stringPreferencesKey("serial_number")
 
     // noti
@@ -124,12 +123,6 @@ object DataStoreManager {
         }
     }
 
-    fun getIsStabilization(): Flow<Boolean?> {
-        return dataStore.data.map { prefs ->
-            prefs[IS_STABILIZATION]
-        }
-    }
-
     fun getSerialNumber(): Flow<String?> {
         return dataStore.data.map { prefs ->
             prefs[SERIAL_NUMBER]
@@ -202,12 +195,6 @@ object DataStoreManager {
         }
     }
 
-    suspend fun saveIsStabilization(value: Boolean) {
-        dataStore.edit { prefs ->
-            prefs[IS_STABILIZATION] = value
-        }
-    }
-
     suspend fun saveSerialNumber(serialNumber: String) {
         dataStore.edit { prefs ->
             prefs[SERIAL_NUMBER] = serialNumber
@@ -269,16 +256,11 @@ object DataStoreManager {
     }
 
     suspend fun deleteDailyCalibrationTime() {
-        dataStore.edit { prefs ->
+        notiStore.edit { prefs ->
             prefs.remove(DAILY_CALIBRATION_TIME)
         }
     }
 
-    suspend fun deleteIsStabilization() {
-        dataStore.edit { prefs ->
-            prefs.remove(IS_STABILIZATION)
-        }
-    }
 
     suspend fun deleteSerialNumber() {
         dataStore.edit { prefs ->

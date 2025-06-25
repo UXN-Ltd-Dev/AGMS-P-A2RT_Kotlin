@@ -2,6 +2,7 @@ package kr.co.uxn.agms_p.ui.components.main.home
 
 import android.annotation.SuppressLint
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -106,6 +107,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.patrykandpatrick.vico.core.cartesian.CartesianDrawingContext
 import com.patrykandpatrick.vico.core.cartesian.CartesianMeasuringContext
 import com.patrykandpatrick.vico.core.cartesian.layer.CartesianLayerDimensions
+import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.ble.BleBridge.showHighGlucoseDialog
 import kr.co.uxn.agms_p.ble.BleBridge.showLowGlucoseDialog
 
@@ -494,24 +496,52 @@ fun HomeScreen(
             onConfirm = {
                 BleBridge.showBleConnectDialog(false)
                 coroutineScope.launch(Dispatchers.IO) {
-                    DataStoreManager.saveIsMain(false)
-                    DataStoreManager.deleteRoute()
-                    DataStoreManager.saveRoute("Splash")
-                    Log.d("TEST", "${DataStoreManager.getIsMain().first()}")
-                    Log.d("TEST", "DS에 저장된 Route는 ${DataStoreManager.getRoute().first()}")
-                    DataStoreManager.deleteAccessToken()
-                    DataStoreManager.deleteRefreshToken()
-                    DataStoreManager.deleteUserId()
-                    DataStoreManager.deleteDeviceMac()
-                    DataStoreManager.deleteStartTime()
-                    DataStoreManager.deleteEndTime()
+                    val userId = DataStoreManager.getUserId().first() ?: -1
+                    try {
+                        val sensorOff = tokenRetrofit.doSensorOff(userId)
+                        if (sensorOff.isSuccessful) {
+                            val sensorOffBody = sensorOff.body()
+                            if (sensorOffBody != null) {
+                                Log.w("TEST", "sensorOff responseBody : ${sensorOffBody}")
+                                if (sensorOffBody.isSuccess) {
+                                    // userId의 db삭제
+                                    localDbRepository?.dataDao()?.deleteUserValueTable(userId)
+                                    localDbRepository?.dataDao()?.deleteUserGlucoseTable(userId)
+                                    localDbRepository?.dataDao()?.deleteUserCalibrationTable(userId)
 
-                    delay(500)
-                    // 1. 서비스 종료
-//                            stopSelf()
-                    // 앱 강제 종료
-                    android.os.Process.killProcess(android.os.Process.myPid())
-                    exitProcess(0)
+                                    Log.w("TEST", "sensorOff 성공")
+                                    DataStoreManager.saveIsMain(false)
+                                    DataStoreManager.deleteRoute()
+                                    DataStoreManager.saveRoute("Splash")
+                                    Log.d("TEST", "${DataStoreManager.getIsMain().first()}")
+                                    DataStoreManager.deleteAccessToken()
+                                    DataStoreManager.deleteRefreshToken()
+                                    DataStoreManager.deleteUserId()
+                                    DataStoreManager.deleteDeviceMac()
+                                    DataStoreManager.deleteStartTime()
+                                    DataStoreManager.deleteEndTime()
+                                    DataStoreManager.deleteDailyCalibrationTime()
+                                    DataStoreManager.setLandScapeMode(false)
+                                    withContext(Dispatchers.Main) {
+                                        // 1. 서비스 종료
+                                        bleViewModel.emit("STOP_SERVICE")
+                                        // 앱 강제종료
+                                        android.os.Process.killProcess(android.os.Process.myPid())
+                                        exitProcess(0)
+                                    }
+                                } else {
+                                    Log.w("TEST", "sensorOff 실패")
+                                }
+                            }
+                        } else {
+                            Log.w("TEST", "sensorOff API통신 실패 : ${sensorOff.errorBody()?.string()}")
+                        }
+                    } catch (e: Exception) {
+                        Log.d("TEST", "sensorOff API통신 실패 : ${e.message}")
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(context, "네트워크를 확인해주세요.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 }
             },
             title = "센서의 사용 기간이 종료되었습니다.",
