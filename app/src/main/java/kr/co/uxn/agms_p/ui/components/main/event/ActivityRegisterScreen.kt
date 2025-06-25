@@ -152,8 +152,9 @@ fun ActivityRegisterScreen(navController: NavController, eventScreenViewModel: E
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(300.dp)
-                        .padding(start = 30.dp, end = 30.dp, top = 60.dp, bottom = 60.dp)
+                        .height(100.dp)
+                        .padding(horizontal = 50.dp)
+                        .padding(vertical = 80.dp)
                         .weight(1f),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
