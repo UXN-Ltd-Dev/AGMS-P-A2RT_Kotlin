@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -98,6 +100,7 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
     Column(
         modifier = Modifier.fillMaxSize()
         .background(Color(0xF7F7FB))
+        .verticalScroll(rememberScrollState())
         .padding(paddingValues)
     ) {
         Divider()
@@ -140,6 +143,29 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
             ) {
                 Text(
                     text = "센서 정보",
+                    fontSize = 16.sp
+                )
+            }
+        }
+
+        Divider()
+
+        Box(
+            modifier = Modifier.clickable {
+                navController.navigate("VersionInfoScreen")
+            }
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .height(50.dp)
+                    .padding(horizontal = 30.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "버전 정보",
                     fontSize = 16.sp
                 )
             }

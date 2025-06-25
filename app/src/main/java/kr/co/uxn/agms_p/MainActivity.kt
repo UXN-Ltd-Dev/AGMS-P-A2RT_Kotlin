@@ -53,6 +53,7 @@ import kr.co.uxn.agms_p.ui.components.main.setting.NotificationScreen
 import kr.co.uxn.agms_p.ui.components.main.setting.PrivacyPolicyScreen
 import kr.co.uxn.agms_p.ui.components.main.setting.SensorInfoScreen
 import kr.co.uxn.agms_p.ui.components.main.setting.TermsAndConditionsScreen
+import kr.co.uxn.agms_p.ui.components.main.setting.VersionInfoScreen
 import kr.co.uxn.agms_p.ui.components.ready.StabilizationCompleteScreen
 import kr.co.uxn.agms_p.ui.components.ready.EnterFirstGlucose
 import kr.co.uxn.agms_p.ui.components.ready.SettingPermissionScreen
@@ -314,6 +315,10 @@ class MainActivity : ComponentActivity() {
 
                 composable("SensorInfoScreen") { backStackEntry ->
                     SensorInfoScreen(navController, bleViewModel)
+                }
+
+                composable("VersionInfoScreen") { backStackEntry ->
+                    VersionInfoScreen(navController)
                 }
 
                 composable("PrivacyPolicyScreen") { backStackEntry ->

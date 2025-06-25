@@ -97,8 +97,8 @@ fun EventScreen(
 
                 // onResume 시점에만 실행!
                 // 서버로부터 이벤트 목록 받아와서 화면 갱신해주기
-                Log.e("TEST", "이벤트 화면에서 onResume일때 DisposableEffect 실행")
-                Log.e("TEST", "이벤트 화면에서 width :${screenWidthDp} height : ${screenHeightDp}")
+                Log.d("TEST", "이벤트 화면에서 onResume일때 DisposableEffect 실행")
+                Log.d("TEST", "이벤트 화면에서 width :${screenWidthDp} height : ${screenHeightDp}")
 
                 coroutineScope.launch(Dispatchers.IO) {
                     try {
