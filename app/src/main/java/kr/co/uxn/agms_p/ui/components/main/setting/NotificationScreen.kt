@@ -112,8 +112,8 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
             val verifiedDSExpiredSensor = DataStoreManager.getNotiExpiredSensor().first() ?: true
             val verifiedDSStabilization = DataStoreManager.getNotiStabilization().first() ?: true
             val verifiedDSCalibration = DataStoreManager.getNotiCalibration().first() ?: true
-            val verifiedDSTargetLowGlucose = DataStoreManager.getTargetLowGlucose().first() ?: -1
-            val verifiedDSTargetHighGlucose = DataStoreManager.getTargetHighGlucose().first() ?: -1
+            val verifiedDSTargetLowGlucose = DataStoreManager.getTargetLowGlucose().first() ?: 70
+            val verifiedDSTargetHighGlucose = DataStoreManager.getTargetHighGlucose().first() ?: 170
             val verifiedDSDailyCalibrationTime = DataStoreManager.getDailyCalibrationTime().first() ?: "오전 11:00"
 
             // 화면에 값 설정
@@ -145,6 +145,8 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                 cal.set(Calendar.HOUR_OF_DAY, state.hour)
                 cal.set(Calendar.MINUTE, state.minute)
                 cal.isLenient = false
+
+                Log.d("TIME", "format time : ${formatter.format(cal.time)} \nfinalTime : $dailyCalibrationTime")
                 dailyCalibrationTime.value = formatter.format(cal.time)
                 showSetDailyCalibrationDialog.value = false
 

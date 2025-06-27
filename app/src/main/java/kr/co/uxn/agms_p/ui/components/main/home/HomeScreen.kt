@@ -522,6 +522,8 @@ fun HomeScreen(
                                     DataStoreManager.deleteEndTime()
                                     DataStoreManager.deleteDailyCalibrationTime()
                                     DataStoreManager.setLandScapeMode(false)
+                                    DataStoreManager.deleteTargetLowGlucose()
+                                    DataStoreManager.deleteTargetHighGlucose()
                                     withContext(Dispatchers.Main) {
                                         // 1. 서비스 종료
                                         bleViewModel.emit("STOP_SERVICE")

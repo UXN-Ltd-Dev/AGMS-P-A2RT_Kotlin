@@ -124,20 +124,20 @@ fun StabilizationCompleteScreen(navController: NavController) {
                                 Log.e("TEST", "안정화 화면에서 버튼 눌럿을시 Route : ${route}")
 
                                 // 알림 혈당 설정
-                                val userId = DataStoreManager.getUserId().first() ?: -1
-                                try {
-                                    val detectorList = localDbRepository?.dataDao()?.getListAfterLastTime(userId, 0)
-                                    Log.d("StabilizationCompleteScreen, 알림혈당 기본값 설정", "detectorList is null or empty!")
-                                    if (detectorList.isNullOrEmpty()) {
-                                        DataStoreManager.setTargetLowGlucose(70)
-                                        DataStoreManager.setTargetHighGlucose(170)
-                                    } else {
-                                        Log.d("TEST", "detectorList is exist : ${detectorList}")
-                                    }
-
-                                } catch (e: Exception) {
-                                    Log.d("TEST","룸 DB에러 발생 : ${e.message}")
-                                }
+//                                val userId = DataStoreManager.getUserId().first() ?: -1
+//                                try {
+//                                    val detectorList = localDbRepository?.dataDao()?.getListAfterLastTime(userId, 0)
+//                                    Log.d("StabilizationCompleteScreen, 알림혈당 기본값 설정", "detectorList is null or empty!")
+//                                    if (detectorList.isNullOrEmpty()) {
+//                                        DataStoreManager.setTargetLowGlucose(70)
+//                                        DataStoreManager.setTargetHighGlucose(170)
+//                                    } else {
+//                                        Log.d("TEST", "detectorList is exist : ${detectorList}")
+//                                    }
+//
+//                                } catch (e: Exception) {
+//                                    Log.d("TEST","룸 DB에러 발생 : ${e.message}")
+//                                }
 
                                 withContext(Dispatchers.Main){
                                     NotificationManagerCompat.from(context).cancel(90)

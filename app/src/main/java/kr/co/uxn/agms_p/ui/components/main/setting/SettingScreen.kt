@@ -76,6 +76,8 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                     DataStoreManager.deleteDeviceMac()
 //                    DataStoreManager.deleteStartTime()
 //                    DataStoreManager.deleteEndTime()
+                    DataStoreManager.deleteTargetLowGlucose()
+                    DataStoreManager.deleteTargetHighGlucose()
 
                     // 1. 서비스 종료
                     bleViewModel.emit("STOP_SERVICE")

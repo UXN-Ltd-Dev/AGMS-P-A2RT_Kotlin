@@ -373,7 +373,7 @@ class AlwaysService() : Service() {
                         val dailyCalibrationLastTime = DataStoreManager.getDailyCalibrationLastTime().first() ?: ""
                         val today = LocalDate.now(ZoneId.of("Asia/Seoul")).toString()
                         if (isDailyCalibration && dailyCalibrationLastTime != today) {
-                            val calibrationTime = DataStoreManager.getDailyCalibrationTime().first() ?: ""
+                            val calibrationTime = DataStoreManager.getDailyCalibrationTime().first() ?: "오전 11:00"
                             Log.d("CALI", "calibrationTime is : ${calibrationTime}")
                             if (calibrationTime != "") {
                                 // a hh:mm 형태의 스트링 값을 현재 시간과 비교후 오차 간격 10분 이내면 알림 울림

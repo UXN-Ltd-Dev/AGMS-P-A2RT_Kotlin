@@ -204,6 +204,12 @@ fun ActivityRegisterScreen(navController: NavController, eventScreenViewModel: E
                                 if (memo.value != "") {
                                     coroutineScope.launch(Dispatchers.IO) {
 
+                                        // 서버 반응 시간 동안 버튼이 두 번 누를경우, 두번 입력될 수 있어서 우선
+                                        // 화면 이동부터 시킴
+                                        withContext(Dispatchers.Main) {
+                                            navController.navigate("MainScreen/${1}")
+                                        }
+
                                         try {
                                             val userId = DataStoreManager.getUserId().first() ?: -1
                                             val formatterOld = DateTimeFormatter.ofPattern("yyyy.MM.dd. a h:mm")
@@ -227,20 +233,20 @@ fun ActivityRegisterScreen(navController: NavController, eventScreenViewModel: E
                                             )
                                             if (upload.isSuccessful) {
                                                 val uploadBody = upload.body()
-                                                Log.e("EVENT", "uploadBody : $uploadBody")
+                                                Log.d("EVENT", "uploadBody : $uploadBody")
                                                 if (uploadBody != null) {
                                                     if (uploadBody.isSuccess) {
-                                                        Log.e("EVENT", "EVENT 업로드 성공, ${uploadBody.message}")
-                                                        withContext(Dispatchers.Main) {
-
-                                                            val image = when (eventTypeCode) {
-                                                                1401 -> R.drawable.event_meal
-                                                                1402 -> R.drawable.event_activity
-                                                                1403 -> R.drawable.event_calibration
-                                                                else -> R.drawable.event_insulin
-                                                            }
-                                                            navController.navigate("MainScreen/${1}")
-                                                        }
+                                                        Log.d("EVENT", "EVENT 업로드 성공, ${uploadBody.message}")
+//                                                        withContext(Dispatchers.Main) {
+//
+////                                                            val image = when (eventTypeCode) {
+////                                                                1401 -> R.drawable.event_meal
+////                                                                1402 -> R.drawable.event_activity
+////                                                                1403 -> R.drawable.event_calibration
+////                                                                else -> R.drawable.event_insulin
+////                                                            }
+//                                                            navController.navigate("MainScreen/${1}")
+//                                                        }
                                                     }
                                                 }
                                             } else {

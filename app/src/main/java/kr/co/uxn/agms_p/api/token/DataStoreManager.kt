@@ -43,9 +43,9 @@ object DataStoreManager {
     private val NOTI_CALIBRATION = booleanPreferencesKey("noti_calibration")
     private val TARGET_HIGH_GLUCOSE = intPreferencesKey("target_high_glucose")
     private val TARGET_LOW_GLUCOSE = intPreferencesKey("target_low_glucose")
-    private val DAILY_CALIBRATION_TIME = stringPreferencesKey("daily_calibration_time")
     private val LANDSCAPE_MODE = booleanPreferencesKey("landscape_mode")
-    private val DAILY_LAST_CALIBRATION_TIME = stringPreferencesKey("daily_calibration_time")
+    private val DAILY_CALIBRATION_TIME = stringPreferencesKey("daily_calibration_time")
+    private val DAILY_LAST_CALIBRATION_TIME = stringPreferencesKey("daily_last_calibration_time")
 
     fun init(context: Context) {
         dataStore = PreferenceDataStoreFactory.create {
@@ -265,6 +265,18 @@ object DataStoreManager {
     suspend fun deleteSerialNumber() {
         dataStore.edit { prefs ->
             prefs.remove(SERIAL_NUMBER)
+        }
+    }
+
+    suspend fun deleteTargetLowGlucose() {
+        dataStore.edit { prefs ->
+            prefs.remove(TARGET_LOW_GLUCOSE)
+        }
+    }
+
+    suspend fun deleteTargetHighGlucose() {
+        dataStore.edit { prefs ->
+            prefs.remove(TARGET_HIGH_GLUCOSE)
         }
     }
 
