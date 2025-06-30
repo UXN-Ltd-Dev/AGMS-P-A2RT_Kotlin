@@ -219,6 +219,12 @@ object DataStoreManager {
         }
     }
 
+    suspend fun deleteEmail() {
+        dataStore.edit { prefs ->
+            prefs.remove(EMAIL)
+        }
+    }
+
     suspend fun deleteDeviceMac() {
         dataStore.edit { prefs ->
             prefs.remove(DEVICE_MAC)

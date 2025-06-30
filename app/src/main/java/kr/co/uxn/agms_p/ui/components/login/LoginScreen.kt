@@ -38,6 +38,8 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -241,6 +243,8 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                 Text(
                     text = "비밀번호 찾기",
                     fontSize = 16.sp,
+//                    fontFamily = FontFamily(Font(R.font.pretendard)),
+//                    fontWeight = FontWeight.Medium,
                     modifier = Modifier.clickable {
                         navController.navigate("PasswordResetScreen")
                     }
@@ -282,11 +286,13 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                                 // userId 저장
                                                 DataStoreManager.deleteUserId()
                                                 DataStoreManager.saveUserId(loginResult.userId)
+                                                DataStoreManager.deleteEmail()
+                                                DataStoreManager.saveEmail(trimEmail)
 
                                                 // mac 정리
                                                 DataStoreManager.deleteDeviceMac()
 
-                                                // 세팅화면으로 이동
+                                                // 세팅 화면으로 이동
                                                 withContext(Dispatchers.Main) {
                                                     navController.navigate("SettingPermissionScreen/${1803}")
                                                 }

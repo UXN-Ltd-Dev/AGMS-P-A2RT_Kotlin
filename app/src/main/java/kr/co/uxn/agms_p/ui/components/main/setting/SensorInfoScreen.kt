@@ -143,6 +143,7 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                                     DataStoreManager.setLandScapeMode(false)
                                     DataStoreManager.deleteTargetLowGlucose()
                                     DataStoreManager.deleteTargetHighGlucose()
+                                    DataStoreManager.deleteEmail()
                                     withContext(Dispatchers.Main) {
                                         // 1. 서비스 종료
                                         bleViewModel.emit("STOP_SERVICE")
