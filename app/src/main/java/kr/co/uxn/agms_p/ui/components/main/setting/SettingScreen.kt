@@ -1,5 +1,6 @@
 package kr.co.uxn.agms_p.ui.components.main.setting
 
+import android.os.Process
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -83,7 +84,7 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                     // 1. 서비스 종료
                     bleViewModel.emit("STOP_SERVICE")
                     // 앱 강제 종료
-                    android.os.Process.killProcess(android.os.Process.myPid())
+                    Process.killProcess(Process.myPid())
                     exitProcess(0)
                 }
                 // 2. 데이터 전송
@@ -335,3 +336,4 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
         Divider()
     }
 }
+

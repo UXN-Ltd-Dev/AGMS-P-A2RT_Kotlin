@@ -108,7 +108,7 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
             // DS로부터 값 불러오기
             val verifiedDSHigh = DataStoreManager.getNotiHighGlucose().first() ?: false
             val verifiedDSLow = DataStoreManager.getNotiLowGlucose().first() ?: false
-            val verifiedDSLostSignal = DataStoreManager.getNotiLostSignal().first() ?: false
+            val verifiedDSLostSignal = DataStoreManager.getNotiLostSignal().first() ?: true
             val verifiedDSExpiredSensor = DataStoreManager.getNotiExpiredSensor().first() ?: true
             val verifiedDSStabilization = DataStoreManager.getNotiStabilization().first() ?: true
             val verifiedDSCalibration = DataStoreManager.getNotiCalibration().first() ?: true
@@ -128,10 +128,10 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
             dailyCalibrationTime.value = verifiedDSDailyCalibrationTime
 
             // 로그 띄우기
-            Log.e("NOTI", "After High : ${verifiedDSHigh}, Low : ${verifiedDSLow} " +
-                    "\n Lost : ${verifiedDSLostSignal} ExpiredSensor : ${verifiedDSExpiredSensor}" +
-                    "\n Stabilization : ${verifiedDSStabilization} Calibration : ${verifiedDSCalibration}" +
-                    "\n Target High Glucose : ${verifiedDSTargetHighGlucose} Target Low Glucose : ${verifiedDSTargetLowGlucose}")
+//            Log.e("NOTI", "After High : ${verifiedDSHigh}, Low : ${verifiedDSLow} " +
+//                    "\n Lost : ${verifiedDSLostSignal} ExpiredSensor : ${verifiedDSExpiredSensor}" +
+//                    "\n Stabilization : ${verifiedDSStabilization} Calibration : ${verifiedDSCalibration}" +
+//                    "\n Target High Glucose : ${verifiedDSTargetHighGlucose} Target Low Glucose : ${verifiedDSTargetLowGlucose}")
         }
     }
 

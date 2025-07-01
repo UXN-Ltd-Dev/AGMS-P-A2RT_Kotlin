@@ -107,6 +107,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.patrykandpatrick.vico.core.cartesian.CartesianDrawingContext
 import com.patrykandpatrick.vico.core.cartesian.CartesianMeasuringContext
 import com.patrykandpatrick.vico.core.cartesian.layer.CartesianLayerDimensions
+import kr.co.uxn.agms_p.GuestList
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.ble.BleBridge.showHighGlucoseDialog
 import kr.co.uxn.agms_p.ble.BleBridge.showLowGlucoseDialog
@@ -140,6 +141,8 @@ fun HomeScreen(
 
     val glucoseTrend = remember { mutableStateOf("유지 중") }
     val glucoseTrendImgResource = remember { mutableStateOf(R.drawable.level3) }
+
+    var email = ""
 
     // Vico Chart
     val modelProducer = remember { CartesianChartModelProducer() }
@@ -234,6 +237,10 @@ fun HomeScreen(
     val fontSize = when {
         screenHeightDp == 783 -> 17.sp // a시리즈
         else -> 16.sp
+    }
+
+    LaunchedEffect(Unit) {
+        email = DataStoreManager.getEmail().first()?: ""
     }
 
     LaunchedEffect(Unit) {
@@ -591,17 +598,21 @@ fun HomeScreen(
                 .padding(10.dp)
 //                .weight(1f)
                 .pointerInput(Unit) {
-                    detectTapGestures(
-                        onLongPress = {
-                            // 롱클릭 시 실행할 코드
-                            Log.d("TEST", "롱 클릭됨!")
-                            showModeDialog.value = true
-
-                        },
-                        onTap = {
-                            // 짧은 클릭 (탭) 시 실행할 코드 (선택 사항)
-                        }
-                    )
+                    if (GuestList.getGuestList().contains(email)) {
+                        detectTapGestures(
+                            onLongPress = {
+                                Log.d("TEST", "I'm guest : ${email}")
+                            }
+                        )
+                    } else {
+                        detectTapGestures(
+                            onLongPress = {
+                                // 롱클릭 시 실행할 코드
+                                Log.d("TEST", "롱 클릭됨!")
+                                showModeDialog.value = true
+                            }
+                        )
+                    }
                 },
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
@@ -688,30 +699,34 @@ fun HomeScreen(
             Box(
                 modifier = Modifier.fillMaxSize()
                     .pointerInput(Unit) {
-                        detectTapGestures(
-                            onDoubleTap = {
-                                val newMax = if(selectedChartOption == "혈당" ) {
-                                    if (currentYMax == 250.0) 500.0 else 250.0
-                                } else {
-                                    if (currentYMax == 250.0) {
-                                        50.0
-                                    } else if (currentYMax == 50.0) {
-                                        10.0
-                                    } else if (currentYMax == 10.0) {
-                                        5.0
-                                    } else {
-                                        50.0
-                                    }
+                        if (GuestList.getGuestList().contains(email)) {
+                            detectTapGestures(
+                                onLongPress = {
+                                    Log.d("TEST", "I'm guest : ${email}")
                                 }
-                                Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
-                                setYMax(newMax)
-                                forceRecompose++
-                            },
-                            onTap = {
-                            },
-                            onLongPress = {
-                            }
-                        )
+                            )
+                        } else {
+                            detectTapGestures(
+                                onDoubleTap = {
+                                    val newMax = if(selectedChartOption == "혈당" ) {
+                                        if (currentYMax == 250.0) 500.0 else 250.0
+                                    } else {
+                                        if (currentYMax == 250.0) {
+                                            50.0
+                                        } else if (currentYMax == 50.0) {
+                                            10.0
+                                        } else if (currentYMax == 10.0) {
+                                            5.0
+                                        } else {
+                                            50.0
+                                        }
+                                    }
+                                    Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
+                                    setYMax(newMax)
+                                    forceRecompose++
+                                }
+                            )
+                        }
                     },
             ) {
                 Card(

@@ -307,19 +307,25 @@ class AlwaysService() : Service() {
 
                                         Log.e("TEST", "glucoseListBody : ${glucoseListBody}")
                                         val insertDataList = glucoseListBody.map {
-                                            val convertToLocalDateTime =
-                                                LocalDateTime.parse(it.createdAt, formatter)
-                                            val parsedLongTime =
-                                                convertToLocalDateTime.atZone(zoneId).toInstant()
-                                                    .toEpochMilli()
-                                            UserGlucose(
-                                                userId = userId,
-                                                glucose = it.glucose.toDouble(),
-                                                weo1 = it.weo1,
-                                                weo2 = it.weo2,
-                                                createdAt = it.createdAt,
-                                                createdAtLong = parsedLongTime
-                                            )
+//                                            val convertToLocalDateTime =
+//                                                LocalDateTime.parse(it.createdAt, formatter)
+//                                            val parsedLongTime =
+//                                                convertToLocalDateTime.atZone(zoneId).toInstant()
+//                                                    .toEpochMilli()
+//                                            UserGlucose(
+//                                                userId = userId,
+//                                                glucose = it.glucose.toDouble(),
+//                                                weo1 = it.weo1,
+//                                                weo2 = it.weo2,
+//                                                createdAt = it.createdAt,
+//                                                createdAtLong = parsedLongTime
+//                                            )
+                                            val now = System.currentTimeMillis()
+
+                                            val localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(now), ZoneId.of("Asia/Seoul"))
+                                            val formattedTime = localDateTime.format(formatter)
+
+                                            UserGlucose(userId = userId , glucose = it.glucose.toDouble(), weo1 = it.weo1, weo2 = it.weo2, createdAt = formattedTime, createdAtLong = now)
                                         }
 
                                         Log.e("TEST", "insertDataList : ${insertDataList}")
@@ -349,6 +355,7 @@ class AlwaysService() : Service() {
                                         val lowChecker =
                                             DataStoreManager.getNotiLowGlucose().first() ?: false
 
+                                        // 고혈당, 저혈당 알람
                                         if (highChecker) {
                                             if (lastGlucose > targetHigh) {
                                                 sendNotification(
@@ -357,6 +364,7 @@ class AlwaysService() : Service() {
                                                     "고혈당이 감지되었습니다. \n현재 혈당 : ${lastGlucose} mg/dL",
                                                     96
                                                 )
+                                                showHighGlucoseDialog(true)
                                             }
                                         }
 
@@ -369,6 +377,7 @@ class AlwaysService() : Service() {
                                                     95
                                                 )
                                             }
+                                            showLowGlucoseDialog(true)
                                         }
 
 
@@ -845,7 +854,8 @@ class AlwaysService() : Service() {
 //                        }
 
 
-                        delay(1000 * 60 * 1)
+//                        delay(1000 * 60 * 1) // 1분
+                        delay(1000 * 10 ) // 10초
                     } catch (e: Exception) {
                         Log.e("SERVICE", "서비스 코루틴 에러 발생 : ${e.message}")
                     } finally {

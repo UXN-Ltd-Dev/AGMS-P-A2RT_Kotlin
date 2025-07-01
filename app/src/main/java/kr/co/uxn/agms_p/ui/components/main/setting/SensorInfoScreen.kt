@@ -40,12 +40,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
-import kr.co.uxn.agms_p.api.model.requestDTO.RequestDataValue
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.ui.components.main.AlwaysDialog
@@ -66,7 +64,7 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
 
     val showDialog = remember { mutableStateOf(false) }
     val startTime = remember { mutableStateOf("") }
-    val leftTime = remember { mutableStateOf(-1) }
+    val remainingTime = remember { mutableStateOf(-1) }
 
     var serialNumber = remember { mutableStateOf("")}
 
@@ -98,7 +96,7 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
         }
 
         // 남은 사용 기간 설정
-        leftTime.value = remainingDays
+        remainingTime.value = remainingDays
 
         // 시리얼번호 가져오기
         withContext(Dispatchers.IO) {
@@ -147,7 +145,7 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                                     withContext(Dispatchers.Main) {
                                         // 1. 서비스 종료
                                         bleViewModel.emit("STOP_SERVICE")
-                                        // 앱 강제종료
+                                        // 앱 강제 종료
                                         android.os.Process.killProcess(android.os.Process.myPid())
                                         exitProcess(0)
                                     }
@@ -249,12 +247,12 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                         text = "남은 사용 기간",
                         fontSize = 16.sp
                     )
-                    if (leftTime.value > 0) {
+                    if (remainingTime.value > 0) {
                         Text(
-                            text = "${leftTime.value}일",
+                            text = "${remainingTime.value}일",
                             fontSize = 16.sp
                         )
-                    } else if (leftTime.value == 0) {
+                    } else if (remainingTime.value == 0) {
                         Text(
                             text = "오늘이에요",
                             fontSize = 16.sp
