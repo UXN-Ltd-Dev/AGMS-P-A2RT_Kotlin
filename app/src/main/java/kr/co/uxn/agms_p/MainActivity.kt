@@ -9,7 +9,9 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -98,6 +100,8 @@ class MainActivity : ComponentActivity() {
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = true
 
+//        enableEdgeToEdge()
+
 //        PermissionManagerConfig.setCustomRationaleUI { permission, onDismiss, onConfirm ->
 //            CustomRationaleDialog(
 //                description = permission.description,
@@ -152,7 +156,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun Navigation(
-        modifier: Modifier = Modifier,
+        modifier: Modifier = Modifier.safeDrawingPadding(),
         navController: NavHostController = rememberNavController()
     ) {
 
@@ -280,8 +284,9 @@ class MainActivity : ComponentActivity() {
                     ScanFailScreen(navController)
                 }
 
-                composable("StabilizationScreen") { backStackEntry ->
-                    StabilizationScreen(navController, bleViewModel)
+                composable("StabilizationScreen/{mac}") { backStackEntry ->
+                    val mac = backStackEntry.arguments?.getString("mac")?.toString() ?: ""
+                    StabilizationScreen(navController, mac, bleViewModel)
                 }
 
                 composable("StabilizationCompleteScreen") { backStackEntry ->

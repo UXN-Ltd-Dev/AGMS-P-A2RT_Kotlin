@@ -114,10 +114,7 @@ fun RegisterDeviceScreen(navController: NavController) {
 
             Text(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        navController.navigate("StabilizationScreen")
-                    },
+                    .fillMaxWidth(),
                 textAlign = TextAlign.Center,
                 text = "블루투스 연결을 위해\n기기 번호를 입력해주세요.",
                 fontSize = 25.sp,
@@ -193,16 +190,20 @@ fun RegisterDeviceScreen(navController: NavController) {
                     modifier = Modifier
                         .align(Alignment.Center)
                         .clickable {
-                            if (deviceNumber.value != "") {
+                            if (deviceNumber.value == "999999") {
+                                navController.navigate("ScanDeviceScreen/${deviceNumber.value}/${deviceNumber.value}")
+                            } else if (deviceNumber.value != "") {
 
                                 if (getBleStatus(context) != STATUS_BLE_ENABLED) {
                                     coroutineScope.launch(Dispatchers.Main) {
-                                        Toast.makeText(context, "블루투스를 켜주세요.", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "블루투스를 켜주세요.", Toast.LENGTH_SHORT)
+                                            .show()
                                     }
                                 } else {
                                     try {
                                         coroutineScope.launch(Dispatchers.IO) {
-                                            val result = tokenRetrofit.getDeviceMac(deviceNumber.value)
+                                            val result =
+                                                tokenRetrofit.getDeviceMac(deviceNumber.value)
                                             if (result.isSuccessful) {
                                                 val resultBody = result.body()
                                                 if (resultBody != null) {

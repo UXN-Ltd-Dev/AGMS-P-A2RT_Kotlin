@@ -108,7 +108,7 @@ fun GlucoseRegisterScreen(
                     IconButton(onClick = {}) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "뒤로가기",
+                            contentDescription = "뒤로 가기",
                             modifier = Modifier.clickable {
                                 navController.navigate("MainScreen/${1}")
                             }

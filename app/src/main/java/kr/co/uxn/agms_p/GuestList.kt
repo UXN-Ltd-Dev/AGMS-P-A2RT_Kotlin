@@ -13,6 +13,16 @@ object GuestList {
             "uxnsw8@uxn.co.kr",
             "uxnsw9@uxn.co.kr",
             "uxnsw10@uxn.co.kr",
+            "uxnsw11@uxn.co.kr",
+            "uxnsw12@uxn.co.kr",
+            "uxnsw13@uxn.co.kr",
+            "uxnsw14@uxn.co.kr",
+            "uxnsw15@uxn.co.kr",
+            "uxnsw16@uxn.co.kr",
+            "uxnsw17@uxn.co.kr",
+            "uxnsw18@uxn.co.kr",
+            "uxnsw19@uxn.co.kr",
+            "uxnsw20@uxn.co.kr",
         )
     }
 }

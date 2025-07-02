@@ -411,6 +411,7 @@ object DataStoreManager {
         }
     }
 
+
     suspend fun setLandScapeMode(isCheck: Boolean) {
         dataStore.edit { prefs ->
             prefs[LANDSCAPE_MODE] = isCheck

@@ -63,7 +63,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 
 @Composable
-fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel) {
+fun StabilizationScreen(navController: NavController, mac: String, bleViewModel: BleViewModel) {
     // 로티 애니메이션
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.reading_guy_lottie))
     val progress by animateLottieCompositionAsState(
@@ -93,8 +93,10 @@ fun StabilizationScreen(navController: NavController, bleViewModel: BleViewModel
 
     LaunchedEffect(Unit) {
         // 서비스 실행 이벤트 발행
-        bleViewModel.emit("START_SERVICE")
-        Log.e("StabilizationScreen", "START_SERVICE EMIT!")
+        if(mac != "999999") {
+            bleViewModel.emit("START_SERVICE")
+            Log.e("StabilizationScreen", "START_SERVICE EMIT!")
+        }
 
         // 서비스 종료 이벤트 발행
         //  bleViewModel.emit("STOP_SERVICE")

@@ -131,7 +131,8 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
             }
 
             // 성공시, 안정화 화면으로 이동
-            navController.navigate("StabilizationScreen")
+            val mac = "test"
+            navController.navigate("StabilizationScreen/$mac")
         }
 
         override fun onBatchScanResults(results: MutableList<ScanResult>?) {
@@ -167,42 +168,47 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
     }
 
     LaunchedEffect(key1 = Unit) {
-        var mScanFilter = mutableListOf<ScanFilter>()
-        Log.e("TAG", "스캔에 쓰일 Mac : $mac")
+        if (mac == "999999") {
+            navController.navigate("StabilizationScreen/$mac")
+        } else {
+            var mScanFilter = mutableListOf<ScanFilter>()
+            Log.e("TAG", "스캔에 쓰일 Mac : $mac")
 
-        val scanFilter = ScanFilter
+            val scanFilter = ScanFilter
                 .Builder()
                 .setDeviceAddress(mac)
                 .build()
 
-        mScanFilter.add(scanFilter)
+            mScanFilter.add(scanFilter)
 
-        val scanSettings = ScanSettings.Builder()
-            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY) // 빠른 스캔 모드
-            .build()
+            val scanSettings = ScanSettings.Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY) // 빠른 스캔 모드
+                .build()
 
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.BLUETOOTH_SCAN
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
+            if (ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.BLUETOOTH_SCAN
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+            }
 
-        }
-        // 스캔 시작
-        bluetoothAdapter.bluetoothLeScanner.startScan(mScanFilter, scanSettings, scanCallback)
-        // 옵저빙하고 있다가 스캔 종료
 
-        launch {
-            bleViewModel.isFindDevice.collect { isFind ->
-                if (isFind) {
-                    bluetoothAdapter.bluetoothLeScanner.stopScan(scanCallback)
+            // 스캔 시작
+            bluetoothAdapter.bluetoothLeScanner.startScan(mScanFilter, scanSettings, scanCallback)
+            // 옵저빙하고 있다가 스캔 종료
+
+            launch {
+                bleViewModel.isFindDevice.collect { isFind ->
+                    if (isFind) {
+                        bluetoothAdapter.bluetoothLeScanner.stopScan(scanCallback)
+                    }
                 }
             }
-        }
 
-        // 스캔 종료 로직
-        launch {
-            teraRups()
+            // 스캔 종료 로직
+            launch {
+                teraRups()
+            }
         }
     }
 

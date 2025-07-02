@@ -83,7 +83,7 @@ class AlwaysService() : Service() {
     private var isDuplicatedJob: Job? = null
 
     private val localBinder = LocalBinder()
-    var count = 0
+    var count = 1
 
     private var timerForNoti: Timer? = null
     private var timerTaskForNoti: TimerTask? = null
@@ -292,6 +292,8 @@ class AlwaysService() : Service() {
                             Log.d("Guest", "He is Guest")
                             Log.d("Guest", "userEmail : ${userEmail}")
 
+                            Log.d("TEST", "")
+
                             // dummy api
                             try {
                                 val glucoseDummyList = tokenRetrofit.getDummyGlucose(count)
@@ -306,6 +308,21 @@ class AlwaysService() : Service() {
                                         val zoneId = ZoneId.of("Asia/Seoul") // 타임존 설정 (필수!)
 
                                         Log.e("TEST", "glucoseListBody : ${glucoseListBody}")
+                                        Log.e("TEST", "glucoseListBody first : ${glucoseListBody.first()}\nglucoseListBody last : ${glucoseListBody.last()}")
+
+                                        val now = System.currentTimeMillis()
+                                        val localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(now), ZoneId.of("Asia/Seoul"))
+                                        val formattedTime = localDateTime.format(formatter)
+
+                                        val insertData = UserGlucose(
+                                            userId = userId,
+                                            glucose = glucoseListBody.last().glucose.toDouble(),
+                                            weo1 = glucoseListBody.last().weo1,
+                                            weo2 = glucoseListBody.last().weo2,
+                                            createdAt = formattedTime,
+                                            createdAtLong = now
+                                        )
+
                                         val insertDataList = glucoseListBody.map {
 //                                            val convertToLocalDateTime =
 //                                                LocalDateTime.parse(it.createdAt, formatter)
@@ -328,9 +345,9 @@ class AlwaysService() : Service() {
                                             UserGlucose(userId = userId , glucose = it.glucose.toDouble(), weo1 = it.weo1, weo2 = it.weo2, createdAt = formattedTime, createdAtLong = now)
                                         }
 
-                                        Log.e("TEST", "insertDataList : ${insertDataList}")
+                                        Log.e("TEST", "insertData : ${insertData}")
                                         // db에 저장
-                                        localDbRepository?.dataDao()?.insertGlucose(insertDataList)
+                                        localDbRepository?.dataDao()?.insertGlucose(listOf(insertData))
 
                                         // ui에 마지막 글루코즈 값 갱신
                                         Log.e(
@@ -854,8 +871,8 @@ class AlwaysService() : Service() {
 //                        }
 
 
-//                        delay(1000 * 60 * 1) // 1분
-                        delay(1000 * 10 ) // 10초
+                        delay(1000 * 60 * 1) // 1분
+//                        delay(1000 * 10 ) // 10초
                     } catch (e: Exception) {
                         Log.e("SERVICE", "서비스 코루틴 에러 발생 : ${e.message}")
                     } finally {

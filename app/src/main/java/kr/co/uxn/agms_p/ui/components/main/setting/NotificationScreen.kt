@@ -94,11 +94,8 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
     val showSetDailyCalibrationDialog = remember { mutableStateOf(false) }
 
     var dailyCalibrationTime = remember { mutableStateOf("") }
-    val state = rememberTimePickerState(
-        is24Hour = true,
-        initialHour = 0,
-        initialMinute = 0
-    )
+
+
     val formatter = remember { SimpleDateFormat("a hh:mm", Locale.KOREAN) }
 
 
@@ -137,12 +134,19 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
 
     if (showSetDailyCalibrationDialog.value) {
 
+        val state = rememberTimePickerState(
+            is24Hour = false,
+            initialHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY),
+            initialMinute = Calendar.getInstance().get(Calendar.MINUTE),
+        )
         TimePickerDialog(
             title = "혈당값 입력 시간",
             onCancel = { showSetDailyCalibrationDialog.value = false },
             onConfirm = {
                 val cal = Calendar.getInstance()
-                cal.set(Calendar.HOUR_OF_DAY, state.hour)
+
+                cal.set(Calendar.HOUR, state.hour % 12) // 12시 → 0시로 변환 필요
+                cal.set(Calendar.AM_PM, if (state.isAfternoon) Calendar.PM else Calendar.AM)
                 cal.set(Calendar.MINUTE, state.minute)
                 cal.isLenient = false
 

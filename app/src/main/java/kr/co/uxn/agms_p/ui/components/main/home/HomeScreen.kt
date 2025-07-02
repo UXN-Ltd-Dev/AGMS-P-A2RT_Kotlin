@@ -104,6 +104,7 @@ import kotlin.system.exitProcess
 import androidx.compose.runtime.*
 import androidx.compose.runtime.key
 import androidx.core.app.NotificationManagerCompat
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisLabelComponent
 import com.patrykandpatrick.vico.core.cartesian.CartesianDrawingContext
 import com.patrykandpatrick.vico.core.cartesian.CartesianMeasuringContext
 import com.patrykandpatrick.vico.core.cartesian.layer.CartesianLayerDimensions
@@ -580,7 +581,7 @@ fun HomeScreen(
                 showHighGlucoseDialog(false)
                 NotificationManagerCompat.from(context).cancel(96)
             },
-            title = "혈당수치가 높습니다.",
+            title = "혈당 수치가 높습니다.",
             content = "현재 혈당이 혈당 범위를 초과했어요. 식사나 활동 내용을 확인하세요.",
         )
     }
@@ -608,7 +609,7 @@ fun HomeScreen(
                         detectTapGestures(
                             onLongPress = {
                                 // 롱클릭 시 실행할 코드
-                                Log.d("TEST", "롱 클릭됨!")
+                                Log.d("TEST", "email : ${email}")
                                 showModeDialog.value = true
                             }
                         )
@@ -701,7 +702,7 @@ fun HomeScreen(
                     .pointerInput(Unit) {
                         if (GuestList.getGuestList().contains(email)) {
                             detectTapGestures(
-                                onLongPress = {
+                                onDoubleTap = {
                                     Log.d("TEST", "I'm guest : ${email}")
                                 }
                             )
@@ -721,6 +722,7 @@ fun HomeScreen(
                                             50.0
                                         }
                                     }
+                                    Log.d("TEST", "email : ${email}")
                                     Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
                                     setYMax(newMax)
                                     forceRecompose++
@@ -804,10 +806,12 @@ fun HomeScreen(
                                         ),
                                         startAxis = VerticalAxis.rememberStart(
                                             valueFormatter = startAxisValueFormatter,
+                                            label = rememberAxisLabelComponent(color = Color.Black),
                                             itemPlacer = VerticalAxis.ItemPlacer.count({ 6 })
                                         ),
                                         bottomAxis = HorizontalAxis.rememberBottom(
                                             valueFormatter = bottomAxisFormatter,
+                                            label = rememberAxisLabelComponent(color = Color.Black),
                                             itemPlacer = HorizontalAxis.ItemPlacer.aligned(
                                                 spacing = { 20 }, // 5개의 xStep마다 하나의 라벨
                                                 offset = { 0 },
@@ -847,10 +851,7 @@ fun HomeScreen(
                                     )
                                 }
                             }
-
                         } // column
-
-
                     } // surface
 
                 } // Card (Column)
@@ -902,30 +903,35 @@ fun HomeScreen(
                         .padding(start = 10.dp)
                         .weight(1f)
                         .pointerInput(Unit) {
-                            detectTapGestures(
-                                onDoubleTap = {
-                                    val newMax = if(selectedChartOption == "혈당" ) {
-                                        if (currentYMax == 250.0) 500.0 else 250.0
-                                    } else {
-                                        if (currentYMax == 250.0) {
-                                            50.0
-                                        } else if (currentYMax == 50.0) {
-                                            10.0
-                                        } else if (currentYMax == 10.0) {
-                                            5.0
-                                        } else {
-                                            50.0
-                                        }
+                            if (GuestList.getGuestList().contains(email)) {
+                                detectTapGestures(
+                                    onLongPress = {
+                                        Log.d("TEST", "I'm guest : ${email}")
                                     }
-                                    Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
-                                    setYMax(newMax)
-                                    forceRecompose++
-                                },
-                                onTap = {
-                                },
-                                onLongPress = {
-                                }
-                            )
+                                )
+                            } else {
+                                detectTapGestures(
+                                    onDoubleTap = {
+                                        val newMax = if(selectedChartOption == "혈당" ) {
+                                            if (currentYMax == 250.0) 500.0 else 250.0
+                                        } else {
+                                            if (currentYMax == 250.0) {
+                                                50.0
+                                            } else if (currentYMax == 50.0) {
+                                                10.0
+                                            } else if (currentYMax == 10.0) {
+                                                5.0
+                                            } else {
+                                                50.0
+                                            }
+                                        }
+                                        Log.d("TEST", "email : ${email}")
+                                        Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
+                                        setYMax(newMax)
+                                        forceRecompose++
+                                    }
+                                )
+                            }
                         },
                     color = Color.Transparent
                 ) {
@@ -983,6 +989,7 @@ fun HomeScreen(
                                         ),
                                         startAxis = VerticalAxis.rememberStart(
                                             valueFormatter = startAxisValueFormatter,
+                                            label = rememberAxisLabelComponent(color = Color.Black),
                                             itemPlacer = if (yMax == 500.0) {
                                             VerticalAxis.ItemPlacer.count({ 6 })
                                             } else {
@@ -992,6 +999,7 @@ fun HomeScreen(
                                         ),
                                         bottomAxis = HorizontalAxis.rememberBottom(
                                             valueFormatter = bottomAxisFormatter,
+                                            label = rememberAxisLabelComponent(color = Color.Black),
 //                                            itemPlacer = HorizontalAxis.ItemPlacer.aligned(
 //                                                spacing = { 20 }, // 5개의 xStep마다 하나의 라벨
 //                                                offset = { 2 },

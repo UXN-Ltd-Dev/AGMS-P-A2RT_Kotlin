@@ -290,27 +290,27 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
 
                 Divider()
 
-                Box(
-                    modifier = Modifier.clickable {
-                        showDialog.value = true
-                    }
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White)
-                            .height(50.dp)
-                            .padding(horizontal = 30.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "센서 종료",
-                            fontSize = 16.sp
-                        )
-                    }
-                }
-                Divider()
+//                Box(
+//                    modifier = Modifier.clickable {
+//                        showDialog.value = true
+//                    }
+//                ) {
+//                    Row(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .background(Color.White)
+//                            .height(50.dp)
+//                            .padding(horizontal = 30.dp),
+//                        verticalAlignment = Alignment.CenterVertically,
+//                        horizontalArrangement = Arrangement.SpaceBetween
+//                    ) {
+//                        Text(
+//                            text = "센서 종료",
+//                            fontSize = 16.sp
+//                        )
+//                    }
+//                }
+//                Divider()
             } // Column
         } // Surface
     } // Scaffold
