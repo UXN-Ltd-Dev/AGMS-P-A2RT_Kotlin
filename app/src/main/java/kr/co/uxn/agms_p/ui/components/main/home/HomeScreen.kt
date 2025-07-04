@@ -103,6 +103,7 @@ import java.util.TimeZone
 import kotlin.system.exitProcess
 import androidx.compose.runtime.*
 import androidx.compose.runtime.key
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.core.app.NotificationManagerCompat
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisLabelComponent
 import com.patrykandpatrick.vico.core.cartesian.CartesianDrawingContext
@@ -143,7 +144,7 @@ fun HomeScreen(
     val glucoseTrend = remember { mutableStateOf("유지 중") }
     val glucoseTrendImgResource = remember { mutableStateOf(R.drawable.level3) }
 
-    var email = ""
+    var email = rememberSaveable { mutableStateOf("") }
 
     // Vico Chart
     val modelProducer = remember { CartesianChartModelProducer() }
@@ -241,7 +242,8 @@ fun HomeScreen(
     }
 
     LaunchedEffect(Unit) {
-        email = DataStoreManager.getEmail().first()?: ""
+        email.value = DataStoreManager.getEmail().first() ?: ""
+        Log.d("TEST", "email.value = ${email.value}")
     }
 
     LaunchedEffect(Unit) {
@@ -537,7 +539,7 @@ fun HomeScreen(
                                     withContext(Dispatchers.Main) {
                                         // 1. 서비스 종료
                                         bleViewModel.emit("STOP_SERVICE")
-                                        // 앱 강제종료
+                                        // 앱 강제 종료
                                         android.os.Process.killProcess(android.os.Process.myPid())
                                         exitProcess(0)
                                     }
@@ -600,17 +602,17 @@ fun HomeScreen(
                 .padding(10.dp)
 //                .weight(1f)
                 .pointerInput(Unit) {
-                    if (GuestList.getGuestList().contains(email)) {
+                    if (GuestList.getGuestList().contains(email.value)) {
                         detectTapGestures(
                             onLongPress = {
-                                Log.d("TEST", "I'm guest : ${email}")
+                                Log.d("TEST", "I'm guest : ${email.value}")
                             }
                         )
                     } else {
                         detectTapGestures(
                             onLongPress = {
                                 // 롱클릭 시 실행할 코드
-                                Log.d("TEST", "email : ${email}")
+                                Log.d("TEST", "email : ${email.value}")
                                 showModeDialog.value = true
                             }
                         )
@@ -701,10 +703,10 @@ fun HomeScreen(
             Box(
                 modifier = Modifier.fillMaxSize()
                     .pointerInput(Unit) {
-                        if (GuestList.getGuestList().contains(email)) {
+                        if (GuestList.getGuestList().contains(email.value)) {
                             detectTapGestures(
                                 onDoubleTap = {
-                                    Log.d("TEST", "I'm guest : ${email}")
+                                    Log.d("TEST", "I'm guest : ${email.value}")
                                 }
                             )
                         } else {
@@ -723,7 +725,7 @@ fun HomeScreen(
                                             50.0
                                         }
                                     }
-                                    Log.d("TEST", "email : ${email}")
+                                    Log.d("TEST", "email : ${email.value}")
                                     Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
                                     setYMax(newMax)
                                     forceRecompose++
@@ -747,6 +749,8 @@ fun HomeScreen(
                     )
                 ) {
                     // VICO 그래프
+                    // 가로 모드
+                    // 2. 그래프 표시 카드
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -904,10 +908,10 @@ fun HomeScreen(
                         .padding(start = 10.dp)
                         .weight(1f)
                         .pointerInput(Unit) {
-                            if (GuestList.getGuestList().contains(email)) {
+                            if (GuestList.getGuestList().contains(email.value)) {
                                 detectTapGestures(
-                                    onLongPress = {
-                                        Log.d("TEST", "I'm guest : ${email}")
+                                    onDoubleTap = {
+                                        Log.d("TEST", "I'm guest : ${email.value}")
                                     }
                                 )
                             } else {
@@ -926,7 +930,7 @@ fun HomeScreen(
                                                 50.0
                                             }
                                         }
-                                        Log.d("TEST", "email : ${email}")
+                                        Log.d("TEST", "email : ${email.value}")
                                         Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
                                         setYMax(newMax)
                                         forceRecompose++

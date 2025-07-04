@@ -104,70 +104,70 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
         }
     }
 
-    if (showDialog.value) {
-        AlwaysDialog(
-            onDismiss = {
-                showDialog.value = false
-            },
-            onConfirm = {
-                showDialog.value = false
-                coroutineScope.launch(Dispatchers.IO) {
-                    // 0. 토큰 정리
-                    val userId = DataStoreManager.getUserId().first() ?: -1
-                    try {
-                        val sensorOff = tokenRetrofit.doSensorOff(userId)
-                        if (sensorOff.isSuccessful) {
-                            val sensorOffBody = sensorOff.body()
-                            if (sensorOffBody != null) {
-                                Log.w("TEST", "sensorOff responseBody : ${sensorOffBody}")
-                                if (sensorOffBody.isSuccess) {
-                                    // userId의 db삭제
-                                    localDbRepository?.dataDao()?.deleteUserValueTable(userId)
-                                    localDbRepository?.dataDao()?.deleteUserGlucoseTable(userId)
-                                    localDbRepository?.dataDao()?.deleteUserCalibrationTable(userId)
-
-                                    Log.w("TEST", "sensorOff 성공")
-                                    DataStoreManager.saveIsMain(false)
-                                    DataStoreManager.deleteRoute()
-                                    DataStoreManager.saveRoute("Splash")
-                                    Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
-                                    DataStoreManager.deleteAccessToken()
-                                    DataStoreManager.deleteRefreshToken()
-                                    DataStoreManager.deleteUserId()
-                                    DataStoreManager.deleteDeviceMac()
-                                    DataStoreManager.deleteStartTime()
-                                    DataStoreManager.deleteEndTime()
-                                    DataStoreManager.deleteDailyCalibrationTime()
-                                    DataStoreManager.setLandScapeMode(false)
-                                    DataStoreManager.deleteTargetLowGlucose()
-                                    DataStoreManager.deleteTargetHighGlucose()
-                                    DataStoreManager.deleteEmail()
-                                    withContext(Dispatchers.Main) {
-                                        // 1. 서비스 종료
-                                        bleViewModel.emit("STOP_SERVICE")
-                                        // 앱 강제 종료
-                                        android.os.Process.killProcess(android.os.Process.myPid())
-                                        exitProcess(0)
-                                    }
-                                } else {
-                                    Log.w("TEST", "sensorOff 실패")
-                                }
-                            }
-                        } else {
-                            Log.w("TEST", "sensorOff API통신 실패 : ${sensorOff.errorBody()?.string()}")
-                        }
-                    } catch (e: Exception) {
-                        Log.d("TEST", "sensorOff API통신 실패 : ${e.message}")
-                        withContext(Dispatchers.Main) {
-                            Toast.makeText(context, "네트워크를 확인해주세요.",Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }
-            },
-            title = "센서 종료",
-            content = "센서 연결을 종료하시겠습니까?"
-        )
-    }
+//    if (showDialog.value) {
+//        AlwaysDialog(
+//            onDismiss = {
+//                showDialog.value = false
+//            },
+//            onConfirm = {
+//                showDialog.value = false
+//                coroutineScope.launch(Dispatchers.IO) {
+//                    // 0. 토큰 정리
+//                    val userId = DataStoreManager.getUserId().first() ?: -1
+//                    try {
+//                        val sensorOff = tokenRetrofit.doSensorOff(userId)
+//                        if (sensorOff.isSuccessful) {
+//                            val sensorOffBody = sensorOff.body()
+//                            if (sensorOffBody != null) {
+//                                Log.w("TEST", "sensorOff responseBody : ${sensorOffBody}")
+//                                if (sensorOffBody.isSuccess) {
+//                                    // userId의 db삭제
+//                                    localDbRepository?.dataDao()?.deleteUserValueTable(userId)
+//                                    localDbRepository?.dataDao()?.deleteUserGlucoseTable(userId)
+//                                    localDbRepository?.dataDao()?.deleteUserCalibrationTable(userId)
+//
+//                                    Log.w("TEST", "sensorOff 성공")
+//                                    DataStoreManager.saveIsMain(false)
+//                                    DataStoreManager.deleteRoute()
+//                                    DataStoreManager.saveRoute("Splash")
+//                                    Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
+//                                    DataStoreManager.deleteAccessToken()
+//                                    DataStoreManager.deleteRefreshToken()
+//                                    DataStoreManager.deleteUserId()
+//                                    DataStoreManager.deleteDeviceMac()
+//                                    DataStoreManager.deleteStartTime()
+//                                    DataStoreManager.deleteEndTime()
+//                                    DataStoreManager.deleteDailyCalibrationTime()
+//                                    DataStoreManager.setLandScapeMode(false)
+//                                    DataStoreManager.deleteTargetLowGlucose()
+//                                    DataStoreManager.deleteTargetHighGlucose()
+//                                    DataStoreManager.deleteEmail()
+//                                    withContext(Dispatchers.Main) {
+//                                        // 1. 서비스 종료
+//                                        bleViewModel.emit("STOP_SERVICE")
+//                                        // 앱 강제 종료
+//                                        android.os.Process.killProcess(android.os.Process.myPid())
+//                                        exitProcess(0)
+//                                    }
+//                                } else {
+//                                    Log.w("TEST", "sensorOff 실패")
+//                                }
+//                            }
+//                        } else {
+//                            Log.w("TEST", "sensorOff API통신 실패 : ${sensorOff.errorBody()?.string()}")
+//                        }
+//                    } catch (e: Exception) {
+//                        Log.d("TEST", "sensorOff API통신 실패 : ${e.message}")
+//                        withContext(Dispatchers.Main) {
+//                            Toast.makeText(context, "네트워크를 확인해주세요.",Toast.LENGTH_SHORT).show()
+//                        }
+//                    }
+//                }
+//            },
+//            title = "센서 종료",
+//            content = "센서 연결을 종료하시겠습니까?"
+//        )
+//    }
 
 
     Scaffold(
