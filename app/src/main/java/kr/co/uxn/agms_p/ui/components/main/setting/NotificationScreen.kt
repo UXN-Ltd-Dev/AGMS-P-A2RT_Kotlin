@@ -256,7 +256,6 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                     }
                 }
             }
-
         }
     }
 
@@ -432,6 +431,7 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                                 checkedForLostSignal.value = it
                                 coroutineScope.launch(Dispatchers.IO) {
                                     DataStoreManager.setNotiLostSignal(it)
+                                    Log.e("NOTI", "신호소실 DS 값 : ${DataStoreManager.getNotiLostSignal().first()!!}")
                                 }
                             }
                         )

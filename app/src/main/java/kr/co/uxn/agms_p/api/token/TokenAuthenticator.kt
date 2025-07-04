@@ -88,7 +88,7 @@ class TokenAuthenticator() : Authenticator {
                         Log.d("TEST", "body : ${responseBody.toString()}")
                         DataStoreManager.deleteAccessToken()
                         DataStoreManager.saveAccessToken(responseBody.accessToken)
-                        Log.d("TEST", "새 accessToken 저장 완료: ${responseBody.accessToken}")
+//                        Log.d("TEST", "새 accessToken 저장 완료: ${responseBody.accessToken}")
                         return@runBlocking responseBody.accessToken
                     }
                 } else {
@@ -102,7 +102,7 @@ class TokenAuthenticator() : Authenticator {
             Log.d("TEST", "newRequestWithToken() 8 call!")
             null
         }
-        Log.d("TEST", "newAccessToken : ${newAccessToken}")
+//        Log.d("TEST", "newAccessToken : ${newAccessToken}")
         Log.d("TEST", "newRequestWithToken() 9 call!")
 
         if (newAccessToken == null) return null

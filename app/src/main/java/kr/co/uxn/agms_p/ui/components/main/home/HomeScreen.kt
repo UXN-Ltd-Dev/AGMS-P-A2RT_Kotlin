@@ -529,6 +529,7 @@ fun HomeScreen(
                                     DataStoreManager.deleteStartTime()
                                     DataStoreManager.deleteEndTime()
                                     DataStoreManager.deleteDailyCalibrationTime()
+                                    DataStoreManager.deleteDailyCalibrationLastTime()
                                     DataStoreManager.setLandScapeMode(false)
                                     DataStoreManager.deleteTargetLowGlucose()
                                     DataStoreManager.deleteTargetHighGlucose()

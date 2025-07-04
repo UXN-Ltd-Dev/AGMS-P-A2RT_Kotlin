@@ -261,6 +261,7 @@ object DataStoreManager {
         }
     }
 
+
     suspend fun deleteDailyCalibrationTime() {
         notiStore.edit { prefs ->
             prefs.remove(DAILY_CALIBRATION_TIME)
@@ -283,6 +284,12 @@ object DataStoreManager {
     suspend fun deleteTargetHighGlucose() {
         dataStore.edit { prefs ->
             prefs.remove(TARGET_HIGH_GLUCOSE)
+        }
+    }
+
+    suspend fun deleteDailyCalibrationLastTime() {
+        dataStore.edit { prefs ->
+            prefs.remove(DAILY_LAST_CALIBRATION_TIME)
         }
     }
 

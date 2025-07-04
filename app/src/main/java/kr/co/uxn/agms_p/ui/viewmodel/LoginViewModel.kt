@@ -150,14 +150,14 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             // 카카오톡으로 로그인
             AuthCodeClient.instance.authorizeWithKakaoTalk(activityContext) { authCode, error ->
                 val accessCode = authCode.toString()
-                Log.e(TAG, "카카오 인가코드 : $authCode")
+//                Log.e(TAG, "카카오 인가코드 : $authCode")
                 isMemberCheckAndLogin(accessCode, 1802)
             }
         } else {
             // 카카오계정으로 로그인
             AuthCodeClient.instance.authorizeWithKakaoAccount(activityContext) { authCode, error ->
                 val accessCode = authCode.toString()
-                Log.e(TAG, "카카오 인가코드 : $authCode")
+//                Log.e(TAG, "카카오 인가코드 : $authCode")
                 isMemberCheckAndLogin(accessCode, 1802)
             }
         }
@@ -174,7 +174,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                 if (response.isSuccessful) {
                     val responseBody = response.body()
                     withContext(Dispatchers.Main) {
-                        Log.d("TEST", "oAuthSignUpAndLogin responseBody: $responseBody")
+//                        Log.d("TEST", "oAuthSignUpAndLogin responseBody: $responseBody")
                     }
                     if (responseBody != null) {
                         if (responseBody.isSignUp) {
@@ -184,10 +184,10 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                             val accessToken = responseBody.accessToken
                             val refreshToken = responseBody.refreshToken
                             val oAuthEmail = responseBody.email
-                            Log.d("TEST", "responseBody.email: $oAuthEmail")
+//                            Log.d("TEST", "responseBody.email: $oAuthEmail")
 
                             val userId = responseBody.userId
-                            Log.d("TEST", "responseBody.userId: $userId")
+//                            Log.d("TEST", "responseBody.userId: $userId")
                             // 토큰 저장
                             DataStoreManager.deleteAccessToken()
                             DataStoreManager.deleteUserId()
@@ -202,11 +202,11 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                             val verifyRefreshToken = DataStoreManager.getRefreshToken().first()
                             val verifyUserId = DataStoreManager.getUserId().first()
                             withContext(Dispatchers.Main) {
-                                Log.d("TEST", "TokenManager | accessToken : $verifyAccessToken\nrefreshToken : $verifyRefreshToken\nuserId : $verifyUserId")
+//                                Log.d("TEST", "TokenManager | accessToken : $verifyAccessToken\nrefreshToken : $verifyRefreshToken\nuserId : $verifyUserId")
                                 updateIsLoading(false)
                             }
                             // 회원가입 화면으로 이동
-                            Log.e("TEST", "userId : ${userId}, type : ${type}, oAuthEmail : ${oAuthEmail}")
+//                            Log.e("TEST", "userId : ${userId}, type : ${type}, oAuthEmail : ${oAuthEmail}")
                             _navigationEvent.value = LoginNavigationEvent.NavigateToSignUp(userId, type.toString(), oAuthEmail)
 //                            signUpType = type
 
@@ -228,7 +228,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                             val verifyRefreshToken = DataStoreManager.getRefreshToken().first()
                             val verifyUserId = DataStoreManager.getUserId().first()
                             withContext(Dispatchers.Main) {
-                                Log.d("TEST", "TokenManager | accessToken : $verifyAccessToken\nrefreshToken : $verifyRefreshToken\nuserId : $verifyUserId")
+//                                Log.d("TEST", "TokenManager | accessToken : $verifyAccessToken\nrefreshToken : $verifyRefreshToken\nuserId : $verifyUserId")
                                 updateIsLoading(false)
                             }
                             // 세팅 화면으로 이동

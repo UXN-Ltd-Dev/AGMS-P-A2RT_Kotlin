@@ -212,21 +212,23 @@ fun ActivityRegisterScreen(navController: NavController, eventScreenViewModel: E
 
                                         try {
                                             val userId = DataStoreManager.getUserId().first() ?: -1
-                                            val formatterOld = DateTimeFormatter.ofPattern("yyyy.MM.dd. a h:mm")
-                                            val formatterNew = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                                            val oldParsedTime = LocalDateTime.parse(time.value, formatterOld)
-                                            val newParsedTime = oldParsedTime.format(formatterNew)
+//                                            val formatterOld = DateTimeFormatter.ofPattern("yyyy.MM.dd. a h:mm")
+//                                            val formatterNew = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+//                                            val oldParsedTime = LocalDateTime.parse(time.value, formatterOld)
+//                                            val newParsedTime = oldParsedTime.format(formatterNew)
+                                            val createdAt = LocalDateTime.now()
+                                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
                                             val eventTypeCode = when (isSelected.value) {
                                                 0 -> 1401
                                                 1 -> 1402
                                                 else -> 1404
                                             }
-                                            Log.e("TEST", "이벤트 전송하기 전 값 확인 userId : $userId eventCode : $eventTypeCode, createdAt : $newParsedTime content : ${memo.value}")
+                                            Log.e("TEST", "이벤트 전송하기 전 값 확인 userId : $userId eventCode : $eventTypeCode, createdAt : $createdAt content : ${memo.value}")
                                             // 서버에 이벤트 전송
                                             val upload = tokenRetrofit.uploadEvent(
                                                 RequestEventData(
                                                     userId = userId,
-                                                    createdAt = newParsedTime,
+                                                    createdAt = createdAt,
                                                     eventTypeCode = eventTypeCode,
                                                     content = memo.value
                                                 )
@@ -237,16 +239,6 @@ fun ActivityRegisterScreen(navController: NavController, eventScreenViewModel: E
                                                 if (uploadBody != null) {
                                                     if (uploadBody.isSuccess) {
                                                         Log.d("EVENT", "EVENT 업로드 성공, ${uploadBody.message}")
-//                                                        withContext(Dispatchers.Main) {
-//
-////                                                            val image = when (eventTypeCode) {
-////                                                                1401 -> R.drawable.event_meal
-////                                                                1402 -> R.drawable.event_activity
-////                                                                1403 -> R.drawable.event_calibration
-////                                                                else -> R.drawable.event_insulin
-////                                                            }
-//                                                            navController.navigate("MainScreen/${1}")
-//                                                        }
                                                     }
                                                 }
                                             } else {

@@ -276,7 +276,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                             // 로그인이 성공적으로 되었을 때
 
                                             if (loginResult != null) {
-                                                Log.e("login","로그인 결과 : ${loginResult.toString()}")
+//                                                Log.e("login","로그인 결과 : ${loginResult.toString()}")
 //
                                                 // 토큰 저장
                                                 DataStoreManager.deleteAccessToken()

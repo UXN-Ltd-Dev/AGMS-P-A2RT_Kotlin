@@ -24,8 +24,7 @@ class TokenInterceptor() : Interceptor {
             DataStoreManager.getAccessToken().first()
         } ?: return errorResponse(chain.request())
 
-        Log.e("TEST", "DataStoreManager.getAcceesToken : ${token}")
-
+//        Log.e("TEST", "DataStoreManager.getAcceesToken : ${token}")
         val request = chain.request().newBuilder().header("Authorization", "Bearer $token").build()
         val response = chain.proceed(request)
         return response

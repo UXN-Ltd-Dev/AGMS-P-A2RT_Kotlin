@@ -140,6 +140,7 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                                     DataStoreManager.deleteStartTime()
                                     DataStoreManager.deleteEndTime()
                                     DataStoreManager.deleteDailyCalibrationTime()
+                                    DataStoreManager.deleteDailyCalibrationLastTime()
                                     DataStoreManager.setLandScapeMode(false)
                                     DataStoreManager.deleteTargetLowGlucose()
                                     DataStoreManager.deleteTargetHighGlucose()

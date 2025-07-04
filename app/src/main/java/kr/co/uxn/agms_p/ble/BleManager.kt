@@ -110,7 +110,7 @@ class BleManager(
                 Log.e("gatt", "gatt connected!")
 
 
-                // BleBridge에 상태 연결완료 전송
+                // BleBridge에 상태 연결 완료 전송
                 BleBridge.updateState(BleConnectionState.CONNECTED)
 
                 // mtu 517로 요청
@@ -127,11 +127,13 @@ class BleManager(
 
                 // 끊김 알림
                 CoroutineScope(Dispatchers.IO).launch {
-                    val isShowBleNoti = DataStoreManager.getNotiLostSignal().first() ?: false
+                    val isShowBleNoti = DataStoreManager.getNotiLostSignal().first() ?: true
                     Log.e("BLE", "BLE 연결 끊김 알림 DS로부터 불러온 설정값 : $isShowBleNoti")
                     if (isShowBleNoti) {
                         withContext(Dispatchers.Main) {
-                            sendNotification(context, "센서와의 연결이 일시적으로 끊어졌어요",
+                            sendNotification(
+                                context,
+                                "센서와의 연결이 일시적으로 끊어졌어요",
                                 "",
                                 92
                             )

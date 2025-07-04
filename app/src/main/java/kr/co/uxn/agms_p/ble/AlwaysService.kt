@@ -145,11 +145,6 @@ class AlwaysService() : Service() {
                                 Manifest.permission.POST_NOTIFICATIONS
                             ) != PackageManager.PERMISSION_GRANTED
                         ) {
-                            // here to request the missing permissions, and then overriding
-                            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                            //                                          int[] grantResults)
-                            // to handle the case where the user grants the permission. See the documentation
-                            // for ActivityCompat#requestPermissions for more details.
                             Log.d("BLE", "BLE 권한 허용 안됨")
                             return@withContext
                         }
@@ -168,8 +163,8 @@ class AlwaysService() : Service() {
                 userId = DataStoreManager.getUserId().first() ?: -1
             }
 
-            Log.d("SERVICE", "onStartCommnad에서 DS로부터 불러온 userId : $userId")
-            Log.d("SERVICE", "onStartCommnad에서 DS로부터 불러온 deviceMac : $deviceMac")
+//            Log.d("SERVICE", "onStartCommnad에서 DS로부터 불러온 userId : $userId")
+//            Log.d("SERVICE", "onStartCommnad에서 DS로부터 불러온 deviceMac : $deviceMac")
 
             val mac = deviceMac
             bleManager = BleManager.getInstance(baseContext, mac, userId, applicationContext)
@@ -203,7 +198,6 @@ class AlwaysService() : Service() {
             }
 
             // 2. 10초마다 노티 생성
-//        if (timerForNoti == null) {
             timerForNoti = Timer()
             timerForNoti?.schedule(object : TimerTask() {
                 override fun run() {
@@ -217,9 +211,6 @@ class AlwaysService() : Service() {
                     NotificationManagerCompat.from(baseContext).notify(NOTI_ID, notification)
                 }
             }, 0, 1000 * 10) // 10초에 한번씩 노티 생성
-//        } else {
-//            Log.e("SERVICE", "노티 1초마다 생서이 실행중이므로 스킵")
-//        }
 
             // 노티 생성 및 설정
             val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
@@ -249,7 +240,6 @@ class AlwaysService() : Service() {
             }
 
 
-//        if (bleManager.mGatt == null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 bluetoothDevice.connectGatt(
                     baseContext,
@@ -260,13 +250,6 @@ class AlwaysService() : Service() {
             } else {
                 bluetoothDevice.connectGatt(baseContext, false, bleManager)
             }
-//        } else {
-//            Log.e("SERIVCE", "이미 ble 연결이 되어있어서 스킵")
-//        }
-
-
-            // 워커 실행
-//            (application as AlwaysApplication).uploadWorkRequest()
 
             // 포그라운드에서 반복 실행
             isDuplicatedJob = serviceScope.launch {
@@ -279,7 +262,6 @@ class AlwaysService() : Service() {
                         Log.e("SERVICE", "서비스 내 코루틴 실행")
 
                         // 액세스 토큰 변경 테스트
-//                        Log.d("TEST" , "현재 액세스 토큰 : ${DataStoreManager.getAccessToken().first()?:"비어잇음"}")
 
                         wl.acquire(1000 * 75) // 75초
 
@@ -324,19 +306,6 @@ class AlwaysService() : Service() {
                                         )
 
                                         val insertDataList = glucoseListBody.map {
-//                                            val convertToLocalDateTime =
-//                                                LocalDateTime.parse(it.createdAt, formatter)
-//                                            val parsedLongTime =
-//                                                convertToLocalDateTime.atZone(zoneId).toInstant()
-//                                                    .toEpochMilli()
-//                                            UserGlucose(
-//                                                userId = userId,
-//                                                glucose = it.glucose.toDouble(),
-//                                                weo1 = it.weo1,
-//                                                weo2 = it.weo2,
-//                                                createdAt = it.createdAt,
-//                                                createdAtLong = parsedLongTime
-//                                            )
                                             val now = System.currentTimeMillis()
 
                                             val localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(now), ZoneId.of("Asia/Seoul"))
@@ -393,8 +362,8 @@ class AlwaysService() : Service() {
                                                     "저혈당이 감지되었습니다 \n현재 혈당 : ${lastGlucose} mg/dL",
                                                     95
                                                 )
+                                                showLowGlucoseDialog(true)
                                             }
-                                            showLowGlucoseDialog(true)
                                         }
 
 
@@ -621,6 +590,7 @@ class AlwaysService() : Service() {
                         val dailyCalibrationLastTime =
                             DataStoreManager.getDailyCalibrationLastTime().first() ?: ""
                         val today = LocalDate.now(ZoneId.of("Asia/Seoul")).toString()
+                        Log.d("CALI", "today is : ${today}\nlastTime : ${dailyCalibrationLastTime}")
                         if (isDailyCalibration && dailyCalibrationLastTime != today) {
                             val calibrationTime =
                                 DataStoreManager.getDailyCalibrationTime().first() ?: "오전 11:00"
@@ -747,14 +717,11 @@ class AlwaysService() : Service() {
 
 
                                 // 알람을 위한 target glucose 값 불러 오기
-                                val targetHigh =
-                                    DataStoreManager.getTargetHighGlucose().first() ?: -1
+                                val targetHigh = DataStoreManager.getTargetHighGlucose().first() ?: -1
                                 val targetLow = DataStoreManager.getTargetLowGlucose().first() ?: -1
 
-                                val highChecker =
-                                    DataStoreManager.getNotiHighGlucose().first() ?: false
-                                val lowChecker =
-                                    DataStoreManager.getNotiLowGlucose().first() ?: false
+                                val highChecker = DataStoreManager.getNotiHighGlucose().first() ?: false
+                                val lowChecker = DataStoreManager.getNotiLowGlucose().first() ?: false
 
                                 // 고혈당, 저혈당 알람
                                 if (highChecker) {
