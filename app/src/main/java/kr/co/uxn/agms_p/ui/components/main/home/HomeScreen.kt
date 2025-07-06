@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -700,8 +701,9 @@ fun HomeScreen(
             val screenWidth = configuration.screenWidthDp.dp
             val screenHeight = configuration.screenHeightDp.dp
                 // 2. 그래프 표시 카드 90도
-            Box(
-                modifier = Modifier.fillMaxSize()
+            BoxWithConstraints (
+                modifier = Modifier
+                    .fillMaxSize()
                     .pointerInput(Unit) {
                         if (GuestList.getGuestList().contains(email.value)) {
                             detectTapGestures(
@@ -734,6 +736,11 @@ fun HomeScreen(
                         }
                     },
             ) {
+                val dynamicVerticalPadding = (maxHeight.value * 0.05f).dp
+                val dynamicEndPadding = (maxHeight.value * 0.09f).dp
+                val maxHeight = maxHeight.value.dp
+                val maxWidth = maxWidth.value.dp
+
                 Card(
                     modifier = Modifier
                         .fillMaxSize()
@@ -753,12 +760,14 @@ fun HomeScreen(
                     // 2. 그래프 표시 카드
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(top = 30.dp, bottom = 100.dp)
                             .rotate(90f)
-                            .background(Color.Transparent)
+                            .width(maxHeight)
+                            .height(maxWidth)
+                            .padding(vertical = dynamicVerticalPadding)
                     ) {
-                        Column() {
+                        Column(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
                             val lineColor = Color(0xFF6FB0E5)
                             val markerDecimalFormat =
                                 when (selectedChartOption) {
@@ -857,8 +866,7 @@ fun HomeScreen(
                                 }
                             }
                         } // column
-                    } // surface
-
+                    } // Box
                 } // Card (Column)
                 RadioButtonSingleSelection(
                     modifier = Modifier.align(Alignment.BottomCenter)
