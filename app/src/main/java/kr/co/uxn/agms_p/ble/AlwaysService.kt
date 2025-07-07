@@ -48,6 +48,7 @@ import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.BleBridge.showHighGlucoseDialog
 import kr.co.uxn.agms_p.ble.BleBridge.showLowGlucoseDialog
 import kr.co.uxn.agms_p.ble.BleManager.Companion.TEST
+import kr.co.uxn.agms_p.ble.BleManager.Companion.mGatt
 import kr.co.uxn.agms_p.ble.BleUtils.STATUS_BLE_ENABLED
 import kr.co.uxn.agms_p.ble.BleUtils.TAG
 import kr.co.uxn.agms_p.ble.BleUtils.getBleStatus
@@ -163,9 +164,6 @@ class AlwaysService() : Service() {
                 userId = DataStoreManager.getUserId().first() ?: -1
             }
 
-//            Log.d("SERVICE", "onStartCommnad에서 DS로부터 불러온 userId : $userId")
-//            Log.d("SERVICE", "onStartCommnad에서 DS로부터 불러온 deviceMac : $deviceMac")
-
             val mac = deviceMac
             bleManager = BleManager.getInstance(baseContext, mac, userId, applicationContext)
 
@@ -241,14 +239,14 @@ class AlwaysService() : Service() {
 
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                bluetoothDevice.connectGatt(
+                mGatt = bluetoothDevice.connectGatt(
                     baseContext,
                     false,
                     bleManager,
                     BluetoothDevice.TRANSPORT_LE
                 )
             } else {
-                bluetoothDevice.connectGatt(baseContext, false, bleManager)
+                mGatt = bluetoothDevice.connectGatt(baseContext, false, bleManager)
             }
 
             // 포그라운드에서 반복 실행

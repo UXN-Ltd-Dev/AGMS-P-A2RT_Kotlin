@@ -64,6 +64,8 @@ class BleManager(
         const val characteristicUuidWriteT21 = "e093f3b5-00a3-a9e5-9eca-40036e0edc24"
         const val serviceUuidT21 = "e093f3b5-00a3-a9e5-9eca-40016e0edc24"
 
+        var mGatt: BluetoothGatt? = null
+        var mDevice: BluetoothDevice? = null
 
         fun getInstance(
             context: Context,
@@ -89,7 +91,6 @@ class BleManager(
     lateinit var bufferWeo2: String
 
 
-    var mGatt: BluetoothGatt? = null
     var isReconnect = true
 
 //    lateinit var bluetoothDevice: BluetoothDevice
@@ -109,7 +110,6 @@ class BleManager(
             BluetoothProfile.STATE_CONNECTED -> {
                 Log.e("gatt", "gatt connected!")
 
-
                 // BleBridge에 상태 연결 완료 전송
                 BleBridge.updateState(BleConnectionState.CONNECTED)
 
@@ -120,7 +120,6 @@ class BleManager(
                 NotificationManagerCompat.from(context).cancel(92)
 
             }
-
 
             BluetoothProfile.STATE_DISCONNECTED -> {
                 Log.e("gatt", "gatt disconnected!!!")
@@ -359,9 +358,15 @@ class BleManager(
     @SuppressLint("MissingPermission")
     private fun reconnect(gatt: BluetoothGatt?, address: String) {
         Log.d("TEST",  "======BLE reconnect() 진입 ======")
-        gatt?.close()
 
-        refreshDeviceCache(gatt)
+        // mDevice = null
+        mGatt?.disconnect()
+        mGatt?.close()
+        refreshDeviceCache(mGatt)
+        mGatt = null
+
+//        gatt?.close()
+
 
         // 스캔 방식
 //        mGatt = gatt?.device?.connectGatt(context, false, this)
@@ -378,11 +383,10 @@ class BleManager(
             bluetoothAdpater.getRemoteDevice(address)
         }
 
-//        mGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            bluetoothDevice.connectGatt(context, false, this, BluetoothDevice.TRANSPORT_LE)
+            mGatt = bluetoothDevice.connectGatt(context, false, this, BluetoothDevice.TRANSPORT_LE)
         } else {
-            bluetoothDevice.connectGatt(context, false, this)
+            mGatt = bluetoothDevice.connectGatt(context, false, this)
         }
     }
 

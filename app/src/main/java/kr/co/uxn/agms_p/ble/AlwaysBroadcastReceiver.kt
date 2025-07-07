@@ -35,12 +35,9 @@ class AlwaysBroadcastReceiver : BroadcastReceiver() {
                 TextUtils.equals(action, Intent.ACTION_MY_PACKAGE_REPLACED)
     }
 
-
     @SuppressLint("ObsoleteSdkInt")
     private fun startService(context: Context) {
-
         val serviceIntent = Intent(context, AlwaysService::class.java)
-
         ContextCompat.startForegroundService(context, serviceIntent)
         Log.e("BROADCAST", "브로드캐스트에서 startForegroundService 호출 완료")
     }
