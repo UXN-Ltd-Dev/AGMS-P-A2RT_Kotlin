@@ -11,6 +11,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -156,7 +160,8 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun Navigation(
-        modifier: Modifier = Modifier.safeDrawingPadding(),
+//        modifier: Modifier = Modifier.safeDrawingPadding(),
+        modifier: Modifier = Modifier,
         navController: NavHostController = rememberNavController()
     ) {
 

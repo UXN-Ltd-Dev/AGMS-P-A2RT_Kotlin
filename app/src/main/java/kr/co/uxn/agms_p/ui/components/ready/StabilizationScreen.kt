@@ -153,7 +153,7 @@ fun StabilizationScreen(navController: NavController, mac: String, bleViewModel:
         try {
             val detectorList = localDbRepository?.dataDao()?.getListAfterLastTime(userId, 0)
             if (detectorList.isNullOrEmpty()) {
-                Log.d("StabilizationScreen, 시작,측정,종료시간 설정", "detectorList is null or empty!")
+                Log.d("StabilizationScreen, 시작,측정,종료 시간 설정", "detectorList is null or empty!")
 
                 // 1. 시작 시간 설정
                 val zoneId = ZoneId.of("Asia/Seoul")
