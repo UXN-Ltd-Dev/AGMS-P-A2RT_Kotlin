@@ -155,7 +155,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                             ) {
                                 if (email.value.isEmpty()) {
                                     Text(
-                                        text = "이메일 주소를 입력해 주세요.",
+                                        text = "이메일 주소를 입력해주세요.",
                                         color = Color.Gray,
                                         fontSize = 16.sp
                                     )
@@ -207,7 +207,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                             ) {
                                 if (pwd.value.isEmpty()) {
                                     Text(
-                                        text = "비밀번호를 입력해 주세요.",
+                                        text = "비밀번호를 입력해주세요.",
                                         color = Color.Gray,
                                         fontSize = 16.sp
                                     )

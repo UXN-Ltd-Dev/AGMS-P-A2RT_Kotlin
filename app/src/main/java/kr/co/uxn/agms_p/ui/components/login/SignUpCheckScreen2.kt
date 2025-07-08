@@ -185,7 +185,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                     ) {
                                         if (email.value.isEmpty()) {
                                             Text(
-                                                text = "이메일 주소를 입력해 주세요.",
+                                                text = "이메일 주소를 입력해주세요.",
                                                 color = Color.Gray,
                                                 fontSize = 16.sp
                                             )
@@ -261,7 +261,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
 
                                         if (email.value == "") {
                                             Text(
-                                                text = "이메일 주소를 입력해 주세요.",
+                                                text = "이메일 주소를 입력해주세요.",
                                                 color = Color.Gray,
                                                 fontSize = 16.sp
                                             )
@@ -427,7 +427,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                 ) {
                                     if (verificationCode.value.isEmpty()) {
                                         Text(
-                                            text = "인증번호를 입력해 주세요.",
+                                            text = "인증번호를 입력해주세요.",
                                             color = Color.Gray,
                                             fontSize = 16.sp
                                         )
@@ -603,7 +603,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                     ) {
                                         if (pwd1.value.isEmpty()) {
                                             Text(
-                                                text = "비밀번호를 입력해 주세요.",
+                                                text = "비밀번호를 입력해주세요.",
                                                 color = Color.Gray,
                                                 fontSize = 16.sp
                                             )
@@ -662,7 +662,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                     ) {
                                         if (pwd2.value.isEmpty()) {
                                             Text(
-                                                text = "비밀번호를 확인 해주세요.",
+                                                text = "비밀번호를 확인해주세요.",
                                                 color = Color.Gray,
                                                 fontSize = 16.sp
                                             )

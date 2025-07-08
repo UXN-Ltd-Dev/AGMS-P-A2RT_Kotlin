@@ -195,7 +195,7 @@ fun PassWordResetScreen(navController: NavController) {
                                 ) {
                                     if (email.value.isEmpty()) {
                                         Text(
-                                            text = "이메일 주소를 입력해 주세요.",
+                                            text = "이메일 주소를 입력해주세요.",
                                             color = Color.Gray,
                                             fontSize = 16.sp
                                         )
@@ -359,7 +359,7 @@ fun PassWordResetScreen(navController: NavController) {
                                 ) {
                                     if (verificationCode.value.isEmpty()) {
                                         Text(
-                                            text = "인증번호를 입력해 주세요.",
+                                            text = "인증번호를 입력해주세요.",
                                             color = Color.Gray,
                                             fontSize = 16.sp
                                         )
@@ -518,7 +518,7 @@ fun PassWordResetScreen(navController: NavController) {
                                 ) {
                                     if (pwd1.value.isEmpty()) {
                                         Text(
-                                            text = "비밀번호를 입력해 주세요.",
+                                            text = "비밀번호를 입력해주세요.",
                                             color = Color.Gray,
                                             fontSize = 16.sp
                                         )
@@ -576,7 +576,7 @@ fun PassWordResetScreen(navController: NavController) {
                                 ) {
                                     if (pwd2.value.isEmpty()) {
                                         Text(
-                                            text = "비밀번호를 확인 해주세요.",
+                                            text = "비밀번호를 확인해주세요.",
                                             color = Color.Gray,
                                             fontSize = 16.sp
                                         )
@@ -621,7 +621,7 @@ fun PassWordResetScreen(navController: NavController) {
                                                     if (resetPwd.isSuccessful) {
                                                         Log.d("TEST", "resetPwdBody = ${resetPwdBody}")
                                                         withContext(Dispatchers.Main) {
-                                                           Toast.makeText(context, "비밀번호가 재설정 되었습니다.", Toast.LENGTH_SHORT).show()
+                                                           Toast.makeText(context, "비밀번호가 재설정되었습니다.", Toast.LENGTH_SHORT).show()
                                                             navController.popBackStack()
                                                         }
                                                     }

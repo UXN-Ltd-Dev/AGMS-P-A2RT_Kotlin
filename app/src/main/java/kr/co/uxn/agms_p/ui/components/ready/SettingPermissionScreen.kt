@@ -269,7 +269,7 @@ fun SettingPermissionScreen(
                         text = "알림(필수)"
                     )
                     Text(
-                        text = "알림 메세지 발송",
+                        text = "알림 메세지 전송",
                         fontSize = 13.sp,
                         color = Color.Gray
                     )
@@ -305,6 +305,29 @@ fun SettingPermissionScreen(
                 modifier = Modifier.padding(start = 10.dp)
             ) {
                 Image(
+                    painterResource(R.drawable.location_permission_icon),
+                    modifier = Modifier.size(35.dp),
+                    contentDescription = "위치 권한"
+                )
+                Spacer(modifier = Modifier.width(15.dp))
+                Column() {
+                    Text(
+                        text = "위치(필수)"
+                    )
+                    Text(
+                        text = "BLE 연결 및 통신",
+                        fontSize = 13.sp,
+                        color = Color.Gray
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.size(15.dp))
+
+            Row(
+                modifier = Modifier.padding(start = 10.dp)
+            ) {
+                Image(
                     painterResource(R.drawable.battery_permission),
                     modifier = Modifier.size(35.dp),
                     contentDescription = "배터리 권한"
@@ -322,7 +345,7 @@ fun SettingPermissionScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.size(140.dp))
+            Spacer(modifier = Modifier.size(80.dp))
 
             // 확인 버튼
             Box(
