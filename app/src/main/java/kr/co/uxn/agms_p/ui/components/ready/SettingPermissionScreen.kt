@@ -292,7 +292,7 @@ fun SettingPermissionScreen(
                         text = "근처 기기(필수)"
                     )
                     Text(
-                        text = "근처 기기 연결, 상대적 위치 파악",
+                        text = "근처 기기 검색",
                         fontSize = 13.sp,
                         color = Color.Gray
                     )
