@@ -8,6 +8,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothManager
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -55,6 +56,7 @@ import kr.co.uxn.agms_p.ble.BleUtils.getBleStatus
 import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.room.UserGlucose
 import kr.co.uxn.agms_p.room.UserValue
+import java.lang.reflect.Method
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -951,6 +953,10 @@ class AlwaysService() : Service() {
             // 4
             BluetoothAdapter.STATE_ON -> {
                 Log.e(TAG, "======BLE ON!!======")
+                mGatt?.disconnect()
+                mGatt?.close()
+                refreshDeviceCache(mGatt)
+                mGatt = null
                 // 블루투스 연결
                 val bluetoothManager =
                     baseContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -967,14 +973,14 @@ class AlwaysService() : Service() {
 //        if (bleManager.mGatt == null) {
                 CoroutineScope(Dispatchers.Main).launch {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        bluetoothDevice.connectGatt(
+                        mGatt = bluetoothDevice.connectGatt(
                             baseContext,
                             false,
                             bleManager,
                             BluetoothDevice.TRANSPORT_LE
                         )
                     } else {
-                        bluetoothDevice.connectGatt(baseContext, false, bleManager)
+                        mGatt = bluetoothDevice.connectGatt(baseContext, false, bleManager)
                     }
                 }
 
@@ -996,6 +1002,30 @@ class AlwaysService() : Service() {
             }
         }
     }
+
+    fun refreshDeviceCache(gatt: BluetoothGatt?) {
+        try {
+            val method: Method = refreshMethod()
+            val isRefreshSuccess = method.invoke(gatt) as Boolean
+            if (isRefreshSuccess) {
+                Log.d(TEST, "Bluetooth refresh cache")
+            }
+        } catch (e: java.lang.Exception) {
+            Log.e(TEST, e.getLocalizedMessage());
+            Log.e(TEST, "An exception occurred while refreshing device");
+        }
+    }
+
+    var sRefreshMethod: Method? = null
+
+    @Throws(NoSuchMethodException::class)
+    private fun refreshMethod(): Method {
+        if (sRefreshMethod == null) {
+            sRefreshMethod = BluetoothGatt::class.java.getMethod("refresh")
+        }
+        return sRefreshMethod!!
+    }
+
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     fun sendBleConnectNotification(

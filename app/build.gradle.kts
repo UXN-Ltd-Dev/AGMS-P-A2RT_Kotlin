@@ -27,8 +27,8 @@ android {
         applicationId = "kr.co.uxn.agms_p"
         minSdk = 29
         targetSdk = 35
-        versionCode = 8
-        versionName = "0.3(BLE)"
+        versionCode = 9
+        versionName = "0.3.1(BLE)"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
