@@ -86,7 +86,6 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                 detectTapGestures(onTap = { focusManager.clearFocus() })  // 🔹 터치 시 키보드 숨기기
             }
     ) {
-
         // email: abc@gmail.com, pwd: 1234
         Column(
             modifier = Modifier
