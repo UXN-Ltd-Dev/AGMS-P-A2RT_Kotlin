@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -101,6 +102,7 @@ fun SignUpInfoScreen3(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color.White)
             .pointerInput(Unit) {
                 detectTapGestures(onTap = { focusManager.clearFocus() })  // 🔹 터치 시 키보드 숨기기
             }
@@ -873,6 +875,13 @@ fun SignUpInfoScreen3(
                                                     "TAG",
                                                     "API 실패: ${result.errorBody()?.string()}"
                                                 )
+                                                withContext(Dispatchers.Main) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        "이미 가입된 계정입니다.",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
                                             }
                                         } catch (e: Exception) {
                                             Log.e("TAG", "네트워크 오류 발생: ${e.message}")

@@ -38,7 +38,7 @@ fun AGMSPTheme(
 //    darkTheme: Boolean = isSystemInDarkTheme(), // 기존 설정
     darkTheme: Boolean = false, // 다크모드 비활성화
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

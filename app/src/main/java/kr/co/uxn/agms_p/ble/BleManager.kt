@@ -228,7 +228,6 @@ class BleManager(
                     "데이터를 가져오는 중입니다.. \n잠시만 기다려주세요..",
                     Toast.LENGTH_SHORT
                 ).show()
-
             }
 
         } else {

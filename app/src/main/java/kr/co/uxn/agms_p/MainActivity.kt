@@ -153,7 +153,7 @@ class MainActivity : ComponentActivity() {
         val appUpdateInfoTask = appUpdateManager.appUpdateInfo
         appUpdateInfoTask.addOnSuccessListener {
             if (it.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE ) {//&& it.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
-                Toast.makeText(this, "플레이스토어에서 최신버전으로 업데이트 해주세요",Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "플레이스토어에서 최신 버전으로 업데이트 해주세요",Toast.LENGTH_SHORT).show()
             }
         }
     }
