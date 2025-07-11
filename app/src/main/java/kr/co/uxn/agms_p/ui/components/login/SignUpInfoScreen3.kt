@@ -102,7 +102,7 @@ fun SignUpInfoScreen3(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(Color.Transparent)
             .pointerInput(Unit) {
                 detectTapGestures(onTap = { focusManager.clearFocus() })  // 🔹 터치 시 키보드 숨기기
             }

@@ -235,14 +235,27 @@ fun GlucoseRegisterScreen(
                         contentDescription = "저장 버튼",
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .clickable(
-                            ) {
+                            .clickable {
                                 if (glucoseDataFromUser.value.contains(".") ||
                                     glucoseDataFromUser.value.contains("-") ||
                                     glucoseDataFromUser.value.contains(",")
                                 ) {
                                     Toast.makeText(context, "숫자만 입력해주세요.", Toast.LENGTH_SHORT).show()
                                 } else if (glucoseDataFromUser.value != "") {
+                                    if (glucoseDataFromUser.value.toInt() >= 500 ) {
+                                        coroutineScope.launch(Dispatchers.Main) {
+                                            Toast.makeText(context, "입력한 혈당이 비정상적으로 높습니다. 혈당계를 다시 사용해 측정해주세요.", Toast.LENGTH_SHORT).show()
+                                        }
+                                        return@clickable
+                                    }
+
+                                    if (glucoseDataFromUser.value.toInt() < 40) {
+                                        coroutineScope.launch(Dispatchers.Main) {
+                                            Toast.makeText(context, "입력한 혈당이 비정상적으로 낮습니다. 혈당계를 다시 사용해 측정해주세요.", Toast.LENGTH_SHORT).show()
+                                        }
+                                        return@clickable
+                                    }
+
                                     coroutineScope.launch(Dispatchers.IO) {
                                         try {
                                             val userId = DataStoreManager.getUserId().first() ?: -1
