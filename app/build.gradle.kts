@@ -27,8 +27,8 @@ android {
         applicationId = "kr.co.uxn.agms_p"
         minSdk = 29
         targetSdk = 35
-        versionCode = 9
-        versionName = "0.3.1(BLE)"
+        versionCode = 10
+        versionName = "0.3.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -73,7 +73,6 @@ android {
                 }
             }
         }
-
     }
 
     chaquopy {
@@ -146,7 +145,7 @@ dependencies {
 
     // navigation
     implementation("androidx.navigation:navigation-compose:2.8.8")
-    // splashapi
+    // splash api
     implementation("androidx.core:core-splashscreen:1.0.1")
 
     // Retrofit

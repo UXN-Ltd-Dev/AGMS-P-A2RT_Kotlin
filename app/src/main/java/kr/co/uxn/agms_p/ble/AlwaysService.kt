@@ -241,14 +241,14 @@ class AlwaysService() : Service() {
 
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                mGatt = bluetoothDevice.connectGatt(
+                bluetoothDevice.connectGatt(
                     baseContext,
                     false,
                     bleManager,
                     BluetoothDevice.TRANSPORT_LE
                 )
             } else {
-                mGatt = bluetoothDevice.connectGatt(baseContext, false, bleManager)
+                bluetoothDevice.connectGatt(baseContext, false, bleManager)
             }
 
             // 포그라운드에서 반복 실행
@@ -953,10 +953,10 @@ class AlwaysService() : Service() {
             // 4
             BluetoothAdapter.STATE_ON -> {
                 Log.e(TAG, "======BLE ON!!======")
-                mGatt?.disconnect()
-                mGatt?.close()
-                refreshDeviceCache(mGatt)
-                mGatt = null
+//                mGatt?.disconnect()
+//                mGatt?.close()
+//                refreshDeviceCache(mGatt)
+//                mGatt = null
                 // 블루투스 연결
                 val bluetoothManager =
                     baseContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -973,14 +973,14 @@ class AlwaysService() : Service() {
 //        if (bleManager.mGatt == null) {
                 CoroutineScope(Dispatchers.Main).launch {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        mGatt = bluetoothDevice.connectGatt(
+                        bluetoothDevice.connectGatt(
                             baseContext,
                             false,
                             bleManager,
                             BluetoothDevice.TRANSPORT_LE
                         )
                     } else {
-                        mGatt = bluetoothDevice.connectGatt(baseContext, false, bleManager)
+                        bluetoothDevice.connectGatt(baseContext, false, bleManager)
                     }
                 }
 

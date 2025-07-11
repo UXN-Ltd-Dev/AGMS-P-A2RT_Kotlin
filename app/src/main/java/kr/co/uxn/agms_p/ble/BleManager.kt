@@ -358,11 +358,11 @@ class BleManager(
     private fun reconnect(gatt: BluetoothGatt?, address: String) {
         Log.d("TEST",  "======BLE reconnect() 진입 ======")
 
-        // mDevice = null
-        mGatt?.disconnect()
-        mGatt?.close()
-        refreshDeviceCache(mGatt)
-        mGatt = null
+//        mGatt?.disconnect()
+//        mGatt?.close()
+        gatt?.close()
+        refreshDeviceCache(gatt)
+//        mGatt = null
 
 //        gatt?.close()
 
@@ -383,9 +383,9 @@ class BleManager(
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            mGatt = bluetoothDevice.connectGatt(context, false, this, BluetoothDevice.TRANSPORT_LE)
+            bluetoothDevice.connectGatt(context, false, this, BluetoothDevice.TRANSPORT_LE)
         } else {
-            mGatt = bluetoothDevice.connectGatt(context, false, this)
+            bluetoothDevice.connectGatt(context, false, this)
         }
     }
 

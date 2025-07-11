@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -89,6 +90,7 @@ fun PassWordResetScreen(navController: NavController) {
     val pwd1 = remember { mutableStateOf("") }
     val pwd2 = remember { mutableStateOf("") }
     val isEmailVerified = remember { mutableStateOf(false) }
+    val sendRegisterBtnEnabled = remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -120,6 +122,7 @@ fun PassWordResetScreen(navController: NavController) {
     Surface(
         modifier = Modifier
             .fillMaxSize()
+            .navigationBarsPadding()
             .pointerInput(Unit) {
                 detectTapGestures(onTap = { focusManager.clearFocus() })  // 🔹 터치 시 키보드 숨기기
             }
@@ -220,6 +223,11 @@ fun PassWordResetScreen(navController: NavController) {
                                     // 인증번호 입력란 초기화
                                     verificationCode.value = ""
 
+                                    // 버튼 비활성화
+                                    CoroutineScope(Dispatchers.Main).launch {
+                                        sendRegisterBtnEnabled.value = true
+                                    }
+
                                     // 서버에 이메일 인증하기 요청
                                     CoroutineScope(Dispatchers.IO).launch {
                                         try {
@@ -256,6 +264,10 @@ fun PassWordResetScreen(navController: NavController) {
                                                         }
                                                         Log.d("TAG", "emailCodeId : ${emailCodeId.value}")
                                                     }
+
+                                                    withContext(Dispatchers.Main) {
+                                                        sendRegisterBtnEnabled.value = false
+                                                    }
                                                 } else {
                                                     Log.d("TAG", "서버 응답이 null 입니다.")
                                                 }
@@ -288,7 +300,7 @@ fun PassWordResetScreen(navController: NavController) {
                                     buttonSize.value = layoutCoordinates.size
                                 },
 //                              .size(130.dp, 35.dp),
-                            enabled = !isEmailVerified.value,
+                            enabled = !sendRegisterBtnEnabled.value,
                         ) {
                             Text(
                                 text = "인증번호 전송",
@@ -399,6 +411,7 @@ fun PassWordResetScreen(navController: NavController) {
                                         // 실제 이메일 인증 로직 처리
 //                            isTimerRunning.value = true
                                         isEmailVerified.value = false
+                                        sendRegisterBtnEnabled.value = true
                                         Log.e("TAG", "이메일 인증 시작, 타이머 시작됨.")
 
                                         // 서버 통신 시작
@@ -419,6 +432,7 @@ fun PassWordResetScreen(navController: NavController) {
 
                                                             // ✅ 타이머 강제 종료
                                                             isTimerRunning.value = false
+                                                            sendRegisterBtnEnabled.value = true
                                                             timerSeconds.value = 0
 
                                                             // 인증완료 테스트를 위한 코드
