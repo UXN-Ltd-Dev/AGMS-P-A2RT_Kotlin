@@ -88,6 +88,8 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
     val checkedForCalibration = remember { mutableStateOf(false) }
 
     val showGlucoseDialog = remember { mutableStateOf(false) }
+    val showSetLowGlucoseDialog = remember { mutableStateOf(false) }
+    val showSetHighGlucoseDialog = remember { mutableStateOf(false) }
     val targetLowGlucose = remember { mutableStateOf("") }
     val targetHighGlucose = remember { mutableStateOf("") }
 
@@ -95,10 +97,7 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
 
     var dailyCalibrationTime = remember { mutableStateOf("") }
 
-
     val formatter = remember { SimpleDateFormat("a hh:mm", Locale.KOREAN) }
-
-
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
@@ -259,6 +258,146 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
         }
     }
 
+    if (showSetLowGlucoseDialog.value) {
+        Dialog(onDismissRequest = { showSetLowGlucoseDialog.value = false }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .background(Color.White, RoundedCornerShape(20.dp))
+                    .padding(24.dp)
+            ) {
+                Column {
+                    Text(
+                        text = "저혈당",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Spacer(modifier = Modifier.height(5.dp))
+
+                    OutlinedTextField(
+                        value = targetLowGlucose.value,
+                        onValueChange = { targetLowGlucose.value = it},
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Done,
+                            keyboardType = KeyboardType.Number
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { focusManager.clearFocus() }
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(15 .dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Button(
+                            onClick = {
+                                if (targetLowGlucose.value.contains(".") || targetLowGlucose.value.contains("-") || targetLowGlucose.value.contains(",")
+                                ) {
+                                    Toast.makeText(context, "숫자만 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                } else if (targetLowGlucose.value != "") {
+                                    showSetLowGlucoseDialog.value = false
+                                    coroutineScope.launch(Dispatchers.Main) {
+                                        DataStoreManager.setTargetLowGlucose(targetLowGlucose.value.toInt())
+                                        Log.d("TEST", "저장된 저혈당 : ${DataStoreManager.getTargetLowGlucose().first()}")
+                                    }
+                                } else {
+                                    Toast.makeText(context, "혈당을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                }},
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF3451B2), // 파란색
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "입력",
+                                color = Color.White,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showSetHighGlucoseDialog.value) {
+        Dialog(onDismissRequest = { showSetHighGlucoseDialog.value = false }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .background(Color.White, RoundedCornerShape(20.dp))
+                    .padding(24.dp)
+            ) {
+                Column {
+                    Text(
+                        text = "고혈당",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Spacer(modifier = Modifier.height(5.dp))
+
+                    OutlinedTextField(
+                        value = targetHighGlucose.value,
+                        onValueChange = { targetHighGlucose.value = it},
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Done,
+                            keyboardType = KeyboardType.Number
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { focusManager.clearFocus() }
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(15 .dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Button(
+                            onClick = {
+                                if (targetHighGlucose.value.contains(".") || targetHighGlucose.value.contains("-") || targetHighGlucose.value.contains(",")
+                                ) {
+                                    Toast.makeText(context, "숫자만 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                } else if (targetHighGlucose.value != "") {
+                                    showSetHighGlucoseDialog.value = false
+                                    coroutineScope.launch(Dispatchers.Main) {
+                                        DataStoreManager.setTargetHighGlucose(targetHighGlucose.value.toInt())
+                                        Log.d("TEST", "저장된 고혈당 : ${DataStoreManager.getTargetHighGlucose().first()}")
+                                    }
+                                } else {
+                                    Toast.makeText(context, "혈당을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                }},
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF3451B2), // 파란색
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "입력",
+                                color = Color.White,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -274,7 +413,10 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
                             imageVector = Icons.Filled.ArrowBack,
                             contentDescription = "뒤로 가기",
                             modifier = Modifier.clickable {
-                                navController.navigate("MainScreen/${2}")
+                                navController.navigate("MainScreen/${2}") {
+                                    popUpTo("MainScreen/{startIndex}") { inclusive = true }
+                                }
+
                             }
                         )
                     }
@@ -308,102 +450,139 @@ fun NotificationScreen(navController: NavController, eventScreenViewModel: Event
 
                 Box(
                     modifier = Modifier.clickable {
-                    showGlucoseDialog.value = true
-                }
+                        showSetLowGlucoseDialog.value = true
+                    }
                 ) {
-                    Row(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(Color.White)
-                            .height(50.dp)
-                            .padding(horizontal = 30.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Start
+                            .height(80.dp),
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Text(
-                            text = "알림 혈당 범위",
-                            fontSize = 16.sp,
-                            modifier = Modifier.weight(1.5f)
-                        )
-
-                        Text(
-                            text = "${targetLowGlucose.value}" +  " ~ " + "${targetHighGlucose.value}" + "mg/dL",
-                            fontSize = 15.sp,
-                            color = Color(0xFF828282),
-                            modifier = Modifier.weight(1f)
-                        )
-
-
-                        Surface(
+                        Row(
                             modifier = Modifier
-                                .padding(top = 2.dp)
+                                .fillMaxWidth()
+                                .background(Color.White)
+                                .height(50.dp)
+                                .padding(horizontal = 30.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.edit_icon),
-                                modifier = Modifier
-                                    .size(16.dp),
-                                contentDescription = "혈당 입력 시간 수정"
+                            Text(
+                                text = "저혈당 알림",
+                                fontSize = 16.sp
                             )
+                            Switch(
+                                checked = checkedForLowGlucose.value,
+                                onCheckedChange = {
+                                    checkedForLowGlucose.value = it
+                                    coroutineScope.launch(Dispatchers.IO) {
+                                        DataStoreManager.setNotiLowGlucose(it)
+                                    }
+                                }
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.White)
+                                .height(30.dp)
+                                .padding(horizontal = 30.dp),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Text(
+                                text = "${targetLowGlucose.value} mg/dL",
+                                color = Color(0xFF828282),
+                                fontSize = 15.sp
+                            )
+                            Spacer(modifier = Modifier.width(15.dp))
+                            Surface(
+                                modifier = Modifier
+                                    .padding(top = 2.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.edit_icon),
+                                    modifier = Modifier
+                                        .size(16.dp),
+                                    contentDescription = "저혈당 알림 입력값 수정"
+                                )
+                            }
                         }
                     }
                 }
 
                 Divider()
 
-                Box() {
-                    Row(
+                Box(
+                    modifier = Modifier.clickable {
+                        showSetHighGlucoseDialog.value = true
+                    }
+                ) {
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(Color.White)
-                            .height(50.dp)
-                            .padding(horizontal = 30.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .height(80.dp),
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Text(
-                            text = "저혈당 알림",
-                            fontSize = 16.sp
-                        )
-                        Switch(
-                            checked = checkedForLowGlucose.value,
-                            onCheckedChange = {
-                                checkedForLowGlucose.value = it
-                                coroutineScope.launch(Dispatchers.IO) {
-                                    DataStoreManager.setNotiLowGlucose(it)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.White)
+                                .height(50.dp)
+                                .padding(horizontal = 30.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "고혈당 알림",
+                                fontSize = 16.sp
+                            )
+
+                            Switch(
+                                checked = checkedForHighGlucose.value,
+                                onCheckedChange = {
+                                    checkedForHighGlucose.value = it
+                                    coroutineScope.launch(Dispatchers.IO) {
+                                        DataStoreManager.setNotiHighGlucose(it)
+                                    }
                                 }
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.White)
+                                .height(30.dp)
+                                .padding(horizontal = 30.dp),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Text(
+                                text = "${targetHighGlucose.value} mg/dL",
+                                color = Color(0xFF828282),
+                                fontSize = 15.sp
+                            )
+                            Spacer(modifier = Modifier.width(15.dp))
+                            Surface(
+                                modifier = Modifier
+                                    .padding(top = 2.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.edit_icon),
+                                    modifier = Modifier
+                                        .size(16.dp),
+                                    contentDescription = "고혈당 알림 입력값 수정"
+                                )
                             }
-                        )
+                        }
                     }
                 }
 
-                Divider()
-
-                Box() {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White)
-                            .height(50.dp)
-                            .padding(horizontal = 30.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "고혈당 알림",
-                            fontSize = 16.sp
-                        )
-
-                        Switch(
-                            checked = checkedForHighGlucose.value,
-                            onCheckedChange = {
-                                checkedForHighGlucose.value = it
-                                coroutineScope.launch(Dispatchers.IO) {
-                                    DataStoreManager.setNotiHighGlucose(it)
-                                }
-                            }
-                        )
-                    }
-                }
 
                 Divider()
 

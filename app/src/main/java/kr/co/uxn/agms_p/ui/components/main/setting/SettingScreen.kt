@@ -403,33 +403,33 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
 
         Divider(color = Color.Transparent, thickness = 20.dp)
 
-        Divider()
-        Box() {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .height(50.dp)
-                    .padding(horizontal = 30.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "그래프 가로모드",
-                    fontSize = 16.sp
-                )
-                Switch(
-                    checked = checkedForLandscapeMode.value,
-                    onCheckedChange = {
-                        checkedForLandscapeMode.value = it
-                        coroutineScope.launch(Dispatchers.IO) {
-                            DataStoreManager.setLandScapeMode(it)
-                        }
-                    }
-                )
-            }
-        }
-        Divider()
+//        Divider()
+//        Box() {
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .background(Color.White)
+//                    .height(50.dp)
+//                    .padding(horizontal = 30.dp),
+//                verticalAlignment = Alignment.CenterVertically,
+//                horizontalArrangement = Arrangement.SpaceBetween
+//            ) {
+//                Text(
+//                    text = "그래프 가로모드",
+//                    fontSize = 16.sp
+//                )
+//                Switch(
+//                    checked = checkedForLandscapeMode.value,
+//                    onCheckedChange = {
+//                        checkedForLandscapeMode.value = it
+//                        coroutineScope.launch(Dispatchers.IO) {
+//                            DataStoreManager.setLandScapeMode(it)
+//                        }
+//                    }
+//                )
+//            }
+//        }
+//        Divider()
     }
 }
 

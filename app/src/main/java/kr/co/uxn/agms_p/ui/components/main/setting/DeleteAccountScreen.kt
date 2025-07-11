@@ -207,7 +207,9 @@ fun DeleteAccountScreen(navController: NavController, eventScreenViewModel: Even
                             imageVector = Icons.Filled.ArrowBack,
                             contentDescription = "뒤로 가기",
                             modifier = Modifier.clickable {
-                                navController.navigate("MainScreen/${2}")
+                                navController.navigate("MainScreen/${2}") {
+                                    popUpTo("MainScreen/{startIndex}") { inclusive = true }
+                                }
                             }
                         )
                     }

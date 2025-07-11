@@ -114,7 +114,11 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
                     NavigationBarItem(
                         selected = selectedIndex == index,
                         onClick = {
-                            selectedIndex = index
+//                            selectedIndex = index
+                            navController.navigate("MainScreen/$index") {
+//                                launchSingleTop = true
+                                popUpTo("MainScreen/{startIndex}") { inclusive = true }
+                            }
                         },
                         icon = {
                             if(selectedIndex == index) {
@@ -153,8 +157,14 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
 @Composable
 fun ContentScreen(paddingValues: PaddingValues, selectedIndex: Int, navController: NavController, homeViewModel: HomeViewModel, bleViewModel: BleViewModel, eventScreenViewModel: EventScreenViewModel) {
     when(selectedIndex) {
-        0 -> HomeScreen(navController, paddingValues, homeViewModel, bleViewModel)
-        1 -> EventScreen(navController, paddingValues, eventScreenViewModel)
-        2 -> SettingScreen(navController, paddingValues, bleViewModel)
+        0 -> {
+            HomeScreen(navController, paddingValues, homeViewModel, bleViewModel)
+        }
+        1 -> {
+            EventScreen(navController, paddingValues, eventScreenViewModel)
+        }
+        2 -> {
+            SettingScreen(navController, paddingValues, bleViewModel)
+        }
     }
 }
