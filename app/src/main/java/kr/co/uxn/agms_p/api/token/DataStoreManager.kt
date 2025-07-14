@@ -288,7 +288,7 @@ object DataStoreManager {
     }
 
     suspend fun deleteDailyCalibrationLastTime() {
-        dataStore.edit { prefs ->
+        notiStore.edit { prefs ->
             prefs.remove(DAILY_LAST_CALIBRATION_TIME)
         }
     }

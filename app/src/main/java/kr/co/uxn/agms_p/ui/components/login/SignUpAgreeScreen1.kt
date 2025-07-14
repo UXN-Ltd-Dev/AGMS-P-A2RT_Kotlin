@@ -79,7 +79,7 @@ fun SignUpAgreeScreen1(navController: NavController, type: Int, oAuthEmail: Stri
 
             // 계속 진행하시려면..
             Text(
-                text = "계속 진행하시려면 아래 권한에 동의해 주세요.",
+                text = "계속 진행하시려면 아래 항목에 동의해 주세요.",
                 fontSize = 15.sp,
                 modifier = Modifier
                     .align(Alignment.Start)

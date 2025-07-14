@@ -246,14 +246,14 @@ fun GlucoseRegisterScreen(
                                 ) {
                                     Toast.makeText(context, "숫자만 입력해주세요.", Toast.LENGTH_SHORT).show()
                                 } else if (glucoseDataFromUser.value != "") {
-                                    if (glucoseDataFromUser.value.toInt() >= 500 ) {
+                                    if (glucoseDataFromUser.value.toInt() > 350 ) {
                                         coroutineScope.launch(Dispatchers.Main) {
                                             Toast.makeText(context, "입력한 혈당이 비정상적으로 높습니다. 혈당계를 다시 사용해 측정해주세요.", Toast.LENGTH_SHORT).show()
                                         }
                                         return@clickable
                                     }
 
-                                    if (glucoseDataFromUser.value.toInt() < 40) {
+                                    if (glucoseDataFromUser.value.toInt() < 50) {
                                         coroutineScope.launch(Dispatchers.Main) {
                                             Toast.makeText(context, "입력한 혈당이 비정상적으로 낮습니다. 혈당계를 다시 사용해 측정해주세요.", Toast.LENGTH_SHORT).show()
                                         }
@@ -313,7 +313,6 @@ fun GlucoseRegisterScreen(
                                                         Log.d("GlucoseRegisterScreen", "diff is : ${diff}")
 
                                                         if (diff <= 3) {
-
                                                             val today = LocalDate.now(ZoneId.of("Asia/Seoul")).toString()
                                                             Log.d("GlucoseRegisterScreen", "today is : ${today}")
 
