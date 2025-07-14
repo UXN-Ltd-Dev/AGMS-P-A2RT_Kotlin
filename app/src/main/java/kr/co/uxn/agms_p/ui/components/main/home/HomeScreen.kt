@@ -138,8 +138,8 @@ fun HomeScreen(
     var showBluetoothOnDialog = bleViewModel.showBluetoothOnDialog.collectAsState()
     var showLowGlucoseDialog = bleViewModel.showLowGlucoseDialog.collectAsState()
     var showHighGlucoseDialog = bleViewModel.showHighGlucoseDialog.collectAsState()
-    var showModeDialog = remember { mutableStateOf(false) }
     var showEndMeasurementDialog = bleViewModel.showEndMeasurementDialog.collectAsState()
+    var showModeDialog = remember { mutableStateOf(false) }
     var selectedChartOption by remember { mutableStateOf("혈당") }
 
     val glucoseTrend = remember { mutableStateOf("유지 중") }
