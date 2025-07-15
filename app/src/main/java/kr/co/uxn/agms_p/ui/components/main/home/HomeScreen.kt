@@ -458,7 +458,7 @@ fun HomeScreen(
                 navController.navigate("GlucoseRegisterScreen")
             },
             title = "혈당 입력 시간입니다.",
-            content = "정확한 측정을 위해 공복 상태에서 자가 채혈한 혈당을 입력해주세요.",
+            content = "정확한 측정을 위해 공복 상태에서 자가 채혈한 혈당값을 입력해주세요.",
         )
     }
 
@@ -585,7 +585,7 @@ fun HomeScreen(
                 showHighGlucoseDialog(false)
                 NotificationManagerCompat.from(context).cancel(96)
             },
-            title = "혈당 수치가 높습니다.",
+            title = "혈당수치가 높습니다.",
             content = "현재 혈당이 혈당 범위를 초과했어요. 식사나 활동 내용을 확인하세요.",
         )
     }

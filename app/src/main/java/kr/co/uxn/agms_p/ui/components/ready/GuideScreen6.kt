@@ -86,7 +86,7 @@ fun GuideScreen6(navController: NavController) {
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
                 text = "손가락으로 트랜스미터 주위에\n" +
-                        "있는 점착패드 주변을 눌러 점착패드\n" +
+                        "있는 점착패드 주변을 눌러 점착패드가\n" +
                         "피부에 잘 붙도록 합니다.",
                 fontSize = 20.sp,
             )
