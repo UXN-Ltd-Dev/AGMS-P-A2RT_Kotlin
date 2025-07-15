@@ -109,7 +109,6 @@ fun PassWordResetScreen(navController: NavController) {
     LaunchedEffect(timerKey.value) {
         if (isTimerRunning.value) {
             timerSeconds.value = 300 // 5분 설정
-//            timerSeconds.value = 60 // 1분 설정
             while (timerSeconds.value > 0) {
                 delay(1000)
                 timerSeconds.value -= 1
@@ -131,7 +130,6 @@ fun PassWordResetScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 30.dp),
-//            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.size(40.dp))
 
@@ -216,9 +214,9 @@ fun PassWordResetScreen(navController: NavController) {
                             shape = RoundedCornerShape(10.dp),
                             onClick = {
                                 if (email.value != "" && email.value.contains("@")) {
-//                                    // 이메일 인증하기 타이머 초기화 코드
-//                                    timerKey.value++
-                                    isTimerRunning.value = false
+//                                  // 이메일 인증하기 타이머 초기화 코드
+                                    timerKey.value++
+                                    isTimerRunning.value = true
 
                                     // 인증번호 입력란 초기화
                                     verificationCode.value = ""
@@ -239,6 +237,7 @@ fun PassWordResetScreen(navController: NavController) {
                                                 Log.d("TAG", "인증하기 서버 응답: ${result.body()}")
                                                 val resultBody = result.body()
                                                 if (resultBody != null) {
+
                                                     if (resultBody.isDuplicated) {
                                                         withContext(Dispatchers.Main) {
                                                             Toast.makeText(
@@ -248,11 +247,11 @@ fun PassWordResetScreen(navController: NavController) {
                                                             ).show()
                                                         }
                                                     } else { // isDuplicated = false
-                                                        // 인증번호 전송
+                                                        // 인증 번호 전송
                                                         withContext(Dispatchers.Main) {
-                                                            // 이메일 인증하기 타이머 초기화 코드
-                                                            timerKey.value++
-                                                            isTimerRunning.value = true
+                                                            // 이메일 인증 하기 타이머 초기화 코드
+//                                                            timerKey.value++
+//                                                            isTimerRunning.value = true
 
                                                             Toast.makeText(
                                                                 context,
@@ -285,7 +284,6 @@ fun PassWordResetScreen(navController: NavController) {
                                             Log.d("TAG", "네트워크 오류 발생: ${e.message}")
                                         }
                                     }
-
                                 } else {
                                     Toast.makeText(context, "올바른 이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
                                 }
@@ -409,7 +407,6 @@ fun PassWordResetScreen(navController: NavController) {
                                     shape = RoundedCornerShape(10.dp),
                                     onClick = {
                                         // 실제 이메일 인증 로직 처리
-//                            isTimerRunning.value = true
                                         isEmailVerified.value = false
                                         sendRegisterBtnEnabled.value = true
                                         Log.e("TAG", "이메일 인증 시작, 타이머 시작됨.")
@@ -429,18 +426,19 @@ fun PassWordResetScreen(navController: NavController) {
                                                     Log.d("TEST", "인증번호 result body : ${resultBody}")
                                                     if (resultBody != null && resultBody.isSuccess) {
                                                         withContext(Dispatchers.Main) {
+                                                            Toast.makeText(
+                                                                context,
+                                                                "인증코드 일치",
+                                                                Toast.LENGTH_SHORT
+                                                            ).show()
 
                                                             // ✅ 타이머 강제 종료
                                                             isTimerRunning.value = false
                                                             sendRegisterBtnEnabled.value = true
                                                             timerSeconds.value = 0
 
-                                                            // 인증완료 테스트를 위한 코드
+                                                            // 인증 완료 테스트를 위한 코드
                                                             isEmailVerified.value = true
-                                                            Log.e(
-                                                                "TAG",
-                                                                "isEmailVerified : ${isEmailVerified.value}"
-                                                            )
 
                                                             // 패스워드 창 보이기
                                                             delay(500)
@@ -449,8 +447,11 @@ fun PassWordResetScreen(navController: NavController) {
                                                         }
                                                     } else {
                                                         withContext(Dispatchers.Main) {
-                                                            Toast.makeText(context, "인증 실패", Toast.LENGTH_SHORT)
-                                                                .show()
+                                                            Toast.makeText(
+                                                                context,
+                                                                "인증 번호가 일치하지 않습니다.\n다시 확인해 주세요.",
+                                                                Toast.LENGTH_SHORT
+                                                            ).show()
                                                         }
                                                     }
                                                 }
@@ -464,8 +465,6 @@ fun PassWordResetScreen(navController: NavController) {
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = Color(0xFF385DAB)
                                     ),
-//                                    modifier = Modifier.size(120.dp, 35.dp)
-//                                    modifier = Modifier.size(130.dp, 35.dp)
                                     modifier = Modifier
                                         .size(
                                             width = with(LocalDensity.current) { buttonSize.value.width.toDp() },

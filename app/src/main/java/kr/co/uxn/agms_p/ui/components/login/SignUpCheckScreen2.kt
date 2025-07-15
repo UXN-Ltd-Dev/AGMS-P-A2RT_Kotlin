@@ -7,7 +7,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -22,7 +21,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -43,7 +41,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
@@ -69,7 +66,6 @@ import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.emptyRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEmailCode
-import kr.co.uxn.agms_p.api.model.requestDTO.RequestEmailVerificationCode
 
 @Composable
 fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: String?) {
@@ -89,7 +85,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
     val isTimerRunning = remember { mutableStateOf(false) }
     val timerKey = remember { mutableStateOf(0) } // 트리거 역할
     val emailCodeId = remember { mutableStateOf(0) }
-    val isShowResetPwd = remember { mutableStateOf(false) }
+    val isShowSetPwd = remember { mutableStateOf(false) }
 
     val fontSize = 18.sp
     val buttonSize = remember { mutableStateOf(IntSize.Zero) }
@@ -97,7 +93,6 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
     LaunchedEffect(timerKey.value) {
         if (isTimerRunning.value) {
             timerSeconds.value = 300 // 5분 설정
-//            timerSeconds.value = 60 // 1분 설정
             while (timerSeconds.value > 0) {
                 delay(1000)
                 timerSeconds.value -= 1
@@ -118,7 +113,6 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 30.dp),
-//            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.size(40.dp))
 
@@ -137,14 +131,14 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
 
 
             AnimatedVisibility(
-                visible = isShowResetPwd.value == false,
+                visible = isShowSetPwd.value == false,
             ) {
 
                 Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
 
-                    if (!isShowResetPwd.value) {
+                    if (!isShowSetPwd.value) {
                         // 이메일
                         Text(
                             text = "이메일",
@@ -283,11 +277,14 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                             onClick = {
                                 if (email.value != "" && email.value.contains("@")) {
                                     // 이메일 인증하기 타이머 초기화 코드
-//                                    timerKey.value++
-                                    isTimerRunning.value = false
+                                    timerKey.value++
+                                    isTimerRunning.value = true
+
+//                                    isTimerRunning.value = false
 
                                     // 인증번호 입력란 초기화
                                     verificationCode.value = ""
+
                                     // 버튼 비활성화
                                     CoroutineScope(Dispatchers.Main).launch {
                                         sendRegisterBtnEnabled.value = true
@@ -298,7 +295,6 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                         try {
                                             // 이메일 공백 처리
                                             val trimEmail = email.value.trim()
-                                            Log.d("TEST", "originalEmail : ${email.value}\ntrimEmail : $trimEmail")
 
                                             val result = emptyRetrofit.requestVerficationCode(trimEmail)
                                             if (result.isSuccessful) {
@@ -315,11 +311,11 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                                             ).show()
                                                         }
                                                     } else { // isDuplicated = false
-                                                        // 인증번호 전송
+                                                        // 인증 번호 전송
                                                         withContext(Dispatchers.Main) {
 
-                                                            timerKey.value++
-                                                            isTimerRunning.value = true
+//                                                            timerKey.value++
+//                                                            isTimerRunning.value = true
 
                                                             Toast.makeText(
                                                                 context,
@@ -335,9 +331,6 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                                     withContext(Dispatchers.Main) {
                                                         sendRegisterBtnEnabled.value = false
                                                     }
-
-
-
                                                 } else {
                                                     Log.d("TAG", "서버 응답이 null 입니다.")
                                                 }
@@ -355,7 +348,6 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                             Log.d("TAG", "네트워크 오류 발생: ${e.message}")
                                         }
                                     }
-
                                 } else {
                                     Toast.makeText(context, "올바른 이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
                                 }
@@ -508,19 +500,14 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                                             sendRegisterBtnEnabled.value = true
                                                             timerSeconds.value = 0
 
-                                                            // 인증완료 테스트를 위한 코드
+                                                            // 인증 완료 테스트를 위한 코드
                                                             isEmailVerified.value = true
-
-                                                            Log.e(
-                                                                "TAG",
-                                                                "isEmailVerified : ${isEmailVerified.value}"
-                                                            )
 
                                                             // 패스워드 창 보이기
                                                             delay(500)
                                                             // 일반 회원가입일 경우, 패스워드 입력창 show
                                                             if(type == 1803) {
-                                                                isShowResetPwd.value = true
+                                                                isShowSetPwd.value = true
 
                                                             } else {
                                                                 // 구글, 카카오 회원가입일 경우, 화면이동
@@ -532,12 +519,12 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                                         withContext(Dispatchers.Main) {
                                                             Toast.makeText(
                                                                 context,
-                                                                "인증 실패",
+                                                                "인증 번호가 일치하지 않습니다.\n다시 확인해 주세요.",
                                                                 Toast.LENGTH_SHORT
                                                             ).show()
 
                                                             // 인증없이 회원가입을 위한 코드
-//                                                            isShowResetPwd.value = true
+//                                                            isShowSetPwd.value = true
 //                                                            isEmailVerified.value = true
 
                                                         }
@@ -553,7 +540,6 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = Color(0xFF385DAB)
                                     ),
-//                                    modifier = Modifier.size(130.dp, 35.dp),
                                     modifier = Modifier
                                         .size(
                                             width = with(LocalDensity.current) { buttonSize.value.width.toDp() },
@@ -576,13 +562,13 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
             Spacer(modifier = Modifier.height(20.dp))
 
             AnimatedVisibility(
-                visible = isShowResetPwd.value,
+                visible = isShowSetPwd.value,
                 enter = fadeIn(animationSpec = tween(durationMillis = 1500)) + slideInHorizontally(initialOffsetX = { -it / 2 })
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (isShowResetPwd.value) {
+                    if (isShowSetPwd.value) {
                         if(type == 1803) {
                             // 비밀번호
                             Text(

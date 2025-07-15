@@ -382,7 +382,6 @@ fun DeleteAccountScreen(navController: NavController, eventScreenViewModel: Even
                                         if (NetworkUtil.isNetworkAvailable(context)) {
                                             showDialog.value = true
 
-                                            // TODO 서버에 계정삭제 요청 및 로그인화면 이동 또는 앱 종료 + 데이터스토어 정리
                                         } else {
                                             Toast.makeText(context, "인터넷 연결을 확인해주세요.", Toast.LENGTH_SHORT).show()
                                         }

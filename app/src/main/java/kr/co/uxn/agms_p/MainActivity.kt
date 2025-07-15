@@ -148,14 +148,15 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+
         // 앱 업데이트 알림
-        val appUpdateManager = AppUpdateManagerFactory.create(this)
-        val appUpdateInfoTask = appUpdateManager.appUpdateInfo
-        appUpdateInfoTask.addOnSuccessListener {
-            if (it.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE ) {//&& it.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
-                Toast.makeText(this, "플레이스토어에서 최신 버전으로 업데이트 해주세요",Toast.LENGTH_SHORT).show()
-            }
-        }
+//        val appUpdateManager = AppUpdateManagerFactory.create(this)
+//        val appUpdateInfoTask = appUpdateManager.appUpdateInfo
+//        appUpdateInfoTask.addOnSuccessListener {
+//            if (it.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE ) {//&& it.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
+//                Toast.makeText(this, "플레이스토어에서 최신 버전으로 업데이트 해주세요",Toast.LENGTH_SHORT).show()
+//            }
+//        }
     }
 
     @Composable
