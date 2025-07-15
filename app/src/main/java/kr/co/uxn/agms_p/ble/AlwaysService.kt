@@ -254,7 +254,6 @@ class AlwaysService() : Service() {
             // 포그라운드에서 반복 실행
             isDuplicatedJob = serviceScope.launch {
                 while (isActive) {
-                    Log.d("SERVICE", "Coroutine 루프에서 반복 실행 중: ${System.currentTimeMillis()}")
                     val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
                     val wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "agms:loopWake")
 
@@ -273,8 +272,6 @@ class AlwaysService() : Service() {
                         if (GuestList.getGuestList().contains(userEmail)) {
                             Log.d("Guest", "He is Guest")
                             Log.d("Guest", "userEmail : ${userEmail}")
-
-                            Log.d("TEST", "")
 
                             // dummy api
                             try {
@@ -305,41 +302,25 @@ class AlwaysService() : Service() {
                                             createdAtLong = now
                                         )
 
-                                        val insertDataList = glucoseListBody.map {
-                                            val now = System.currentTimeMillis()
-
-                                            val localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(now), ZoneId.of("Asia/Seoul"))
-                                            val formattedTime = localDateTime.format(formatter)
-
-                                            UserGlucose(userId = userId , glucose = it.glucose.toDouble(), weo1 = it.weo1, weo2 = it.weo2, createdAt = formattedTime, createdAtLong = now)
-                                        }
-
                                         Log.e("TEST", "insertData : ${insertData}")
+
                                         // db에 저장
                                         localDbRepository?.dataDao()?.insertGlucose(listOf(insertData))
 
-                                        // ui에 마지막 글루코즈 값 갱신
-                                        Log.e(
+                                        Log.d(
                                             "TEST",
                                             "glucoseList first : ${glucoseListBody.first().createdAt}, last : ${glucoseListBody.last().createdAt}"
                                         )
-                                        BleBridge.updateGlucose(glucoseListBody.last().glucose)
-
-
+                                        // ui에 마지막 글루코즈 값 갱신
                                         val lastGlucose = glucoseListBody.last().glucose
-
+                                        BleBridge.updateGlucose(lastGlucose)
 
                                         // 알람을 위한 target glucose 값 불러오기
+                                        val targetHigh = DataStoreManager.getTargetHighGlucose().first() ?: -1
+                                        val targetLow = DataStoreManager.getTargetLowGlucose().first() ?: -1
 
-                                        val targetHigh =
-                                            DataStoreManager.getTargetHighGlucose().first() ?: -1
-                                        val targetLow =
-                                            DataStoreManager.getTargetLowGlucose().first() ?: -1
-
-                                        val highChecker =
-                                            DataStoreManager.getNotiHighGlucose().first() ?: false
-                                        val lowChecker =
-                                            DataStoreManager.getNotiLowGlucose().first() ?: false
+                                        val highChecker = DataStoreManager.getNotiHighGlucose().first() ?: false
+                                        val lowChecker = DataStoreManager.getNotiLowGlucose().first() ?: false
 
                                         // 고혈당, 저혈당 알람
                                         if (highChecker) {
@@ -365,7 +346,6 @@ class AlwaysService() : Service() {
                                                 showLowGlucoseDialog(true)
                                             }
                                         }
-
 
                                         // 그래프를 위한 트리거
                                         BleBridge.activateTrigger()
@@ -501,30 +481,25 @@ class AlwaysService() : Service() {
 
                         }
 
-                        // 혈당값 매일 입력 알림
-                        val isDailyCalibration =
-                            DataStoreManager.getNotiCalibration().first() ?: true
-                        val dailyCalibrationLastTime =
-                            DataStoreManager.getDailyCalibrationLastTime().first() ?: ""
+                        // 일일 혈당 알림
+                        val isDailyCalibration = DataStoreManager.getNotiCalibration().first() ?: true
+                        val dailyCalibrationLastTime = DataStoreManager.getDailyCalibrationLastTime().first() ?: ""
                         val today = LocalDate.now(ZoneId.of("Asia/Seoul")).toString()
                         Log.d("CALI", "today is : ${today}\nlastTime : ${dailyCalibrationLastTime}")
+
                         if (isDailyCalibration && dailyCalibrationLastTime != today) {
-                            val calibrationTime =
-                                DataStoreManager.getDailyCalibrationTime().first() ?: "오전 11:00"
+                            val calibrationTime = DataStoreManager.getDailyCalibrationTime().first() ?: "오전 11:00"
                             Log.d("CALI", "calibrationTime is : ${calibrationTime}")
                             if (calibrationTime != "") {
-                                // a hh:mm 형태의 스트링 값을 현재 시간과 비교후 오차 간격 10분 이내면 알림 울림
-                                val formatter =
-                                    DateTimeFormatter.ofPattern("a hh:mm", Locale.KOREAN)
+                                // a hh:mm 형태의 스트링 값을 현재 시간과 비교후 오차 간격 3분 이내면 알림 울림
+                                val formatter = DateTimeFormatter.ofPattern("a hh:mm", Locale.KOREAN)
                                 val targetTime = LocalTime.parse(calibrationTime, formatter)
-
                                 Log.d("CALI", "targetTime is : ${targetTime}")
 
                                 val nowTime = LocalTime.now(ZoneId.of("Asia/Seoul"))
                                 Log.d("CALI", "nowTime is : ${nowTime}")
 
-                                val diff = Duration.between(targetTime, nowTime).toMinutes()
-                                    .let { abs(it) }
+                                val diff = Duration.between(targetTime, nowTime).toMinutes().let { abs(it) }
                                 Log.d("CALI", "diff is : ${diff}")
 
                                 if (diff <= 3) {
@@ -543,7 +518,7 @@ class AlwaysService() : Service() {
                         }
 
 
-                        // 혈당 불러오기 (new)
+                        // 혈당 불러 오기 (new)
                         if (!GuestList.getGuestList().contains(userEmail)) {
                             val userValueList =
                                 localDbRepository?.dataDao()?.getListAfterLastTime(userId, 0)
@@ -695,68 +670,7 @@ class AlwaysService() : Service() {
                             BleBridge.showEndMeasurementDialog(true)
                         }
 
-
-//                        // dummy api
-//                        val glucoseDummyList = tokenRetrofit.getDummyGlucose(count)
-//                        if (glucoseDummyList.isSuccessful) {
-//                            count++
-//                            val glucoseListBody = glucoseDummyList.body()
-//                            if (glucoseListBody != null) {
-//
-//                                val userId = DataStoreManager.getUserId().first() ?: -1
-//                                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-//                                val zoneId = ZoneId.of("Asia/Seoul") // 타임존 설정 (필수!)
-//
-//                                Log.e("TEST", "glucoseListBody : ${glucoseListBody}")
-//                                val insertDataList = glucoseListBody.map {
-//                                    val convertToLocalDateTime = LocalDateTime.parse(it.createdAt, formatter)
-//                                    val parsedLongTime = convertToLocalDateTime.atZone(zoneId).toInstant().toEpochMilli()
-//                                    UserGlucose(userId = userId , glucose = it.glucose.toDouble(), weo1 = it.weo1, weo2 = it.weo2, createdAt = it.createdAt, createdAtLong = parsedLongTime)
-//                                }
-//
-//                                Log.e("TEST", "insertDataList : ${insertDataList}")
-//                                // db에 저장
-//                                localDbRepository?.dataDao()?.insertGlucose(insertDataList)
-//
-//                                // ui에 마지막 글루코즈 값 갱신
-//                                Log.e("TEST", "glucoseList first : ${glucoseListBody.first().createdAt}, last : ${glucoseListBody.last().createdAt}")
-//                                BleBridge.updateGlucose(glucoseListBody.last().glucose)
-//
-//
-////                                val lastGlucose = glucoseListBody.last().glucose
-//
-//
-//                                // 알람을 위한 target glucose 값 불러오기
-//
-////                                val targetHigh = DataStoreManager.getTargetHighGlucose().first() ?: -1
-////                                val targetLow = DataStoreManager.getTargetLowGlucose().first() ?: -1
-////
-////                                val highChecker = DataStoreManager.getNotiHighGlucose().first() ?: false
-////                                val lowChecker = DataStoreManager.getNotiLowGlucose().first() ?: false
-////
-////                                if (highChecker) {
-////                                    if (lastGlucose > targetHigh) {
-////                                        sendNotification(baseContext, "고혈당 주의", "고혈당이 감지되었습니다. \n현재 혈당 : ${lastGlucose} mg/dL", 96)
-////                                    }
-////                                }
-////
-////                                if (lowChecker) {
-////                                    if (lastGlucose < targetLow) {
-////                                        sendNotification(baseContext, "저혈당 주의", "저혈당이 감지되었습니다 \n현재 혈당 : ${lastGlucose} mg/dL", 95)
-////                                    }
-////                                }
-//
-//
-//                                // 그래프를 위한 트리거
-//                                BleBridge.activateTrigger()
-//                            }
-//                        } else {
-//                            Log.e("TEST", "glucoseList API통신 실패 : ${glucoseDummyList.errorBody()?.string()}")
-//                        }
-
-
                         delay(1000 * 60 * 1) // 1분
-//                        delay(1000 * 10 ) // 10초
                     } catch (e: Exception) {
                         Log.e("SERVICE", "서비스 코루틴 에러 발생 : ${e.message}")
                     } finally {
