@@ -34,11 +34,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TermsAndConditionsScreen(navController: NavController, eventScreenViewModel: EventScreenViewModel) {
+fun TermsAndConditionsScreen(navController: NavController, bleViewModel: BleViewModel) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 

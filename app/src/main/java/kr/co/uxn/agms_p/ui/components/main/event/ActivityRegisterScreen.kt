@@ -66,7 +66,7 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ActivityRegisterScreen(navController: NavController, eventScreenViewModel: EventScreenViewModel) {
+fun ActivityRegisterScreen(navController: NavController) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 

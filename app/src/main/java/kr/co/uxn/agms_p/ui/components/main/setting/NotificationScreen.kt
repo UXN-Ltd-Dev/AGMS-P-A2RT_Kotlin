@@ -63,6 +63,7 @@ import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ui.components.main.TimePickerDialog
+import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -70,7 +71,7 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotificationScreen(navController: NavController, eventScreenViewModel: EventScreenViewModel) {
+fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 

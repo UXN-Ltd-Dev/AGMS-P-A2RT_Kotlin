@@ -71,11 +71,12 @@ import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestUpdateUser
 import kr.co.uxn.agms_p.api.token.DataStoreManager
+import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyInfoScreen(navController: NavController, eventScreenViewModel: EventScreenViewModel) {
+fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 

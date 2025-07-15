@@ -309,19 +309,19 @@ class MainActivity : ComponentActivity() {
                 }
 
                 composable("GlucoseRegisterScreen") { backStackEntry ->
-                    GlucoseRegisterScreen(navController, eventScreenViewModel)
+                    GlucoseRegisterScreen(navController)
                 }
 
                 composable("ActivityRegisterScreen") { backStackEntry ->
-                    ActivityRegisterScreen(navController, eventScreenViewModel)
+                    ActivityRegisterScreen(navController)
                 }
 
                 composable("MyInfoScreen") { backStackEntry ->
-                    MyInfoScreen(navController, eventScreenViewModel)
+                    MyInfoScreen(navController, bleViewModel)
                 }
 
                 composable("NotificationScreen") { backStackEntry ->
-                    NotificationScreen(navController, eventScreenViewModel)
+                    NotificationScreen(navController, bleViewModel)
                 }
 
                 composable("SensorInfoScreen") { backStackEntry ->
@@ -329,19 +329,19 @@ class MainActivity : ComponentActivity() {
                 }
 
                 composable("VersionInfoScreen") { backStackEntry ->
-                    VersionInfoScreen(navController)
+                    VersionInfoScreen(navController, bleViewModel)
                 }
 
                 composable("PrivacyPolicyScreen") { backStackEntry ->
-                    PrivacyPolicyScreen(navController, eventScreenViewModel)
+                    PrivacyPolicyScreen(navController, bleViewModel)
                 }
 
                 composable("TermsAndConditionsScreen") { backStackEntry ->
-                    TermsAndConditionsScreen(navController, eventScreenViewModel)
+                    TermsAndConditionsScreen(navController, bleViewModel)
                 }
 
                 composable("DeleteAccountScreen") { backStackEntry ->
-                    DeleteAccountScreen(navController, eventScreenViewModel)
+                    DeleteAccountScreen(navController, bleViewModel)
                 }
             }
         }

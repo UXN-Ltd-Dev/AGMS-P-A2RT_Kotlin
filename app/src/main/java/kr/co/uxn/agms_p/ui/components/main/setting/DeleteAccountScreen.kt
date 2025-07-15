@@ -66,7 +66,7 @@ import kotlin.system.exitProcess
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DeleteAccountScreen(navController: NavController, eventScreenViewModel: EventScreenViewModel) {
+fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 

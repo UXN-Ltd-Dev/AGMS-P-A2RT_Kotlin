@@ -37,10 +37,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VersionInfoScreen(navController: NavController) {
+fun VersionInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)

@@ -78,8 +78,7 @@ import kotlin.math.abs
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GlucoseRegisterScreen(
-    navController: NavController,
-    eventScreenViewModel: EventScreenViewModel
+    navController: NavController
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
