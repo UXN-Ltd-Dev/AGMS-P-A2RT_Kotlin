@@ -133,6 +133,7 @@ fun HomeScreen(
     val glucose by bleViewModel.glucose.collectAsState()
     val chartTrigger by bleViewModel.chartTrigger.collectAsState()
 
+    // 다이얼로그 변수 모음
     var showCaliDialog = bleViewModel.showCaliDialog.collectAsState()
     var showBleConnectDialog = bleViewModel.showBleConnectDialog.collectAsState()
     var showBluetoothOnDialog = bleViewModel.showBluetoothOnDialog.collectAsState()
@@ -140,8 +141,8 @@ fun HomeScreen(
     var showHighGlucoseDialog = bleViewModel.showHighGlucoseDialog.collectAsState()
     var showEndMeasurementDialog = bleViewModel.showEndMeasurementDialog.collectAsState()
     var showModeDialog = remember { mutableStateOf(false) }
-    var selectedChartOption by remember { mutableStateOf("혈당") }
 
+    var selectedChartOption by remember { mutableStateOf("혈당") }
     val glucoseTrend = remember { mutableStateOf("유지 중") }
     val glucoseTrendImgResource = remember { mutableStateOf(R.drawable.level3) }
 
