@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,6 +27,7 @@ import androidx.compose.material.Divider
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -77,6 +79,7 @@ import kr.co.uxn.agms_p.ble.BleBridge
 import kr.co.uxn.agms_p.ble.BleBridge.showHighGlucoseDialog
 import kr.co.uxn.agms_p.ble.BleBridge.showLowGlucoseDialog
 import kr.co.uxn.agms_p.room.AppDatabase
+import kr.co.uxn.agms_p.ui.components.main.CustomTimePicker
 import kr.co.uxn.agms_p.ui.components.main.NotiDialog
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import java.text.SimpleDateFormat
@@ -112,6 +115,9 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
     val showSetDailyCalibrationDialog = remember { mutableStateOf(false) }
 
     var dailyCalibrationTime = remember { mutableStateOf("") }
+    var hour = remember { mutableStateOf("") }
+    var minute = remember { mutableStateOf("") }
+    var isAfternoon = remember { mutableStateOf(false) }
 
     val formatter = remember { SimpleDateFormat("a hh:mm", Locale.KOREAN) }
 
@@ -171,7 +177,8 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                 shape = MaterialTheme.shapes.extraLarge,
                 tonalElevation = 6.dp,
                 modifier = Modifier
-                    .width(IntrinsicSize.Min)
+                    .fillMaxWidth()
+                    .padding(horizontal = 40.dp)
                     .height(IntrinsicSize.Min)
                     .background(
                         shape = MaterialTheme.shapes.extraLarge,
@@ -193,27 +200,29 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                         style = MaterialTheme.typography.labelMedium
                     )
 
-                    WheelTimePicker(
-                        timeFormat = TimeFormat.AM_PM,
-                        size = DpSize(200.dp, 100.dp),
-                        textStyle =
-                            TextStyle(
-                                color = Color.Black,
-                                fontSize = 25.sp,
-                                fontWeight = FontWeight.Medium
-                            ),
-                        selectorProperties = WheelPickerDefaults.selectorProperties(
-                            enabled = true,
-                            shape = RoundedCornerShape(0.dp),
-                            color = Color(0xFF8ACBF1).copy(alpha = 0.2f),
-                            border = BorderStroke(2.dp, Color(0xFFf1faee))
-                        )
-                    ){ snappedDateTime ->
-                        calHour = snappedDateTime.hour
-                        calMinute = snappedDateTime.minute
+//                    WheelTimePicker(
+//                        timeFormat = TimeFormat.AM_PM,
+//                        size = DpSize(200.dp, 100.dp),
+//                        textStyle =
+//                            TextStyle(
+//                                color = Color.Black,
+//                                fontSize = 25.sp,
+//                                fontWeight = FontWeight.Medium
+//                            ),
+//                        selectorProperties = WheelPickerDefaults.selectorProperties(
+//                            enabled = true,
+//                            shape = RoundedCornerShape(0.dp),
+//                            color = Color(0xFF8ACBF1).copy(alpha = 0.2f),
+//                            border = BorderStroke(2.dp, Color(0xFFf1faee))
+//                        )
+//                    ) { snappedDateTime ->
+//                        calHour = snappedDateTime.hour
+//                        calMinute = snappedDateTime.minute
+//
+//                        Log.d("TIME" , "calHour : ${calHour}, snappedDateTime.hour : ${snappedDateTime.hour} \ncalMinute : ${calMinute}, snappedDateTime.minute : ${snappedDateTime.minute}")
+//                    }
 
-                        Log.d("TIME" , "calHour : ${calHour}, snappedDateTime.hour : ${snappedDateTime.hour} \ncalMinute : ${calMinute}, snappedDateTime.minute : ${snappedDateTime.minute}")
-                    }
+                    CustomTimePicker(hour = hour, minute = minute, isAfternoon = isAfternoon)
 
                     Spacer(modifier = Modifier.height(10.dp))
 
