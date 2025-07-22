@@ -35,7 +35,7 @@ fun TimePickerDialog(
     onCancel: () -> Unit,
     onConfirm: () -> Unit,
     toggle: @Composable () -> Unit = {},
-    content: @Composable () -> Unit,
+    content: @Composable () -> Unit = {},
 ) {
     Dialog(
         onDismissRequest = onCancel,
@@ -99,32 +99,6 @@ fun TimePickerDialog(
                         )
                     }
                 }
-
-
-
-
-//                Row(
-//                    modifier = Modifier
-//                        .height(40.dp)
-//                        .fillMaxWidth()
-//                ) {
-//                    toggle()
-//                    Spacer(modifier = Modifier.weight(1f))
-//                    TextButton(onClick = onCancel) {
-//                        Text(
-//                            text = "취소",
-//                            fontSize = 15.sp,
-//                            fontWeight = FontWeight.Medium
-//                        )
-//                    }
-//                    TextButton(onClick = onConfirm) {
-//                        Text(
-//                            text = "확인",
-//                            fontSize = 15.sp,
-//                            fontWeight = FontWeight.Medium
-//                        )
-//                    }
-//                }
             }
         }
     }

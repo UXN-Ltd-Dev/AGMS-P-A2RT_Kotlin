@@ -316,8 +316,8 @@ class AlwaysService() : Service() {
                                         BleBridge.updateGlucose(lastGlucose)
 
                                         // 알람을 위한 target glucose 값 불러오기
-                                        val targetHigh = DataStoreManager.getTargetHighGlucose().first() ?: -1
-                                        val targetLow = DataStoreManager.getTargetLowGlucose().first() ?: -1
+                                        val targetHigh = DataStoreManager.getTargetHighGlucose().first() ?: 170
+                                        val targetLow = DataStoreManager.getTargetLowGlucose().first() ?: 70
 
                                         val highChecker = DataStoreManager.getNotiHighGlucose().first() ?: false
                                         val lowChecker = DataStoreManager.getNotiLowGlucose().first() ?: false
@@ -332,6 +332,7 @@ class AlwaysService() : Service() {
                                                     96
                                                 )
                                                 showHighGlucoseDialog(true)
+                                                Log.e("NOTI", "고혈당, lastGlucose: ${lastGlucose}, targetHigh: ${targetHigh}")
                                             }
                                         }
 
@@ -344,6 +345,7 @@ class AlwaysService() : Service() {
                                                     95
                                                 )
                                                 showLowGlucoseDialog(true)
+                                                Log.e("NOTI", "저혈당, lastGlucose: ${lastGlucose}, targetLow: ${targetLow}")
                                             }
                                         }
 

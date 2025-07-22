@@ -276,13 +276,13 @@ object DataStoreManager {
     }
 
     suspend fun deleteTargetLowGlucose() {
-        dataStore.edit { prefs ->
+        notiStore.edit { prefs ->
             prefs.remove(TARGET_LOW_GLUCOSE)
         }
     }
 
     suspend fun deleteTargetHighGlucose() {
-        dataStore.edit { prefs ->
+        notiStore.edit { prefs ->
             prefs.remove(TARGET_HIGH_GLUCOSE)
         }
     }

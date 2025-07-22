@@ -2,6 +2,7 @@ package kr.co.uxn.agms_p.ui.components.main.setting
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -9,6 +10,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,12 +33,12 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
-import androidx.compose.material3.TimeInput
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -50,14 +52,20 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.app.NotificationManagerCompat
 import androidx.navigation.NavController
+import com.commandiron.wheel_picker_compose.WheelTimePicker
+import com.commandiron.wheel_picker_compose.core.TimeFormat
+import com.commandiron.wheel_picker_compose.core.WheelPickerDefaults
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -70,9 +78,7 @@ import kr.co.uxn.agms_p.ble.BleBridge.showHighGlucoseDialog
 import kr.co.uxn.agms_p.ble.BleBridge.showLowGlucoseDialog
 import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.ui.components.main.NotiDialog
-import kr.co.uxn.agms_p.ui.components.main.TimePickerDialog
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
-import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -121,6 +127,9 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
         AppDatabase.getInstance(context)
     }
 
+    var calHour: Int? = null
+    var calMinute: Int? = null
+
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             // DS로부터 값 불러오기
@@ -154,35 +163,111 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
     }
 
     if (showSetDailyCalibrationDialog.value) {
-
-        val state = rememberTimePickerState(
-            is24Hour = false,
-            initialHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY),
-            initialMinute = Calendar.getInstance().get(Calendar.MINUTE),
-        )
-        TimePickerDialog(
-            title = "혈당값 입력 시간",
-            onCancel = { showSetDailyCalibrationDialog.value = false },
-            onConfirm = {
-                val cal = Calendar.getInstance()
-
-                cal.set(Calendar.HOUR, state.hour % 12) // 12시 → 0시로 변환 필요
-                cal.set(Calendar.AM_PM, if (state.isAfternoon) Calendar.PM else Calendar.AM)
-                cal.set(Calendar.MINUTE, state.minute)
-                cal.isLenient = false
-
-                Log.d("TIME", "format time : ${formatter.format(cal.time)} \nfinalTime : $dailyCalibrationTime")
-                dailyCalibrationTime.value = formatter.format(cal.time)
-                showSetDailyCalibrationDialog.value = false
-
-                coroutineScope.launch(Dispatchers.IO) {
-                    DataStoreManager.setDailyCalibrationTime(dailyCalibrationTime.value)
-                }
-                Log.d("TIME", "finalTime : $dailyCalibrationTime")
-            }
+        Dialog(
+            onDismissRequest = { showSetDailyCalibrationDialog.value = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false),
         ) {
-            TimeInput(state = state)
+            androidx.compose.material3.Surface(
+                shape = MaterialTheme.shapes.extraLarge,
+                tonalElevation = 6.dp,
+                modifier = Modifier
+                    .width(IntrinsicSize.Min)
+                    .height(IntrinsicSize.Min)
+                    .background(
+                        shape = MaterialTheme.shapes.extraLarge,
+                        color = MaterialTheme.colorScheme.background
+                    ),
+                color = Color.White
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    androidx.compose.material3.Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 20.dp),
+                        text = "혈당값 입력 시간",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium,
+                        style = MaterialTheme.typography.labelMedium
+                    )
+
+                    WheelTimePicker(
+                        timeFormat = TimeFormat.AM_PM,
+                        size = DpSize(200.dp, 100.dp),
+                        textStyle =
+                            TextStyle(
+                                color = Color.Black,
+                                fontSize = 25.sp,
+                                fontWeight = FontWeight.Medium
+                            ),
+                        selectorProperties = WheelPickerDefaults.selectorProperties(
+                            enabled = true,
+                            shape = RoundedCornerShape(0.dp),
+                            color = Color(0xFF8ACBF1).copy(alpha = 0.2f),
+                            border = BorderStroke(2.dp, Color(0xFFf1faee))
+                        )
+                    ){ snappedDateTime ->
+                        calHour = snappedDateTime.hour
+                        calMinute = snappedDateTime.minute
+
+                        Log.d("TIME" , "calHour : ${calHour}, snappedDateTime.hour : ${snappedDateTime.hour} \ncalMinute : ${calMinute}, snappedDateTime.minute : ${snappedDateTime.minute}")
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End)
+                    ) {
+                        OutlinedButton(
+                            onClick = { showSetDailyCalibrationDialog.value = false },
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f),
+                            border = BorderStroke(1.dp, Color(0xFFD8D8D8))
+                        ) {
+                            androidx.compose.material3.Text(
+                                text = "취소",
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        Button(
+                            onClick = {
+                                if (calHour != null && calMinute != null) {
+                                    val cal = Calendar.getInstance().apply {
+                                        set(Calendar.HOUR_OF_DAY, calHour!!)  // 0~23시로 설정
+                                        set(Calendar.MINUTE, calMinute!!)
+                                    }
+                                    val formattedTime = formatter.format(cal.time)
+                                    Log.d("TIME", "입력된 시간: $formattedTime")
+                                    dailyCalibrationTime.value = formattedTime
+                                    showSetDailyCalibrationDialog.value = false
+
+                                    coroutineScope.launch(Dispatchers.IO) {
+                                        DataStoreManager.setDailyCalibrationTime(dailyCalibrationTime.value)
+                                    }
+                                    Log.d("TIME", "finalTime : $dailyCalibrationTime")
+                                }
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF3451B2), // 파란색
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            androidx.compose.material3.Text(
+                                text = "입력",
+                                color = Color.White,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+
+                }
+            }
         }
+
     }
 
     if (showGlucoseDialog.value) {
@@ -900,3 +985,4 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
         }
     }
 }
+

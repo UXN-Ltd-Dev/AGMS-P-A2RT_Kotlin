@@ -27,7 +27,7 @@ android {
         applicationId = "kr.co.uxn.agms_p"
         minSdk = 29
         targetSdk = 35
-        versionCode = 11
+        versionCode = 12
         versionName = "0.3.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -116,7 +116,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.firebase.crashlytics.buildtools)
+//    implementation(libs.firebase.crashlytics.buildtools)
     implementation(libs.material)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.constraintlayout)
@@ -210,7 +210,10 @@ dependencies {
     // 앱 업데이트 확인
     implementation("com.google.android.play:app-update-ktx:2.1.0")
 
-    // 권한 meticha 라이브러리
+    // 권한 meticha library
     implementation(libs.permissions.compose)
+
+    // timepicker library
+    implementation("com.github.commandiron:WheelPickerCompose:1.1.11")
 
 }
