@@ -115,7 +115,7 @@ fun EnterFirstGlucose(navController: NavController) {
                         fontSize = 18.sp
                     )
                 },
-                interactionSource = interactionSource, // 터치 이벤트 감지
+                interactionSource = interactionSource,
                 keyboardOptions = KeyboardOptions.Default.copy(
                     imeAction = ImeAction.Done,
                     keyboardType = KeyboardType.Number
@@ -199,7 +199,6 @@ fun EnterFirstGlucose(navController: NavController) {
                                                 content = glucoseDataFromUser.value
                                             )
                                         )
-
 
                                         Log.e("TEST", "uploadbody : ${upload.body().toString()}")
                                         if (upload.isSuccessful) {

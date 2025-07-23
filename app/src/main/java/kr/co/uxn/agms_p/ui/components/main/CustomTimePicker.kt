@@ -1,5 +1,6 @@
 package kr.co.uxn.agms_p.ui.components.main
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Divider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -21,8 +23,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,14 +65,21 @@ fun CustomTimePicker(
                 },
                 modifier = Modifier
                     .width(70.dp)
-                    .height(80.dp),
+                    .height(80.dp)
+                    .onFocusChanged { focusState ->
+                        Log.d("FocusDebug", "Hour TextField focused: ${focusState.isFocused}")
+                    },
                 textStyle = textStyle,
                 singleLine = true,
                 shape = shape,
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedContainerColor = Color.White,
                     focusedBorderColor = Color.Black
-                )
+                ),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Next,
+                    keyboardType = KeyboardType.Number
+                ),
             )
             Text("시", fontSize = 12.sp)
         }
@@ -83,20 +96,32 @@ fun CustomTimePicker(
             OutlinedTextField(
                 value = minute.value,
                 onValueChange = {
-                    if (it.length <= 2 && it.all { ch -> ch.isDigit() }) {
-                        minute.value = it
+                    if(it.isEmpty()) {
+                        minute.value  = it
+                    } else if (it.length <= 2 && it.all { ch -> ch.isDigit() } ) {
+                        val intValue = it.toIntOrNull() ?: 0
+                        if(intValue in 0 .. 59) {
+                            minute.value = it
+                        }
                     }
                 },
                 modifier = Modifier
                     .width(70.dp)
-                    .height(80.dp),
+                    .height(80.dp)
+                    .onFocusChanged { focusState ->
+                        Log.d("FocusDebug", "Min TextField focused: ${focusState.isFocused}")
+                    },
                 textStyle = textStyle,
                 singleLine = true,
                 shape = shape,
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedContainerColor = Color.White,
                     focusedBorderColor = Color.Black
-                )
+                ),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Done,
+                    keyboardType = KeyboardType.Number
+                ),
             )
             Text("분", fontSize = 12.sp)
         }

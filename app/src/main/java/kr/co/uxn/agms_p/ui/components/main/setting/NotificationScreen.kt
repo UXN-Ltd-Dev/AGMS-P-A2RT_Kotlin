@@ -133,8 +133,8 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
         AppDatabase.getInstance(context)
     }
 
-    var calHour: Int? = null
-    var calMinute: Int? = null
+//    var calHour: Int? = null
+//    var calMinute: Int? = null
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
@@ -234,7 +234,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                             onClick = { showSetDailyCalibrationDialog.value = false },
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.weight(1f),
-                            border = BorderStroke(1.dp, Color(0xFFD8D8D8))
+                            border = BorderStroke(1.dp, Color(0xFFD8D8D8)),
                         ) {
                             androidx.compose.material3.Text(
                                 text = "취소",
@@ -243,10 +243,15 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                         }
                         Button(
                             onClick = {
-                                if (calHour != null && calMinute != null) {
+                                if (hour.value != "" && minute.value != "") {
                                     val cal = Calendar.getInstance().apply {
-                                        set(Calendar.HOUR_OF_DAY, calHour!!)  // 0~23시로 설정
-                                        set(Calendar.MINUTE, calMinute!!)
+                                        set(Calendar.HOUR, hour.value.toInt())  // 0~23시로 설정
+                                        set(Calendar.MINUTE, minute.value.toInt())
+                                        if(isAfternoon.value) {
+                                            set(Calendar.AM_PM, Calendar.PM)
+                                        } else {
+                                            set(Calendar.AM_PM, Calendar.AM)
+                                        }
                                     }
                                     val formattedTime = formatter.format(cal.time)
                                     Log.d("TIME", "입력된 시간: $formattedTime")
@@ -257,6 +262,8 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                                         DataStoreManager.setDailyCalibrationTime(dailyCalibrationTime.value)
                                     }
                                     Log.d("TIME", "finalTime : $dailyCalibrationTime")
+                                } else {
+                                    Toast.makeText(context, "시간을 입력해주세요.", Toast.LENGTH_SHORT).show()
                                 }
                             },
                             shape = RoundedCornerShape(10.dp),
@@ -926,6 +933,9 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                 Box(
                     modifier = Modifier.clickable {
                         showSetDailyCalibrationDialog.value = true
+                        hour.value = Calendar.getInstance().get(Calendar.HOUR).toString()
+                        minute.value = Calendar.getInstance().get(Calendar.MINUTE).toString()
+                        isAfternoon.value = if(Calendar.getInstance().get(Calendar.AM_PM) == Calendar.AM) false else true
                     }
                 ) {
                     Column(
