@@ -245,13 +245,14 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                             onClick = {
                                 if (hour.value != "" && minute.value != "") {
                                     val cal = Calendar.getInstance().apply {
-                                        set(Calendar.HOUR, hour.value.toInt())  // 0~23시로 설정
-                                        set(Calendar.MINUTE, minute.value.toInt())
-                                        if(isAfternoon.value) {
-                                            set(Calendar.AM_PM, Calendar.PM)
-                                        } else {
-                                            set(Calendar.AM_PM, Calendar.AM)
+                                        val hourInt = hour.value.toInt()
+                                        val hour24 = when {
+                                            isAfternoon.value && hourInt != 12 -> hourInt + 12  // 오후 1-11시
+                                            !isAfternoon.value && hourInt == 12 -> 0           // 오전 12시 (자정)
+                                            else -> hourInt                                     // 오전 1-11시, 오후 12시
                                         }
+                                        set(Calendar.HOUR_OF_DAY, hour24)
+                                        set(Calendar.MINUTE, minute.value.toInt())
                                     }
                                     val formattedTime = formatter.format(cal.time)
                                     Log.d("TIME", "입력된 시간: $formattedTime")
