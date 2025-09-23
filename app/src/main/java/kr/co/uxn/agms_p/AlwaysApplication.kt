@@ -1,7 +1,10 @@
 package kr.co.uxn.agms_p
 
 import android.app.Application
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import android.util.Log
+import android.widget.Toast
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
@@ -17,6 +20,9 @@ import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.room.DummyValue
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
+import java.security.Signature
 import java.util.concurrent.TimeUnit
 
 class AlwaysApplication : Application() {
@@ -41,9 +47,57 @@ class AlwaysApplication : Application() {
 
         // db에 더미 저장
 
+//        Toast.makeText(this, "무결성 검증 통과!", Toast.LENGTH_SHORT).show()
+
+        val VALID_SIGNATURE_HASH = "9E9233211A9157E699D49D8C0E7A4289B180A1B3DC4B9EE7AC3C96A6AA86FAB1"
 
 
-//        localDbRepository.dataDao().insertDummyList()
+//        fun checkAppSignature() {
+//            try {
+//                val packageInfo = packageManager.getPackageInfo(
+//                    packageName,
+//                    PackageManager.GET_SIGNATURES
+//                )
+//
+//                for (signature: Signature in packageInfo.signatures) {
+//                    Log.d("TEST", "서명정보 : ${signature.toCharsString()}")
+//
+//                    try {
+//                        val md = MessageDigest.getInstance("SHA-256")
+//                        md.update(signature.toByteArray())
+//                        val currentHash = toHex(md.digest())
+//
+//                        if (currentHash.equals(VALID_SIGNATURE_HASH, ignoreCase = true)) {
+//                            Log.e("TEST", "무결성 검증 통과!")
+////                    Toast.makeText(this, "무결성 검증 통과!", Toast.LENGTH_SHORT).show()
+//                        } else {
+//                            Log.e("TEST", "무결성 검증 실패")
+//                            Toast.makeText(
+//                                this,
+//                                "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.",
+//                                Toast.LENGTH_SHORT
+//                            ).show()
+//                        }
+//                    } catch (e: NoSuchAlgorithmException) {
+//                        Log.e("TEST", "무결성 검증 실패: ${e.message}")
+//                        Toast.makeText(
+//                            this,
+//                            "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.",
+//                            Toast.LENGTH_SHORT
+//                        ).show()
+//                        throw RuntimeException(e)
+//                    }
+//                }
+//            } catch (e: PackageManager.NameNotFoundException) {
+//                Log.e("TEST", "무결성 검증 실패: ${e.message}")
+//                Toast.makeText(
+//                    this,
+//                    "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.",
+//                    Toast.LENGTH_SHORT
+//                ).show()
+//                throw RuntimeException(e)
+//            }
+//        }
 
     }
     fun uploadWorkRequest() {

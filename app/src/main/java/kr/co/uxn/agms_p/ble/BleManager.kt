@@ -26,13 +26,11 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.BleConnectionState
-import kr.co.uxn.agms_p.PythonManager
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.room.AppDatabase
@@ -60,9 +58,12 @@ class BleManager(
         @Volatile
         private var INSTANCE: BleManager? = null
 
-        const val characteristicUuidReadT21 = "e093f3b5-00a3-a9e5-9eca-40026e0edc24"
-        const val characteristicUuidWriteT21 = "e093f3b5-00a3-a9e5-9eca-40036e0edc24"
-        const val serviceUuidT21 = "e093f3b5-00a3-a9e5-9eca-40016e0edc24"
+//        const val characteristicUuidReadT21 = "e093f3b5-00a3-a9e5-9eca-40026e0edc24"
+//        const val characteristicUuidWriteT21 = "e093f3b5-00a3-a9e5-9eca-40036e0edc24"
+//        const val serviceUuidT21 = "e093f3b5-00a3-a9e5-9eca-40016e0edc24"
+        const val characteristicUuidReadF23 = "e093f3b5-00a3-a9e5-9eca-80026e0edc24"
+        const val characteristicUuidWriteF23 = "e093f3b5-00a3-a9e5-9eca-80036e0edc24"
+        const val serviceUuidF23 = "e093f3b5-00a3-a9e5-9eca-80016e0edc24"
 
         var mGatt: BluetoothGatt? = null
         var mDevice: BluetoothDevice? = null
@@ -109,6 +110,39 @@ class BleManager(
         when (newState) {
             BluetoothProfile.STATE_CONNECTED -> {
                 Log.e("gatt", "gatt connected!")
+
+
+
+//                removeDeviceBond()
+                //                removeDeviceBond();
+
+                val mDevice = gatt?.device?.bondState
+                if (mDevice == BluetoothDevice.BOND_NONE) {
+                    val result =  gatt?.device?.createBond()
+                    Log.i("BOND", "Bonding started: $result")
+                } else if (gatt?.device?.bondState == BluetoothDevice.BOND_BONDING) {
+                    Log.i("BOND", "Bonding ing: ")
+                } else if (gatt?.device?.bondState == BluetoothDevice.BOND_BONDED) {
+//                    if (!bondingTest) {
+//                        mDevice.createBond();
+//                        Log.i("BOND", "본딩이 되었지만 최초라 본딩 보냄!");
+//                    }
+
+
+//                    bondingTest = true;
+//                    Log.i("BOND", "Bonding completed");
+//                    boolean check =gatt.requestMtu(GlobalConstants.MTU_SIZE);
+//                    if (!check) {
+//                        clearExecutor();
+//                        if (mGatt != null&&mBleListener != null) {
+//                            mGatt.disconnect();
+//                            mBleListener.onDisconnected();
+//                        }
+//                    }
+                } else {
+
+                }
+
 
                 // BleBridge에 상태 연결 완료 전송
                 BleBridge.updateState(BleConnectionState.CONNECTED)
@@ -202,7 +236,7 @@ class BleManager(
                 }
             }
 
-            val characteristicUUID = UUID.fromString(characteristicUuidReadT21)
+            val characteristicUUID = UUID.fromString(characteristicUuidReadF23)
 
             // 원하는 서비스로 지정
             var found = false
@@ -210,7 +244,7 @@ class BleManager(
             while (i < services!!.size && !found) {
                 val currentService = services[i]
                 if (currentService.uuid.toString()
-                        .equals(serviceUuidT21, ignoreCase = true)
+                        .equals(serviceUuidF23, ignoreCase = true)
                 ) {
                     service = currentService
                     found = true
@@ -612,6 +646,30 @@ class BleManager(
         return 0
     }
 
+    fun removeDeviceBond(): Boolean {
+        if (mDevice == null) {
+            Log.e("BOND", "removeDeviceBond: BluetoothDevice is null. Cannot remove bond.")
+            return false
+        }
+
+        return try {
+            // "removeBond" 메서드를 리플렉션을 통해 가져오기
+            val method: Method = mDevice!!::class.java.getMethod("removeBond")
+            // 메서드 호출하여 본딩 삭제 시도
+            val result = method.invoke(mDevice) as Boolean
+
+            if (result) {
+                Log.d("BOND", "Bond removal initiated for device: ${mDevice?.address}")
+            } else {
+                Log.e("BOND", "Failed to initiate bond removal for device: ${mDevice?.address}")
+            }
+            result
+        } catch (e: Exception) {
+            Log.e("BOND", "Exception while trying to remove bond", e)
+            false
+        }
+    }
+
 
     private fun convertToCurrentDataDouble(
         weoFirst: Byte,
@@ -652,6 +710,7 @@ class BleManager(
     fun refreshDeviceCache(gatt: BluetoothGatt?) {
         try {
             val method: Method = refreshMethod()
+
             val isRefreshSuccess = method.invoke(gatt) as Boolean
             if (isRefreshSuccess) {
                 Log.d(TEST, "Bluetooth refresh cache")
@@ -701,7 +760,7 @@ class BleManager(
         while (i < services!!.size && !found) {
             val currentService = services[i]
             if (currentService.uuid.toString()
-                    .equals(serviceUuidT21, ignoreCase = true)
+                    .equals(serviceUuidF23, ignoreCase = true)
             ) {
                 service = currentService
                 found = true
@@ -710,7 +769,7 @@ class BleManager(
         }
         Log.d(TEST, "in writeAgms - service : ${service.uuid.toString()}")
 
-        val characteristicUuid = UUID.fromString(characteristicUuidWriteT21)
+        val characteristicUuid = UUID.fromString(characteristicUuidWriteF23)
         val writeCharacteristic = service.getCharacteristic(characteristicUuid)
         Log.d(
             TEST,
