@@ -51,7 +51,8 @@ class BleManager(
     val context: Context,
     val mac: String,
     val userId: Int,
-    val applicationContext: Context
+    val applicationContext: Context,
+    val protocol: Protocol
 ) : BluetoothGattCallback() {
 
     companion object {
@@ -72,10 +73,11 @@ class BleManager(
             context: Context,
             mac: String,
             userId: Int,
-            applicationContext: Context
+            applicationContext: Context,
+            protocol: Protocol
         ): BleManager {
             return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: BleManager(context, mac, userId, applicationContext).also {
+                INSTANCE ?: BleManager(context, mac, userId, applicationContext, protocol).also {
                     INSTANCE = it
                 }
             }
@@ -111,8 +113,6 @@ class BleManager(
             BluetoothProfile.STATE_CONNECTED -> {
                 Log.e("gatt", "gatt connected!")
 
-
-
 //                removeDeviceBond()
                 //                removeDeviceBond();
 
@@ -121,26 +121,9 @@ class BleManager(
                     val result =  gatt?.device?.createBond()
                     Log.i("BOND", "Bonding started: $result")
                 } else if (gatt?.device?.bondState == BluetoothDevice.BOND_BONDING) {
-                    Log.i("BOND", "Bonding ing: ")
+                    Log.i("BOND", "Bonding... ")
                 } else if (gatt?.device?.bondState == BluetoothDevice.BOND_BONDED) {
-//                    if (!bondingTest) {
-//                        mDevice.createBond();
-//                        Log.i("BOND", "본딩이 되었지만 최초라 본딩 보냄!");
-//                    }
-
-
-//                    bondingTest = true;
-//                    Log.i("BOND", "Bonding completed");
-//                    boolean check =gatt.requestMtu(GlobalConstants.MTU_SIZE);
-//                    if (!check) {
-//                        clearExecutor();
-//                        if (mGatt != null&&mBleListener != null) {
-//                            mGatt.disconnect();
-//                            mBleListener.onDisconnected();
-//                        }
-//                    }
-                } else {
-
+                    Log.i("BOND", "Bonding Success!")
                 }
 
 
@@ -236,7 +219,8 @@ class BleManager(
                 }
             }
 
-            val characteristicUUID = UUID.fromString(characteristicUuidReadF23)
+//            val characteristicUUID = UUID.fromString(characteristicUuidReadF23)
+            val characteristicUUID = UUID.fromString(protocol.readUUID)
 
             // 원하는 서비스로 지정
             var found = false
@@ -244,7 +228,8 @@ class BleManager(
             while (i < services!!.size && !found) {
                 val currentService = services[i]
                 if (currentService.uuid.toString()
-                        .equals(serviceUuidF23, ignoreCase = true)
+//                        .equals(serviceUuidF23, ignoreCase = true)
+                        .equals(protocol.serviceUUID, ignoreCase = true)
                 ) {
                     service = currentService
                     found = true
@@ -278,108 +263,117 @@ class BleManager(
         super.onCharacteristicChanged(gatt, characteristic)
 
         val data = characteristic!!.value
-        val deviceName = gatt?.device?.name
 
-        Log.d(TEST, "commandId  : ${String.format("0x%02X", data[2])}")
-        Log.d(TEST, "status  : ${String.format("0x%02X", data[3])}")
-        Log.e(TEST, "데이터 size : ${data.size}")
-        Log.e(TEST, "data[4] length : ${java.lang.Byte.toUnsignedInt(data[4]) + 8}")
-
-        // Check CRC Code
-        val crc1 = java.lang.Byte.toUnsignedInt(data[6])
-        val crc2 = java.lang.Byte.toUnsignedInt(data[7])
-        Log.d(TEST, "crc1 : $crc1, crc2 : $crc2")
-
-        val crc = (crc1 * 256) + crc2
-        Log.d(TEST, "수신된 crc : $crc")
-
-        val checkCrc = checkCrc(data)
-        Log.d(TEST, "계산된 crc : $checkCrc")
-
-        // crc 안 맞으면 crc 에러 응답
-        if (crc != checkCrc) {
-            Log.e(TEST, "crc 에러 발생!")
-            writeAgms(gatt!!, makeByteArrayWithState(0x01.toByte())) // crc_error
-            return
+        val response = protocol.runProtocol(AppDatabase.getInstance(applicationContext), data, userId)
+        if (response != null) {
+            writeAgms(gatt!!, response)
         } else {
-            Log.e(TEST, "=== crc 체크 통과! ===")
+            Log.e(TEST, " response is null")
         }
+//        val deviceName = gatt?.device?.name
+//
+//        Log.d(TEST, "commandId  : ${String.format("0x%02X", data[2])}")
+//        Log.d(TEST, "status  : ${String.format("0x%02X", data[3])}")
+//        Log.e(TEST, "데이터 size : ${data.size}")
+//        Log.e(TEST, "data[4] length : ${java.lang.Byte.toUnsignedInt(data[4]) + 8}")
+//
+//        // Check CRC Code
+//        val crc1 = java.lang.Byte.toUnsignedInt(data[6])
+//        val crc2 = java.lang.Byte.toUnsignedInt(data[7])
+//        Log.d(TEST, "crc1 : $crc1, crc2 : $crc2")
+//
+//        val crc = (crc1 * 256) + crc2
+//        Log.d(TEST, "수신된 crc : $crc")
+//
+//        val checkCrc = checkCrc(data)
+//        Log.d(TEST, "계산된 crc : $checkCrc")
+//
+//        // crc 안 맞으면 crc 에러 응답
+//        if (crc != checkCrc) {
+//            Log.e(TEST, "crc 에러 발생!")
+//            writeAgms(gatt!!, makeByteArrayWithState(0x01.toByte())) // crc_error
+//            return
+//        } else {
+//            Log.e(TEST, "=== crc 체크 통과! ===")
+//        }
+//
+//        if (data[0] == 0xA0.toByte() && data[1] == 0x81.toByte()) {
+//            Log.d(
+//                TEST,
+//                "data[0] : ${String.format("0x%02X", data[0])},  0xA0\n" +
+//                        "data[1] : ${String.format("0x%02X", data[1])},  0x81"
+//            )
+//            val commandId = data[2]
+//            Log.d(TEST, "data[2] commandId converted = ${0x42.toByte()}")
+//            Log.d(TEST, "data[2] commandId = ${data[2]}")
+//
+//            when (commandId) {
+//                // CMD_SEND (0x42)
+//                0x42.toByte() -> {
+//                    val length = java.lang.Byte.toUnsignedInt(data[4])
+//                    val calLength = 8 + length
+//                    if (data.size != calLength) {
+//                        Log.e(
+//                            TEST,
+//                            "데이터 길이 맞지 않음\nlength = ${data.size}\ncal_length = ${calLength}"
+//                        )
+//                        writeAgms(
+//                            gatt!!,
+//                            makeByteArrayWithState(0x02.toByte())
+//                        ) // date_length_error
+//                    } else {
+//                        // 데이터 받아오기
+//                        Log.e(
+//                            TEST,
+//                            "=== 데이터 길이 일치! === \nlength = ${data.size}\ncal_length = ${calLength}"
+//                        )
+//                        try {
+//                            val checker = receiveDataAndInsert(data, deviceName)
+//                            if (checker == -1) {
+//                                // 0x12 : time error
+//                                writeAgms(gatt!!, makeByteArrayWithState(0x12.toByte()))
+//                            } else {
+//                                // 0x00 : no error (OK)
+//                                writeAgms(gatt!!, makeByteArrayWithState(0x00.toByte()))
+//                            }
+//
+//                        } catch (e: Exception) {
+//                            Log.e(TEST, "데이터 받아오기 에러발생")
+//                            CoroutineScope(Dispatchers.Main).launch {
+//                                Log.e(TEST, "프로토콜2.0이 아님")
+//                                Log.e(TEST, "error : ${e.message}")
+//                                Toast.makeText(
+//                                    context,
+//                                    "해당 기기는 프로토콜2.0이 아닙니다.\n다른 기기를 선택해주세요.",
+//                                    Toast.LENGTH_LONG
+//                                ).show()
+////                                isChange = true
+//
+//                                gatt?.disconnect()
+////                                eventViewModel.goBleList(0, true)
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                // CMD_RTC (0x41)
+//                0x41.toByte() -> {
+//                    // sendRTC
+//                    val state = data[3]
+//                    Log.d(TEST, "state = ${String.format("0x%02X", data[3])}")
+//                    if (state == 0x11.toByte() || state == 0x12.toByte()) {
+//                        // write 기능
+//                        writeAgms(gatt!!, sendRtc())
+//                        Log.d(TEST, "SEND_RTC!!!")
+//                        //    return
+//                    }
+//                }
+//            }
+//        } else {
+//            Log.e(TEST, "start code Error!")
+//        }
 
-        if (data[0] == 0xA0.toByte() && data[1] == 0x81.toByte()) {
-            Log.d(
-                TEST,
-                "data[0] : ${String.format("0x%02X", data[0])},  0xA0\n" +
-                        "data[1] : ${String.format("0x%02X", data[1])},  0x81"
-            )
-            val commandId = data[2]
-            Log.d(TEST, "data[2] commandId converted = ${0x42.toByte()}")
-            Log.d(TEST, "data[2] commandId = ${data[2]}")
 
-            when (commandId) {
-                // CMD_SEND (0x42)
-                0x42.toByte() -> {
-                    val length = java.lang.Byte.toUnsignedInt(data[4])
-                    val calLength = 8 + length
-                    if (data.size != calLength) {
-                        Log.e(
-                            TEST,
-                            "데이터 길이 맞지 않음\nlength = ${data.size}\ncal_length = ${calLength}"
-                        )
-                        writeAgms(
-                            gatt!!,
-                            makeByteArrayWithState(0x02.toByte())
-                        ) // date_length_error
-                    } else {
-                        // 데이터 받아오기
-                        Log.e(
-                            TEST,
-                            "=== 데이터 길이 일치! === \nlength = ${data.size}\ncal_length = ${calLength}"
-                        )
-                        try {
-                            val checker = receiveDataAndInsert(data, deviceName)
-                            if (checker == -1) {
-                                // 0x12 : time error
-                                writeAgms(gatt!!, makeByteArrayWithState(0x12.toByte()))
-                            } else {
-                                // 0x00 : no error (OK)
-                                writeAgms(gatt!!, makeByteArrayWithState(0x00.toByte()))
-                            }
-
-                        } catch (e: Exception) {
-                            Log.e(TEST, "데이터 받아오기 에러발생")
-                            CoroutineScope(Dispatchers.Main).launch {
-                                Log.e(TEST, "프로토콜2.0이 아님")
-                                Log.e(TEST, "error : ${e.message}")
-                                Toast.makeText(
-                                    context,
-                                    "해당 기기는 프로토콜2.0이 아닙니다.\n다른 기기를 선택해주세요.",
-                                    Toast.LENGTH_LONG
-                                ).show()
-//                                isChange = true
-
-                                gatt?.disconnect()
-//                                eventViewModel.goBleList(0, true)
-                            }
-                        }
-                    }
-                }
-
-                // CMD_RTC (0x41)
-                0x41.toByte() -> {
-                    // sendRTC
-                    val state = data[3]
-                    Log.d(TEST, "state = ${String.format("0x%02X", data[3])}")
-                    if (state == 0x11.toByte() || state == 0x12.toByte()) {
-                        // write 기능
-                        writeAgms(gatt!!, sendRtc())
-                        Log.d(TEST, "SEND_RTC!!!")
-                        //    return
-                    }
-                }
-            }
-        } else {
-            Log.e(TEST, "start code Error!")
-        }
     }
 
     @SuppressLint("MissingPermission")
@@ -487,164 +481,164 @@ class BleManager(
     }
 
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun receiveDataAndInsert(data: ByteArray, deviceName: String?): Int {
-
-        // 리스트 생성
-        val saveData: MutableList<UserValue> = mutableListOf<UserValue>()
-
-        // 데이터 받아오기
-        val stx1 = data[0]
-        val stx2 = data[1]
-        Log.d(TEST, "stx1 : ${stx1}, stx2: ${stx2}")
-
-        val commandId = data[2]
-        val status = data[3]
-        Log.d(TEST, "commandId : ${commandId}")
-        // printf("%02X\n", 10);   // 출력 (앞의 빈자리를 0으로 채우기): 0A
-        Log.d(TEST, "status : ${status}")
-        // 왜 0x%02X라는 작업을 포맷하는가? 오는 파일이 16진수인가?
-
-        Log.d(TEST, "data의 size : ${data.size}")
-        val length = data[4]
-        Log.d("data", "length : $length")
-
-        val nDataLength =
-            (java.lang.Byte.toUnsignedInt(data[4]) - 10) / 6
-
-        val reserved = data[5]
-        Log.d(TEST, "reversed : $reserved")
-
-        val chc1 = data[6]
-        val chc2 = data[7]
-        Log.d(TEST, "chc1 : $chc1, chc2 : $chc2")
-
-        val year = data[8].toInt()
-        val month = data[9].toInt()
-        val day = data[10].toInt()
-        val hour = data[11].toInt()
-        val min = data[12].toInt()
-        val sec = data[13].toInt()
-
-        var lastWeo1 = 0.0
-
-        Log.d(TEST, "time : 20${year}년 ${month}월 ${day}일 ${hour}시 ${min}분 ${sec}초")
-
-        val cal = Calendar.getInstance().apply {
-            set(
-                Calendar.YEAR,
-                year + 2000
-            ) // Assuming time1 is in the format YY and represents a year after 2000
-            set(
-                Calendar.MONTH,
-                month - 1
-            ) // Calendar.MONTH is zero-based, so we need to subtract 1
-            set(Calendar.DAY_OF_MONTH, day)
-            set(Calendar.HOUR_OF_DAY, hour) // 24-hour format, range 0-23
-            set(Calendar.MINUTE, min)
-            set(Calendar.SECOND, sec)
-            set(Calendar.MILLISECOND, 0) // Optionally set milliseconds to zero
-        }
-
-        val calTime = cal.timeInMillis
-        Log.d(TEST, "calTime in milliseconds: $calTime")
-
-        val zoneId = ZoneId.of("Asia/Seoul")
-        val startTime: Long =
-            LocalDateTime.of((year + 2000), month, day, hour, min, sec).atZone(zoneId)
-                .toInstant().toEpochMilli()
-        Log.d("time", "startTime : $startTime")
-
-        val now = LocalDateTime.now().atZone(zoneId).toInstant().toEpochMilli()
-        Log.d("time", "now : $now")
-
-        val lastTime: Long =
-            startTime + ((1000 * 10).toLong() * (nDataLength - 1))
-        Log.d("time", "lastTime : $lastTime")
-
-        // 타입 오차 허용값 = 10분
-        val checkTime: Long = now + (60 * 1000 * 10)
-        Log.d("time", "checkTime : $checkTime")
-
-        // time error check
-        if (lastTime > checkTime) {
-            Log.e(TEST, "Time Check Error")
-            return -1
-        }
-
-        // 배터리
-        val batteryLevel =
-            java.lang.Byte.toUnsignedInt(data[14]) + (java.lang.Byte.toUnsignedInt(data[15]) / 100.0f * 100).roundToInt() / 100.0
-
-        val decimalFormat = DecimalFormat("#.00")
-        val battery = decimalFormat.format(batteryLevel)
-
-//        val createdAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-        val createdAt = Instant.ofEpochMilli(lastTime)
-            .atZone(ZoneId.of("Asia/Seoul"))
-            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-
-        Log.d(TEST, "battery : $battery")
-
-        // 온도
-        val temperature =
-            java.lang.Byte.toUnsignedInt(data[16]) + (java.lang.Byte.toUnsignedInt(data[17]) / 100.0f * 100).roundToInt() / 100.0
-
-        Log.d(TEST, "temperature : $temperature")
-
-        // weo1, weo2
-        val findBufferWeoCount: Int = (data.size - 18) / 6
-        Log.d(TEST, "findBufferWeoCount : $findBufferWeoCount")
-        Log.d(TEST, "nDataLength : $nDataLength")
-        for (i in 0 until findBufferWeoCount) {
-            val nWHigh: Int = 18 + i * 6
-            val nWMiddle: Int = 19 + i * 6
-            val nWLow: Int = 20 + i * 6
-//            Log.e(TEST, "WE Address : $nWHigh : $nWMiddle : $nWLow")
-
-            val nAHigh: Int = 21 + i * 6
-            val nAMiddle: Int = 22 + i * 6
-            val nALow: Int = 23 + i * 6
-//            Log.e(TEST, "AE Address : " + nAHigh + " : " + nAMiddle + " : " + nALow)
-            val time: Long = startTime + (1000 * 10 * i)
-
-            val weCurrent: Double =
-                convertToCurrentDataDouble(data[nWHigh], data[nWMiddle], data[nWLow])
-            val aeCurrent: Double =
-                convertToCurrentDataDouble(data[nAHigh], data[nAMiddle], data[nALow])
-
-            Log.e(TEST, "WE_Current " + i + ": " + weCurrent)
-            Log.e(TEST, "AE_Current " + i + ": " + aeCurrent)
-//            Log.e("PYTHON", "Glucose " + i + ": " + "${PythonManager.instance.calculationGlucose(time / 1000, weCurrent, aeCurrent)}")
-
-            val convertedTime = Instant.ofEpochMilli(time)
-                .atZone(ZoneId.of("Asia/Seoul"))
-                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-
-            saveData.add(
-                UserValue(
-                    userId = userId,
-                    weCurrent = weCurrent,
-                    aeCurrent = aeCurrent,
-                    createdAt = convertedTime,
-                    createdAtLong = time
-                )
-            )
-            if (i == findBufferWeoCount - 1) {
-                lastWeo1 = weCurrent
-            }
-        }
-
-        // ui에 weo1 값 실시간 갱신
-//        BleBridge.updateWeo1(lastWeo1)
-
-        CoroutineScope(Dispatchers.IO).launch {
-            AppDatabase.getInstance(context)?.dataDao()?.insertUserValue(saveData)
-        }
-
-
-        return 0
-    }
+//    @RequiresApi(Build.VERSION_CODES.O)
+//    private fun receiveDataAndInsert(data: ByteArray, deviceName: String?): Int {
+//
+//        // 리스트 생성
+//        val saveData: MutableList<UserValue> = mutableListOf<UserValue>()
+//
+//        // 데이터 받아오기
+//        val stx1 = data[0]
+//        val stx2 = data[1]
+//        Log.d(TEST, "stx1 : ${stx1}, stx2: ${stx2}")
+//
+//        val commandId = data[2]
+//        val status = data[3]
+//        Log.d(TEST, "commandId : ${commandId}")
+//        // printf("%02X\n", 10);   // 출력 (앞의 빈자리를 0으로 채우기): 0A
+//        Log.d(TEST, "status : ${status}")
+//        // 왜 0x%02X라는 작업을 포맷하는가? 오는 파일이 16진수인가?
+//
+//        Log.d(TEST, "data의 size : ${data.size}")
+//        val length = data[4]
+//        Log.d("data", "length : $length")
+//
+//        val nDataLength =
+//            (java.lang.Byte.toUnsignedInt(data[4]) - 10) / 6
+//
+//        val reserved = data[5]
+//        Log.d(TEST, "reversed : $reserved")
+//
+//        val chc1 = data[6]
+//        val chc2 = data[7]
+//        Log.d(TEST, "chc1 : $chc1, chc2 : $chc2")
+//
+//        val year = data[8].toInt()
+//        val month = data[9].toInt()
+//        val day = data[10].toInt()
+//        val hour = data[11].toInt()
+//        val min = data[12].toInt()
+//        val sec = data[13].toInt()
+//
+//        var lastWeo1 = 0.0
+//
+//        Log.d(TEST, "time : 20${year}년 ${month}월 ${day}일 ${hour}시 ${min}분 ${sec}초")
+//
+//        val cal = Calendar.getInstance().apply {
+//            set(
+//                Calendar.YEAR,
+//                year + 2000
+//            ) // Assuming time1 is in the format YY and represents a year after 2000
+//            set(
+//                Calendar.MONTH,
+//                month - 1
+//            ) // Calendar.MONTH is zero-based, so we need to subtract 1
+//            set(Calendar.DAY_OF_MONTH, day)
+//            set(Calendar.HOUR_OF_DAY, hour) // 24-hour format, range 0-23
+//            set(Calendar.MINUTE, min)
+//            set(Calendar.SECOND, sec)
+//            set(Calendar.MILLISECOND, 0) // Optionally set milliseconds to zero
+//        }
+//
+//        val calTime = cal.timeInMillis
+//        Log.d(TEST, "calTime in milliseconds: $calTime")
+//
+//        val zoneId = ZoneId.of("Asia/Seoul")
+//        val startTime: Long =
+//            LocalDateTime.of((year + 2000), month, day, hour, min, sec).atZone(zoneId)
+//                .toInstant().toEpochMilli()
+//        Log.d("time", "startTime : $startTime")
+//
+//        val now = LocalDateTime.now().atZone(zoneId).toInstant().toEpochMilli()
+//        Log.d("time", "now : $now")
+//
+//        val lastTime: Long =
+//            startTime + ((1000 * 10).toLong() * (nDataLength - 1))
+//        Log.d("time", "lastTime : $lastTime")
+//
+//        // 타입 오차 허용값 = 10분
+//        val checkTime: Long = now + (60 * 1000 * 10)
+//        Log.d("time", "checkTime : $checkTime")
+//
+//        // time error check
+//        if (lastTime > checkTime) {
+//            Log.e(TEST, "Time Check Error")
+//            return -1
+//        }
+//
+//        // 배터리
+//        val batteryLevel =
+//            java.lang.Byte.toUnsignedInt(data[14]) + (java.lang.Byte.toUnsignedInt(data[15]) / 100.0f * 100).roundToInt() / 100.0
+//
+//        val decimalFormat = DecimalFormat("#.00")
+//        val battery = decimalFormat.format(batteryLevel)
+//
+////        val createdAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+//        val createdAt = Instant.ofEpochMilli(lastTime)
+//            .atZone(ZoneId.of("Asia/Seoul"))
+//            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+//
+//        Log.d(TEST, "battery : $battery")
+//
+//        // 온도
+//        val temperature =
+//            java.lang.Byte.toUnsignedInt(data[16]) + (java.lang.Byte.toUnsignedInt(data[17]) / 100.0f * 100).roundToInt() / 100.0
+//
+//        Log.d(TEST, "temperature : $temperature")
+//
+//        // weo1, weo2
+//        val findBufferWeoCount: Int = (data.size - 18) / 6
+//        Log.d(TEST, "findBufferWeoCount : $findBufferWeoCount")
+//        Log.d(TEST, "nDataLength : $nDataLength")
+//        for (i in 0 until findBufferWeoCount) {
+//            val nWHigh: Int = 18 + i * 6
+//            val nWMiddle: Int = 19 + i * 6
+//            val nWLow: Int = 20 + i * 6
+////            Log.e(TEST, "WE Address : $nWHigh : $nWMiddle : $nWLow")
+//
+//            val nAHigh: Int = 21 + i * 6
+//            val nAMiddle: Int = 22 + i * 6
+//            val nALow: Int = 23 + i * 6
+////            Log.e(TEST, "AE Address : " + nAHigh + " : " + nAMiddle + " : " + nALow)
+//            val time: Long = startTime + (1000 * 10 * i)
+//
+//            val weCurrent: Double =
+//                convertToCurrentDataDouble(data[nWHigh], data[nWMiddle], data[nWLow])
+//            val aeCurrent: Double =
+//                convertToCurrentDataDouble(data[nAHigh], data[nAMiddle], data[nALow])
+//
+//            Log.e(TEST, "WE_Current " + i + ": " + weCurrent)
+//            Log.e(TEST, "AE_Current " + i + ": " + aeCurrent)
+////            Log.e("PYTHON", "Glucose " + i + ": " + "${PythonManager.instance.calculationGlucose(time / 1000, weCurrent, aeCurrent)}")
+//
+//            val convertedTime = Instant.ofEpochMilli(time)
+//                .atZone(ZoneId.of("Asia/Seoul"))
+//                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+//
+//            saveData.add(
+//                UserValue(
+//                    userId = userId,
+//                    weCurrent = weCurrent,
+//                    aeCurrent = aeCurrent,
+//                    createdAt = convertedTime,
+//                    createdAtLong = time
+//                )
+//            )
+//            if (i == findBufferWeoCount - 1) {
+//                lastWeo1 = weCurrent
+//            }
+//        }
+//
+//        // ui에 weo1 값 실시간 갱신
+////        BleBridge.updateWeo1(lastWeo1)
+//
+//        CoroutineScope(Dispatchers.IO).launch {
+//            AppDatabase.getInstance(context)?.dataDao()?.insertUserValue(saveData)
+//        }
+//
+//
+//        return 0
+//    }
 
     fun removeDeviceBond(): Boolean {
         if (mDevice == null) {
@@ -760,7 +754,8 @@ class BleManager(
         while (i < services!!.size && !found) {
             val currentService = services[i]
             if (currentService.uuid.toString()
-                    .equals(serviceUuidF23, ignoreCase = true)
+//                    .equals(serviceUuidF23, ignoreCase = true)
+                    .equals(protocol.serviceUUID, ignoreCase = true)
             ) {
                 service = currentService
                 found = true
@@ -769,7 +764,8 @@ class BleManager(
         }
         Log.d(TEST, "in writeAgms - service : ${service.uuid.toString()}")
 
-        val characteristicUuid = UUID.fromString(characteristicUuidWriteF23)
+//        val characteristicUuid = UUID.fromString(characteristicUuidWriteF23)
+        val characteristicUuid = UUID.fromString(protocol.writeUUID)
         val writeCharacteristic = service.getCharacteristic(characteristicUuid)
         Log.d(
             TEST,

@@ -80,8 +80,8 @@ fun StabilizationScreen(navController: NavController, mac: String, bleViewModel:
      * 센서 안정화 시간 설정 변수
      * totalTime
      */
-    val totalTime = 120 * 60 * 1000L // 120분
-//    val totalTime = 1 * 10 * 1000L // 테스트용 10초
+//    val totalTime = 120 * 60 * 1000L // 120분
+    val totalTime = 1 * 60 * 1000L // 테스트용 1분
 
     val remainingTime = remember { mutableStateOf(totalTime) }
     val lifecycleOwner = LocalLifecycleOwner.current

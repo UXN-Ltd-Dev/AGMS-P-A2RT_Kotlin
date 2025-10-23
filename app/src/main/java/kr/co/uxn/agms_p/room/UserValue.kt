@@ -11,6 +11,8 @@ data class UserValue(
     val weCurrent: Double,
     @ColumnInfo(name = "ae_current")
     val aeCurrent: Double,
+    @ColumnInfo(name = "temperature")
+    val temperature: Double,
     @ColumnInfo(name = "created_at")
     val createdAt: String,
     @ColumnInfo(name = "created_at_long")

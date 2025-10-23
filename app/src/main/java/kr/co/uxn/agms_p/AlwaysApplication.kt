@@ -45,6 +45,7 @@ class AlwaysApplication : Application() {
             Python.start(AndroidPlatform(this))
         }
 
+
         // db에 더미 저장
 
 //        Toast.makeText(this, "무결성 검증 통과!", Toast.LENGTH_SHORT).show()

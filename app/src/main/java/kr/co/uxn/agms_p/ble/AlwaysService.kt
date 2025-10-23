@@ -167,7 +167,12 @@ class AlwaysService() : Service() {
             }
 
             val mac = deviceMac
-            bleManager = BleManager.getInstance(baseContext, mac, userId, applicationContext)
+
+            // 프로토콜 선택기
+//            val protocol = F21Device()
+            val protocol = F23Device()
+
+            bleManager = BleManager.getInstance(baseContext, mac, userId, applicationContext, protocol)
 
             // 브로드캐스트 리시버 등록
             registerBluetoothStateBroadcastReceiver(mac)

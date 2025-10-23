@@ -302,7 +302,6 @@ fun GlucoseRegisterScreen(
 
                                                         val formatter = DateTimeFormatter.ofPattern("a hh:mm", Locale.KOREAN)
                                                         val targetTime = LocalTime.parse(calibrationTime, formatter)
-
                                                         Log.d("GlucoseRegisterScreen", "targetTime is : ${targetTime}")
 
                                                         val nowTime = LocalTime.now(ZoneId.of("Asia/Seoul"))
