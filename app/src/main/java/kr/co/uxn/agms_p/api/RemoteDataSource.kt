@@ -74,7 +74,7 @@ interface RemoteDataSource {
     @POST("/api/device/link")
     suspend fun linkDevice(@Body linkDevice: RequestLinkDevice) : Response<ResponseLinkDevice>
 
-    // 마지막시간 가져오기
+    // 마지막 시간 가져오기
     @GET("/api/value/recent/time")
     suspend fun getLastTime(@Query("user_id") userId: Int): Response<ResponseGetLastTime>
 

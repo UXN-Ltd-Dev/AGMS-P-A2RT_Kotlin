@@ -8,31 +8,32 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import kr.co.uxn.agms_p.R
 
-private val pretendardFontFamily = FontFamily(Font(R.font.pretendard))
+private val spoqaHansSansNeoRegular = Font(R.font.spoqahansansneo_regular, FontWeight.Normal)
+private val spoqaHansSansNeoBold = Font(R.font.spoqahansansneo_bold, FontWeight.Bold)
+private val spoqaHansSansNeoThin = Font(R.font.spoqahansansneo_thin, FontWeight.Thin)
+
+// 2. 폰트 '가족'을 코드로 정의합니다.
+val spoqaHansSansNeoFamily = FontFamily(
+    spoqaHansSansNeoRegular,
+    spoqaHansSansNeoBold,
+    spoqaHansSansNeoThin
+)
 
 // Set of Material typography styles to start with
 val Typography = Typography(
     bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontFamily = spoqaHansSansNeoFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
-    )
-    /* Other default text styles to override
-    titleLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
     ),
-    labelSmall = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
+    bodyMedium = TextStyle(
+        fontFamily = spoqaHansSansNeoFamily,
+        fontWeight = FontWeight.Normal,
+    ),
+    bodySmall = TextStyle(
+        fontFamily = spoqaHansSansNeoFamily,
+        fontWeight = FontWeight.Thin,
+//        fontSize = 11.sp,
+//        lineHeight = 16.sp,
+//        letterSpacing = 0.5.sp
     )
-    */
 )

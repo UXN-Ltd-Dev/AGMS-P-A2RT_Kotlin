@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -42,7 +43,10 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -120,7 +124,11 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     BasicTextField(
                         value = email.value,
                         onValueChange = { email.value = it },
-                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email,
+                            autoCorrect = false,
+                            imeAction = ImeAction.Done
+                        ),
                         keyboardActions = KeyboardActions(onDone = {
                             keyboardController?.hide()
                         }),
@@ -128,6 +136,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                             fontSize = 18.sp,
                             letterSpacing = 1.sp,
                             fontWeight = FontWeight.Medium,
+                            textDecoration = TextDecoration.None
                         ),
                         maxLines = 3,
                         decorationBox = { innerTextField ->
@@ -135,20 +144,17 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .wrapContentHeight()
-//                                    .height(30.dp)
-//                                    .focusRequester(focusRequester) // 포커스 요청
-//                                    .onFocusChanged { isFocused = !isFocused } // 포커스 감지
                                     .drawBehind {
                                         val strokeWidth = 3.dp.toPx() // 선 두께 설정
                                         val y = size.height - strokeWidth / 2 // 선을 하단에 위치
                                         drawLine(
                                             color = Color(0xFFEEEEEF),
-//                                            color = if (isFocused) Color.Gray else Color.Blue,
                                             start = Offset(0f, y),
                                             end = Offset(size.width, y),
                                             strokeWidth = strokeWidth
                                         )
                                     }
+
                                     .padding(start = 5.dp, end = 40.dp),
                                 contentAlignment = Alignment.CenterStart
                             ) {
@@ -274,7 +280,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                             val loginResult = login.body()
                                             // 로그인이 성공적으로 되었을 때
 
-                                            if (loginResult != null) {
+                                            if (loginResult?.accessToken != null) {
 //                                                Log.e("login","로그인 결과 : ${loginResult.toString()}")
 //
                                                 // 토큰 저장
@@ -295,6 +301,8 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                                 withContext(Dispatchers.Main) {
                                                     navController.navigate("SettingPermissionScreen/${1803}")
                                                 }
+                                            } else {
+                                                Log.e("TEST", "엑세스 토큰 없음 ")
                                             }
                                         } else {
                                             Log.e("TEST", "API통신 실패 : ${login.errorBody()?.string()}")

@@ -10,8 +10,13 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 
 
@@ -21,17 +26,31 @@ class AlwaysBroadcastReceiver : BroadcastReceiver() {
         if (context != null && intent != null && intent.action != null) {
             if (shouldStartService(intent)) {
                 Log.d("BROADCASTRECEIVER", "인텐트는 : ${intent.action!!}")
+
                 if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-                    val uptime = android.os.SystemClock.elapsedRealtime()
-                    // 부팅 5분 이내 서비스 실행
-                    if (uptime < 300_000L) {
-                        Log.d("TEST", "uptime : $uptime")
-                        startService(context)
+                    val pendingResult: PendingResult = goAsync()
+
+                    CoroutineScope(Dispatchers.IO).launch {
+                        var deviceMac: String? = null
+                        try {
+                            deviceMac = DataStoreManager.getDeviceMac().firstOrNull()
+                        } finally {
+                            withContext(Dispatchers.Main) {
+                                if (!deviceMac.isNullOrEmpty()) {
+                                    startService(context)
+                                }
+                                pendingResult.finish()
+                            }
+                        }
                     }
                 } else {
-
+                    // BOOT_COMPLETED가 아닌 다른 액션은 바로 서비스 시작
                     startService(context)
                 }
+
+
+
+
             }
         }
     }
