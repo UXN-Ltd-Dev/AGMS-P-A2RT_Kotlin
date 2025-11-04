@@ -9,21 +9,13 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -33,17 +25,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.UpdateAvailability
-import com.meticha.permissions_compose.CustomSettingsUI
-import com.meticha.permissions_compose.PermissionManagerConfig
-import com.meticha.permissions_compose.PermissionState
-import com.meticha.permissions_compose.rememberAppPermissionState
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.AlwaysService
-import kr.co.uxn.agms_p.ui.components.CustomRationaleDialog
-import kr.co.uxn.agms_p.ui.components.CustomSettingsDialog
 import kr.co.uxn.agms_p.ui.theme.AGMSPTheme
 import kr.co.uxn.agms_p.ui.components.login.LoginScreen
 import kr.co.uxn.agms_p.ui.components.login.PassWordResetScreen
@@ -128,6 +115,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+
         // 서비스 실행 이벤트 처리
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -159,7 +147,9 @@ class MainActivity : ComponentActivity() {
         val appUpdateManager = AppUpdateManagerFactory.create(this)
         val appUpdateInfoTask = appUpdateManager.appUpdateInfo
         appUpdateInfoTask.addOnSuccessListener {
-            if (it.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE ) { //&& it.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
+            if (it.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+                && it.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)
+                ) { //&& it.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
                 Toast.makeText(this, "앱을 최신버전으로 업데이트 해주세요",Toast.LENGTH_SHORT).show()
             }
         }

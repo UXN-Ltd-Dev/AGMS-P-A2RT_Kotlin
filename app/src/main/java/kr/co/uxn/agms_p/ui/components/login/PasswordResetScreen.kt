@@ -74,6 +74,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kr.co.uxn.agms_p.PasswordChecker
+import kr.co.uxn.agms_p.PasswordChecker.checkPwd
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.emptyRetrofit
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
@@ -232,7 +234,8 @@ fun PassWordResetScreen(navController: NavController) {
                                             // 이메일 공백 처리
                                             val trimEmail = email.value.trim()
 
-                                            val result = emptyRetrofit.requestVerficationCode(trimEmail)
+                                            val result =
+                                                emptyRetrofit.requestVerficationCode(trimEmail)
                                             if (result.isSuccessful) {
                                                 Log.d("TAG", "인증하기 서버 응답: ${result.body()}")
                                                 val resultBody = result.body()
@@ -259,9 +262,13 @@ fun PassWordResetScreen(navController: NavController) {
                                                                 Toast.LENGTH_SHORT
                                                             ).show()
                                                             // email_code_id 저장
-                                                            emailCodeId.value = resultBody.emailCodeId
+                                                            emailCodeId.value =
+                                                                resultBody.emailCodeId
                                                         }
-                                                        Log.d("TAG", "emailCodeId : ${emailCodeId.value}")
+                                                        Log.d(
+                                                            "TAG",
+                                                            "emailCodeId : ${emailCodeId.value}"
+                                                        )
                                                     }
 
                                                     withContext(Dispatchers.Main) {
@@ -271,7 +278,10 @@ fun PassWordResetScreen(navController: NavController) {
                                                     Log.d("TAG", "서버 응답이 null 입니다.")
                                                 }
                                             } else {
-                                                Log.d("TAG", "API 실패: ${result.errorBody()?.string()}")
+                                                Log.d(
+                                                    "TAG",
+                                                    "API 실패: ${result.errorBody()?.string()}"
+                                                )
                                                 withContext(Dispatchers.Main) {
                                                     Toast.makeText(
                                                         context,
@@ -285,7 +295,8 @@ fun PassWordResetScreen(navController: NavController) {
                                         }
                                     }
                                 } else {
-                                    Toast.makeText(context, "올바른 이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "올바른 이메일을 입력해주세요.", Toast.LENGTH_SHORT)
+                                        .show()
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
@@ -423,7 +434,10 @@ fun PassWordResetScreen(navController: NavController) {
 
                                                 if (result.isSuccessful) {
                                                     val resultBody = result.body()
-                                                    Log.d("TEST", "인증번호 result body : ${resultBody}")
+                                                    Log.d(
+                                                        "TEST",
+                                                        "인증번호 result body : ${resultBody}"
+                                                    )
                                                     if (resultBody != null && resultBody.isSuccess) {
                                                         withContext(Dispatchers.Main) {
                                                             Toast.makeText(
@@ -487,7 +501,8 @@ fun PassWordResetScreen(navController: NavController) {
 
             AnimatedVisibility(
                 visible = isShowResetPwd.value,
-                enter = fadeIn(animationSpec = tween(durationMillis = 1500)) + slideInHorizontally(initialOffsetX = { -it / 2 })
+                enter = fadeIn(animationSpec = tween(durationMillis = 1500)) + slideInHorizontally(
+                    initialOffsetX = { -it / 2 })
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
@@ -614,50 +629,77 @@ fun PassWordResetScreen(navController: NavController) {
                                     .align(Alignment.Center)
                                     .clickable {
                                         if (pwd1.value.isEmpty()) {
-                                            Toast.makeText(context, "비밀번호를 입력해주세요.", Toast.LENGTH_SHORT)
-                                                .show()
+                                            Toast.makeText(context, "비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                        } else if (checkPwd(pwd1.value) != PasswordChecker.PwdError.NO_ERROR) {
+                                            when (checkPwd(pwd1.value)) {
+                                                PasswordChecker.PwdError.TOO_SHORT_OR_LONG -> {
+                                                    Toast.makeText(context, "비밀번호는 8~15자로 설정해주세요.", Toast.LENGTH_SHORT).show()
+                                                }
+
+                                                PasswordChecker.PwdError.INVALID_CHAR -> {
+                                                    Toast.makeText(context, "유효하지않은 비밀번호입니다.", Toast.LENGTH_SHORT).show()
+                                                }
+
+                                                PasswordChecker.PwdError.NO_UPPERCASE -> {
+                                                    Toast.makeText(context, "대문자를 포함해주세요.", Toast.LENGTH_SHORT).show()
+                                                }
+
+                                                PasswordChecker.PwdError.NO_LOWERCASE -> {
+                                                    Toast.makeText(context, "소문자를 포함해주세요.", Toast.LENGTH_SHORT).show()
+                                                }
+
+                                                PasswordChecker.PwdError.NO_NUMBER -> {
+                                                    Toast.makeText(context, "숫자를 포함해주세요.", Toast.LENGTH_SHORT).show()
+                                                }
+
+                                                PasswordChecker.PwdError.NO_SPECIAL_CHAR -> {
+                                                    Toast.makeText(context, "특수문자를 포함해주세요.", Toast.LENGTH_SHORT).show()
+                                                }
+
+                                                PasswordChecker.PwdError.NO_ERROR -> {}
+                                            }
                                         } else if (pwd2.value.isEmpty()) {
-                                            Toast.makeText(context, "비밀번호를 입력해주세요.", Toast.LENGTH_SHORT)
-                                                .show()
+                                            Toast.makeText(context, "비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show()
                                         } else if (pwd1.value != pwd2.value) {
-                                            Toast.makeText(
-                                                context,
-                                                "비밀번호가 일치하지 않습니다.",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
+                                            Toast.makeText(context, "비밀번호가 일치하지 않습니다.", Toast.LENGTH_SHORT).show()
                                         } else {
                                             try {
                                                 coroutineScope.launch(Dispatchers.IO) {
-                                                    val resetPwd = emptyRetrofit.resetPwd(RequestUserInfo(email = email.value, pwd = pwd1.value))
-                                                    Log.d("TEST", "email  = ${email.value}, pwd = ${pwd1.value})")
+                                                    val resetPwd = emptyRetrofit.resetPwd(
+                                                        RequestUserInfo(
+                                                            email = email.value,
+                                                            pwd = pwd1.value
+                                                        )
+                                                    )
+                                                    Log.d("TEST", "email  = ${email.value}, pwd = ${pwd1.value})"
+                                                    )
                                                     val resetPwdBody = resetPwd.body()
                                                     if (resetPwd.isSuccessful) {
-                                                        Log.d("TEST", "resetPwdBody = ${resetPwdBody}")
+                                                        Log.d("TEST", "resetPwdBody = ${resetPwdBody}"
+                                                        )
                                                         withContext(Dispatchers.Main) {
-                                                           Toast.makeText(context, "비밀번호가 재설정되었습니다.", Toast.LENGTH_SHORT).show()
+                                                            Toast.makeText(context, "비밀번호가 재설정되었습니다.", Toast.LENGTH_SHORT).show()
                                                             navController.popBackStack()
                                                         }
-                                                    }
-
-                                                    else {
+                                                    } else {
                                                         withContext(Dispatchers.Main) {
                                                             Toast.makeText(context, "재설정 실패", Toast.LENGTH_SHORT).show()
 //                                                            navController.popBackStack()
                                                         }
-                                                        Log.e("TEST", "resetPwd 실패 : ${resetPwd.errorBody().toString()}")
+                                                        Log.e(
+                                                            "TEST",
+                                                            "resetPwd 실패 : ${resetPwd.errorBody().toString()}"
+                                                        )
                                                     }
                                                 }
-                                            } catch(e: Exception) {
+                                            } catch (e: Exception) {
                                                 Log.e("TEST", "네트워크 에러 : ${e.message}")
                                             }
                                         }
                                     }
                             )
                         }
-
-
                         Spacer(modifier = Modifier.height(33.dp))
-
                     }
                 }
             }

@@ -63,6 +63,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kr.co.uxn.agms_p.PasswordChecker
+import kr.co.uxn.agms_p.PasswordChecker.checkPwd
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.emptyRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestEmailCode
@@ -694,6 +696,28 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                                 Toast.makeText(context, "이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
                                             } else if (pwd1.value.isEmpty()) {
                                                 Toast.makeText(context, "비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                            } else if (checkPwd(pwd1.value) != PasswordChecker.PwdError.NO_ERROR) {
+                                                when(checkPwd(pwd1.value)) {
+                                                    PasswordChecker.PwdError.TOO_SHORT_OR_LONG -> {
+                                                        Toast.makeText(context, "비밀번호는 8~15자로 설정해주세요.", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                    PasswordChecker.PwdError.INVALID_CHAR -> {
+                                                        Toast.makeText(context, "유효하지않은 비밀번호입니다.", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                    PasswordChecker.PwdError.NO_UPPERCASE -> {
+                                                        Toast.makeText(context, "대문자를 포함해주세요.", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                    PasswordChecker.PwdError.NO_LOWERCASE -> {
+                                                        Toast.makeText(context, "소문자를 포함해주세요.", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                    PasswordChecker.PwdError.NO_NUMBER -> {
+                                                        Toast.makeText(context, "숫자를 포함해주세요.", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                    PasswordChecker.PwdError.NO_SPECIAL_CHAR -> {
+                                                        Toast.makeText(context, "특수문자를 포함해주세요.", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                    PasswordChecker.PwdError.NO_ERROR -> {}
+                                                }
                                             } else if (pwd2.value.isEmpty()) {
                                                 Toast.makeText(context, "비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show()
                                             } else if (pwd1.value != pwd2.value) {
@@ -705,15 +729,12 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                                 // 이메일 공백 처리
                                                 val trimEmail = email.value.trim()
                                                 Log.d("TEST", "originalEmail : ${email.value}\ntrimEmail : $trimEmail")
-
                                                 navController.navigate("SignUpInfoScreen3/${trimEmail}/${pwd1.value}/${type}")
                                             }
                                         }
-                                )
+                               )
                             }
-
                             Spacer(modifier = Modifier.height(33.dp))
-
                         }
                     }
                 }
@@ -721,5 +742,3 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
         }
     }
 }
-
-

@@ -85,6 +85,14 @@ android {
 
     buildTypes {
         release {
+            isMinifyEnabled = true
+            isShrinkResources = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+        debug {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -159,9 +167,6 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
     // Scalar
     implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
-
-    // Normal
-    implementation("io.github.ParkSangGwon:tedpermission-normal:3.4.2")
 
     // Coroutine
     implementation("io.github.ParkSangGwon:tedpermission-coroutine:3.4.2")

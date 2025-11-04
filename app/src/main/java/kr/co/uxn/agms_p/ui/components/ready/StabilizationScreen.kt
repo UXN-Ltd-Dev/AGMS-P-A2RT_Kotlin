@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +43,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -169,7 +171,7 @@ fun StabilizationScreen(navController: NavController, mac: String, bleViewModel:
 
                 // 2. 측정 기간 설정
                 val measurementTime: Long = 1000 * 60 * 60 * 24 * 14 // 측정 기간 14일
-                //        val measurementTime: Long = 1000 * 60 * 60 * 24 * 10 // 측정 기간 10일
+//                val measurementTime: Long = 1000 * 60 * 60 * 24 * 10 // 측정 기간 10일
 //                val measurementTime: Long = 1000 * 60 * 60 * 24 * 3// 측정 기간 3일
 
                 DataStoreManager.deleteMeasurementTime()
