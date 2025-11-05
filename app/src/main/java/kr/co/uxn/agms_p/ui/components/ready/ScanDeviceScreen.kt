@@ -168,6 +168,8 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
     }
 
     LaunchedEffect(key1 = Unit) {
+        DataStoreManager.deleteActivateFirst()
+        DataStoreManager.setFirstActivateDB(false)
         if (mac == "999999") {
             navController.navigate("StabilizationScreen/$mac")
         } else {

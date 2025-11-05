@@ -33,6 +33,8 @@ object DataStoreManager {
     private val ROUTE = stringPreferencesKey("route")
     private val TYPE = intPreferencesKey("type")
     private val SERIAL_NUMBER = stringPreferencesKey("serial_number")
+    private val STABLE_FIRST_ACTIVATE = booleanPreferencesKey("stable_first_activate")
+
 
     // noti
     private val NOTI_HIGH_GLUCOSE = booleanPreferencesKey("noti_high_glucose")
@@ -128,6 +130,13 @@ object DataStoreManager {
             prefs[SERIAL_NUMBER]
         }
     }
+
+    fun getFirstActivate(): Flow<Boolean?> {
+        return dataStore.data.map { prefs ->
+            prefs[STABLE_FIRST_ACTIVATE]
+        }
+    }
+
 
     suspend fun saveEmail(email: String) {
         dataStore.edit { prefs ->
@@ -293,6 +302,12 @@ object DataStoreManager {
         }
     }
 
+    suspend fun deleteActivateFirst() {
+        dataStore.edit { prefs ->
+            prefs.remove(STABLE_FIRST_ACTIVATE)
+        }
+    }
+
     // noti
     fun getNotiHighGlucose(): Flow<Boolean?> {
         return notiStore.data.map { prefs ->
@@ -424,5 +439,11 @@ object DataStoreManager {
             prefs[LANDSCAPE_MODE] = isCheck
         }
         Log.d("TEST", "landScapeMode : ${getLandScapeMode().first()}")
+    }
+
+    suspend fun setFirstActivateDB(isActivate: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[STABLE_FIRST_ACTIVATE] = isActivate
+        }
     }
 }

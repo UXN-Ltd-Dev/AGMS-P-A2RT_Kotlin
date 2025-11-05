@@ -29,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -93,20 +94,37 @@ fun StabilizationScreen(navController: NavController, mac: String, bleViewModel:
         AppDatabase.getInstance(context)
     }
 
-    LaunchedEffect(Unit) {
-        // 서비스 실행 이벤트 발행
-        if(mac != "999999") {
-            bleViewModel.emit("START_SERVICE")
-            Log.e("StabilizationScreen", "START_SERVICE EMIT!")
-        }
 
-        // 서비스 종료 이벤트 발행
-        //  bleViewModel.emit("STOP_SERVICE")
-        Log.e(
-            "TEST",
-            "ble뷰모델로부터 갖고 온 device 테스트 : deviceMac :${bleViewModel.device.value.deviceMac}\ndevice객체 : ${bleViewModel.device.value.device}"
-        )
-        val device = bleViewModel.device.value.device
+    LaunchedEffect(Unit) {
+        // 첫 실행 보장 플래그 불러오기
+        val firstActivate = DataStoreManager.getFirstActivate().first() ?: false
+        Log.d("TEST", "firstActivate 1 : ${firstActivate}")
+        delay(1000)
+
+        // 라우트 설정
+        DataStoreManager.deleteRoute()
+        DataStoreManager.saveRoute("StabilizationScreen/$mac")
+        val route = DataStoreManager.getRoute().first()
+        Log.e("TEST", "안정화 화면에서 Route : ${route}")
+
+        if (!firstActivate) {
+
+            Log.d("TEST", "firstActivate 2 : ${firstActivate}")
+            DataStoreManager.setFirstActivateDB(true)
+            val firstActivate2 = DataStoreManager.getFirstActivate().first() ?: false
+            Log.d("TEST", "firstActivate 3 : ${firstActivate2}")
+
+            // 서비스 실행 이벤트 발행
+            if (mac != "999999") {
+                bleViewModel.emit("START_SERVICE")
+                Log.e("StabilizationScreen", "START_SERVICE EMIT!")
+            }
+
+            Log.e(
+                "TEST",
+                "ble뷰모델로부터 갖고 온 device 테스트 : deviceMac :${bleViewModel.device.value.deviceMac}\ndevice객체 : ${bleViewModel.device.value.device}"
+            )
+        }
 
 
         val countDownTimer = object : CountDownTimer(remainingTime.value, 1000 * 60 * 1) {
@@ -133,10 +151,14 @@ fun StabilizationScreen(navController: NavController, mac: String, bleViewModel:
                     delay(500)
 
                     withContext(Dispatchers.Main) {
-                        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                        if (ActivityCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.POST_NOTIFICATIONS
+                            ) == PackageManager.PERMISSION_GRANTED
+                        ) {
 
                             if (isNotiStabilization) {
-                                sendNotification(context,"센서가 준비되었습니다", "", 90)
+                                sendNotification(context, "센서가 준비되었습니다", "", 90)
                             }
                         }
                     }
@@ -196,7 +218,7 @@ fun StabilizationScreen(navController: NavController, mac: String, bleViewModel:
                 Log.d("TEST", "detectorList is exist : ${detectorList}")
             }
         } catch (e: Exception) {
-            Log.d("TEST","에러 : ${e.message}")
+            Log.d("TEST", "에러 : ${e.message}")
         }
 
     }
@@ -233,7 +255,7 @@ fun StabilizationScreen(navController: NavController, mac: String, bleViewModel:
                     Text(
 //                    modifier = Modifier.fillMaxWidth(),
 //                        textAlign = TextAlign.Center,
-                        text = minutes.toString() +"분",
+                        text = minutes.toString() + "분",
                         fontSize = 70.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF385DAB)
@@ -296,7 +318,8 @@ fun sendNotification(context: Context, title: String, message: String, notificat
             description = "Alerts for stabilization"
         }
 
-        val notificationManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager =
+            context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
     }
 

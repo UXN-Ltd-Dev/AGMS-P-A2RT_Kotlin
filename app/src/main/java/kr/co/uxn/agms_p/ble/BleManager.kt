@@ -118,15 +118,15 @@ class BleManager(
 
 
                 // 본딩 작업 시작
-//                val mDevice = gatt?.device?.bondState
-//                if (mDevice == BluetoothDevice.BOND_NONE) {
-//                    val result =  gatt?.device?.createBond()
-//                    Log.i("BOND", "Bonding started: $result")
-//                } else if (gatt?.device?.bondState == BluetoothDevice.BOND_BONDING) {
-//                    Log.i("BOND", "Bonding... ")
-//                } else if (gatt?.device?.bondState == BluetoothDevice.BOND_BONDED) {
-//                    Log.i("BOND", "Bonding Success!")
-//                }
+                val mDevice = gatt?.device?.bondState
+                if (mDevice == BluetoothDevice.BOND_NONE) {
+                    val result =  gatt?.device?.createBond()
+                    Log.i("BOND", "Bonding started: $result")
+                } else if (gatt?.device?.bondState == BluetoothDevice.BOND_BONDING) {
+                    Log.i("BOND", "Bonding... ")
+                } else if (gatt?.device?.bondState == BluetoothDevice.BOND_BONDED) {
+                    Log.i("BOND", "Bonding Success!")
+                }
 
 
                 // BleBridge에 상태 연결 완료 전송

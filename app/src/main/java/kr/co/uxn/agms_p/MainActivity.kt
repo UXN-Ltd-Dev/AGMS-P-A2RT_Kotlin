@@ -1,10 +1,8 @@
 package kr.co.uxn.agms_p
 
 import android.content.Intent
-import android.graphics.Color
-import android.net.Uri
+import android.content.pm.PackageManager
 import android.os.Bundle
-import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -31,15 +29,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.AlwaysService
-import kr.co.uxn.agms_p.ui.theme.AGMSPTheme
 import kr.co.uxn.agms_p.ui.components.login.LoginScreen
 import kr.co.uxn.agms_p.ui.components.login.PassWordResetScreen
 import kr.co.uxn.agms_p.ui.components.login.SignUpAgreeScreen1
 import kr.co.uxn.agms_p.ui.components.login.SignUpCheckScreen2
 import kr.co.uxn.agms_p.ui.components.login.SignUpInfoScreen3
+import kr.co.uxn.agms_p.ui.components.main.MainScreen
 import kr.co.uxn.agms_p.ui.components.main.event.ActivityRegisterScreen
 import kr.co.uxn.agms_p.ui.components.main.event.GlucoseRegisterScreen
-import kr.co.uxn.agms_p.ui.components.main.MainScreen
 import kr.co.uxn.agms_p.ui.components.main.setting.DeleteAccountScreen
 import kr.co.uxn.agms_p.ui.components.main.setting.MyInfoScreen
 import kr.co.uxn.agms_p.ui.components.main.setting.NotificationScreen
@@ -47,9 +44,7 @@ import kr.co.uxn.agms_p.ui.components.main.setting.PrivacyPolicyScreen
 import kr.co.uxn.agms_p.ui.components.main.setting.SensorInfoScreen
 import kr.co.uxn.agms_p.ui.components.main.setting.TermsAndConditionsScreen
 import kr.co.uxn.agms_p.ui.components.main.setting.VersionInfoScreen
-import kr.co.uxn.agms_p.ui.components.ready.StabilizationCompleteScreen
 import kr.co.uxn.agms_p.ui.components.ready.EnterFirstGlucose
-import kr.co.uxn.agms_p.ui.components.ready.SettingPermissionScreen
 import kr.co.uxn.agms_p.ui.components.ready.GuideScreen1
 import kr.co.uxn.agms_p.ui.components.ready.GuideScreen2
 import kr.co.uxn.agms_p.ui.components.ready.GuideScreen3
@@ -59,8 +54,11 @@ import kr.co.uxn.agms_p.ui.components.ready.GuideScreen6
 import kr.co.uxn.agms_p.ui.components.ready.RegisterDeviceScreen
 import kr.co.uxn.agms_p.ui.components.ready.ScanDeviceScreen
 import kr.co.uxn.agms_p.ui.components.ready.ScanFailScreen
+import kr.co.uxn.agms_p.ui.components.ready.SettingPermissionScreen
+import kr.co.uxn.agms_p.ui.components.ready.StabilizationCompleteScreen
 import kr.co.uxn.agms_p.ui.components.ready.StabilizationScreen
 import kr.co.uxn.agms_p.ui.components.splash.SplashScreen
+import kr.co.uxn.agms_p.ui.theme.AGMSPTheme
 import kr.co.uxn.agms_p.ui.viewmodel.AuthEventNotifier
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
@@ -69,6 +67,8 @@ import kr.co.uxn.agms_p.ui.viewmodel.LoginNavigationEvent
 import kr.co.uxn.agms_p.ui.viewmodel.LoginViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.PermissionViewModel
 import java.net.URLDecoder
+import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
 
 class MainActivity : ComponentActivity() {
     private val loginViewModel: LoginViewModel by viewModels()
@@ -153,6 +153,59 @@ class MainActivity : ComponentActivity() {
                 Toast.makeText(this, "앱을 최신버전으로 업데이트 해주세요",Toast.LENGTH_SHORT).show()
             }
         }
+
+        // 무결성 검사
+        val VALID_SIGNATURE_HASH =
+            "9E9233211A9157E699D49D8C0E7A4289B180A1B3DC4B9EE7AC3C96A6AA86FAB1" // 서명 키
+
+        try {
+            val packageInfo = this.packageManager.getPackageInfo(
+                this.packageName,
+                PackageManager.GET_SIGNATURES
+            )
+
+            for (signature in packageInfo.signatures!!) {
+                // signature 객체를 문자열이나 해시값으로 변환하여 사용
+                Log.d("TEST", "서명정보 : " + signature.toCharsString())
+
+                var md: MessageDigest? = null
+                try {
+                    md = MessageDigest.getInstance("SHA-256")
+                    md.update(signature.toByteArray())
+                    val currentHash: String = toHex(md.digest())
+
+                    if (currentHash.equals(VALID_SIGNATURE_HASH, ignoreCase = true)) {
+                        Log.e("TEST", "무결성 검증 통과!")
+                        //                        Toast.makeText(this, "무결성 검증 통과!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(
+                            this,
+                            "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } catch (e: NoSuchAlgorithmException) {
+                    Toast.makeText(
+                        this,
+                        "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    Log.e("TEST", "무결성 검증 실패: " + e.message)
+                    throw RuntimeException(e)
+                }
+            }
+        } catch (e: PackageManager.NameNotFoundException) {
+            Log.e("TEST", "무결성 검증 실패: " + e.message)
+            Toast.makeText(this, "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.", Toast.LENGTH_SHORT)
+                .show()
+            throw RuntimeException(e)
+        }
+
+    }
+
+    private fun toHex(bytes: ByteArray): String {
+        // "%02X" : %X(대문자 16진수), 02(2자리로, 비면 0으로 채움)
+        return bytes.joinToString("") { "%02X".format(it) }
     }
 
 
