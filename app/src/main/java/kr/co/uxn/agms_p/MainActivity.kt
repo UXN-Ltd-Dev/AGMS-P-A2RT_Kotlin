@@ -93,19 +93,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    val appUpdateManager = AppUpdateManagerFactory.create(this)
-    val appUpdateInfoTask = appUpdateManager.appUpdateInfo
-
-    val installStateUpdatedListener = InstallStateUpdatedListener { state ->
-        if (state.installStatus() == InstallStatus.DOWNLOADED) {
-            // 4단계로 점프!
-            popupSnackbarForCompleteUpdate(appUpdateManager)
-        } else if (state.installStatus() == InstallStatus.FAILED) {
-            Log.e("InAppUpdate", "Flexible update download failed.")
-        }
-    }
-
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -175,6 +162,20 @@ class MainActivity : ComponentActivity() {
         super.onResume()
 
         // 앱 업데이트 알림
+
+        val appUpdateManager = AppUpdateManagerFactory.create(this)
+        val appUpdateInfoTask = appUpdateManager.appUpdateInfo
+
+        val installStateUpdatedListener = InstallStateUpdatedListener { state ->
+            if (state.installStatus() == InstallStatus.DOWNLOADED) {
+                // 4단계로 점프!
+                popupSnackbarForCompleteUpdate(appUpdateManager)
+            } else if (state.installStatus() == InstallStatus.FAILED) {
+                Log.e("InAppUpdate", "Flexible update download failed.")
+            }
+        }
+
+
         appUpdateInfoTask.addOnSuccessListener {
             if (it.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
                 && it.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
@@ -229,10 +230,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        appUpdateManager.unregisterListener(installStateUpdatedListener)
-    }
+//    override fun onPause() {
+//        super.onPause()
+//        appUpdateManager.unregisterListener(installStateUpdatedListener)
+//    }
 
     private fun toHex(bytes: ByteArray): String {
         // "%02X" : %X(대문자 16진수), 02(2자리로, 비면 0으로 채움)
