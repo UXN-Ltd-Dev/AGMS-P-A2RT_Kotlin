@@ -1,5 +1,6 @@
 package kr.co.uxn.agms_p
 
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -7,6 +8,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,8 +24,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.android.material.snackbar.Snackbar
+import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.appupdate.AppUpdateOptions
+import com.google.android.play.core.install.InstallStateUpdatedListener
 import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -76,6 +83,30 @@ class MainActivity : ComponentActivity() {
     private val bleViewModel: BleViewModel by viewModels()
     private val homeViewModel: HomeViewModel by viewModels()
     private val eventScreenViewModel: EventScreenViewModel by viewModels()
+
+    val appUpdateResultLauncher = registerForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode != Activity.RESULT_OK) {
+            // 사용자가 '아니요'를 누르거나 뒤로 가기를 한 경우
+            Log.w("InAppUpdate", "Flexible update flow cancelled by user.")
+        }
+    }
+
+    val appUpdateManager = AppUpdateManagerFactory.create(this)
+    val appUpdateInfoTask = appUpdateManager.appUpdateInfo
+
+    val installStateUpdatedListener = InstallStateUpdatedListener { state ->
+        if (state.installStatus() == InstallStatus.DOWNLOADED) {
+            // 4단계로 점프!
+            popupSnackbarForCompleteUpdate(appUpdateManager)
+        } else if (state.installStatus() == InstallStatus.FAILED) {
+            Log.e("InAppUpdate", "Flexible update download failed.")
+        }
+    }
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
@@ -144,20 +175,27 @@ class MainActivity : ComponentActivity() {
         super.onResume()
 
         // 앱 업데이트 알림
-        val appUpdateManager = AppUpdateManagerFactory.create(this)
-        val appUpdateInfoTask = appUpdateManager.appUpdateInfo
         appUpdateInfoTask.addOnSuccessListener {
             if (it.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
-                && it.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)
+                && it.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
                 ) { //&& it.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
                 Toast.makeText(this, "앱을 최신버전으로 업데이트 해주세요",Toast.LENGTH_SHORT).show()
+
+                appUpdateManager.startUpdateFlowForResult(
+                    it,
+                    appUpdateResultLauncher, // 1단계에서 만든 런처
+                    AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build()
+                )
+
             }
         }
+        appUpdateManager.registerListener(installStateUpdatedListener)
+
+
 
         // 무결성 검사
         val VALID_SIGNATURE_HASH =
             "9E9233211A9157E699D49D8C0E7A4289B180A1B3DC4B9EE7AC3C96A6AA86FAB1" // 서명 키
-
         try {
             val packageInfo = this.packageManager.getPackageInfo(
                 this.packageName,
@@ -165,9 +203,7 @@ class MainActivity : ComponentActivity() {
             )
 
             for (signature in packageInfo.signatures!!) {
-                // signature 객체를 문자열이나 해시값으로 변환하여 사용
-                Log.d("TEST", "서명정보 : " + signature.toCharsString())
-
+                Log.d("TEST", "서명 정보 : " + signature.toCharsString())
                 var md: MessageDigest? = null
                 try {
                     md = MessageDigest.getInstance("SHA-256")
@@ -178,35 +214,46 @@ class MainActivity : ComponentActivity() {
                         Log.e("TEST", "무결성 검증 통과!")
                         //                        Toast.makeText(this, "무결성 검증 통과!", Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(
-                            this,
-                            "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(this, "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.", Toast.LENGTH_SHORT).show()
                     }
                 } catch (e: NoSuchAlgorithmException) {
-                    Toast.makeText(
-                        this,
-                        "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(this, "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.", Toast.LENGTH_SHORT).show()
                     Log.e("TEST", "무결성 검증 실패: " + e.message)
                     throw RuntimeException(e)
                 }
             }
         } catch (e: PackageManager.NameNotFoundException) {
             Log.e("TEST", "무결성 검증 실패: " + e.message)
-            Toast.makeText(this, "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.", Toast.LENGTH_SHORT)
-                .show()
+            Toast.makeText(this, "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.", Toast.LENGTH_SHORT).show()
             throw RuntimeException(e)
         }
+    }
 
+    override fun onPause() {
+        super.onPause()
+        appUpdateManager.unregisterListener(installStateUpdatedListener)
     }
 
     private fun toHex(bytes: ByteArray): String {
         // "%02X" : %X(대문자 16진수), 02(2자리로, 비면 0으로 채움)
         return bytes.joinToString("") { "%02X".format(it) }
     }
+
+    fun popupSnackbarForCompleteUpdate(appUpdateManager: AppUpdateManager) {
+        Snackbar.make(
+            findViewById(android.R.id.content), // Activity의 루트 뷰
+            "새 버전 다운로드가 완료되었습니다.",
+            Snackbar.LENGTH_INDEFINITE // 사용자가 직접 닫거나 액션을 취해야 함
+        ).apply {
+            setAction("설치") {
+                // ★★★★★ 이게 진짜 설치(재시작)를 실행하는 코드 ★★★★★
+                appUpdateManager.completeUpdate()
+            }
+            setActionTextColor(resources.getColor(R.color.blue_splash)) // 색상 지정
+            show()
+        }
+    }
+
 
 
     @Composable
