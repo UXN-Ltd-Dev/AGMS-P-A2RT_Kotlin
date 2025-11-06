@@ -297,7 +297,7 @@ fun GlucoseRegisterScreen(
                                                             UserCalibration(userId = userId, createdAt = createdAt, glucoseValue = glucoseDataFromUser.value.toDouble())
                                                         )
 
-                                                        val calibrationTime = DataStoreManager.getDailyCalibrationTime().first() ?: ""
+                                                        val calibrationTime = DataStoreManager.getDailyCalibrationTime().first() ?: "오전 11:00"
                                                         Log.d("GlucoseRegisterScreen", "calibrationTime is : ${calibrationTime}")
 
                                                         val formatter = DateTimeFormatter.ofPattern("a hh:mm", Locale.KOREAN)
