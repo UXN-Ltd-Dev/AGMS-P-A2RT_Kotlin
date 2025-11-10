@@ -180,7 +180,7 @@ class MainActivity : ComponentActivity() {
             if (it.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
                 && it.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
                 ) { //&& it.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
-                Toast.makeText(this, "앱을 최신버전으로 업데이트 해주세요",Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "앱을 최신 버전으로 업데이트해 주세요.",Toast.LENGTH_SHORT).show()
 
                 appUpdateManager.startUpdateFlowForResult(
                     it,

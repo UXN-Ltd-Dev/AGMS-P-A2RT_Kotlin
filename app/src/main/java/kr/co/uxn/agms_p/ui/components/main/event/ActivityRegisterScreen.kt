@@ -250,13 +250,13 @@ fun ActivityRegisterScreen(navController: NavController) {
                                             Log.e("EVENT", "네트워크 또는 userId null 에러 : ${e.message}")
 
                                             withContext(Dispatchers.Main) {
-                                                Toast.makeText(context, "네트워크를 확인해주세요.", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
                                                 Log.e("EVENT", "활동 이벤트 업로드 실패")
                                             }
                                         }
                                     }
                                 } else {
-                                    Toast.makeText(context, "메모를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "메모를 입력해 주세요.", Toast.LENGTH_SHORT).show()
                                 }
                             }
                     )

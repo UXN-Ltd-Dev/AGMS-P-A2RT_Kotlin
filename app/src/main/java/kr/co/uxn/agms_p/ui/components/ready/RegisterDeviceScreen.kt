@@ -116,7 +116,7 @@ fun RegisterDeviceScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxWidth(),
                 textAlign = TextAlign.Center,
-                text = "블루투스 연결을 위해\n기기 번호를 입력해주세요.",
+                text = "블루투스 연결을 위해\n기기 번호를 입력해 주세요.",
                 fontSize = 25.sp,
                 fontWeight = FontWeight.Medium
             )
@@ -148,7 +148,7 @@ fun RegisterDeviceScreen(navController: NavController) {
                         if (focusState.isFocused) {
                             hint.value = "" // 포커스가 들어가면 힌트를 비웁니다
                         } else if (deviceNumber.value.isEmpty()) {
-                            hint.value = "기기 번호를 입력해주세요." // 포커스를 잃고 입력값이 비어있다면 힌트를 다시 보여줍니다.
+                            hint.value = "기기 번호를 입력해 주세요." // 포커스를 잃고 입력값이 비어있다면 힌트를 다시 보여줍니다.
                         }
                     },
 

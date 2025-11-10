@@ -697,7 +697,7 @@ fun SignUpInfoScreen3(
                             } else if (diabetesType.value == "") {
                                 Toast.makeText(context, "당뇨 유형을 입력해 주세요.", Toast.LENGTH_SHORT).show()
                             } else if (checked.value == false) {
-                                Toast.makeText(context, "개인정보 처리방침 및 이용약관에 동의해주세요.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "개인정보 처리방침 및 이용약관에 동의해 주세요.", Toast.LENGTH_SHORT).show()
                             } else {
                                 // TODO : 서버에 가입정보 전달
                                 // TODO : 가입에 성공하면 로그인 API로 로그인 시도
@@ -861,7 +861,7 @@ fun SignUpInfoScreen3(
                                                             withContext(Dispatchers.Main) {
                                                                 Toast.makeText(
                                                                     context,
-                                                                    "네트워크 연결 오류, 잠시 후 시도해주세요.",
+                                                                    "네트워크 연결 오류, 잠시 후 시도해 주세요.",
                                                                     Toast.LENGTH_SHORT
                                                                 ).show()
                                                             }

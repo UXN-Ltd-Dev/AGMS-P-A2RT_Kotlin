@@ -624,7 +624,7 @@ class AlwaysService() : Service() {
                                     sendNotification(
                                         baseContext,
                                         "혈당 입력 시간입니다",
-                                        "오늘의 혈당을 입력해주세요",
+                                        "오늘의 혈당을 입력해 주세요",
                                         93
                                     )
                                     BleBridge.showCaliDialog(true)
@@ -783,7 +783,7 @@ class AlwaysService() : Service() {
 
                         if (endTime != null && now > endTime) {
                             Log.d("SERVICE", "측정종료 프로세스 작동!")
-                            sendNotification(baseContext, "측정이 종료되었습니다", "앱을 확인해주세요", 94)
+                            sendNotification(baseContext, "측정이 종료되었습니다", "앱을 확인해 주세요", 94)
                             BleBridge.showEndMeasurementDialog(true)
                         }
 

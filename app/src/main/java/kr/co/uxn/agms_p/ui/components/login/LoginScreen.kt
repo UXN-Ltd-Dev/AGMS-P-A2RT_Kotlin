@@ -160,7 +160,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                             ) {
                                 if (email.value.isEmpty()) {
                                     Text(
-                                        text = "이메일 주소를 입력해주세요.",
+                                        text = "이메일 주소를 입력해 주세요.",
                                         color = Color.Gray,
                                         fontSize = 16.sp
                                     )
@@ -212,7 +212,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                             ) {
                                 if (pwd.value.isEmpty()) {
                                     Text(
-                                        text = "비밀번호를 입력해주세요.",
+                                        text = "비밀번호를 입력해 주세요.",
                                         color = Color.Gray,
                                         fontSize = 16.sp
                                     )
@@ -240,7 +240,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                             if (isNetworkAvailable(context)) {
                                 navController.navigate("SignUpAgreeScreen1/${1803}/${"uxn signup"}")
                             } else {
-                                Toast.makeText(context, "네트워크 상태를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
                             }
                         }
                     )
@@ -315,10 +315,10 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                     }
                                 }
                             } else {
-                                Toast.makeText(context, "이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "이메일을 입력해 주세요.", Toast.LENGTH_SHORT).show()
                             }
                         } else {
-                            Toast.makeText(context, "네트워크 상태를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "네트워크를 확인해 주세요..", Toast.LENGTH_SHORT).show()
                         }
                     },
                 contentAlignment = Alignment.CenterStart
@@ -372,7 +372,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                             viewModel.googleLogin(context)
                             viewModel.updateIsLoading(true)
                         } else {
-                            Toast.makeText(context, "네트워크 상태를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
                         }
                     },
                 contentAlignment = Alignment.CenterStart
@@ -405,7 +405,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                             viewModel.kakaoLogin(context)
                             viewModel.updateIsLoading(true)
                         } else {
-                            Toast.makeText(context, "네트워크 상태를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
                         }
                     },
                 contentAlignment = Alignment.CenterStart

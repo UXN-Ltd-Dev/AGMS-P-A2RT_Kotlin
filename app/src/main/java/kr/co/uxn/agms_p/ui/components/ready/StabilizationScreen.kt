@@ -277,7 +277,7 @@ fun StabilizationScreen(navController: NavController, mac: String, bleViewModel:
             Spacer(modifier = Modifier.size(50.dp))
 
             Text(
-                text = "조금만 기다려주세요.\n센서 안정화 중입니다.",
+                text = "조금만 기다려 주세요.\n센서 안정화 중입니다.",
                 color = Color.Gray
             )
 

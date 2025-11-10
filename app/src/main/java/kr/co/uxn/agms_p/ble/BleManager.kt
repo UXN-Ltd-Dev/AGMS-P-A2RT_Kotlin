@@ -346,7 +346,7 @@ class BleManager(
 //                                Log.e(TEST, "error : ${e.message}")
 //                                Toast.makeText(
 //                                    context,
-//                                    "해당 기기는 프로토콜2.0이 아닙니다.\n다른 기기를 선택해주세요.",
+//                                    "해당 기기는 프로토콜2.0이 아닙니다.\n다른 기기를 선택해 주세요.",
 //                                    Toast.LENGTH_LONG
 //                                ).show()
 ////                                isChange = true

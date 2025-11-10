@@ -114,7 +114,7 @@ fun ScanFailScreen(navController: NavController) {
 
             Text(
                 modifier = Modifier.fillMaxWidth(),
-                text = "다시 연결하기 전 블루투스 신호와\n기기 번호를 확인해주세요.",
+                text = "다시 연결하기 전 블루투스 신호와\n기기 번호를 확인해 주세요.",
                 fontSize = 18.sp,
                 textAlign = TextAlign.Center
             )

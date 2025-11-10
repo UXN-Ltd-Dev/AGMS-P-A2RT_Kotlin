@@ -459,7 +459,7 @@ fun HomeScreen(
                 navController.navigate("GlucoseRegisterScreen")
             },
             title = "혈당 입력 시간입니다.",
-            content = "정확한 측정을 위해 공복 상태에서 자가 채혈한 혈당값을 입력해주세요.",
+            content = "정확한 측정을 위해 공복 상태에서 자가 채혈한 혈당값을 입력해 주세요.",
         )
     }
 
@@ -555,13 +555,13 @@ fun HomeScreen(
                     } catch (e: Exception) {
                         Log.d("TEST", "sensorOff API통신 실패 : ${e.message}")
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(context, "네트워크를 확인해주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             },
             title = "센서의 사용 기간이 종료되었습니다.",
-            content = "센서의 사용 기간이 만료되어 더 이상 측정이 불가합니다. 새 센서를 연결해주세요.",
+            content = "센서의 사용 기간이 만료되어 더 이상 측정이 불가합니다. 새 센서를 연결해 주세요.",
         )
     }
 
@@ -604,18 +604,18 @@ fun HomeScreen(
                 .padding(10.dp)
 //                .weight(1f)
                 .pointerInput(Unit) {
-                    if (GuestList.getGuestList().contains(email.value)) {
+                    if (GuestList.getVipList().contains(email.value)) {
                         detectTapGestures(
                             onLongPress = {
-                                Log.d("TEST", "I'm guest : ${email.value}")
+                                Log.d("TEST", "email : ${email.value}")
+                                showModeDialog.value = true
                             }
                         )
                     } else {
                         detectTapGestures(
                             onLongPress = {
                                 // 롱클릭 시 실행할 코드
-                                Log.d("TEST", "email : ${email.value}")
-                                showModeDialog.value = true
+                                Log.d("TEST", "I'm guest : ${email.value}")
                             }
                         )
                     }
@@ -706,13 +706,7 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .pointerInput(Unit) {
-                        if (GuestList.getGuestList().contains(email.value)) {
-                            detectTapGestures(
-                                onDoubleTap = {
-                                    Log.d("TEST", "I'm guest : ${email.value}")
-                                }
-                            )
-                        } else {
+                        if (GuestList.getVipList().contains(email.value)) {
                             detectTapGestures(
                                 onDoubleTap = {
                                     val newMax = if(selectedChartOption == "혈당" ) {
@@ -732,6 +726,12 @@ fun HomeScreen(
                                     Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
                                     setYMax(newMax)
                                     forceRecompose++
+                                }
+                            )
+                        } else {
+                            detectTapGestures(
+                                onDoubleTap = {
+                                    Log.d("TEST", "I'm guest : ${email.value}")
                                 }
                             )
                         }
@@ -859,7 +859,7 @@ fun HomeScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = "잠시만 기다려주세요...",
+                                        text = "잠시만 기다려 주세요...",
                                         color = Color(0xFF385DAB),
                                         fontSize = 18.sp,
                                         fontWeight = FontWeight.Medium
@@ -917,13 +917,7 @@ fun HomeScreen(
                         .padding(start = 10.dp)
                         .weight(1f)
                         .pointerInput(Unit) {
-                            if (GuestList.getGuestList().contains(email.value)) {
-                                detectTapGestures(
-                                    onDoubleTap = {
-                                        Log.d("TEST", "I'm guest : ${email.value}")
-                                    }
-                                )
-                            } else {
+                            if (GuestList.getVipList().contains(email.value)) {
                                 detectTapGestures(
                                     onDoubleTap = {
                                         val newMax = if(selectedChartOption == "혈당" ) {
@@ -945,6 +939,15 @@ fun HomeScreen(
                                         forceRecompose++
                                     }
                                 )
+
+                            } else {
+
+                                detectTapGestures(
+                                    onDoubleTap = {
+                                        Log.d("TEST", "I'm guest : ${email.value}")
+                                    }
+                                )
+
                             }
                         },
                     color = Color.Transparent
@@ -1059,7 +1062,7 @@ fun HomeScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "잠시만 기다려주세요...",
+                                    text = "잠시만 기다려 주세요...",
                                     color = Color(0xFF385DAB),
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Medium

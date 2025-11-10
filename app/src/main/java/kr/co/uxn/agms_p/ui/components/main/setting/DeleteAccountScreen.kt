@@ -102,7 +102,7 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                 navController.navigate("GlucoseRegisterScreen")
             },
             title = "혈당 입력 시간입니다.",
-            content = "정확한 측정을 위해 공복 상태에서 자가 채혈한 혈당값을 입력해주세요.",
+            content = "정확한 측정을 위해 공복 상태에서 자가 채혈한 혈당값을 입력해 주세요.",
         )
     }
 
@@ -184,13 +184,13 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                     } catch (e: Exception) {
                         Log.d("TEST", "sensorOff API통신 실패 : ${e.message}")
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(context, "네트워크를 확인해주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             },
             title = "센서의 사용 기간이 종료되었습니다.",
-            content = "센서의 사용 기간이 만료되어 더 이상 측정이 불가합니다. 새 센서를 연결해주세요.",
+            content = "센서의 사용 기간이 만료되어 더 이상 측정이 불가합니다. 새 센서를 연결해 주세요.",
         )
     }
 
@@ -518,13 +518,13 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                             modifier = Modifier.align(Alignment.Center)
                                 .clickable {
                                     if (!isCheck) {
-                                        Toast.makeText(context, "삭제를 체크해주세요.", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "삭제를 체크해 주세요.", Toast.LENGTH_SHORT).show()
                                     } else {
                                         if (NetworkUtil.isNetworkAvailable(context)) {
                                             showDialog.value = true
 
                                         } else {
-                                            Toast.makeText(context, "인터넷 연결을 확인해주세요.", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
                                         }
                                     }
                                 }
