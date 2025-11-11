@@ -23,6 +23,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -81,6 +82,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
             darkIcons = true // 상태바 아이콘을 밝게 (흰색)
         )
     }
+
 
     LaunchedEffect(Unit) {
         viewModel.updateIsLoading(false)
