@@ -334,7 +334,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                                 // 2. 1003 : 횟수 5회 이상 초과
                                                 1003 -> {
                                                     withContext(Dispatchers.Main) {
-                                                        Toast.makeText(context, "로그인 5회 이상 실패로 계정이 잠겼습니다. 비밀번호를 다시 설정해 주세요", Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(context, "로그인 5회 이상 실패로 계정이 잠겼습니다. 비밀번호를 다시 설정해 주세요.", Toast.LENGTH_SHORT).show()
                                                         navController.navigate("PasswordResetScreen")
                                                     }
                                                 }
