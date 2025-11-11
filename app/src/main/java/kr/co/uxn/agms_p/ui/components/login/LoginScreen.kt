@@ -50,7 +50,9 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.network.HttpException
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -60,6 +62,7 @@ import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignInNormal
 import kr.co.uxn.agms_p.ui.viewmodel.LoginViewModel
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.NetworkUtil.isNetworkAvailable
+import kr.co.uxn.agms_p.api.model.responseDTO.ResponseLoginError
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 
 @Composable
@@ -272,13 +275,26 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
 
                                         // 이메일 공백 처리
                                         val trimEmail = email.value.trim()
-                                        Log.d("TEST", "originalEmail : ${email.value}\ntrimEmail : $trimEmail")
+                                        Log.d(
+                                            "TEST",
+                                            "originalEmail : ${email.value}\ntrimEmail : $trimEmail"
+                                        )
 
                                         val login =
-                                            emptyRetrofit.uxnLogin(signInInfo = RequestSignInNormal(trimEmail, pwd.value))
-                                        if (login.isSuccessful) {
+                                            emptyRetrofit.uxnLogin(
+                                                signInInfo = RequestSignInNormal(
+                                                    trimEmail,
+                                                    pwd.value
+                                                )
+                                            )
+
+                                        val httpCode = login.code()
+                                        Log.e("TEST", "http 코드 : $httpCode")
+
+                                        if (login.isSuccessful && httpCode == 200) {
                                             val loginResult = login.body()
                                             // 로그인이 성공적으로 되었을 때
+
 
                                             if (loginResult?.accessToken != null) {
 //                                                Log.e("login","로그인 결과 : ${loginResult.toString()}")
@@ -304,21 +320,40 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                             } else {
                                                 Log.e("TEST", "엑세스 토큰 없음 ")
                                             }
+                                        } else if (httpCode == 401) {
+                                            val errorBody = login.errorBody()?.string()
+                                            val gson = Gson()
+                                            val errorResponse = gson.fromJson(errorBody, ResponseLoginError::class.java)
+                                            when (errorResponse.resultCode) {
+                                                // 1. 1002 : 비번 틀릴 때
+                                                1002 -> {
+                                                    withContext(Dispatchers.Main) {
+                                                        Toast.makeText(context, "비밀번호를 확인해주세요.", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                }
+                                                // 2. 1003 : 횟수 5회 이상 초과
+                                                1003 -> {
+                                                    withContext(Dispatchers.Main) {
+                                                        Toast.makeText(context, "로그인 5회 이상 실패로 계정이 잠겼습니다. 비밀번호를 다시 설정해 주세요", Toast.LENGTH_SHORT).show()
+                                                        navController.navigate("PasswordResetScreen")
+                                                    }
+                                                }
+                                            }
                                         } else {
                                             Log.e("TEST", "API통신 실패 : ${login.errorBody()?.string()}")
                                         }
                                     } catch (exception: Exception) {
-                                        Log.e("TEST", "네트워크 에러 : ${exception.message}")
-                                        withContext(Dispatchers.Main) {
-                                            Toast.makeText(context, "계정 정보가 올바르지 않습니다.", Toast.LENGTH_SHORT).show()
-                                        }
+                                    Log.e("TEST", "네트워크 에러 : ${exception.message}")
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(context, "계정 정보가 올바르지 않습니다.", Toast.LENGTH_SHORT).show()
+                                    }
                                     }
                                 }
                             } else {
                                 Toast.makeText(context, "이메일을 입력해 주세요.", Toast.LENGTH_SHORT).show()
                             }
                         } else {
-                            Toast.makeText(context, "네트워크를 확인해 주세요..", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
                         }
                     },
                 contentAlignment = Alignment.CenterStart
