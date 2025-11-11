@@ -58,7 +58,7 @@ class AlwaysBroadcastReceiver : BroadcastReceiver() {
 
     private fun shouldStartService(intent: Intent): Boolean {
         val action = intent.action
-         return TextUtils.equals(action, Intent.ACTION_BOOT_COMPLETED)
+         return TextUtils.equals(action, Intent.ACTION_BOOT_COMPLETED) || TextUtils.equals(action, Intent.ACTION_MY_PACKAGE_REPLACED)
     }
 
     /**
