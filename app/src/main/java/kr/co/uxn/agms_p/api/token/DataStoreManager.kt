@@ -34,6 +34,7 @@ object DataStoreManager {
     private val TYPE = intPreferencesKey("type")
     private val SERIAL_NUMBER = stringPreferencesKey("serial_number")
     private val STABLE_FIRST_ACTIVATE = booleanPreferencesKey("stable_first_activate")
+    private val IS_UPDATE_COMPLETED = booleanPreferencesKey("is_update_completed")
 
 
     // noti
@@ -137,6 +138,12 @@ object DataStoreManager {
         }
     }
 
+    fun getIsUpdateCompleted(): Flow<Boolean?> {
+        return dataStore.data.map { prefs ->
+            prefs[IS_UPDATE_COMPLETED]
+        }
+    }
+
 
     suspend fun saveEmail(email: String) {
         dataStore.edit { prefs ->
@@ -207,6 +214,12 @@ object DataStoreManager {
     suspend fun saveSerialNumber(serialNumber: String) {
         dataStore.edit { prefs ->
             prefs[SERIAL_NUMBER] = serialNumber
+        }
+    }
+
+    suspend fun saveIsUpdateCompleted(isUpdated: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[IS_UPDATE_COMPLETED] = isUpdated
         }
     }
 
@@ -305,6 +318,11 @@ object DataStoreManager {
     suspend fun deleteActivateFirst() {
         dataStore.edit { prefs ->
             prefs.remove(STABLE_FIRST_ACTIVATE)
+        }
+    }
+    suspend fun deleteIsUpdateCompleted() {
+        dataStore.edit { prefs ->
+            prefs.remove(IS_UPDATE_COMPLETED)
         }
     }
 

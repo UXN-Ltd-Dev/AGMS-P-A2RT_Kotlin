@@ -32,8 +32,11 @@ import com.google.android.play.core.install.InstallStateUpdatedListener
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.AlwaysService
 import kr.co.uxn.agms_p.ui.components.login.LoginScreen
@@ -154,12 +157,67 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        // 앱 업데이트 확인 후 서비스 실행
+        lifecycleScope.launch(Dispatchers.IO) {
+            val isUpdate = DataStoreManager.getIsUpdateCompleted().firstOrNull()
+            if (isUpdate != null) {
+                if (isUpdate == true) {
+                    DataStoreManager.saveIsUpdateCompleted(false)
+                    withContext(Dispatchers.Main) {
+                        val serviceIntent = Intent(this@MainActivity, AlwaysService::class.java)
+                        ContextCompat.startForegroundService(this@MainActivity, serviceIntent)
+                    }
+                }
+            }
+        }
 
+        // 무결성 검사
+        lifecycleScope.launch(Dispatchers.IO) {
+            val VALID_SIGNATURE_HASH =
+                "9E9233211A9157E699D49D8C0E7A4289B180A1B3DC4B9EE7AC3C96A6AA86FAB1" // 서명 키
+            try {
+                val packageInfo = this@MainActivity.packageManager.getPackageInfo(
+                    this@MainActivity.packageName,
+                    PackageManager.GET_SIGNATURES
+                )
 
+                for (signature in packageInfo.signatures!!) {
+                    Log.d("TEST", "서명 정보 : " + signature.toCharsString())
+                    var md: MessageDigest? = null
+                    try {
+                        md = MessageDigest.getInstance("SHA-256")
+                        md.update(signature.toByteArray())
+                        val currentHash: String = toHex(md.digest())
+
+                        if (currentHash.equals(VALID_SIGNATURE_HASH, ignoreCase = true)) {
+                            Log.e("TEST", "무결성 검증 통과!")
+                            //                        Toast.makeText(this, "무결성 검증 통과!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(this@MainActivity, "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    } catch (e: NoSuchAlgorithmException) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@MainActivity, "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.", Toast.LENGTH_SHORT).show()
+                        }
+                        Log.e("TEST", "무결성 검증 실패: " + e.message)
+                        throw RuntimeException(e)
+                    }
+                }
+            } catch (e: PackageManager.NameNotFoundException) {
+                Log.e("TEST", "무결성 검증 실패: " + e.message)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.", Toast.LENGTH_SHORT).show()
+                }
+                throw RuntimeException(e)
+            }
+        }
     }
 
     override fun onResume() {
         super.onResume()
+
 
         // 앱 업데이트 알림
 
@@ -192,42 +250,6 @@ class MainActivity : ComponentActivity() {
         }
         appUpdateManager.registerListener(installStateUpdatedListener)
 
-
-
-        // 무결성 검사
-        val VALID_SIGNATURE_HASH =
-            "9E9233211A9157E699D49D8C0E7A4289B180A1B3DC4B9EE7AC3C96A6AA86FAB1" // 서명 키
-        try {
-            val packageInfo = this.packageManager.getPackageInfo(
-                this.packageName,
-                PackageManager.GET_SIGNATURES
-            )
-
-            for (signature in packageInfo.signatures!!) {
-                Log.d("TEST", "서명 정보 : " + signature.toCharsString())
-                var md: MessageDigest? = null
-                try {
-                    md = MessageDigest.getInstance("SHA-256")
-                    md.update(signature.toByteArray())
-                    val currentHash: String = toHex(md.digest())
-
-                    if (currentHash.equals(VALID_SIGNATURE_HASH, ignoreCase = true)) {
-                        Log.e("TEST", "무결성 검증 통과!")
-                        //                        Toast.makeText(this, "무결성 검증 통과!", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(this, "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.", Toast.LENGTH_SHORT).show()
-                    }
-                } catch (e: NoSuchAlgorithmException) {
-                    Toast.makeText(this, "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.", Toast.LENGTH_SHORT).show()
-                    Log.e("TEST", "무결성 검증 실패: " + e.message)
-                    throw RuntimeException(e)
-                }
-            }
-        } catch (e: PackageManager.NameNotFoundException) {
-            Log.e("TEST", "무결성 검증 실패: " + e.message)
-            Toast.makeText(this, "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.", Toast.LENGTH_SHORT).show()
-            throw RuntimeException(e)
-        }
     }
 
 //    override fun onPause() {
@@ -247,7 +269,10 @@ class MainActivity : ComponentActivity() {
             Snackbar.LENGTH_INDEFINITE // 사용자가 직접 닫거나 액션을 취해야 함
         ).apply {
             setAction("설치") {
-                // ★★★★★ 이게 진짜 설치(재시작)를 실행하는 코드 ★★★★★
+                lifecycleScope.launch(Dispatchers.IO) {
+                    DataStoreManager.getIsUpdateCompleted().first()?: true
+                    DataStoreManager.saveIsUpdateCompleted(true)
+                }
                 appUpdateManager.completeUpdate()
             }
             setActionTextColor(resources.getColor(R.color.blue_splash)) // 색상 지정
