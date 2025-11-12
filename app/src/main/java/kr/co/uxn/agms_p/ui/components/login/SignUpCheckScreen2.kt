@@ -721,7 +721,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                             } else if (pwd2.value.isEmpty()) {
                                                 Toast.makeText(context, "비밀번호를 입력해 주세요.", Toast.LENGTH_SHORT).show()
                                             } else if (pwd1.value != pwd2.value) {
-                                                Toast.makeText(context, "비밀번호가 일치하지 않습니다.\n다시 시도해 보세요.", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, "비밀번호가 일치하지 않습니다.", Toast.LENGTH_SHORT).show()
                                             } else if (!isEmailVerified.value) {
                                                 Toast.makeText(context, "이메일 인증을 해주세요.", Toast.LENGTH_SHORT).show()
                                             } else {

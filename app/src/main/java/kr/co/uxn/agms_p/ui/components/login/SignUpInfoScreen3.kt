@@ -686,7 +686,9 @@ fun SignUpInfoScreen3(
                         .clickable {
                             // TODO : int로 변환해야할 체중, 신장, 나이는 string값이 포함되면 runtimeError가 발생한다.
                             // TODO : Picker로 바꿔야 하나.?
-                            if (sex.value == "") {
+                            if (name.value == "") {
+                                Toast.makeText(context, "이름을 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                            } else if (sex.value == "") {
                                 Toast.makeText(context, "성별을 선택해 주세요.", Toast.LENGTH_SHORT).show()
                             } else if (age.value == "") {
                                 Toast.makeText(context, "나이를 입력해 주세요.", Toast.LENGTH_SHORT).show()
