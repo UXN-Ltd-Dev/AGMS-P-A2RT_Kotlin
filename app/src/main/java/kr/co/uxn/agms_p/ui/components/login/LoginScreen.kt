@@ -330,7 +330,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                                 // 1. 1002 : 비번 틀릴 때
                                                 1002 -> {
                                                     withContext(Dispatchers.Main) {
-                                                        Toast.makeText(context, "비밀번호를 확인해주세요.", Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(context, "로그인할 수 없습니다.", Toast.LENGTH_SHORT).show()
                                                     }
                                                 }
                                                 // 2. 1003 : 횟수 5회 이상 초과
