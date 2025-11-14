@@ -338,14 +338,24 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                                         navController.navigate("PasswordResetScreen")
                                                     }
                                                 }
-                                                // 3. 1004 : 6개월 초과 비번 재설정
+
+                                            }
+                                        } else if (httpCode == 410) {
+                                            val errorBody = login.errorBody()?.string()
+                                            val gson = Gson()
+                                            val errorResponse = gson.fromJson(errorBody, ResponseLoginError::class.java)
+                                            when (errorResponse.resultCode) {
+                                                // 1. 1004 : 6개월 지났을 경우
                                                 1004 -> {
                                                     withContext(Dispatchers.Main) {
                                                         Toast.makeText(context, "인증기간 만료, 비밀번호 재설정으로 재설정 후 로그인해주세요!", Toast.LENGTH_SHORT).show()
                                                         navController.navigate("PasswordResetScreen")
                                                     }
                                                 }
+
                                             }
+
+
                                         } else {
                                             Log.e("TEST", "API통신 실패 : ${login.errorBody()?.string()}")
                                         }
