@@ -274,7 +274,6 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                 CoroutineScope(Dispatchers.IO).launch {
                                     try {
                                         // 로그인
-
                                         // 이메일 공백 처리
                                         val trimEmail = email.value.trim()
                                         Log.d(
@@ -296,7 +295,6 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                         if (login.isSuccessful && httpCode == 200) {
                                             val loginResult = login.body()
                                             // 로그인이 성공적으로 되었을 때
-
 
                                             if (loginResult?.accessToken != null) {
 //                                                Log.e("login","로그인 결과 : ${loginResult.toString()}")
@@ -337,6 +335,13 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                                 1003 -> {
                                                     withContext(Dispatchers.Main) {
                                                         Toast.makeText(context, "로그인 5회 이상 실패로 계정이 잠겼습니다. 비밀번호를 다시 설정해 주세요.", Toast.LENGTH_SHORT).show()
+                                                        navController.navigate("PasswordResetScreen")
+                                                    }
+                                                }
+                                                // 3. 1004 : 6개월 초과 비번 재설정
+                                                1004 -> {
+                                                    withContext(Dispatchers.Main) {
+                                                        Toast.makeText(context, "인증기간 만료, 비밀번호 재설정으로 재설정 후 로그인해주세요!", Toast.LENGTH_SHORT).show()
                                                         navController.navigate("PasswordResetScreen")
                                                     }
                                                 }
@@ -405,7 +410,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                 modifier = Modifier
                     .wrapContentWidth()
                     .clickable {
-                        if (isNetworkAvailable(context)) {
+                        if (isNetworkAvailable(context) ) {
                             viewModel.googleLogin(context)
                             viewModel.updateIsLoading(true)
                         } else {

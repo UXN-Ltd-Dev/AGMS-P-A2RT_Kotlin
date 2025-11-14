@@ -7,5 +7,8 @@ data class RequestUserInfo(
     val email: String,
 
     @SerializedName("password")
-    val pwd: String
+    val pwd: String,
+
+    @SerializedName("device")
+    val device: Int = 1101
 )

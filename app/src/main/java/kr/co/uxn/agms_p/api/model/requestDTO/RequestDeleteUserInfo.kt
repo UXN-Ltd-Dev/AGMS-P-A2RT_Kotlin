@@ -4,5 +4,8 @@ import com.google.gson.annotations.SerializedName
 
 data class RequestDeleteUserInfo(
     @SerializedName("user_id")
-    val userId: Int
+    val userId: Int,
+
+    @SerializedName("device")
+    val device: Int = 1101
 )

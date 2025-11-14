@@ -114,7 +114,6 @@ class BleManager(
                 Log.e("gatt", "gatt connected!")
 
 //                removeDeviceBond()
-                //                removeDeviceBond();
 
 
                 // 본딩 작업 시작
