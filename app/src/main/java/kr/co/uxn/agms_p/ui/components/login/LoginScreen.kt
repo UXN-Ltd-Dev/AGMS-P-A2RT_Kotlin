@@ -354,8 +354,6 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                                 }
 
                                             }
-
-
                                         } else {
                                             Log.e("TEST", "API통신 실패 : ${login.errorBody()?.string()}")
                                         }
