@@ -298,21 +298,14 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                             // 이메일 공백 처리
                                             val trimEmail = email.value.trim()
 
-                                            val result = emptyRetrofit.requestVerficationCode(trimEmail)
-                                            if (result.isSuccessful) {
+                                            val result = emptyRetrofit.requestVerificationCodeEmail(trimEmail)
+                                            val httpCode = result.code()
+                                            Log.e("TEST", "http 코드 : $httpCode")
+
+                                            if (result.isSuccessful && httpCode == 200) {
                                                 Log.d("TAG", "인증하기 서버 응답: ${result.body()}")
                                                 val resultBody = result.body()
                                                 if (resultBody != null) {
-
-                                                    if (resultBody.isDuplicated) {
-                                                        withContext(Dispatchers.Main) {
-                                                            Toast.makeText(
-                                                                context,
-                                                                "이미 가입된 이메일입니다.",
-                                                                Toast.LENGTH_SHORT
-                                                            ).show()
-                                                        }
-                                                    } else { // isDuplicated = false
                                                         // 인증 번호 전송
                                                         withContext(Dispatchers.Main) {
 
@@ -328,13 +321,21 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                                             emailCodeId.value = resultBody.emailCodeId
                                                         }
                                                         Log.d("TAG", "emailCodeId : ${emailCodeId.value}")
-                                                    }
+
 
                                                     withContext(Dispatchers.Main) {
                                                         sendRegisterBtnEnabled.value = false
                                                     }
                                                 } else {
                                                     Log.d("TAG", "서버 응답이 null 입니다.")
+                                                }
+                                            } else if (httpCode == 415) {
+                                                withContext(Dispatchers.Main) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        "이미 가입된 계입니다.",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
                                                 }
                                             } else {
                                                 Log.d("TAG", "API 실패: ${result.errorBody()?.string()}")

@@ -82,9 +82,13 @@ interface RemoteDataSource {
     @POST("/api/value/save")
     suspend fun sendData(@Body data: List<RequestDataValue>): Response<ResponseDataValue>
 
-    // 이메일 인증하기
-    @GET("/api/email/simple")
-    suspend fun requestVerficationCode(@Query("email") email: String): Response<ResponseVerificationCode>
+    // 이메일 인증하기(회원가입)
+    @GET("/api/email/join")
+    suspend fun requestVerificationCodeEmail(@Query("email") email: String): Response<ResponseVerificationCode>
+
+    // 이메일 인증하기(비밀번호 재설정)
+    @GET("/api/email/pwd/reset")
+    suspend fun requestVerificationCodeResetPwd(@Query("email") email: String): Response<ResponseVerificationCode>
 
     // 이메일 인증번호 확인
     @POST("/api/email/code/check")

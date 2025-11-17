@@ -235,21 +235,15 @@ fun PassWordResetScreen(navController: NavController) {
                                             val trimEmail = email.value.trim()
 
                                             val result =
-                                                emptyRetrofit.requestVerficationCode(trimEmail)
-                                            if (result.isSuccessful) {
+//                                                emptyRetrofit.requestVerficationCode(trimEmail)
+                                                emptyRetrofit.requestVerificationCodeResetPwd(trimEmail)
+                                            val httpCode = result.code()
+                                            Log.e("TEST", "http 코드 : $httpCode")
+
+                                            if (result.isSuccessful && httpCode == 200) {
                                                 Log.d("TAG", "인증하기 서버 응답: ${result.body()}")
                                                 val resultBody = result.body()
                                                 if (resultBody != null) {
-
-                                                    if (resultBody.isDuplicated) {
-                                                        withContext(Dispatchers.Main) {
-                                                            Toast.makeText(
-                                                                context,
-                                                                "이미 가입된 이메일입니다.",
-                                                                Toast.LENGTH_SHORT
-                                                            ).show()
-                                                        }
-                                                    } else { // isDuplicated = false
                                                         // 인증 번호 전송
                                                         withContext(Dispatchers.Main) {
                                                             // 이메일 인증 하기 타이머 초기화 코드
@@ -269,13 +263,21 @@ fun PassWordResetScreen(navController: NavController) {
                                                             "TAG",
                                                             "emailCodeId : ${emailCodeId.value}"
                                                         )
-                                                    }
+
 
                                                     withContext(Dispatchers.Main) {
                                                         sendRegisterBtnEnabled.value = false
                                                     }
                                                 } else {
                                                     Log.d("TAG", "서버 응답이 null 입니다.")
+                                                }
+                                            } else if (httpCode == 418) {
+                                                withContext(Dispatchers.Main) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        "가입되지 않은 계정입니다.",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
                                                 }
                                             } else {
                                                 Log.d(
