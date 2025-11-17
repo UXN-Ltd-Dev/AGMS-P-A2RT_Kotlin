@@ -256,13 +256,9 @@ fun PassWordResetScreen(navController: NavController) {
                                                                 Toast.LENGTH_SHORT
                                                             ).show()
                                                             // email_code_id 저장
-                                                            emailCodeId.value =
-                                                                resultBody.emailCodeId
+                                                            emailCodeId.value = resultBody.emailCodeId
                                                         }
-                                                        Log.d(
-                                                            "TAG",
-                                                            "emailCodeId : ${emailCodeId.value}"
-                                                        )
+                                                        Log.d("TAG", "emailCodeId : ${emailCodeId.value}")
 
 
                                                     withContext(Dispatchers.Main) {
@@ -278,7 +274,10 @@ fun PassWordResetScreen(navController: NavController) {
                                                         "가입되지 않은 계정입니다.",
                                                         Toast.LENGTH_SHORT
                                                     ).show()
+                                                    delay(1000)
+                                                    navController.navigate("Login")
                                                 }
+
                                             } else {
                                                 Log.d(
                                                     "TAG",
