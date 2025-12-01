@@ -333,7 +333,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                                 withContext(Dispatchers.Main) {
                                                     Toast.makeText(
                                                         context,
-                                                        "이미 가입된 계정입니다.",
+                                                        "회원가입할 수 없습니다.",
                                                         Toast.LENGTH_SHORT
                                                     ).show()
                                                     delay(1000)

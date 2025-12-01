@@ -4,6 +4,7 @@ import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
@@ -24,7 +25,12 @@ class TokenInterceptor() : Interceptor {
             DataStoreManager.getAccessToken().first()
         } ?: return errorResponse(chain.request())
 
-//        Log.e("TEST", "DataStoreManager.getAcceesToken : ${token}")
+        val refreshToken: String? = runBlocking {
+            DataStoreManager.getRefreshToken().firstOrNull()
+        }
+
+        Log.e("TEST", "DataStoreManager.getAccessToken : ${token}")
+        Log.e("TEST", "DataStoreManager.getRefreshToken : ${refreshToken}")
         val request = chain.request().newBuilder().header("Authorization", "Bearer $token").build()
         val response = chain.proceed(request)
         return response
