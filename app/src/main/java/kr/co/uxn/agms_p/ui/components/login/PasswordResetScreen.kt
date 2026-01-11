@@ -55,11 +55,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -107,6 +109,9 @@ fun PassWordResetScreen(navController: NavController) {
 
     val fontSize = 18.sp
     val buttonSize = remember { mutableStateOf(IntSize.Zero) }
+
+    val currentLanguage = Locale.current.language
+    val isKorean = currentLanguage == "ko"
 
     LaunchedEffect(timerKey.value) {
         if (isTimerRunning.value) {
@@ -157,7 +162,7 @@ fun PassWordResetScreen(navController: NavController) {
                     if (!isShowResetPwd.value) {
                         // 이메일
                         Text(
-                            text = "이메일",
+                            text = stringResource(R.string.login_email),
                             fontSize = fontSize,
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier
@@ -198,7 +203,7 @@ fun PassWordResetScreen(navController: NavController) {
                                 ) {
                                     if (email.value.isEmpty()) {
                                         Text(
-                                            text = "이메일 주소를 입력해 주세요.",
+                                            text = stringResource(R.string.login_email_hint),
                                             color = Color.Gray,
                                             fontSize = 16.sp
                                         )
@@ -250,11 +255,7 @@ fun PassWordResetScreen(navController: NavController) {
 //                                                            timerKey.value++
 //                                                            isTimerRunning.value = true
 
-                                                            Toast.makeText(
-                                                                context,
-                                                                "인증번호가 전송되었습니다.\n메일을 확인해 주세요.",
-                                                                Toast.LENGTH_SHORT
-                                                            ).show()
+                                                            Toast.makeText(context, R.string.toast_send_email_code_check_please, Toast.LENGTH_SHORT).show()
                                                             // email_code_id 저장
                                                             emailCodeId.value = resultBody.emailCodeId
                                                         }
@@ -271,7 +272,7 @@ fun PassWordResetScreen(navController: NavController) {
                                                 withContext(Dispatchers.Main) {
                                                     Toast.makeText(
                                                         context,
-                                                        "가입되지 않은 계정입니다.",
+                                                        R.string.toast_account_not_registered,
                                                         Toast.LENGTH_SHORT
                                                     ).show()
                                                     delay(1000)
@@ -286,7 +287,7 @@ fun PassWordResetScreen(navController: NavController) {
                                                 withContext(Dispatchers.Main) {
                                                     Toast.makeText(
                                                         context,
-                                                        "메일 주소를 올바르게 입력해 주세요.",
+                                                        R.string.toast_invalid_email_format,
                                                         Toast.LENGTH_SHORT
                                                     ).show()
                                                 }
@@ -296,8 +297,7 @@ fun PassWordResetScreen(navController: NavController) {
                                         }
                                     }
                                 } else {
-                                    Toast.makeText(context, "올바른 이메일을 입력해 주세요.", Toast.LENGTH_SHORT)
-                                        .show()
+                                    Toast.makeText(context, R.string.toast_enter_vailid_email, Toast.LENGTH_SHORT).show()
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
@@ -313,7 +313,7 @@ fun PassWordResetScreen(navController: NavController) {
                             enabled = !sendRegisterBtnEnabled.value,
                         ) {
                             Text(
-                                text = "인증번호 전송",
+                                text = stringResource(R.string.send_authentication_code),
                                 fontSize = 14.sp,
                                 textAlign = TextAlign.Center
                             )
@@ -327,7 +327,7 @@ fun PassWordResetScreen(navController: NavController) {
                             horizontalArrangement = Arrangement.Start
                         ) {
                             Text(
-                                text = "이메일 인증번호",
+                                text = stringResource(R.string.email_authentication_code),
                                 fontSize = fontSize,
                                 fontWeight = FontWeight.Medium,
                                 modifier = Modifier
@@ -381,7 +381,7 @@ fun PassWordResetScreen(navController: NavController) {
                                 ) {
                                     if (verificationCode.value.isEmpty()) {
                                         Text(
-                                            text = "인증번호를 입력해 주세요.",
+                                            text = stringResource(R.string.enter_authentication_code),
                                             color = Color.Gray,
                                             fontSize = 16.sp
                                         )
@@ -443,7 +443,7 @@ fun PassWordResetScreen(navController: NavController) {
                                                         withContext(Dispatchers.Main) {
                                                             Toast.makeText(
                                                                 context,
-                                                                "인증코드 일치",
+                                                                R.string.toast_correct_authentcation_code,
                                                                 Toast.LENGTH_SHORT
                                                             ).show()
 
@@ -464,7 +464,7 @@ fun PassWordResetScreen(navController: NavController) {
                                                         withContext(Dispatchers.Main) {
                                                             Toast.makeText(
                                                                 context,
-                                                                "인증 번호가 일치하지 않습니다.\n다시 확인해 주세요.",
+                                                                R.string.toast_incorrect_autehntication_code_check_please,
                                                                 Toast.LENGTH_SHORT
                                                             ).show()
                                                         }
@@ -487,7 +487,7 @@ fun PassWordResetScreen(navController: NavController) {
                                         )
                                 ) {
                                     Text(
-                                        text = "확인",
+                                        text = stringResource(R.string.confirm),
                                         fontSize = 14.sp,
                                         textAlign = TextAlign.Center
                                     )
@@ -511,7 +511,7 @@ fun PassWordResetScreen(navController: NavController) {
                     if (isShowResetPwd.value) {
                         // 비밀번호
                         Text(
-                            text = "비밀번호",
+                            text = stringResource(R.string.login_pwd),
                             fontSize = fontSize,
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier
@@ -547,7 +547,7 @@ fun PassWordResetScreen(navController: NavController) {
                                 ) {
                                     if (pwd1.value.isEmpty()) {
                                         Text(
-                                            text = "비밀번호를 입력해 주세요.",
+                                            text = stringResource(R.string.login_pwd_hint),
                                             color = Color.Gray,
                                             fontSize = 16.sp
                                         )
@@ -558,7 +558,7 @@ fun PassWordResetScreen(navController: NavController) {
                         )
 
                         Text(
-                            text = "8~16자의 영문, 숫자, 특수문자를 조합해 사용해 주세요.",
+                            text = stringResource(R.string.pwd_reset_condition_description),
                             color = Color.Gray,
                             fontSize = 12.sp,
                             modifier = Modifier.padding(start = 8.dp)
@@ -568,7 +568,7 @@ fun PassWordResetScreen(navController: NavController) {
 
                         // 비밀번호 확인
                         Text(
-                            text = "비밀번호 확인",
+                            text = stringResource(R.string.pwd_confirm),
                             fontWeight = FontWeight.Medium,
                             fontSize = fontSize,
                             modifier = Modifier
@@ -605,7 +605,7 @@ fun PassWordResetScreen(navController: NavController) {
                                 ) {
                                     if (pwd2.value.isEmpty()) {
                                         Text(
-                                            text = "비밀번호를 확인해 주세요.",
+                                            text = stringResource(R.string.request_pwd_confirm),
                                             color = Color.Gray,
                                             fontSize = 16.sp
                                         )
@@ -623,46 +623,47 @@ fun PassWordResetScreen(navController: NavController) {
                                 .fillMaxWidth()
                                 .height(50.dp)
                         ) {
+
                             Image(
-                                painter = painterResource(R.drawable.btn_next),
+                                painter = painterResource(id = if(isKorean) R.drawable.btn_next else R.drawable.btn_eng_continue),
                                 contentDescription = "다음 버튼",
                                 modifier = Modifier
                                     .align(Alignment.Center)
                                     .clickable {
                                         if (pwd1.value.isEmpty()) {
-                                            Toast.makeText(context, "비밀번호를 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, R.string.toast_pwd_empty, Toast.LENGTH_SHORT).show()
                                         } else if (checkPwd(pwd1.value) != PasswordChecker.PwdError.NO_ERROR) {
                                             when (checkPwd(pwd1.value)) {
                                                 PasswordChecker.PwdError.TOO_SHORT_OR_LONG -> {
-                                                    Toast.makeText(context, "비밀번호는 8~16자로 설정해 주세요.", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(context, R.string.toast_pwd_length_error, Toast.LENGTH_SHORT).show()
                                                 }
 
                                                 PasswordChecker.PwdError.INVALID_CHAR -> {
-                                                    Toast.makeText(context, "유효하지 않은 비밀번호입니다.", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(context, R.string.toast_pwd_invalid, Toast.LENGTH_SHORT).show()
                                                 }
 
                                                 PasswordChecker.PwdError.NO_UPPERCASE -> {
-                                                    Toast.makeText(context, "대문자를 포함해 주세요.", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(context, R.string.toast_pwd_req_uppercase, Toast.LENGTH_SHORT).show()
                                                 }
 
                                                 PasswordChecker.PwdError.NO_LOWERCASE -> {
-                                                    Toast.makeText(context, "소문자를 포함해 주세요.", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(context, R.string.toast_pwd_req_lowercase, Toast.LENGTH_SHORT).show()
                                                 }
 
                                                 PasswordChecker.PwdError.NO_NUMBER -> {
-                                                    Toast.makeText(context, "숫자를 포함해 주세요.", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(context, R.string.toast_pwd_req_number, Toast.LENGTH_SHORT).show()
                                                 }
 
                                                 PasswordChecker.PwdError.NO_SPECIAL_CHAR -> {
-                                                    Toast.makeText(context, "특수문자를 포함해 주세요.", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(context, R.string.toast_pwd_req_special, Toast.LENGTH_SHORT).show()
                                                 }
 
                                                 PasswordChecker.PwdError.NO_ERROR -> {}
                                             }
                                         } else if (pwd2.value.isEmpty()) {
-                                            Toast.makeText(context, "비밀번호를 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, R.string.toast_pwd_empty, Toast.LENGTH_SHORT).show()
                                         } else if (pwd1.value != pwd2.value) {
-                                            Toast.makeText(context, "비밀번호가 일치하지 않습니다.", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, R.string.toast_pwd_mismatch, Toast.LENGTH_SHORT).show()
                                         } else {
                                             try {
                                                 coroutineScope.launch(Dispatchers.IO) {
@@ -679,12 +680,12 @@ fun PassWordResetScreen(navController: NavController) {
                                                         Log.d("TEST", "resetPwdBody = ${resetPwdBody}"
                                                         )
                                                         withContext(Dispatchers.Main) {
-                                                            Toast.makeText(context, "비밀번호가 재설정되었습니다.", Toast.LENGTH_SHORT).show()
+                                                            Toast.makeText(context, R.string.toast_pwd_reset_success, Toast.LENGTH_SHORT).show()
                                                             navController.popBackStack()
                                                         }
                                                     } else {
                                                         withContext(Dispatchers.Main) {
-                                                            Toast.makeText(context, "재설정 실패", Toast.LENGTH_SHORT).show()
+                                                            Toast.makeText(context, R.string.toast_pwd_reset_fail, Toast.LENGTH_SHORT).show()
 //                                                            navController.popBackStack()
                                                         }
                                                         Log.e(

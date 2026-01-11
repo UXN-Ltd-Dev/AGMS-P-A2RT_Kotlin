@@ -191,15 +191,15 @@ class MainActivity : ComponentActivity() {
 
                         if (currentHash.equals(VALID_SIGNATURE_HASH, ignoreCase = true)) {
                             Log.e("TEST", "무결성 검증 통과!")
-                            //                        Toast.makeText(this, "무결성 검증 통과!", Toast.LENGTH_SHORT).show();
+//                            Toast.makeText(this@MainActivity, R.string.toast_integrity_check_pass, Toast.LENGTH_SHORT).show();
                         } else {
                             withContext(Dispatchers.Main) {
-                                Toast.makeText(this@MainActivity, "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.", Toast.LENGTH_SHORT).show()
+//                                Toast.makeText(this@MainActivity, R.string.toast_integrity_check_fail, Toast.LENGTH_SHORT).show()
                             }
                         }
                     } catch (e: NoSuchAlgorithmException) {
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(this@MainActivity, "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.", Toast.LENGTH_SHORT).show()
+//                            Toast.makeText(this@MainActivity, R.string.toast_integrity_check_fail, Toast.LENGTH_SHORT).show()
                         }
                         Log.e("TEST", "무결성 검증 실패: " + e.message)
                         throw RuntimeException(e)
@@ -208,7 +208,7 @@ class MainActivity : ComponentActivity() {
             } catch (e: PackageManager.NameNotFoundException) {
                 Log.e("TEST", "무결성 검증 실패: " + e.message)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.", Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(this@MainActivity, R.string.toast_integrity_check_fail, Toast.LENGTH_SHORT).show()
                 }
                 throw RuntimeException(e)
             }
@@ -238,7 +238,7 @@ class MainActivity : ComponentActivity() {
             if (it.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
                 && it.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
                 ) { //&& it.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
-                Toast.makeText(this, "앱을 최신 버전으로 업데이트해 주세요.",Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.toast_request_app_update,Toast.LENGTH_SHORT).show()
 
                 appUpdateManager.startUpdateFlowForResult(
                     it,
@@ -265,7 +265,7 @@ class MainActivity : ComponentActivity() {
     fun popupSnackbarForCompleteUpdate(appUpdateManager: AppUpdateManager) {
         Snackbar.make(
             findViewById(android.R.id.content), // Activity의 루트 뷰
-            "새 버전 다운로드가 완료되었습니다.",
+            R.string.snakbar_complete_update,
             Snackbar.LENGTH_INDEFINITE // 사용자가 직접 닫거나 액션을 취해야 함
         ).apply {
             setAction("설치") {

@@ -27,7 +27,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -41,6 +43,9 @@ fun SignUpAgreeScreen1(navController: NavController, type: Int, oAuthEmail: Stri
     val checked2 = remember { mutableStateOf(false) }
     val checked3 = remember { mutableStateOf(false) }
     val checked4 = remember { mutableStateOf(false) }
+
+    val currentLanguage = Locale.current.language
+    val isKorean = currentLanguage == "ko"
 
     Surface(
         modifier = Modifier
@@ -69,7 +74,7 @@ fun SignUpAgreeScreen1(navController: NavController, type: Int, oAuthEmail: Stri
 
             // 안녕하세요!
             Text(
-                text = "안녕하세요!",
+                text = stringResource(R.string.sign_up_welcome),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
@@ -79,7 +84,7 @@ fun SignUpAgreeScreen1(navController: NavController, type: Int, oAuthEmail: Stri
 
             // 계속 진행하시려면..
             Text(
-                text = "계속 진행하시려면 아래 항목에 동의해 주세요.",
+                text = stringResource(R.string.sign_up_agree_guide),
                 fontSize = 15.sp,
                 modifier = Modifier
                     .align(Alignment.Start)
@@ -118,7 +123,7 @@ fun SignUpAgreeScreen1(navController: NavController, type: Int, oAuthEmail: Stri
                     )
                     Spacer(modifier = Modifier.size(3.dp))
                     Text(
-                        text = "모두 동의"
+                        text = stringResource(R.string.sign_up_agree_all)
                     )
                 }
             }
@@ -141,7 +146,7 @@ fun SignUpAgreeScreen1(navController: NavController, type: Int, oAuthEmail: Stri
                 )
                 Spacer(modifier = Modifier.size(10.dp))
                 Text(
-                    text = "[필수] 만 14세 이상입니다.",
+                    text = stringResource(R.string.term_item_age_check),
                     fontSize = 14.sp
                 )
             }
@@ -164,7 +169,7 @@ fun SignUpAgreeScreen1(navController: NavController, type: Int, oAuthEmail: Stri
                 )
                 Spacer(modifier = Modifier.size(10.dp))
                 Text(
-                    text = "[필수] 이용약관",
+                    text = stringResource(R.string.term_item_service),
                     fontSize = 14.sp
                 )
             }
@@ -187,7 +192,7 @@ fun SignUpAgreeScreen1(navController: NavController, type: Int, oAuthEmail: Stri
                 )
                 Spacer(modifier = Modifier.size(10.dp))
                 Text(
-                    text = "[필수] 개인정보 수집 및 이용",
+                    text = stringResource(R.string.term_item_privacy),
                     fontSize = 14.sp
                 )
             }
@@ -210,7 +215,7 @@ fun SignUpAgreeScreen1(navController: NavController, type: Int, oAuthEmail: Stri
                 )
                 Spacer(modifier = Modifier.size(10.dp))
                 Text(
-                    text = "[선택] 서비스 품질 향상",
+                    text = stringResource(R.string.term_item_quality),
                     fontSize = 14.sp
                 )
             }
@@ -223,14 +228,14 @@ fun SignUpAgreeScreen1(navController: NavController, type: Int, oAuthEmail: Stri
                     .height(50.dp)
             ) {
                 Image(
-                    painter = painterResource(R.drawable.btn_next),
+                    painter = painterResource(id = if (isKorean) R.drawable.btn_next else R.drawable.btn_eng_continue),
                     contentDescription = "다음 버튼",
                     modifier = Modifier.align(Alignment.Center)
                         .clickable {
                             if (checked1.value == true && checked2.value == true && checked3.value == true) {
                                 navController.navigate("SignUpCheckScreen2/${type}/${oAuthEmail}")
                             } else {
-                                Toast.makeText(context, "필수 동의 항목에 동의해 주세요.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.toast_agree_required, Toast.LENGTH_SHORT).show()
                             }
                         }
                 )

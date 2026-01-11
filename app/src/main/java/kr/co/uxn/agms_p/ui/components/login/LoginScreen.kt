@@ -39,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -47,6 +48,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -74,6 +76,9 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val isLoading by viewModel.isLoading.collectAsState()
+
+    val currentLanguage = Locale.current.language
+    val isKorean = currentLanguage == "ko"
 
     val systemUiController = rememberSystemUiController()
     LaunchedEffect(key1 = Unit) {
@@ -118,7 +123,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     )
                     // 로그인을 위해 이메일을 입력하세요.
                     Text(
-                        text = "이메일",
+                        text = stringResource(id = R.string.login_email),
                         color = Color.Gray,
                         fontSize = 16.sp,
                         modifier = Modifier.align(Alignment.Start)
@@ -165,7 +170,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                             ) {
                                 if (email.value.isEmpty()) {
                                     Text(
-                                        text = "이메일 주소를 입력해 주세요.",
+                                        text = stringResource(id = R.string.login_email_hint),
                                         color = Color.Gray,
                                         fontSize = 16.sp
                                     )
@@ -176,7 +181,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     )
                     Spacer(modifier = Modifier.size(10.dp))
                     Text(
-                        text = "비밀번호",
+                        text = stringResource(id = R.string.login_pwd),
                         color = Color.Gray,
                         fontSize = 16.sp,
                         modifier = Modifier.align(Alignment.Start)
@@ -217,7 +222,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                             ) {
                                 if (pwd.value.isEmpty()) {
                                     Text(
-                                        text = "비밀번호를 입력해 주세요.",
+                                        text = stringResource(id = R.string.login_pwd_hint),
                                         color = Color.Gray,
                                         fontSize = 16.sp
                                     )
@@ -237,7 +242,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     .padding(end = 40.dp)
             ) {
                 Text(
-                    text = "회원가입",
+                    text = stringResource(id = R.string.login_sign_up),
                     fontSize = 16.sp,
                     modifier = Modifier
                         // 1803 : uxn 회원가입
@@ -245,13 +250,13 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                             if (isNetworkAvailable(context)) {
                                 navController.navigate("SignUpAgreeScreen1/${1803}/${"uxn signup"}")
                             } else {
-                                Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.toast_network_error, Toast.LENGTH_SHORT).show()
                             }
                         }
                     )
                 Spacer(modifier = Modifier.size(17.dp))
                 Text(
-                    text = "비밀번호 찾기",
+                    text = stringResource(R.string.login_find_pwd),
                     fontSize = 16.sp,
 //                    fontFamily = FontFamily(Font(R.font.pretendard)),
 //                    fontWeight = FontWeight.Medium,
@@ -328,13 +333,13 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                                 // 1. 1002 : 비번 틀릴 때
                                                 1002 -> {
                                                     withContext(Dispatchers.Main) {
-                                                        Toast.makeText(context, "로그인할 수 없습니다.", Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(context, R.string.toast_login_error, Toast.LENGTH_SHORT).show()
                                                     }
                                                 }
                                                 // 2. 1003 : 횟수 5회 이상 초과
                                                 1003 -> {
                                                     withContext(Dispatchers.Main) {
-                                                        Toast.makeText(context, "로그인 5회 이상 실패로 계정이 잠겼습니다. 비밀번호를 다시 설정해 주세요.", Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(context, R.string.toast_login_error_over_five, Toast.LENGTH_SHORT).show()
                                                         navController.navigate("PasswordResetScreen")
                                                     }
                                                 }
@@ -348,7 +353,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                                 // 1. 1004 : 6개월 지났을 경우
                                                 1004 -> {
                                                     withContext(Dispatchers.Main) {
-                                                        Toast.makeText(context, "인증기간 만료, 비밀번호 재설정으로 재설정 후 로그인해주세요!", Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(context, R.string.toast_login_error_authentication_expired, Toast.LENGTH_SHORT).show()
                                                         navController.navigate("PasswordResetScreen")
                                                     }
                                                 }
@@ -360,21 +365,21 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                     } catch (exception: Exception) {
                                     Log.e("TEST", "네트워크 에러 : ${exception.message}")
                                     withContext(Dispatchers.Main) {
-                                        Toast.makeText(context, "계정 정보가 올바르지 않습니다.", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, R.string.toast_login_error_incorrect_account_info, Toast.LENGTH_SHORT).show()
                                     }
                                     }
                                 }
                             } else {
-                                Toast.makeText(context, "이메일을 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.toast_request_enter_email, Toast.LENGTH_SHORT).show()
                             }
                         } else {
-                            Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, R.string.toast_login_error, Toast.LENGTH_SHORT).show()
                         }
                     },
                 contentAlignment = Alignment.CenterStart
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.email_login_high),
+                    painter = painterResource(id = if(isKorean) R.drawable.email_login_high else R.drawable.btn_eng_start_with_email),
                     contentDescription = "메일 로그인 배경",
                     modifier = Modifier
                         .size(width = 300.dp, height = 50.dp)
@@ -395,7 +400,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
             // 간편 로그인
             if (!isLoading) {
                 Text(
-                    text = "또는",
+                    text = stringResource(id = R.string.login_or),
                     fontSize = 16.sp
                 )
 
@@ -422,13 +427,13 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                             viewModel.googleLogin(context)
                             viewModel.updateIsLoading(true)
                         } else {
-                            Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, R.string.toast_network_error, Toast.LENGTH_SHORT).show()
                         }
                     },
                 contentAlignment = Alignment.CenterStart
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.google_login_high),
+                    painter = painterResource(id = if (isKorean) R.drawable.google_login_high else R.drawable.btn_eng_start_google),
                     contentDescription = "구글 로그인 배경",
                     modifier = Modifier
                         .size(width = 300.dp, height = 50.dp)
@@ -455,13 +460,13 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                             viewModel.kakaoLogin(context)
                             viewModel.updateIsLoading(true)
                         } else {
-                            Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, R.string.toast_network_error, Toast.LENGTH_SHORT).show()
                         }
                     },
                 contentAlignment = Alignment.CenterStart
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.kakao_icon_high),
+                    painter = painterResource(id = if (isKorean) R.drawable.kakao_icon_high else R.drawable.btn_eng_start_with_kakao),
                     contentDescription = "카카오 로그인 배경",
                     modifier = Modifier
                         .size(width = 300.dp, height = 50.dp)

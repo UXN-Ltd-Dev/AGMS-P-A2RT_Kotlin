@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Always</string>
+
+    <!--  로그인 화면 -->
+    <string name="login_email">이메일</string>
+    <string name="login_email_hint">이메일 주소를 입력해 주세요.</string>
+    <string name="login_pwd">비밀번호</string>
+    <string name="login_pwd_hint">비밀번호를 입력해 주세요.</string>
+    <string name="login_sign_up">회원가입</string>
+    <string name="login_find_pwd">비밀번호 찾기</string>
+    <string name="login_or">또는</string>
+
+    <!--  회원가입 화면1  -->
+    <string name="sign_up_welcome">안녕하세요!</string>
+    <string name="sign_up_agree_guide">계속 진행하시려면 아래 항목에 동의해 주세요.</string>
+    <string name="sign_up_agree_all">모두 동의</string>
+    <string name="term_item_age_check">[필수] 만 14세 이상입니다.</string>
+    <string name="term_item_service">[필수] 이용약관</string>
+    <string name="term_item_privacy">[필수] 개인정보 수집 및 이용</string>
+    <string name="term_item_quality">[선택] 서비스 품질 향상</string>
+
+    <!--  패스워드 리셋 -->
+    <string name="send_authentication_code">인증번호 전송</string>
+    <string name="email_authentication_code">이메일 인증번호</string>
+    <string name="enter_authentication_code">인증번호를 입력해 주세요.</string>
+    <string name="confirm">확인</string>
+    <string name="pwd_reset_condition_description">8~16자의 영문, 숫자, 특수문자를 조합해 사용해 주세요.</string>
+    <string name="pwd_confirm">비밀번호 확인</string>
+    <string name="request_pwd_confirm">비밀번호를 확인해 주세요.</string>
+
+    <!--  토스트 -->
+    <string name="toast_network_error">네트워크를 확인해 주세요.</string>
+    <string name="toast_login_error">로그인할 수 없습니다.</string>
+    <string name="toast_login_error_over_five">로그인 5회 이상 실패로 계정이 잠겼습니다. 비밀번호를 다시 설정해 주세요.</string>
+    <string name="toast_login_error_authentication_expired">인증기간 만료, 비밀번호 재설정으로 재설정 후 로그인해주세요!</string>
+    <string name="toast_login_error_incorrect_account_info">계정 정보가 올바르지 않습니다.</string>
+    <string name="toast_request_enter_email">이메일을 입력해 주세요.</string>
+    <string name="toast_send_email_code_check_please">"인증번호가 전송되었습니다.\n메일을 확인해 주세요."</string>
+    <string name="toast_account_not_registered">가입되지 않은 계정입니다.</string>
+    <string name="toast_invalid_email_format">메일 주소를 올바르게 입력해 주세요.</string>
+    <string name="toast_enter_vailid_email">올바른 이메일을 입력해 주세요.</string>
+    <string name="toast_correct_authentcation_code">인증코드 일치</string>
+    <string name="toast_incorrect_autehntication_code_check_please">"인증 번호가 일치하지 않습니다.\n다시 확인해 주세요."</string>
+    <string name="toast_integrity_check_pass">무결성 검증 통과!</string>
+    <string name="toast_integrity_check_fail">앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.</string>
+    <string name="toast_request_app_update">앱을 최신 버전으로 업데이트해 주세요.</string>
+    <string name="toast_pwd_empty">비밀번호를 입력해 주세요.</string>
+    <string name="toast_pwd_length_error">비밀번호는 8~16자로 설정해 주세요.</string>
+    <string name="toast_pwd_invalid">유효하지 않은 비밀번호입니다.</string>
+    <string name="toast_pwd_req_uppercase">대문자를 포함해 주세요.</string>
+    <string name="toast_pwd_req_lowercase">소문자를 포함해 주세요.</string>
+    <string name="toast_pwd_req_number">숫자를 포함해 주세요.</string>
+    <string name="toast_pwd_req_special">특수문자를 포함해 주세요.</string>
+    <string name="toast_pwd_mismatch">비밀번호가 일치하지 않습니다.</string>
+    <string name="toast_pwd_reset_success">비밀번호가 재설정되었습니다.</string>
+    <string name="toast_pwd_reset_fail">재설정 실패.</string>
+    <string name="toast_agree_required">필수 동의 항목에 동의해 주세요</string>
+
+    <!--  스낵바  -->
+    <string name="snakbar_complete_update">새 버전 다운로드가 완료되었습니다.</string>
+</resources>
