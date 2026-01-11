@@ -20,7 +20,7 @@
     <string name="term_item_privacy">[필수] 개인정보 수집 및 이용</string>
     <string name="term_item_quality">[선택] 서비스 품질 향상</string>
 
-    <!--  패스워드 리셋 -->
+    <!--  회원가입 화면2, 패스워드 리셋 -->
     <string name="send_authentication_code">인증번호 전송</string>
     <string name="email_authentication_code">이메일 인증번호</string>
     <string name="enter_authentication_code">인증번호를 입력해 주세요.</string>
@@ -28,6 +28,27 @@
     <string name="pwd_reset_condition_description">8~16자의 영문, 숫자, 특수문자를 조합해 사용해 주세요.</string>
     <string name="pwd_confirm">비밀번호 확인</string>
     <string name="request_pwd_confirm">비밀번호를 확인해 주세요.</string>
+
+    <!--  회원가입 화면3  -->
+    <string name="title_enter_my_info">내 정보를 입력하세요.</string>
+    <string name="desc_user_info_detail">혈당, 혈당 추세 등 더욱 정확한 결과를 제공할려면 이 정보가 필요합니다. Always가 제공하는 알고리즘을 적용하기 위해서는 나이 외에도 이러한 추가 정보를 입력해야 여러분에게 꼭 맞는 데이터를 제공할 수 있습니다. 자세히 보기</string>
+    <string name="label_name">이름</string>
+    <string name="label_gender">성별</string>
+    <string name="label_age">연령</string>
+    <string name="label_height">신장</string>
+    <string name="label_weight">체중</string>
+    <string name="item_gender_male">남성</string>
+    <string name="item_gender_female">여성</string>
+    <string name="item_gender_none">선택 안함</string>
+    <string name="label_diabetes_type">당뇨 유형</string>
+    <string name="item_diabetes_type_normal">정상</string>
+    <string name="item_diabetes_type_prediabetes">당뇨 전단계</string>
+    <string name="item_diabetes_type_1">제1형 당뇨병</string>
+    <string name="item_diabetes_type_2">제2형 당뇨병</string>
+    <string name="item_diabetes_type_gestational">임신성 당뇨병</string>
+    <string name="item_diabetes_type_lada">LADA</string>
+    <string name="item_diabetes_type_unknown">모름</string>
+    <string name="label_agree_terms_privacy">개인정보 처리방침 및 이용약관에 동의합니다.</string>
 
     <!--  토스트 -->
     <string name="toast_network_error">네트워크를 확인해 주세요.</string>
@@ -56,6 +77,15 @@
     <string name="toast_pwd_reset_success">비밀번호가 재설정되었습니다.</string>
     <string name="toast_pwd_reset_fail">재설정 실패.</string>
     <string name="toast_agree_required">필수 동의 항목에 동의해 주세요</string>
+    <string name="toast_req_email_authentication">이메일 인증을 해주세요.</string>
+    <string name="toast_signup_failed">회원가입할 수 없습니다.</string>
+    <string name="toast_req_name">이름을 입력해 주세요.</string>
+    <string name="toast_req_gender">성별을 선택해 주세요.</string>
+    <string name="toast_req_age">나이를 입력해 주세요.</string>
+    <string name="toast_req_height">신장을 입력해 주세요.</string>
+    <string name="toast_req_weight">체중을 입력해 주세요.</string>
+    <string name="toast_req_diabetes_type">당뇨 유형을 입력해 주세요.</string>
+    <string name="toast_req_agree_terms">개인정보 처리방침 및 이용약관에 동의해 주세요.</string>
 
     <!--  스낵바  -->
     <string name="snakbar_complete_update">새 버전 다운로드가 완료되었습니다.</string>

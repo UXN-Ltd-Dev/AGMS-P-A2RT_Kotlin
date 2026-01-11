@@ -61,6 +61,35 @@
     <string name="term_item_service">[Required] Terms of Service</string>
     <string name="term_item_privacy">[Required] Privacy Policy</string>
     <string name="term_item_quality">[Optional] Service Improvement &amp; Analytics</string>
+    <string name="toast_req_email_authentication">Please verify your email address.</string>
+    <string name="toast_already_registed_account">Unable to sign up.</string>
+    <string name="title_enter_my_info">Enter Your Profile.</string>
+    <string name="desc_user_info_detail">We need this information to provide accurate glucose trends and results. Our algorithm requires these details to deliver data personalized just for you. View Details</string>
+    <string name="label_name">Name</string>
+    <string name="label_gender">Gender</string>
+    <string name="label_age">Age</string>
+    <string name="label_height">Height</string>
+    <string name="label_weight">Weight</string>
+    <string name="item_diabetes_type_lada">LADA</string>
+    <string name="label_agree_terms_privacy">I agree to the Privacy Policy and Terms of Service.</string>
+    <string name="label_diabetes_type">Diabetes Type</string>
+    <string name="item_gender_male">Male</string>
+    <string name="item_gender_female">Female</string>
+    <string name="item_gender_none">Prefer not to say</string>
+    <string name="item_diabetes_type_normal">Normal</string>
+    <string name="item_diabetes_type_prediabetes">Prediabetes</string>
+    <string name="item_diabetes_type_1">Type 1 Diabetes</string>
+    <string name="item_diabetes_type_2">Type 2 Diabetes</string>
+    <string name="item_diabetes_type_gestational">Gestational Diabetes</string>
+    <string name="item_diabetes_type_unknown">I don\'t know</string>
+    <string name="toast_signup_failed">Unable to sign up.</string>
+    <string name="toast_req_name">Please enter your name.</string>
+    <string name="toast_req_gender">Please enter your gender.</string>
+    <string name="toast_req_age">Please enter your age.</string>
+    <string name="toast_req_height">Please enter your height.</string>
+    <string name="toast_req_weight">Please enter your weight.</string>
+    <string name="toast_req_diabetes_type">Please select your diabetes type.</string>
+    <string name="toast_req_agree_terms">Please agree to the Privacy Policy and Terms of Use.</string>
 
 
 </resources>

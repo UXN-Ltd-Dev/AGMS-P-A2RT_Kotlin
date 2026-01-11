@@ -45,10 +45,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -95,6 +97,9 @@ fun SignUpInfoScreen3(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
+    val currentLanguage = Locale.current.language
+    val isKorean = currentLanguage == "ko"
+
     LaunchedEffect(key1 = Unit) {
 //        Log.e("SignUpInfoScreen3", "email: $email, pwd: $pwd")
     }
@@ -117,7 +122,7 @@ fun SignUpInfoScreen3(
 
             // 내 정보를 입력하세요.
             Text(
-                text = "내 정보를 입력하세요.",
+                text = stringResource(R.string.title_enter_my_info),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
@@ -129,7 +134,7 @@ fun SignUpInfoScreen3(
 
             // 혈당, 혈당 추세 ..
             Text(
-                text = "혈당, 혈당 추세 등 더욱 정확한 결과를 제공할려면 이 정보가 필요합니다. Always가 제공하는 알고리즘을 적용하기 위해서는 나이 외에도 이러한 추가 정보를 입력해야 여러분에게 꼭 맞는 데이터를 제공할 수 있습니다. 자세히 보기",
+                text = stringResource(R.string.desc_user_info_detail),
                 fontSize = 16.sp,
                 color = Color(0xFF828282),
                 modifier = Modifier
@@ -146,7 +151,7 @@ fun SignUpInfoScreen3(
                     .padding(start = 50.dp)
             ) {
                 Text(
-                    text = "이름",
+                    text = stringResource(R.string.label_name),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium
                     )
@@ -214,7 +219,7 @@ fun SignUpInfoScreen3(
                 modifier = Modifier.padding(start = 50.dp)
             ) {
                 Text(
-                    text = "성별",
+                    text = stringResource(R.string.label_gender),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium
                 )
@@ -255,7 +260,7 @@ fun SignUpInfoScreen3(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                text = "남성",
+                                text = stringResource(R.string.item_gender_male),
                                 fontSize = 20.sp
                             )
                         },
@@ -268,7 +273,7 @@ fun SignUpInfoScreen3(
                     DropdownMenuItem(
                         text = {
                             androidx.compose.material.Text(
-                                text = "여성",
+                                text = stringResource(R.string.item_gender_female),
                                 fontSize = 20.sp
                             )
                         },
@@ -281,7 +286,7 @@ fun SignUpInfoScreen3(
                     DropdownMenuItem(
                         text = {
                             androidx.compose.material.Text(
-                                text = "선택 안함",
+                                text = stringResource(R.string.item_gender_none),
                                 fontSize = 20.sp
                             )
                         },
@@ -301,7 +306,7 @@ fun SignUpInfoScreen3(
                 modifier = Modifier.padding(start = 50.dp)
             ) {
                 androidx.compose.material.Text(
-                    text = "연령",
+                    text = stringResource(R.string.label_age),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium
                 )
@@ -369,7 +374,7 @@ fun SignUpInfoScreen3(
                 modifier = Modifier.padding(start = 50.dp)
             ) {
                 androidx.compose.material.Text(
-                    text = "신장",
+                    text = stringResource(R.string.label_height),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium
                 )
@@ -437,7 +442,7 @@ fun SignUpInfoScreen3(
                 modifier = Modifier.padding(start = 50.dp)
             ) {
                 androidx.compose.material.Text(
-                    text = "체중",
+                    text = stringResource(R.string.label_weight),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium
                 )
@@ -505,7 +510,7 @@ fun SignUpInfoScreen3(
                 modifier = Modifier.padding(start = 50.dp)
             ) {
                 Text(
-                    text = "당뇨 유형",
+                    text = stringResource(R.string.label_diabetes_type),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium
                 )
@@ -551,7 +556,7 @@ fun SignUpInfoScreen3(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                text = "정상",
+                                text = stringResource(R.string.item_diabetes_type_normal),
                                 fontSize = 20.sp
                             )
                         },
@@ -564,7 +569,7 @@ fun SignUpInfoScreen3(
                     DropdownMenuItem(
                         text = {
                             androidx.compose.material.Text(
-                                text = "당뇨 전단계",
+                                text = stringResource(R.string.item_diabetes_type_prediabetes),
                                 fontSize = 20.sp
                             )
                         },
@@ -577,7 +582,7 @@ fun SignUpInfoScreen3(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                text = "제1형 당뇨병",
+                                text = stringResource(R.string.item_diabetes_type_1),
                                 fontSize = 20.sp
                             )
                         },
@@ -590,7 +595,7 @@ fun SignUpInfoScreen3(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                text = "제2형 당뇨병",
+                                text = stringResource(R.string.item_diabetes_type_2),
                                 fontSize = 20.sp
                             )
                         },
@@ -603,7 +608,7 @@ fun SignUpInfoScreen3(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                text = "임신성 당뇨병",
+                                text = stringResource(R.string.item_diabetes_type_gestational),
                                 fontSize = 20.sp
                             )
                         },
@@ -616,7 +621,7 @@ fun SignUpInfoScreen3(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                text = "LADA",
+                                text = stringResource(R.string.item_diabetes_type_lada),
                                 fontSize = 20.sp
                             )
                         },
@@ -629,7 +634,7 @@ fun SignUpInfoScreen3(
                     DropdownMenuItem(
                         text = {
                             androidx.compose.material.Text(
-                                text = "모름",
+                                text = stringResource(R.string.item_diabetes_type_unknown),
                                 fontSize = 20.sp
                             )
                         },
@@ -661,7 +666,7 @@ fun SignUpInfoScreen3(
                 )
                 Spacer(modifier = Modifier.width(15.dp))
                 Text(
-                    text = "개인정보 처리방침 및 이용약관에 동의합니다.",
+                    text = stringResource(R.string.label_agree_terms_privacy),
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
@@ -674,12 +679,8 @@ fun SignUpInfoScreen3(
                     .padding(bottom = 10.dp),
                 contentAlignment = Alignment.BottomCenter
             ) {
-
-
-
-
                 Image(
-                    painter = painterResource(R.drawable.btn_confirm),
+                    painter = painterResource(id = if (isKorean) R.drawable.btn_confirm else R.drawable.btn_eng_confirm),
                     contentDescription = "확인 버튼",
                     modifier = Modifier
                         .align(Alignment.Center)

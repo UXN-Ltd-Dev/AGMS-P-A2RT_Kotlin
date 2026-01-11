@@ -48,11 +48,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -91,6 +93,9 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
 
     val fontSize = 18.sp
     val buttonSize = remember { mutableStateOf(IntSize.Zero) }
+
+    val currentLanguage = Locale.current.language
+    val isKorean = currentLanguage == "ko"
 
     LaunchedEffect(timerKey.value) {
         if (isTimerRunning.value) {
@@ -143,7 +148,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                     if (!isShowSetPwd.value) {
                         // 이메일
                         Text(
-                            text = "이메일",
+                            text = stringResource(R.string.login_email),
                             fontSize = fontSize,
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier.align(Alignment.Start)
@@ -184,7 +189,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                     ) {
                                         if (email.value.isEmpty()) {
                                             Text(
-                                                text = "이메일 주소를 입력해 주세요.",
+                                                text = stringResource(R.string.login_email_hint),
                                                 color = Color.Gray,
                                                 fontSize = 16.sp
                                             )
@@ -260,7 +265,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
 
                                         if (email.value == "") {
                                             Text(
-                                                text = "이메일 주소를 입력해 주세요.",
+                                                text = stringResource(R.string.login_email_hint),
                                                 color = Color.Gray,
                                                 fontSize = 16.sp
                                             )
@@ -314,7 +319,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
 
                                                             Toast.makeText(
                                                                 context,
-                                                                "인증번호가 전송되었습니다.\n메일을 확인해 주세요.",
+                                                                R.string.toast_send_email_code_check_please,
                                                                 Toast.LENGTH_SHORT
                                                             ).show()
                                                             // email_code_id 저장
@@ -333,7 +338,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                                 withContext(Dispatchers.Main) {
                                                     Toast.makeText(
                                                         context,
-                                                        "회원가입할 수 없습니다.",
+                                                        R.string.toast_already_registed_account,
                                                         Toast.LENGTH_SHORT
                                                     ).show()
                                                     delay(1000)
@@ -345,7 +350,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                                 withContext(Dispatchers.Main) {
                                                     Toast.makeText(
                                                         context,
-                                                        "메일 주소를 올바르게 입력해 주세요.",
+                                                        R.string.toast_invalid_email_format,
                                                         Toast.LENGTH_SHORT
                                                     ).show()
                                                 }
@@ -355,7 +360,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                         }
                                     }
                                 } else {
-                                    Toast.makeText(context, "올바른 이메일을 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, R.string.toast_enter_vailid_email, Toast.LENGTH_SHORT).show()
                                 }
 
                             },
@@ -373,7 +378,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                             enabled = !sendRegisterBtnEnabled.value,
                         ) {
                             Text(
-                                text = "인증번호 전송",
+                                text = stringResource(R.string.send_authentication_code),
                                 fontSize = 14.sp,
                                 textAlign = TextAlign.Center
                             )
@@ -387,7 +392,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                             horizontalArrangement = Arrangement.Start
                         ) {
                             Text(
-                                text = "이메일 인증번호",
+                                text = stringResource(R.string.email_authentication_code),
                                 fontSize = fontSize,
                                 fontWeight = FontWeight.Medium,
                                 modifier = Modifier.align(Alignment.CenterVertically)
@@ -440,7 +445,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                 ) {
                                     if (verificationCode.value.isEmpty()) {
                                         Text(
-                                            text = "인증번호를 입력해 주세요.",
+                                            text = stringResource(R.string.enter_authentication_code),
                                             color = Color.Gray,
                                             fontSize = 16.sp
                                         )
@@ -497,7 +502,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                                         withContext(Dispatchers.Main) {
                                                             Toast.makeText(
                                                                 context,
-                                                                "인증코드 일치",
+                                                                R.string.toast_correct_authentcation_code,
                                                                 Toast.LENGTH_SHORT
                                                             ).show()
 
@@ -525,7 +530,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                                         withContext(Dispatchers.Main) {
                                                             Toast.makeText(
                                                                 context,
-                                                                "인증 번호가 일치하지 않습니다.\n다시 확인해 주세요.",
+                                                                R.string.toast_incorrect_autehntication_code_check_please,
                                                                 Toast.LENGTH_SHORT
                                                             ).show()
 
@@ -553,7 +558,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                         )
                                 ) {
                                     Text(
-                                        text = "확인",
+                                        text = stringResource(R.string.confirm),
                                         fontSize = 14.sp,
                                         textAlign = TextAlign.Center
                                     )
@@ -578,7 +583,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                         if(type == 1803) {
                             // 비밀번호
                             Text(
-                                text = "비밀번호",
+                                text = stringResource(R.string.login_pwd),
                                 fontSize = fontSize,
                                 fontWeight = FontWeight.Medium,
                                 modifier = Modifier.align(Alignment.Start)
@@ -613,7 +618,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                     ) {
                                         if (pwd1.value.isEmpty()) {
                                             Text(
-                                                text = "비밀번호를 입력해 주세요.",
+                                                text = stringResource(R.string.login_pwd_hint),
                                                 color = Color.Gray,
                                                 fontSize = 16.sp
                                             )
@@ -625,7 +630,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
 
 
                             Text(
-                                text = "8~16자의 영문, 숫자, 특수문자를 조합해 사용해 주세요.",
+                                text = stringResource(R.string.pwd_reset_condition_description),
                                 color = Color.Gray,
                                 fontSize = 12.sp,
                                 modifier = Modifier.padding(start = 8.dp)
@@ -635,7 +640,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
 
                             // 비밀번호 확인
                             Text(
-                                text = "비밀번호 확인",
+                                text = stringResource(R.string.pwd_confirm),
                                 fontWeight = FontWeight.Medium,
                                 fontSize = fontSize,
                                 modifier = Modifier
@@ -672,7 +677,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                     ) {
                                         if (pwd2.value.isEmpty()) {
                                             Text(
-                                                text = "비밀번호를 확인해 주세요.",
+                                                text = stringResource(R.string.request_pwd_confirm),
                                                 color = Color.Gray,
                                                 fontSize = 16.sp
                                             )
@@ -691,43 +696,43 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                     .height(50.dp)
                             ) {
                                 Image(
-                                    painter = painterResource(R.drawable.btn_next),
+                                    painter = painterResource(id = if(isKorean) R.drawable.btn_next else R.drawable.btn_eng_continue),
                                     contentDescription = "다음 버튼",
                                     modifier = Modifier
                                         .align(Alignment.Center)
                                         .clickable {
                                             if (email.value.isEmpty()) {
-                                                Toast.makeText(context, "이메일을 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, R.string.toast_request_enter_email, Toast.LENGTH_SHORT).show()
                                             } else if (pwd1.value.isEmpty()) {
-                                                Toast.makeText(context, "비밀번호를 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, R.string.toast_pwd_empty, Toast.LENGTH_SHORT).show()
                                             } else if (checkPwd(pwd1.value) != PasswordChecker.PwdError.NO_ERROR) {
                                                 when(checkPwd(pwd1.value)) {
                                                     PasswordChecker.PwdError.TOO_SHORT_OR_LONG -> {
-                                                        Toast.makeText(context, "비밀번호는 8~16자로 설정해 주세요.", Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(context, R.string.toast_pwd_length_error, Toast.LENGTH_SHORT).show()
                                                     }
                                                     PasswordChecker.PwdError.INVALID_CHAR -> {
-                                                        Toast.makeText(context, "유효하지 않은 비밀번호입니다.", Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(context, R.string.toast_pwd_invalid, Toast.LENGTH_SHORT).show()
                                                     }
                                                     PasswordChecker.PwdError.NO_UPPERCASE -> {
-                                                        Toast.makeText(context, "대문자를 포함해 주세요.", Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(context, R.string.toast_pwd_req_uppercase, Toast.LENGTH_SHORT).show()
                                                     }
                                                     PasswordChecker.PwdError.NO_LOWERCASE -> {
-                                                        Toast.makeText(context, "소문자를 포함해 주세요.", Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(context, R.string.toast_pwd_req_lowercase, Toast.LENGTH_SHORT).show()
                                                     }
                                                     PasswordChecker.PwdError.NO_NUMBER -> {
-                                                        Toast.makeText(context, "숫자를 포함해 주세요.", Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(context, R.string.toast_pwd_req_number, Toast.LENGTH_SHORT).show()
                                                     }
                                                     PasswordChecker.PwdError.NO_SPECIAL_CHAR -> {
-                                                        Toast.makeText(context, "특수문자를 포함해 주세요.", Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(context, R.string.toast_pwd_req_special, Toast.LENGTH_SHORT).show()
                                                     }
                                                     PasswordChecker.PwdError.NO_ERROR -> {}
                                                 }
                                             } else if (pwd2.value.isEmpty()) {
-                                                Toast.makeText(context, "비밀번호를 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, R.string.toast_pwd_empty, Toast.LENGTH_SHORT).show()
                                             } else if (pwd1.value != pwd2.value) {
-                                                Toast.makeText(context, "비밀번호가 일치하지 않습니다.", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, R.string.toast_pwd_mismatch, Toast.LENGTH_SHORT).show()
                                             } else if (!isEmailVerified.value) {
-                                                Toast.makeText(context, "이메일 인증을 해주세요.", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, R.string.toast_req_email_authentication, Toast.LENGTH_SHORT).show()
                                             } else {
                                                 // 인증 성공시
                                                 // 이메일 공백 처리
