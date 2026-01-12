@@ -32,7 +32,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,6 +56,9 @@ fun GuideScreen1(
 
     val context = LocalContext.current
     val activityContext = context as Activity
+
+    val currentLanguage = Locale.current.language
+    val isKorean = currentLanguage == "ko"
 
     fun checkIgnoringBatteryOptimizations(activity: Activity): Boolean {
         val pm = activity.getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -81,7 +86,7 @@ fun GuideScreen1(
         ) {
 
 
-            Spacer(modifier = Modifier.size(40.dp))
+            Spacer(modifier = Modifier.size(70.dp))
 
             // Always 로고
             Image(
@@ -92,7 +97,7 @@ fun GuideScreen1(
 
             // 사용 설명
             Text(
-                text = "사용 설명",
+                text = stringResource(R.string.guide_title),
                 fontSize = 33.sp,
                 color = Color(0xFF385DAB)
             )
@@ -117,32 +122,35 @@ fun GuideScreen1(
             Spacer(modifier = Modifier.size(20.dp))
 
             Text(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
+                    .padding(horizontal = 30.dp),
                 textAlign = TextAlign.Center,
-                text = "알코올 스왑으로 부착 부위 피부를\n깨끗이 닦은 후 건조시킵니다.",
+                text = stringResource(R.string.guide_description_1),
                 fontSize = 20.sp,
             )
 
             Spacer(modifier = Modifier.size(20.dp))
 
             Text(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
+                    .padding(horizontal = 30.dp),
                 textAlign = TextAlign.Center,
-                text = "착용 부위 : 배꼽 기준 좌우 10cm 내외",
+                text = stringResource(R.string.guide_tip_1),
                 fontSize = 16.sp,
                 color = Color.Gray
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             // 다음 버튼
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(55.dp)
+                    .padding(bottom = 5.dp)
             ) {
                 Image(
-                    painter = painterResource(R.drawable.btn_next),
+                    painter = painterResource(id = if(isKorean) R.drawable.btn_next else R.drawable.btn_eng_continue),
                     contentDescription = "다음 버튼",
                     modifier = Modifier
                         .align(Alignment.Center)

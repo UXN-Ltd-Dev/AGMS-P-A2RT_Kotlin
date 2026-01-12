@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,6 +58,9 @@ fun StabilizationCompleteScreen(navController: NavController) {
     val localDbRepository by lazy {
         AppDatabase.getInstance(context)
     }
+
+    val currentLanguage = Locale.current.language
+    val isKorean = currentLanguage == "ko"
 
     LaunchedEffect(Unit) {
         DataStoreManager.deleteRoute()
@@ -106,7 +110,7 @@ fun StabilizationCompleteScreen(navController: NavController) {
                     .height(50.dp)
             ) {
                 Image(
-                    painter = painterResource(R.drawable.btn_next),
+                    painter = painterResource(id = if (isKorean)R.drawable.btn_next else R.drawable.btn_eng_continue),
                     contentDescription = "다음 버튼",
                     modifier = Modifier
                         .align(Alignment.Center)

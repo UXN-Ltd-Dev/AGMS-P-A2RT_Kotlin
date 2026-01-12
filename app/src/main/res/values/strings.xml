@@ -90,6 +90,31 @@
     <string name="toast_req_weight">Please enter your weight.</string>
     <string name="toast_req_diabetes_type">Please select your diabetes type.</string>
     <string name="toast_req_agree_terms">Please agree to the Privacy Policy and Terms of Use.</string>
+    <string name="toast_already_registred">This account already exists.</string>
+    <string name="toast_network_error2">Network connection error. Please try again later.</string>
+    <string name="permission_access_fine_location">Please allow location permission for BLE connection.</string>
+    <string name="permission_access_coarse_location">Please allow approximate location permission for BLE connection.</string>
+    <string name="permission_bluetooth_scan">Please allow nearby devices permission to use BLE.</string>
+    <string name="permission_bluetooth_connect">Please allow BLE permission.</string>
+    <string name="permission_post_notifications">Please allow permission to send notifications.</string>
+    <string name="setting_permissions_title">App Permissions Guide</string>
+    <string name="setting_permissions_sub_title">You can use the app without granting all permissions, but some features may be limited.</string>
+    <string name="notification_permission_title">Notifications (Required)</string>
+    <string name="notification_permission_sub_title">To send alert messages and updates.</string>
+    <string name="nearby_permission_title">Nearby Devices (Required)</string>
+    <string name="location_permission_title">Location (Required)</string>
+    <string name="nearby_permission_sub_title">To search for and connect to nearby sensors.</string>
+    <string name="location_permission_sub_title">For BLE  pairing and stable communication.</string>
+    <string name="battery_optimization_permission_title">Disable Battery Optimization (Required)</string>
+    <string name="battery_optimization_permission_sub_title">To prevent background data restrictions and ensure continuous monitoring.</string>
+    <string name="guide_title">How to Use</string>
+    <string name="guide_description_1">"Clean the application site\nwith an alcohol swab\nand let it dry completely."</string>
+    <string name="guide_description_2">Hold the protective cap firmly\nand twist the main body\ncounter-clockwise\nto separate it from the cap.</string>
+    <string name="guide_description_3">Place the applicator\nhorizontally against the skin at\nthe application site.</string>
+    <string name="guide_description_4">Place your palm on top of the\napplicator and press down\nfirmly until you hear a click.</string>
+    <string name="guide_description_5">Lift the applicator away from\nyour body. Ensure the\ntransmitter is securely\nattached to your skin.</string>
+    <string name="guide_description_6">Press around the adhesive pad\nwith your fingers to ensure it is\nfirmly stuck to your skin.</string>
+    <string name="guide_tip_1">Application site: Around 10cm to\nthe left or right of the navel.</string>
 
 
 </resources>

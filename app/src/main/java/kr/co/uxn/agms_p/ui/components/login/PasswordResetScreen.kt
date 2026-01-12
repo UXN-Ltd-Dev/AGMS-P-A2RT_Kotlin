@@ -128,7 +128,7 @@ fun PassWordResetScreen(navController: NavController) {
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .navigationBarsPadding()
+//            .navigationBarsPadding()
             .pointerInput(Unit) {
                 detectTapGestures(onTap = { focusManager.clearFocus() })  // 🔹 터치 시 키보드 숨기기
             }
@@ -621,7 +621,8 @@ fun PassWordResetScreen(navController: NavController) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(50.dp)
+                                .height(55.dp)
+                                .padding(bottom = 5.dp)
                         ) {
 
                             Image(

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -147,19 +148,21 @@ fun SignUpInfoScreen3(
             // 1. 이름
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(start = 50.dp)
+                modifier = Modifier.fillMaxWidth()
+                    .padding(start = 50.dp, end = 20.dp)
             ) {
                 Text(
                     text = stringResource(R.string.label_name),
+                    modifier = Modifier.width(90.dp),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium
                     )
-                Spacer(modifier = Modifier.size(60.dp, 27.dp))
+//                Spacer(modifier = Modifier.size(60.dp, 27.dp))
 
                 Box(
                     modifier = Modifier
-                        .width(120.dp)
+                        .fillMaxWidth()
+                        .padding(start = 5.dp)
                         .drawBehind {
                             val strokeWidth = 1.dp.toPx()  // 선 굵기
                             val y = size.height - strokeWidth / 2
@@ -216,18 +219,21 @@ fun SignUpInfoScreen3(
             // 2. 성별
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = 50.dp)
+                modifier = Modifier.fillMaxWidth()
+                            .padding(start = 50.dp, end = 20.dp)
             ) {
                 Text(
                     text = stringResource(R.string.label_gender),
+                    modifier = Modifier.width(90.dp),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium
                 )
-                Spacer(modifier = Modifier.size(60.dp, 27.dp))
+//                Spacer(modifier = Modifier.size(60.dp, 27.dp))
                 var expanded by remember { mutableStateOf(false) }
                 Box(
                     modifier = Modifier
-                        .width(120.dp)
+                        .fillMaxWidth()
+                        .padding(start = 5.dp)
                         .clickable {
                             expanded = !expanded
                         }
@@ -261,11 +267,12 @@ fun SignUpInfoScreen3(
                         text = {
                             Text(
                                 text = stringResource(R.string.item_gender_male),
-                                fontSize = 20.sp
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Light
                             )
                         },
                         onClick = {
-                            sex.value = "남성"
+                            sex.value = context.getString(R.string.item_gender_male)
                             expanded = !expanded
                         }
                     )
@@ -278,7 +285,7 @@ fun SignUpInfoScreen3(
                             )
                         },
                         onClick = {
-                            sex.value = "여성"
+                            sex.value = context.getString(R.string.item_gender_female)
                             expanded = !expanded
                         }
                     )
@@ -291,7 +298,7 @@ fun SignUpInfoScreen3(
                             )
                         },
                         onClick = {
-                            sex.value = "선택 안함"
+                            sex.value = context.getString(R.string.item_gender_none)
                             expanded = !expanded
                         }
                     )
@@ -303,18 +310,23 @@ fun SignUpInfoScreen3(
             // 3. 연령
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = 50.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 50.dp, end = 20.dp)
             ) {
                 androidx.compose.material.Text(
                     text = stringResource(R.string.label_age),
+                    modifier = Modifier.width(90.dp),
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Normal
                 )
-                Spacer(modifier = Modifier.size(60.dp, 27.dp))
+//                Spacer(modifier = Modifier.size(60.dp, 27.dp))
 
                 Box(
                     modifier = Modifier
-                        .width(120.dp)
+//                        .width(120.dp)
+                        .fillMaxWidth()
+                        .padding(start = 5.dp)
                         .drawBehind {
                             val strokeWidth = 1.dp.toPx()  // 선 굵기
                             val y = size.height - strokeWidth / 2
@@ -371,17 +383,21 @@ fun SignUpInfoScreen3(
             // 4. 신장
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = 50.dp)
+                modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 50.dp, end = 20.dp)
             ) {
                 androidx.compose.material.Text(
                     text = stringResource(R.string.label_height),
+                    modifier = Modifier.width(90.dp),
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Normal
                 )
-                Spacer(modifier = Modifier.size(60.dp, 27.dp))
+//                Spacer(modifier = Modifier.size(60.dp, 27.dp))
                 Box(
                     modifier = Modifier
-                        .width(120.dp)
+                        .fillMaxWidth()
+                        .padding(start = 5.dp)
                         .drawBehind {
                             val strokeWidth = 1.dp.toPx()  // 선 굵기
                             val y = size.height - strokeWidth / 2
@@ -439,18 +455,22 @@ fun SignUpInfoScreen3(
             // 5. 체중
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = 50.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 50.dp, end = 20.dp)
             ) {
                 androidx.compose.material.Text(
                     text = stringResource(R.string.label_weight),
+                    modifier = Modifier.width(90.dp),
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Normal
                 )
-                Spacer(modifier = Modifier.size(60.dp, 27.dp))
 
                 Box(
                     modifier = Modifier
-                        .width(120.dp)
+//                        .width(120.dp)
+                        .fillMaxWidth()
+                        .padding(start = 5.dp)
                         .drawBehind {
                             val strokeWidth = 1.dp.toPx()  // 선 굵기
                             val y = size.height - strokeWidth / 2
@@ -476,7 +496,8 @@ fun SignUpInfoScreen3(
                         decorationBox = { innerTextField ->
                             Box(
                                 modifier = Modifier
-                                    .width(120.dp)
+//                                    .width(120.dp)
+                                    .wrapContentWidth()
                                     .height(27.dp)
                                     .drawBehind {
                                         val strokeWidth = 0.dp.toPx() // 선 두께 설정
@@ -507,9 +528,12 @@ fun SignUpInfoScreen3(
             // 6. 당뇨 정보
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = 50.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 50.dp, end = 20.dp)
             ) {
                 Text(
+                    modifier = Modifier.width(90.dp),
                     text = stringResource(R.string.label_diabetes_type),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium
@@ -520,10 +544,11 @@ fun SignUpInfoScreen3(
                 // 당뇨 전단계
                 // LADA(Latent Autoimmune Diabetes in Adults)
                 // 정상
-                Spacer(modifier = Modifier.size(22.dp))
                 Box(
                     modifier = Modifier
-                        .width(120.dp)
+//                        .width(120.dp)
+                        .fillMaxWidth()
+                        .padding(start = 5.dp)
                         .clickable {
                             expandedForDiabetesType = !expandedForDiabetesType
                         }
@@ -557,11 +582,12 @@ fun SignUpInfoScreen3(
                         text = {
                             Text(
                                 text = stringResource(R.string.item_diabetes_type_normal),
-                                fontSize = 20.sp
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Light
                             )
                         },
                         onClick = {
-                            diabetesType.value = "정상"
+                            diabetesType.value = context.getString(R.string.item_diabetes_type_normal)
                             expandedForDiabetesType = !expandedForDiabetesType
                         }
                     )
@@ -570,11 +596,12 @@ fun SignUpInfoScreen3(
                         text = {
                             androidx.compose.material.Text(
                                 text = stringResource(R.string.item_diabetes_type_prediabetes),
-                                fontSize = 20.sp
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Light
                             )
                         },
                         onClick = {
-                            diabetesType.value = "당뇨 전단계"
+                            diabetesType.value = context.getString(R.string.item_diabetes_type_prediabetes)
                             expandedForDiabetesType = !expandedForDiabetesType
                         }
                     )
@@ -583,11 +610,12 @@ fun SignUpInfoScreen3(
                         text = {
                             Text(
                                 text = stringResource(R.string.item_diabetes_type_1),
-                                fontSize = 20.sp
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Light
                             )
                         },
                         onClick = {
-                            diabetesType.value = "제1형 당뇨병"
+                            diabetesType.value = context.getString(R.string.item_diabetes_type_1)
                             expandedForDiabetesType = !expandedForDiabetesType
                         }
                     )
@@ -596,11 +624,12 @@ fun SignUpInfoScreen3(
                         text = {
                             Text(
                                 text = stringResource(R.string.item_diabetes_type_2),
-                                fontSize = 20.sp
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Light
                             )
                         },
                         onClick = {
-                            diabetesType.value = "제2형 당뇨병"
+                            diabetesType.value = context.getString(R.string.item_diabetes_type_2)
                             expandedForDiabetesType = !expandedForDiabetesType
                         }
                     )
@@ -609,11 +638,12 @@ fun SignUpInfoScreen3(
                         text = {
                             Text(
                                 text = stringResource(R.string.item_diabetes_type_gestational),
-                                fontSize = 20.sp
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Light
                             )
                         },
                         onClick = {
-                            diabetesType.value = "임신성 당뇨병"
+                            diabetesType.value = context.getString(R.string.item_diabetes_type_gestational)
                             expandedForDiabetesType = !expandedForDiabetesType
                         }
                     )
@@ -622,11 +652,12 @@ fun SignUpInfoScreen3(
                         text = {
                             Text(
                                 text = stringResource(R.string.item_diabetes_type_lada),
-                                fontSize = 20.sp
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Light
                             )
                         },
                         onClick = {
-                            diabetesType.value = "LADA"
+                            diabetesType.value = context.getString(R.string.item_diabetes_type_lada)
                             expandedForDiabetesType = !expandedForDiabetesType
                         }
                     )
@@ -635,11 +666,12 @@ fun SignUpInfoScreen3(
                         text = {
                             androidx.compose.material.Text(
                                 text = stringResource(R.string.item_diabetes_type_unknown),
-                                fontSize = 20.sp
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Light
                             )
                         },
                         onClick = {
-                            diabetesType.value = "모름"
+                            diabetesType.value = context.getString(R.string.item_diabetes_type_unknown)
                             expandedForDiabetesType = !expandedForDiabetesType
                         }
                     )
@@ -672,11 +704,14 @@ fun SignUpInfoScreen3(
                 )
             }
 
+            Spacer(modifier = Modifier.weight(1f))
+
             // 확인 버튼
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 10.dp),
+                    .fillMaxWidth()
+                    .height(55.dp)
+                    .padding(bottom = 5.dp),
                 contentAlignment = Alignment.BottomCenter
             ) {
                 Image(
@@ -688,40 +723,40 @@ fun SignUpInfoScreen3(
                             // TODO : int로 변환해야할 체중, 신장, 나이는 string값이 포함되면 runtimeError가 발생한다.
                             // TODO : Picker로 바꿔야 하나.?
                             if (name.value == "") {
-                                Toast.makeText(context, "이름을 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.toast_req_name, Toast.LENGTH_SHORT).show()
                             } else if (sex.value == "") {
-                                Toast.makeText(context, "성별을 선택해 주세요.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.toast_req_gender, Toast.LENGTH_SHORT).show()
                             } else if (age.value == "") {
-                                Toast.makeText(context, "나이를 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.toast_req_age, Toast.LENGTH_SHORT).show()
                             } else if (height.value == "") {
-                                Toast.makeText(context, "신장을 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.toast_req_height, Toast.LENGTH_SHORT).show()
                             } else if (weight.value == "") {
-                                Toast.makeText(context, "체중을 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.toast_req_weight, Toast.LENGTH_SHORT).show()
                             } else if (diabetesType.value == "") {
-                                Toast.makeText(context, "당뇨 유형을 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.toast_req_diabetes_type, Toast.LENGTH_SHORT).show()
                             } else if (checked.value == false) {
-                                Toast.makeText(context, "개인정보 처리방침 및 이용약관에 동의해 주세요.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.toast_req_agree_terms, Toast.LENGTH_SHORT).show()
                             } else {
                                 // TODO : 서버에 가입정보 전달
                                 // TODO : 가입에 성공하면 로그인 API로 로그인 시도
                                 CoroutineScope(Dispatchers.IO).launch {
                                     val diabetesTypeCode: Int =
                                         when (diabetesType.value) {
-                                            "제1형 당뇨병" -> 1701
-                                            "제2형 당뇨병" -> 1702
-                                            "임신성 당뇨병" -> 1703
-                                            "당뇨 전단계" -> 1704
-                                            "LADA" -> 1705
-                                            "정상" -> 1706
-                                            "모름" -> 1707
+                                            context.getString(R.string.item_diabetes_type_1) -> 1701
+                                            context.getString(R.string.item_diabetes_type_2) -> 1702
+                                            context.getString(R.string.item_diabetes_type_gestational) -> 1703
+                                            context.getString(R.string.item_diabetes_type_prediabetes) -> 1704
+                                            context.getString(R.string.item_diabetes_type_lada) -> 1705
+                                            context.getString(R.string.item_diabetes_type_normal) -> 1706
+                                            context.getString(R.string.item_diabetes_type_unknown) -> 1707
                                             else -> throw IllegalArgumentException("Unknown diabetes type")
                                         }
 
                                     val sexCode: Int =
                                         when (sex.value) {
-                                            "남성" -> 1601
-                                            "여성" -> 1602
-                                            "선택 안함" -> 1603
+                                            context.getString(R.string.item_gender_male) -> 1601
+                                            context.getString(R.string.item_gender_female) -> 1602
+                                            context.getString(R.string.item_gender_none) -> 1603
                                             else -> throw IllegalArgumentException("Unknown diabetes type")
                                         }
 
@@ -847,10 +882,10 @@ fun SignUpInfoScreen3(
 
                                                                 // 화면 이동
                                                                 withContext(Dispatchers.Main) {
-                                                                    Log.d(
-                                                                        "DTO",
-                                                                        requestSignUpNormal.toString()
-                                                                    )
+//                                                                    Log.d(
+//                                                                        "DTO",
+//                                                                        requestSignUpNormal.toString()
+//                                                                    )
                                                                     navController.navigate("SettingPermissionScreen/${type}") {
                                                                         popUpTo("Splash") {
                                                                             inclusive = true
@@ -864,7 +899,7 @@ fun SignUpInfoScreen3(
                                                             withContext(Dispatchers.Main) {
                                                                 Toast.makeText(
                                                                     context,
-                                                                    "네트워크 연결 오류, 잠시 후 시도해 주세요.",
+                                                                    R.string.toast_network_error2,
                                                                     Toast.LENGTH_SHORT
                                                                 ).show()
                                                             }
@@ -881,7 +916,7 @@ fun SignUpInfoScreen3(
                                                 withContext(Dispatchers.Main) {
                                                     Toast.makeText(
                                                         context,
-                                                        "이미 가입된 계정입니다.",
+                                                        R.string.toast_already_registred,
                                                         Toast.LENGTH_SHORT
                                                     ).show()
                                                 }

@@ -30,6 +30,7 @@
     <string name="request_pwd_confirm">비밀번호를 확인해 주세요.</string>
 
     <!--  회원가입 화면3  -->
+    <string name="toast_already_registed_account">회원가입할 수 없습니다.</string>
     <string name="title_enter_my_info">내 정보를 입력하세요.</string>
     <string name="desc_user_info_detail">혈당, 혈당 추세 등 더욱 정확한 결과를 제공할려면 이 정보가 필요합니다. Always가 제공하는 알고리즘을 적용하기 위해서는 나이 외에도 이러한 추가 정보를 입력해야 여러분에게 꼭 맞는 데이터를 제공할 수 있습니다. 자세히 보기</string>
     <string name="label_name">이름</string>
@@ -49,6 +50,28 @@
     <string name="item_diabetes_type_lada">LADA</string>
     <string name="item_diabetes_type_unknown">모름</string>
     <string name="label_agree_terms_privacy">개인정보 처리방침 및 이용약관에 동의합니다.</string>
+
+    <!--  권한 화면 -->
+    <string name="setting_permissions_title">"Always앱에서 사용하는\n권한을 알려드려요."</string>
+    <string name="setting_permissions_sub_title">모든 권한을 허용하지 않아도 앱을 사용할 수 있으나 일부 기능이 제한될 수 있어요</string>
+    <string name="notification_permission_title">알림(필수)</string>
+    <string name="notification_permission_sub_title">알림 메세지 전송</string>
+    <string name="nearby_permission_title">근처 기기(필수)</string>
+    <string name="nearby_permission_sub_title">근처 기기 검색</string>
+    <string name="location_permission_title">위치(필수)</string>
+    <string name="location_permission_sub_title">BLE 연결 및 통신</string>
+    <string name="battery_optimization_permission_title">배터리 사용량 최적화 중지(필수)</string>
+    <string name="battery_optimization_permission_sub_title">백그라운드 배터리 사용량 제한</string>
+
+    <!--  가이드 화면 -->
+    <string name="guide_title">사용 설명</string>
+    <string name="guide_tip_1">착용 부위 : 배꼽 기준 좌우 10cm 내외</string>
+    <string name="guide_description_1">"알코올 스왑으로 부착 부위 피부를\n깨끗이 닦은 후 건조시킵니다."</string>
+    <string name="guide_description_2">"보호 덮개를 손으로 단단히 잡고,\n본체를 시계반대 방향으로 돌려서\n보호 덮개와 분리합니다."</string>
+    <string name="guide_description_3">"어플리케이터를 삽입하는 피부에\n수평하게 위치시킵니다."</string>
+    <string name="guide_description_4">"어플리케이터를 본체 위에\n손바닥을 대고 소리가 날때까지\n끝까지 누릅니다."</string>
+    <string name="guide_description_5">"어플리케이터를 들어올려 몸에서\n분리합니다. 트랜스미터가 피부에\n붙어 있는지 확인합니다."</string>
+    <string name="guide_description_6">"손가락으로 트랜스미터 주위에\n있는 점착패드 주변을 눌러 점착패드가\n피부에 잘 붙도록 합니다."</string>
 
     <!--  토스트 -->
     <string name="toast_network_error">네트워크를 확인해 주세요.</string>
@@ -86,6 +109,15 @@
     <string name="toast_req_weight">체중을 입력해 주세요.</string>
     <string name="toast_req_diabetes_type">당뇨 유형을 입력해 주세요.</string>
     <string name="toast_req_agree_terms">개인정보 처리방침 및 이용약관에 동의해 주세요.</string>
+    <string name="toast_network_error2">네트워크 연결 오류, 잠시 후 시도해 주세요.</string>
+    <string name="toast_already_registred">이미 가입된 계정입니다.</string>
+
+    <!--  BLE 권한 -->
+    <string name="permission_access_fine_location">BLE 연결을 위해 위치 권한을 허용해 주세요.</string>
+    <string name="permission_access_coarse_location">BLE 연결을 위해 거리 권한을 허용해 주세요.</string>
+    <string name="permission_bluetooth_scan">BLE 사용을 위해 근처 기기 권한을 허용해 주세요.</string>
+    <string name="permission_bluetooth_connect">BLE 권한을 허용해 주세요.</string>
+    <string name="permission_post_notifications">알림 메시지 전송을 위해 권한을 허용해 주세요.</string>
 
     <!--  스낵바  -->
     <string name="snakbar_complete_update">새 버전 다운로드가 완료되었습니다.</string>

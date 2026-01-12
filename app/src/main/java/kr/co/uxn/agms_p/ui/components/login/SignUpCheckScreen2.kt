@@ -111,7 +111,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .navigationBarsPadding()
+//            .navigationBarsPadding()
             .pointerInput(Unit) {
                 detectTapGestures(onTap = { focusManager.clearFocus() })  // 🔹 터치 시 키보드 숨기기
             }
@@ -570,14 +570,14 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
             }
 
 
-            Spacer(modifier = Modifier.height(20.dp))
+//            Spacer(modifier = Modifier.height(20.dp))
 
             AnimatedVisibility(
                 visible = isShowSetPwd.value,
                 enter = fadeIn(animationSpec = tween(durationMillis = 1500)) + slideInHorizontally(initialOffsetX = { -it / 2 })
             ) {
                 Column(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     if (isShowSetPwd.value) {
                         if(type == 1803) {
@@ -692,8 +692,9 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
 
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(50.dp)
+                                    .height(55.dp)
+                                    .padding(bottom = 5.dp)
+                                    .align(Alignment.CenterHorizontally)
                             ) {
                                 Image(
                                     painter = painterResource(id = if(isKorean) R.drawable.btn_next else R.drawable.btn_eng_continue),
@@ -743,7 +744,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                         }
                                )
                             }
-                            Spacer(modifier = Modifier.height(33.dp))
+//                            Spacer(modifier = Modifier.height(33.dp))
                         }
                     }
                 }

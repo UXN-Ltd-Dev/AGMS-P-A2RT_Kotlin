@@ -225,8 +225,8 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(80.dp)
-                    .padding(start = 30.dp, top = 38.dp),
+                    .height(70.dp)
+                    .padding(start = 30.dp, top = 30.dp),
             ) {
                 // 백 버튼
                 Image(

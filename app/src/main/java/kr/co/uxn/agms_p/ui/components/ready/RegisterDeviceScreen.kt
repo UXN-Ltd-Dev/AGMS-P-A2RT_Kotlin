@@ -42,6 +42,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -77,6 +78,10 @@ fun RegisterDeviceScreen(navController: NavController) {
         screenHeightDp == 777 -> 15.sp // s21
         else -> 16.sp
     }
+
+    val currentLanguage = Locale.current.language
+    val isKorean = currentLanguage == "ko"
+
     LaunchedEffect(Unit) {
         Log.d("TEST", "screenHeightDP : $screenHeightDp")
     }
@@ -95,8 +100,8 @@ fun RegisterDeviceScreen(navController: NavController) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(80.dp)
-                    .padding(start = 30.dp, top = 38.dp),
+                    .height(70.dp)
+                    .padding(start = 30.dp, top = 30.dp),
             ) {
                 // 백 버튼
                 Image(
@@ -176,16 +181,18 @@ fun RegisterDeviceScreen(navController: NavController) {
                 ),
             )
 
-            Spacer(modifier = Modifier.height(54.dp))
+//            Spacer(modifier = Modifier.height(54.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             // 다음 버튼
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(55.dp)
+                    .padding(bottom = 5.dp)
             ) {
                 Image(
-                    painter = painterResource(R.drawable.btn_next),
+                    painter = painterResource(id = if(isKorean) R.drawable.btn_next else R.drawable.btn_eng_continue),
                     contentDescription = "다음 버튼",
                     modifier = Modifier
                         .align(Alignment.Center)

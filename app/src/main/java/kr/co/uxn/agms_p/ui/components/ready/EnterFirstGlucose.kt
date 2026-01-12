@@ -36,6 +36,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,6 +67,9 @@ fun EnterFirstGlucose(navController: NavController) {
     val localDbRepository by lazy {
         AppDatabase.getInstance(context)
     }
+
+    val currentLanguage = Locale.current.language
+    val isKorean = currentLanguage == "ko"
 
     Surface(
         modifier = Modifier

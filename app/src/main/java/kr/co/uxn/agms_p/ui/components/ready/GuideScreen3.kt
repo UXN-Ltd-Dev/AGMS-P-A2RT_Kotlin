@@ -23,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,6 +33,9 @@ import kr.co.uxn.agms_p.R
 
 @Composable
 fun GuideScreen3(navController: NavController) {
+    val currentLanguage = Locale.current.language
+    val isKorean = currentLanguage == "ko"
+
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -42,9 +47,9 @@ fun GuideScreen3(navController: NavController) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(40.dp)
+                    .height(70.dp)
                     .align(Alignment.Start)
-                    .padding(start = 30.dp)
+                    .padding(start = 30.dp, top = 30.dp)
             ) {
                 // 백 버튼
                 Image(
@@ -66,7 +71,7 @@ fun GuideScreen3(navController: NavController) {
 
             // 사용 설명
             Text(
-                text = "사용 설명",
+                text = stringResource(R.string.guide_title),
                 fontSize = 33.sp,
                 color = Color(0xFF385DAB)
             )
@@ -83,22 +88,26 @@ fun GuideScreen3(navController: NavController) {
             Spacer(modifier = Modifier.size(20.dp))
 
             Text(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
+                    .height(55.dp)
+                    .padding(bottom = 5.dp),
                 textAlign = TextAlign.Center,
-                text = "어플리케이터를 삽입하는 피부에\n수평하게 위치시킵니다.\n ",
+                text = stringResource(R.string.guide_description_3),
                 fontSize = 20.sp
             )
 
-            Spacer(modifier = Modifier.size(32.dp))
+//            Spacer(modifier = Modifier.size(32.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             // 다음 버튼
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(55.dp)
+                    .padding(bottom = 5.dp)
             ) {
                 Image(
-                    painter = painterResource(R.drawable.btn_next),
+                    painter = painterResource(id = if(isKorean) R.drawable.btn_next else R.drawable.btn_eng_continue),
                     contentDescription = "다음 버튼",
                     modifier = Modifier.align(Alignment.Center)
                         .clickable {

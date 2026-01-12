@@ -8,10 +8,14 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -23,6 +27,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.play.core.appupdate.AppUpdateManager
@@ -112,7 +117,7 @@ class MainActivity : ComponentActivity() {
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = true
 
-//        enableEdgeToEdge()
+        enableEdgeToEdge()
 
 //        PermissionManagerConfig.setCustomRationaleUI { permission, onDismiss, onConfirm ->
 //            CustomRationaleDialog(
@@ -285,7 +290,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun Navigation(
 //        modifier: Modifier = Modifier.safeDrawingPadding(),
-        modifier: Modifier = Modifier,
+        modifier: Modifier = Modifier.fillMaxSize(),
         navController: NavHostController = rememberNavController()
     ) {
 
@@ -333,10 +338,24 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        // 현재 화면의 Route를 실시간으로 감지
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
+
+        var isSplash = currentRoute == "Splash" || currentRoute == null
+
+        var modifier = Modifier.fillMaxSize()
+        if (isSplash) {
+            modifier = Modifier.fillMaxSize()
+        } else {
+            modifier = Modifier.safeDrawingPadding()
+        }
 
         destination.value?.let {
             startDestination ->
             NavHost(navController, startDestination, modifier = modifier) {
+//            NavHost(navController, "GuideScreen1", modifier = modifier) {
+//            NavHost(navController, "SignUpInfoScreen3/choco5732@gmail.com/chicken2/1801", modifier = modifier) {
                 composable("Splash") {
                     SplashScreen(navController, activity = this@MainActivity)
                 }
@@ -349,13 +368,13 @@ class MainActivity : ComponentActivity() {
                     PassWordResetScreen(navController)
                 }
 
-                composable("SignUpAgreeScreen1/{type}/{email}") {backStackEntry ->
+                composable("SignUpAgreeScreen1/{type}/{email}") { backStackEntry ->
                     val type = backStackEntry.arguments?.getString("type")?.toIntOrNull() ?: -1
                     val oAuthEmail = backStackEntry.arguments?.getString("email").toString()
                     SignUpAgreeScreen1(navController, type, oAuthEmail)
                 }
 
-                composable("SignUpCheckScreen2/{type}/{email}") {backStackEntry ->
+                composable("SignUpCheckScreen2/{type}/{email}") { backStackEntry ->
                     val type = backStackEntry.arguments?.getString("type")?.toIntOrNull() ?: -1
                     val oAuthEmail = backStackEntry.arguments?.getString("email").toString()
                     SignUpCheckScreen2(navController, type, oAuthEmail)

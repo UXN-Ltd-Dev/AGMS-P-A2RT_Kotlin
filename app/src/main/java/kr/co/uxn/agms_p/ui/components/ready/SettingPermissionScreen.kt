@@ -34,7 +34,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -58,6 +60,9 @@ fun SettingPermissionScreen(
     val isGrant by viewModel.isGrant.collectAsState()
     val coroutineScope = rememberCoroutineScope()
 
+    val currentLanguage = Locale.current.language
+    val isKorean = currentLanguage == "ko"
+
     // meticha
     val permissions =
         // 15, SDK 35
@@ -66,27 +71,27 @@ fun SettingPermissionScreen(
                 permissions = listOf(
                     AppPermission(
                         permission = Manifest.permission.ACCESS_FINE_LOCATION,
-                        description = "BLE 연결을 위해 위치 권한을 허용해 주세요.",
+                        description = context.getString(R.string.permission_access_fine_location),
                         isRequired = true
                     ),
                     AppPermission(
                         permission = Manifest.permission.ACCESS_COARSE_LOCATION,
-                        description = "BLE 연결을 위해 거리 권한을 허용해 주세요.",
+                        description = context.getString(R.string.permission_access_coarse_location),
                         isRequired = true
                     ),
                     AppPermission(
                         permission = Manifest.permission.BLUETOOTH_SCAN,
-                        description = "BLE 사용을 위해 근처 기기 권한을 허용해 주세요.",
+                        description = context.getString(R.string.permission_bluetooth_scan),
                         isRequired = true
                     ),
                     AppPermission(
                         permission = Manifest.permission.BLUETOOTH_CONNECT,
-                        description = "BLE 권한을 허용해 주세요",
+                        description = context.getString(R.string.permission_bluetooth_connect),
                         isRequired = true
                     ),
                     AppPermission(
                         permission = Manifest.permission.POST_NOTIFICATIONS,
-                        description = "알림 메시지 전송을 위해 권한을 허용해 주세요.",
+                        description = context.getString(R.string.permission_post_notifications),
                         isRequired = true
                     )
                 )
@@ -97,27 +102,27 @@ fun SettingPermissionScreen(
                 permissions = listOf(
                     AppPermission(
                         permission = Manifest.permission.ACCESS_FINE_LOCATION,
-                        description = "BLE 연결을 위해 위치 권한을 허용해 주세요.",
+                        description = context.getString(R.string.permission_access_fine_location),
                         isRequired = true
                     ),
                     AppPermission(
                         permission = Manifest.permission.ACCESS_COARSE_LOCATION,
-                        description = "BLE 연결을 위해 거리 권한을 허용해 주세요.",
+                        description = context.getString(R.string.permission_access_coarse_location),
                         isRequired = true
                     ),
                     AppPermission(
                         permission = Manifest.permission.BLUETOOTH_SCAN,
-                        description = "BLE 사용을 위해 근처 기기 권한을 허용해 주세요.",
+                        description = context.getString(R.string.permission_bluetooth_scan),
                         isRequired = true
                     ),
                     AppPermission(
                         permission = Manifest.permission.BLUETOOTH_CONNECT,
-                        description = "BLE 권한을 허용해 주세요",
+                        description = context.getString(R.string.permission_bluetooth_connect),
                         isRequired = true
                     ),
                     AppPermission(
                         permission = Manifest.permission.POST_NOTIFICATIONS,
-                        description = "알림 메시지 전송을 위해 권한을 허용해 주세요.",
+                        description = context.getString(R.string.permission_post_notifications),
                         isRequired = true
                     )
                 )
@@ -128,27 +133,27 @@ fun SettingPermissionScreen(
                 permissions = listOf(
                     AppPermission(
                         permission = Manifest.permission.ACCESS_FINE_LOCATION,
-                        description = "BLE 연결을 위해 위치 권한을 허용해 주세요.",
+                        description = context.getString(R.string.permission_access_fine_location),
                         isRequired = true
                     ),
                     AppPermission(
                         permission = Manifest.permission.ACCESS_COARSE_LOCATION,
-                        description = "BLE 연결을 위해 거리 권한을 허용해 주세요.",
+                        description = context.getString(R.string.permission_access_coarse_location),
                         isRequired = true
                     ),
                     AppPermission(
                         permission = Manifest.permission.BLUETOOTH_SCAN,
-                        description = "BLE 사용을 위해 근처 기기 권한을 허용해 주세요.",
+                        description = context.getString(R.string.permission_bluetooth_scan),
                         isRequired = true
                     ),
                     AppPermission(
                         permission = Manifest.permission.BLUETOOTH_CONNECT,
-                        description = "BLE 권한을 허용해 주세요",
+                        description = context.getString(R.string.permission_bluetooth_connect),
                         isRequired = true
                     ),
                     AppPermission(
                         permission = Manifest.permission.POST_NOTIFICATIONS,
-                        description = "알림 메시지 전송을 위해 권한을 허용해 주세요.",
+                        description = context.getString(R.string.permission_post_notifications),
                         isRequired = true
                     )
                 )
@@ -160,22 +165,22 @@ fun SettingPermissionScreen(
                 permissions = listOf(
                     AppPermission(
                         permission = Manifest.permission.ACCESS_FINE_LOCATION,
-                        description = "BLE 연결을 위해 위치 권한을 허용해 주세요.",
+                        description = context.getString(R.string.permission_access_fine_location),
                         isRequired = true
                     ),
                     AppPermission(
                         permission = Manifest.permission.ACCESS_COARSE_LOCATION,
-                        description = "BLE 연결을 위해 거리 권한을 허용해 주세요.",
+                        description = context.getString(R.string.permission_access_coarse_location),
                         isRequired = true
                     ),
                     AppPermission(
                         permission = Manifest.permission.BLUETOOTH_SCAN,
-                        description = "BLE 사용을 위해 근처 기기 권한을 허용해 주세요.",
+                        description = context.getString(R.string.permission_bluetooth_scan),
                         isRequired = true
                     ),
                     AppPermission(
                         permission = Manifest.permission.BLUETOOTH_CONNECT,
-                        description = "BLE 권한을 허용해 주세요",
+                        description = context.getString(R.string.permission_bluetooth_connect),
                         isRequired = true
                     )
 
@@ -187,12 +192,12 @@ fun SettingPermissionScreen(
                 permissions = listOf(
                     AppPermission(
                         permission = Manifest.permission.ACCESS_FINE_LOCATION,
-                        description = "BLE 연결을 위해 위치 권한을 허용해 주세요.",
+                        description = context.getString(R.string.permission_access_fine_location),
                         isRequired = true
                     ),
                     AppPermission(
                         permission = Manifest.permission.ACCESS_COARSE_LOCATION,
-                        description = "BLE 연결을 위해 거리 권한을 허용해 주세요.",
+                        description = context.getString(R.string.permission_access_coarse_location),
                         isRequired = true
                     ),
                 )
@@ -203,12 +208,12 @@ fun SettingPermissionScreen(
                 permissions = listOf(
                     AppPermission(
                         permission = Manifest.permission.ACCESS_FINE_LOCATION,
-                        description = "BLE 연결을 위해 위치 권한을 허용해 주세요.",
+                        description = context.getString(R.string.permission_access_fine_location),
                         isRequired = true
                     ),
                     AppPermission(
                         permission = Manifest.permission.ACCESS_COARSE_LOCATION,
-                        description = "BLE 연결을 위해 거리 권한을 허용해 주세요.",
+                        description = context.getString(R.string.permission_access_coarse_location),
                         isRequired = true
                     ),
                 )
@@ -241,14 +246,14 @@ fun SettingPermissionScreen(
         ) {
             Spacer(modifier = Modifier.size(100.dp))
             Text(
-                text = "Always앱에서 사용하는\n권한을 알려드려요.",
+                text = stringResource(R.string.setting_permissions_title),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )
 
             Spacer(modifier = Modifier.size(20.dp))
             Text(
-                text = "모든 권한을 허용하지 않아도 앱을 사용할 수 있으나 일부 기능이 제한될 수 있어요",
+                text = stringResource(R.string.setting_permissions_sub_title),
                 fontSize = 13.sp,
                 color = Color.Gray
             )
@@ -266,10 +271,10 @@ fun SettingPermissionScreen(
                 Spacer(modifier = Modifier.width(15.dp))
                 Column() {
                     Text(
-                        text = "알림(필수)"
+                        text = stringResource(R.string.notification_permission_title)
                     )
                     Text(
-                        text = "알림 메세지 전송",
+                        text = stringResource(R.string.notification_permission_sub_title),
                         fontSize = 13.sp,
                         color = Color.Gray
                     )
@@ -289,10 +294,10 @@ fun SettingPermissionScreen(
                 Spacer(modifier = Modifier.width(15.dp))
                 Column() {
                     Text(
-                        text = "근처 기기(필수)"
+                        text = stringResource(R.string.nearby_permission_title)
                     )
                     Text(
-                        text = "근처 기기 검색",
+                        text = stringResource(R.string.nearby_permission_sub_title),
                         fontSize = 13.sp,
                         color = Color.Gray
                     )
@@ -312,10 +317,10 @@ fun SettingPermissionScreen(
                 Spacer(modifier = Modifier.width(15.dp))
                 Column() {
                     Text(
-                        text = "위치(필수)"
+                        text = stringResource(R.string.location_permission_title)
                     )
                     Text(
-                        text = "BLE 연결 및 통신",
+                        text = stringResource(R.string.location_permission_sub_title),
                         fontSize = 13.sp,
                         color = Color.Gray
                     )
@@ -335,10 +340,10 @@ fun SettingPermissionScreen(
                 Spacer(modifier = Modifier.width(15.dp))
                 Column() {
                     Text(
-                        text = "배터리 사용량 최적화 중지(필수)"
+                        text = stringResource(R.string.battery_optimization_permission_title)
                     )
                     Text(
-                        text = "백그라운드 배터리 사용량 제한",
+                        text = stringResource(R.string.battery_optimization_permission_sub_title),
                         fontSize = 13.sp,
                         color = Color.Gray
                     )
@@ -368,7 +373,7 @@ fun SettingPermissionScreen(
                             permissions.requestPermission()
                             Log.d("TEST", "요구된 권한은 : ")
                         },
-                    painter = painterResource(R.drawable.btn_confirm),
+                    painter = painterResource(id = if(isKorean) R.drawable.btn_confirm else R.drawable.btn_eng_confirm),
                     contentDescription = "확인 버튼",
                 )
             }

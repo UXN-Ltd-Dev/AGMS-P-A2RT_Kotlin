@@ -220,12 +220,14 @@ fun SignUpAgreeScreen1(navController: NavController, type: Int, oAuthEmail: Stri
                 )
             }
 
-            Spacer(modifier = Modifier.size(210.dp))
+//            Spacer(modifier = Modifier.size(210.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(55.dp)
+                    .padding(bottom = 5.dp)
             ) {
                 Image(
                     painter = painterResource(id = if (isKorean) R.drawable.btn_next else R.drawable.btn_eng_continue),
