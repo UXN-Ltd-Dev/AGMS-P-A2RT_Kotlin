@@ -35,7 +35,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -94,6 +96,8 @@ fun StabilizationScreen(navController: NavController, mac: String, bleViewModel:
         AppDatabase.getInstance(context)
     }
 
+    val currentLanguage = Locale.current.language
+    val isKorean = currentLanguage == "ko"
 
     LaunchedEffect(Unit) {
         // 첫 실행 보장 플래그 불러오기
@@ -158,7 +162,7 @@ fun StabilizationScreen(navController: NavController, mac: String, bleViewModel:
                         ) {
 
                             if (isNotiStabilization) {
-                                sendNotification(context, "센서가 준비되었습니다", "", 90)
+                                sendNotification(context, context.getString(R.string.notification_sensor_ready), "", 90)
                             }
                         }
                     }
@@ -238,7 +242,7 @@ fun StabilizationScreen(navController: NavController, mac: String, bleViewModel:
             Text(
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
-                text = "남은 시간",
+                text = stringResource(R.string.stabilizationing_title),
 //                fontWeight = FontWeight.Bold,
                 fontSize = 27.sp
             )
@@ -255,7 +259,7 @@ fun StabilizationScreen(navController: NavController, mac: String, bleViewModel:
                     Text(
 //                    modifier = Modifier.fillMaxWidth(),
 //                        textAlign = TextAlign.Center,
-                        text = minutes.toString() + "분",
+                        text = minutes.toString() + stringResource(R.string.minute),
                         fontSize = 70.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF385DAB)
@@ -277,17 +281,26 @@ fun StabilizationScreen(navController: NavController, mac: String, bleViewModel:
             Spacer(modifier = Modifier.size(50.dp))
 
             Text(
-                text = "조금만 기다려 주세요.\n센서 안정화 중입니다.",
+                text = stringResource(R.string.stabilizationing_sub_title),
+                textAlign = TextAlign.Center,
                 color = Color.Gray
             )
 
             Spacer(modifier = Modifier.size(30.dp))
 
-            Image(
-                painter = painterResource(R.drawable.one_hundred_twenty_min),
-                contentDescription = "120분 소요",
-                modifier = Modifier.size(width = 90.dp, 30.dp)
-            )
+            if (isKorean) {
+                Image(
+                    painter = painterResource(id = R.drawable.one_hundred_twenty_min),
+                    contentDescription = "120분 소요",
+                    modifier = Modifier.size(width = 90.dp, 30.dp)
+                )
+            } else {
+                Image(
+                    painter = painterResource(id = R.drawable.test),
+                    contentDescription = "120분 소요",
+                    modifier = Modifier.size(width = 130.dp, 30.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.height(30.dp))
             // 로티 애니메이션

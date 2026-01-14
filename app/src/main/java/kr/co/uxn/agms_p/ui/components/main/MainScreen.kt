@@ -31,6 +31,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -49,10 +51,13 @@ import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
 fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleViewModel: BleViewModel, startIndex: Int= 0, eventScreenViewModel: EventScreenViewModel) {
     val context = LocalContext.current
 
+    val currentLanguage = Locale.current.language
+    val isKorean = currentLanguage == "ko"
+
     val navItemList = listOf(
-        NavItem(icon = painterResource(id = R.drawable.home_icon), selectedIcon = painterResource(id = R.drawable.home_selected), label = "홈"),
-        NavItem(icon = painterResource(id = R.drawable.event_icon), selectedIcon = painterResource(id = R.drawable.event_selected), label = "이벤트"),
-        NavItem(icon = painterResource(id = R.drawable.setting_icon), selectedIcon = painterResource(id = R.drawable.settings_selected), label = "설정")
+        NavItem(icon = painterResource(id = R.drawable.home_icon), selectedIcon = painterResource(id = R.drawable.home_selected), label = stringResource(R.string.label_home)),
+        NavItem(icon = painterResource(id = R.drawable.event_icon), selectedIcon = painterResource(id = R.drawable.event_selected), label = stringResource(R.string.label_event)),
+        NavItem(icon = painterResource(id = R.drawable.setting_icon), selectedIcon = painterResource(id = R.drawable.settings_selected), label = stringResource(R.string.label_setting))
     )
 
     var selectedIndex by remember { mutableStateOf(startIndex) }
@@ -60,9 +65,9 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
     val bleState by bleViewModel.bleState.collectAsState()
 
     val blePainter = when (bleState) {
-        BleConnectionState.CONNECTED -> R.drawable.ble_connected
-        BleConnectionState.DISCONNECTED -> R.drawable.ble_disconnected
-        BleConnectionState.CONNECTING -> R.drawable.ble_connecting
+        BleConnectionState.CONNECTED -> if(isKorean) R.drawable.ble_connected else R.drawable.eng_connected
+        BleConnectionState.DISCONNECTED -> if(isKorean) R.drawable.ble_disconnected else R.drawable.eng_disconnected
+        BleConnectionState.CONNECTING -> if(isKorean) R.drawable.ble_connecting else R.drawable.eng_connecting
     }
 
     val configuration = LocalConfiguration.current
@@ -94,12 +99,22 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
                     )
                 },
                 actions = {
-                    Image(
-                        painter = painterResource(blePainter),
-                        contentDescription = "ble 연결상태 아이콘",
-                        modifier = Modifier.size(80.dp, 40.dp)
+                    if (isKorean) {
+                        Image(
+                            painter = painterResource(blePainter),
+                            contentDescription = "ble 연결상태 아이콘",
+                            modifier = Modifier.size(80.dp, 40.dp)
 //                            .padding(end = 10.dp)
-                    )
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(blePainter),
+                            contentDescription = "ble 연결상태 아이콘",
+                            modifier = Modifier.size(110.dp, 40.dp)
+//                            .padding(end = 10.dp)
+                        )
+                    }
+
                     Spacer(modifier = Modifier.width(10.dp))
                 }
             )

@@ -39,7 +39,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -111,6 +113,9 @@ fun EventScreen(
 
     val bgColor = MaterialTheme.colorScheme.background
 
+    val currentLanguage = Locale.current.language
+    val isKorean = currentLanguage == "ko"
+
     LaunchedEffect(Unit) {
         Log.e("COLOR", "배경 RGB = ${bgColor.red} ${bgColor.green} ${bgColor.blue}")
     }
@@ -168,8 +173,8 @@ fun EventScreen(
                 BleBridge.showCaliDialog(false)
                 navController.navigate("GlucoseRegisterScreen")
             },
-            title = "혈당 입력 시간입니다.",
-            content = "정확한 측정을 위해 공복 상태에서 자가 채혈한 혈당값을 입력해 주세요.",
+            title = stringResource(R.string.dialog_daily_enter_glucose_title),
+            content = stringResource(R.string.dialog_daily_enter_glucose_content)
         )
     }
 
@@ -180,8 +185,8 @@ fun EventScreen(
             onConfirm = {
                 BleBridge.showBleConnectDialog(false)
             },
-            title = "블루투스 연결이 끊어졌습니다.",
-            content = "센서와의 연결이 일시적으로 끊어졌어요.\n스마트폰을 가까이 두고 연결 상태를 확인하세요.",
+            title = stringResource(R.string.dialog_ble_disconnected_title),
+            content = stringResource(R.string.dialog_ble_disconnected_content)
         )
     }
 
@@ -192,8 +197,8 @@ fun EventScreen(
             onConfirm = {
                 BleBridge.showBluetoothOnDialog(false)
             },
-            title = "블루투스가 꺼져있습니다.",
-            content = "블루투스를 켜고 연결 상태를 확인하세요.",
+            title = stringResource(R.string.dialog_bluetooth_off_title),
+            content = stringResource(R.string.dialog_bluetooth_off_content),
         )
     }
 
@@ -251,13 +256,13 @@ fun EventScreen(
                     } catch (e: Exception) {
                         Log.d("TEST", "sensorOff API통신 실패 : ${e.message}")
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.toast_network_error), Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             },
-            title = "센서의 사용 기간이 종료되었습니다.",
-            content = "센서의 사용 기간이 만료되어 더 이상 측정이 불가합니다. 새 센서를 연결해 주세요.",
+            title = stringResource(R.string.dialog_end_measurement_title),
+            content = stringResource(R.string.dialog_end_measurement_content),
         )
     }
 
@@ -269,8 +274,8 @@ fun EventScreen(
                 showLowGlucoseDialog(false)
                 NotificationManagerCompat.from(context).cancel(95)
             },
-            title = "혈당수치가 낮습니다.",
-            content = "저혈당 위험이 있어요. 필요시 조치를 취하고, 안정 후 수치를 다시 확인하세요.",
+            title = stringResource(R.string.dialog_low_glucose_title),
+            content = stringResource(R.string.dialog_low_glucose_content),
         )
     }
 
@@ -282,10 +287,12 @@ fun EventScreen(
                 showHighGlucoseDialog(false)
                 NotificationManagerCompat.from(context).cancel(96)
             },
-            title = "혈당수치가 높습니다.",
-            content = "현재 혈당이 혈당 범위를 초과했어요. 식사나 활동 내용을 확인하세요.",
+            title = stringResource(R.string.dialog_high_glucose_title),
+            content = stringResource(R.string.dialog_high_glucose_content)
         )
     }
+
+
 
 
     Column(
@@ -321,50 +328,96 @@ fun EventScreen(
                     .padding(horizontal = 20.dp)
             ) {
                 Text(
-                    text = "생활 등록",
+                    text = stringResource(R.string.track_activity_title),
                     fontWeight = FontWeight.Bold,
                     fontSize = fontSize
                 )
             }
             Spacer(modifier = Modifier.height(2.dp))
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            ) {
-                Text(
-                    text = "식사와 운동, 인슐린 주입",
-                    fontWeight = FontWeight.Medium,
-                    fontSize = fontSize
-                )
-                Text(
-                    text = " 등",
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF828282),
-                    fontSize = fontSize
-                )
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "일상 활동을 기록하세요",
-                    color = Color(0xFF828282),
-                    fontWeight = FontWeight.Medium,
-                    fontSize = fontSize
-                )
-                Image(
+            if (isKorean) {
+                Row(
                     modifier = Modifier
-                        .size(70.dp, 26.dp)
-                        .padding(bottom = 3.dp),
-                    painter = painterResource(R.drawable.enter_icon),
-                    contentDescription = "입력 아이콘"
-                )
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp)
+                ) {
+                    Text(
+                        text = "식사와 운동, 인슐린 주입",
+                        fontWeight = FontWeight.Medium,
+                        fontSize = fontSize
+                    )
+                    Text(
+                        text = " 등",
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF828282),
+                        fontSize = fontSize
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "일상 활동을 기록하세요",
+                        color = Color(0xFF828282),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = fontSize
+                    )
+                    Image(
+                        modifier = Modifier
+                            .size(70.dp, 26.dp)
+                            .padding(bottom = 3.dp),
+                        painter = painterResource(R.drawable.enter_icon),
+                        contentDescription = "입력 아이콘"
+                    )
+                }
+            } else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp)
+                ) {
+//                    Text(
+//                        text = "Record your daily activities such",
+//                        fontWeight = FontWeight.Medium,
+//                        fontSize = fontSize
+//                    )
+                    Text(
+                        text = "Record your daily activities such",
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF828282),
+                        fontSize = fontSize
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "as",
+                        color = Color(0xFF828282),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = fontSize
+                    )
+                    Text(
+                        text = " meals, exercise, and insulin.",
+                        fontWeight = FontWeight.Medium,
+                        fontSize = fontSize
+                    )
+                    Image(
+                        modifier = Modifier
+                            .size(70.dp, 26.dp)
+                            .padding(bottom = 3.dp),
+                        painter = painterResource(R.drawable.eng_btn_add),
+                        contentDescription = "입력 아이콘"
+                    )
+                }
             }
         }
 
@@ -393,7 +446,7 @@ fun EventScreen(
                     .padding(horizontal = 20.dp)
             ) {
                 Text(
-                    text = "혈당값 입력",
+                    text = stringResource(R.string.enter_glucose_title),
                     fontWeight = FontWeight.Bold,
                     fontSize = fontSize
                 )
@@ -401,44 +454,79 @@ fun EventScreen(
 
             Spacer(modifier = Modifier.height(2.dp))
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            ) {
-                Text(
-                    text = "최소 ",
-                    fontWeight = FontWeight.Medium,
-                    fontSize = fontSize,
-                    color = Color(0xFF828282),
-                )
-                Text(
-                    text = "1일 1회",
-                    fontWeight = FontWeight.Medium,
-                    textDecoration = TextDecoration.Underline,
-                    fontSize = fontSize
-                )
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "공복 혈당을 입력하세요",
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF828282),
-                    fontSize = fontSize
-                )
-                Image(
+            if (isKorean) {
+                Row(
                     modifier = Modifier
-                        .size(70.dp, 26.dp)
-                        .padding(bottom = 3.dp),
-                    painter = painterResource(R.drawable.enter_icon),
-                    contentDescription = "입력 아이콘"
-                )
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp)
+                ) {
+                    Text(
+                        text = "최소 ",
+                        fontWeight = FontWeight.Medium,
+                        fontSize = fontSize,
+                        color = Color(0xFF828282),
+                    )
+                    Text(
+                        text = "1일 1회",
+                        fontWeight = FontWeight.Medium,
+                        textDecoration = TextDecoration.Underline,
+                        fontSize = fontSize
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "공복 혈당을 입력하세요",
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF828282),
+                        fontSize = fontSize
+                    )
+                    Image(
+                        modifier = Modifier
+                            .size(70.dp, 26.dp)
+                            .padding(bottom = 3.dp),
+                        painter = painterResource(R.drawable.enter_icon),
+                        contentDescription = "입력 아이콘"
+                    )
+                }
+            } else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp)
+                ) {
+                    Text(
+                        text = "Enter your fasting glucose",
+                        fontWeight = FontWeight.Medium,
+                        fontSize = fontSize,
+                        color = Color(0xFF828282),
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "at least once a day.",
+                        fontWeight = FontWeight.Medium,
+                        textDecoration = TextDecoration.Underline,
+                        fontSize = fontSize
+                    )
+                    Image(
+                        modifier = Modifier
+                            .size(70.dp, 26.dp)
+                            .padding(bottom = 3.dp),
+                        painter = painterResource(R.drawable.eng_btn_add),
+                        contentDescription = "입력 아이콘"
+                    )
+                }
             }
         }
 
@@ -468,7 +556,7 @@ fun EventScreen(
                     .padding(horizontal = 20.dp)
             ) {
                 Text(
-                    text = "최근 활동",
+                    text = stringResource(R.string.recent_activity_title),
                     fontWeight = FontWeight.Bold,
                     fontSize = fontSize
                 )
@@ -481,7 +569,7 @@ fun EventScreen(
                     contentAlignment = Alignment.Center // 중앙 정렬
                 ) {
                     Text(
-                        text = "네트워크를 확인해 주세요",
+                        text = stringResource(R.string.toast_network_error),
                         fontSize = fontSize,
                         color = Color.Gray,
                         fontWeight = FontWeight.Medium
@@ -494,7 +582,7 @@ fun EventScreen(
                     contentAlignment = Alignment.Center // 중앙 정렬
                 ) {
                     Text(
-                        text = "가볍게, 오늘 하루를 남겨보세요",
+                        text = stringResource(R.string.recent_activity_sub_title),
                         fontSize = fontSize,
                         color = Color.Gray,
                         fontWeight = FontWeight.Medium

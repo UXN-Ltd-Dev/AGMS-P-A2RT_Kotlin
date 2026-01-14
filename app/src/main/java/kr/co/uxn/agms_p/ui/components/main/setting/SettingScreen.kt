@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
@@ -38,6 +39,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.BleBridge
@@ -115,8 +117,8 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
             onDismiss = {
                 showLogOutDialog.value = false
             },
-            title = "로그아웃",
-            content = "정말 로그아웃하시겠습니까?"
+            title = stringResource(R.string.dialog_log_out_title),
+            content = stringResource(R.string.dialog_log_out_content)
         )
     }
 
@@ -179,13 +181,13 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                     } catch (e: Exception) {
                         Log.d("TEST", "sensorOff API통신 실패 : ${e.message}")
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.toast_network_error), Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             },
-            title = "센서 종료",
-            content = "센서 연결을 종료하시겠습니까?"
+            title = stringResource(R.string.dialog_sensor_off_title),
+            content = stringResource(R.string.dialog_sensor_off_content)
         )
     }
 
@@ -198,8 +200,8 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                 BleBridge.showCaliDialog(false)
                 navController.navigate("GlucoseRegisterScreen")
             },
-            title = "혈당 입력 시간입니다.",
-            content = "정확한 측정을 위해 공복 상태에서 자가 채혈한 혈당값을 입력해 주세요.",
+            title = stringResource(R.string.dialog_daily_enter_glucose_title),
+            content = stringResource(R.string.dialog_daily_enter_glucose_content)
         )
     }
 
@@ -210,8 +212,8 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
             onConfirm = {
                 BleBridge.showBleConnectDialog(false)
             },
-            title = "블루투스 연결이 끊어졌습니다.",
-            content = "센서와의 연결이 일시적으로 끊어졌어요.\n스마트폰을 가까이 두고 연결 상태를 확인하세요.",
+            title = stringResource(R.string.dialog_ble_disconnected_title),
+            content = stringResource(R.string.dialog_ble_disconnected_content)
         )
     }
 
@@ -222,8 +224,8 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
             onConfirm = {
                 BleBridge.showBluetoothOnDialog(false)
             },
-            title = "블루투스가 꺼져있습니다.",
-            content = "블루투스를 켜고 연결 상태를 확인하세요.",
+            title = stringResource(R.string.dialog_bluetooth_off_title),
+            content = stringResource(R.string.dialog_bluetooth_off_content)
         )
     }
 
@@ -281,13 +283,13 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                     } catch (e: Exception) {
                         Log.d("TEST", "sensorOff API통신 실패 : ${e.message}")
                         withContext(Dispatchers.Main) {
-                             Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                             Toast.makeText(context, context.getString(R.string.toast_network_error), Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             },
-            title = "센서의 사용 기간이 종료되었습니다.",
-            content = "센서의 사용 기간이 만료되어 더 이상 측정이 불가합니다. 새 센서를 연결해 주세요.",
+            title = stringResource(R.string.dialog_end_measurement_title),
+            content = stringResource(R.string.dialog_end_measurement_content),
         )
     }
 
@@ -299,8 +301,8 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                 showLowGlucoseDialog(false)
                 NotificationManagerCompat.from(context).cancel(95)
             },
-            title = "혈당수치가 낮습니다.",
-            content = "저혈당 위험이 있어요. 필요시 조치를 취하고, 안정 후 수치를 다시 확인하세요.",
+            title = stringResource(R.string.dialog_low_glucose_title),
+            content = stringResource(R.string.dialog_low_glucose_content)
         )
     }
 
@@ -312,8 +314,8 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                 showHighGlucoseDialog(false)
                 NotificationManagerCompat.from(context).cancel(96)
             },
-            title = "혈당수치가 높습니다.",
-            content = "현재 혈당이 혈당 범위를 초과했어요. 식사나 활동 내용을 확인하세요.",
+            title = stringResource(R.string.dialog_high_glucose_title),
+            content = stringResource(R.string.dialog_high_glucose_content)
         )
     }
 
@@ -341,7 +343,7 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "내 정보",
+                    text = stringResource(R.string.settings_profile),
                     fontSize = 16.sp
                 )
             }
@@ -364,7 +366,7 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "센서 정보",
+                    text = stringResource(R.string.settings_sensor_info),
                     fontSize = 16.sp
                 )
             }
@@ -387,7 +389,7 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "버전 정보",
+                    text = stringResource(R.string.settings_version_info),
                     fontSize = 16.sp
                 )
             }
@@ -414,7 +416,7 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "알림 설정",
+                    text = stringResource(R.string.settings_notifications),
                     fontSize = 16.sp
                 )
             }
@@ -442,7 +444,7 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "이용 약관",
+                    text = stringResource(R.string.settings_terms_of_service),
                     fontSize = 16.sp
                 )
             }
@@ -465,7 +467,7 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "개인정보 처리방침",
+                    text = stringResource(R.string.settings_privacy_policy),
                     fontSize = 16.sp
                 )
             }
@@ -492,7 +494,7 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "로그아웃",
+                    text = stringResource(R.string.settings_log_out),
                     fontSize = 16.sp
                 )
             }
@@ -515,7 +517,7 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "센서 종료",
+                    text = stringResource(R.string.settings_sensor_off),
                     fontSize = 16.sp
                 )
             }
@@ -538,7 +540,7 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "계정 삭제",
+                    text = stringResource(R.string.settings_delete_account),
                     fontSize = 16.sp
                 )
             }

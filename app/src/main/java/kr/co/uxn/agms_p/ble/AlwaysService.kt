@@ -456,7 +456,7 @@ class AlwaysService() : Service() {
                                                 }
                                             } else {
                                                 Log.d(
-                                                    "TEST",
+                                                    "TEST", 
                                                     "recent time API통신 실패 : ${lastTime.errorBody()?.string()}"
                                                 )
                                             }

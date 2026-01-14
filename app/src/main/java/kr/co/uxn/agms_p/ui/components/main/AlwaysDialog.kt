@@ -19,10 +19,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import kr.co.uxn.agms_p.R
 
 @Composable
 fun AlwaysDialog(
@@ -66,7 +68,7 @@ fun AlwaysDialog(
                         border = BorderStroke(1.dp, Color(0xFFD8D8D8))
                     ) {
                         androidx.compose.material3.Text(
-                            text = "예",
+                            text = stringResource(R.string.dialog_yes),
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -80,7 +82,7 @@ fun AlwaysDialog(
                         modifier = Modifier.weight(1f)
                     ) {
                         androidx.compose.material3.Text(
-                            text = "아니오",
+                            text = stringResource(R.string.dialog_no),
                             color = Color.White,
                             fontWeight = FontWeight.Medium
                         )

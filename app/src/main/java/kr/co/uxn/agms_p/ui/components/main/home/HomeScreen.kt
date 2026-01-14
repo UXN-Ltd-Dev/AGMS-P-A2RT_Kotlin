@@ -1,10 +1,10 @@
 package kr.co.uxn.agms_p.ui.components.main.home
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -105,6 +105,7 @@ import kotlin.system.exitProcess
 import androidx.compose.runtime.*
 import androidx.compose.runtime.key
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.res.stringResource
 import androidx.core.app.NotificationManagerCompat
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisLabelComponent
 import com.patrykandpatrick.vico.core.cartesian.CartesianDrawingContext
@@ -142,8 +143,8 @@ fun HomeScreen(
     var showEndMeasurementDialog = bleViewModel.showEndMeasurementDialog.collectAsState()
     var showModeDialog = remember { mutableStateOf(false) }
 
-    var selectedChartOption by remember { mutableStateOf("혈당") }
-    val glucoseTrend = remember { mutableStateOf("유지 중") }
+    var selectedChartOption by remember { mutableStateOf(context.getString(R.string.chart_option_glucose)) }
+    val glucoseTrend = remember { mutableStateOf(context.getString(R.string.glucose_trend_level_3)) }
     val glucoseTrendImgResource = remember { mutableStateOf(R.drawable.level3) }
 
     var email = rememberSaveable { mutableStateOf("") }
@@ -230,7 +231,7 @@ fun HomeScreen(
     }
 
     // RadioButton
-    var selectedTimeOption by remember { mutableStateOf("6시간") }
+    var selectedTimeOption by remember { mutableStateOf(context.getString(R.string.chart_hour_6)) }
 
     val localDbRepository by lazy {
         AppDatabase.getInstance(context)
@@ -260,8 +261,8 @@ fun HomeScreen(
 
     LaunchedEffect(selectedChartOption) {
         when (selectedChartOption) {
-            "혈당" -> setYMax(250.0)
-            "WEO1", "WEO2" -> setYMax(50.0) // 시작은 50.0, 필요시 5.0/10.0 등으로 조정
+            context.getString(R.string.chart_option_glucose) -> setYMax(250.0)
+            context.getString(R.string.chart_option_weo1), context.getString(R.string.chart_option_weo2) -> setYMax(50.0) // 시작은 50.0, 필요시 5.0/10.0 등으로 조정
         }
         forceRecompose++
     }
@@ -276,8 +277,8 @@ fun HomeScreen(
 
             Log.e("TEST", "selectedOption : ${selectedTimeOption}")
             val lastTime = when (selectedTimeOption) {
-                "6시간" -> System.currentTimeMillis() - (6 * 60 * 60 * 1000L)
-                "12시간" -> System.currentTimeMillis() - (12 * 60 * 60 * 1000L)
+                context.getString(R.string.chart_hour_6) -> System.currentTimeMillis() - (6 * 60 * 60 * 1000L)
+                context.getString(R.string.chart_hour_12) -> System.currentTimeMillis() - (12 * 60 * 60 * 1000L)
                 else -> System.currentTimeMillis() - (24 * 60 * 60 * 1000L)
             }
             Log.e("DB", "lastTime : ${lastTime}")
@@ -297,7 +298,7 @@ fun HomeScreen(
             }
 
             when (selectedTimeOption) {
-                "6시간" -> {
+                context.getString(R.string.chart_hour_6) -> {
                     if (totalEntryCount.value < 360 && totalEntryCount.value > 0) {
                         val str = localDBDataListAfterLastTime?.first()?.createdAt
                         val lastTimeLong = localDBDataListAfterLastTime?.first()?.createdAtLong!!
@@ -321,7 +322,7 @@ fun HomeScreen(
                         Log.d("TEST", "localDBDataListAfterLastTime first : ${localDBDataListAfterLastTime.first()}, localDBDataListAfterLastTime last : ${localDBDataListAfterLastTime.last()}")
                     }
                 }
-                "12시간" -> {
+                context.getString(R.string.chart_hour_12) -> {
                     if (totalEntryCount.value < 720 && totalEntryCount.value > 0) {
                         val str = localDBDataListAfterLastTime?.first()?.createdAt
                         val lastTimeLong = localDBDataListAfterLastTime?.first()?.createdAtLong!!
@@ -371,7 +372,7 @@ fun HomeScreen(
                 val timeDiffMinutes =
                     (timeDiffMillis / 1000 / 60).toDouble() // millis → seconds → minutes
                 when (selectedChartOption) {
-                    "혈당" -> {
+                    context.getString(R.string.chart_option_glucose) -> { // 혈당
                         x.add(
                             timeDiffMinutes
                         )
@@ -380,7 +381,7 @@ fun HomeScreen(
                         )
                     }
 
-                    "WEO1" -> {
+                    context.getString(R.string.chart_option_weo1) -> { // weo1
                         x.add(
                             timeDiffMinutes
                         )
@@ -389,7 +390,7 @@ fun HomeScreen(
                         )
                     }
 
-                    else -> {
+                    else -> { // weo2
                         x.add(
                             timeDiffMinutes
                         )
@@ -424,12 +425,12 @@ fun HomeScreen(
             }
 
             // 추세 변화 알고리즘
-            glucoseTrend.value = getTrendStatus(localDBDataListAfterLastTime)
+            glucoseTrend.value = getTrendStatus(context, localDBDataListAfterLastTime)
             glucoseTrendImgResource.value = when (glucoseTrend.value) {
-                "급상승" -> R.drawable.level5
-                "상승 중" -> R.drawable.level4
-                "유지 중" -> R.drawable.level3
-                "하강 중" -> R.drawable.level2
+                context.getString(R.string.glucose_trend_level_5) -> R.drawable.level5 // 급 상승
+                context.getString(R.string.glucose_trend_level_4) -> R.drawable.level4 // 상승 중
+                context.getString(R.string.glucose_trend_level_3) -> R.drawable.level3 // 유지 중
+                context.getString(R.string.glucose_trend_level_2) -> R.drawable.level2 // 하강 중
                 else -> R.drawable.level1//"급하강"
             }
         }
@@ -458,8 +459,8 @@ fun HomeScreen(
                 BleBridge.showCaliDialog(false)
                 navController.navigate("GlucoseRegisterScreen")
             },
-            title = "혈당 입력 시간입니다.",
-            content = "정확한 측정을 위해 공복 상태에서 자가 채혈한 혈당값을 입력해 주세요.",
+            title = stringResource(R.string.dialog_daily_enter_glucose_title),
+            content = stringResource(R.string.dialog_daily_enter_glucose_content)
         )
     }
 
@@ -470,15 +471,15 @@ fun HomeScreen(
             onConfirm = {
                 BleBridge.showBleConnectDialog(false)
             },
-            title = "블루투스 연결이 끊어졌습니다.",
-            content = "센서와의 연결이 일시적으로 끊어졌어요.\n스마트폰을 가까이 두고 연결 상태를 확인하세요.",
+            title = stringResource(R.string.dialog_ble_disconnected_title),
+            content = stringResource(R.string.dialog_ble_disconnected_content)
         )
     }
 
     // 3. 그래프 모드 다이얼로그
     if (showModeDialog.value) {
         ModeDialog(
-            options = listOf("혈당", "WEO1", "WEO2"),
+            options = listOf(stringResource(R.string.chart_option_glucose), stringResource(R.string.chart_option_weo1), stringResource(R.string.chart_option_weo2)),
             selectedOption = selectedChartOption,
             onOptionSelected =
                 {
@@ -496,8 +497,8 @@ fun HomeScreen(
             onConfirm = {
                 BleBridge.showBluetoothOnDialog(false)
             },
-            title = "블루투스가 꺼져있습니다.",
-            content = "블루투스를 켜고 연결 상태를 확인하세요.",
+            title = stringResource(R.string.dialog_bluetooth_off_title),
+            content = stringResource(R.string.dialog_bluetooth_off_content),
         )
     }
 
@@ -555,13 +556,13 @@ fun HomeScreen(
                     } catch (e: Exception) {
                         Log.d("TEST", "sensorOff API통신 실패 : ${e.message}")
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.toast_network_error), Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             },
-            title = "센서의 사용 기간이 종료되었습니다.",
-            content = "센서의 사용 기간이 만료되어 더 이상 측정이 불가합니다. 새 센서를 연결해 주세요.",
+            title = stringResource(R.string.dialog_end_measurement_title),
+            content = stringResource(R.string.dialog_end_measurement_content),
         )
     }
 
@@ -573,8 +574,8 @@ fun HomeScreen(
                 showLowGlucoseDialog(false)
                 NotificationManagerCompat.from(context).cancel(95)
             },
-            title = "혈당수치가 낮습니다.",
-            content = "저혈당 위험이 있어요. 필요시 조치를 취하고, 안정 후 수치를 다시 확인하세요.",
+            title = stringResource(R.string.dialog_low_glucose_title),
+            content = stringResource(R.string.dialog_low_glucose_content),
         )
     }
 
@@ -586,8 +587,8 @@ fun HomeScreen(
                 showHighGlucoseDialog(false)
                 NotificationManagerCompat.from(context).cancel(96)
             },
-            title = "혈당수치가 높습니다.",
-            content = "현재 혈당이 혈당 범위를 초과했어요. 식사나 활동 내용을 확인하세요.",
+            title = stringResource(R.string.dialog_high_glucose_title),
+            content = stringResource(R.string.dialog_high_glucose_content)
         )
     }
 
@@ -636,7 +637,7 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "현재 혈당",
+                    text = stringResource(R.string.current_glucose),
                     fontSize = fontSize,
                     fontWeight = FontWeight.Medium,
                     color = Color.White,
@@ -709,7 +710,7 @@ fun HomeScreen(
                         if (GuestList.getVipList().contains(email.value)) {
                             detectTapGestures(
                                 onDoubleTap = {
-                                    val newMax = if(selectedChartOption == "혈당" ) {
+                                    val newMax = if(selectedChartOption == context.getString(R.string.chart_option_glucose) ) {
                                         if (currentYMax == 250.0) 500.0 else 250.0
                                     } else {
                                         if (currentYMax == 250.0) {
@@ -772,7 +773,7 @@ fun HomeScreen(
                             val lineColor = Color(0xFF6FB0E5)
                             val markerDecimalFormat =
                                 when (selectedChartOption) {
-                                    "혈당" -> DecimalFormat("# mg/dL")
+                                    stringResource(R.string.chart_option_glucose) -> DecimalFormat("# mg/dL")
                                     else -> DecimalFormat("##.## nA")
                                 }
                             val yDecimalFormat = DecimalFormat("#")
@@ -859,7 +860,7 @@ fun HomeScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = "잠시만 기다려 주세요...",
+                                        text = stringResource(R.string.chart_wait_a_moment),
                                         color = Color(0xFF385DAB),
                                         fontSize = 18.sp,
                                         fontWeight = FontWeight.Medium
@@ -873,7 +874,8 @@ fun HomeScreen(
                     modifier = Modifier.align(Alignment.BottomCenter)
                         .padding(bottom = 20.dp),
                     selectedOption = selectedTimeOption,
-                    onOptionSelected = { selectedTimeOption = it }
+                    onOptionSelected = { selectedTimeOption = it },
+                    context = context
                 )
             } // Box
         } else { // 세로 모드
@@ -893,9 +895,9 @@ fun HomeScreen(
             ) {
                 Spacer(modifier = Modifier.height(10.dp))
                 val mode = when (selectedChartOption) {
-                    "혈당" -> "혈당 그래프"
-                    "WEO1" -> "WEO1 그래프"
-                    else -> "WEO2 그래프"
+                    context.getString(R.string.chart_option_glucose) -> context.getString(R.string.glucose_chart)
+                    context.getString(R.string.chart_option_weo1) -> context.getString(R.string.weo1_chart)
+                    else -> context.getString(R.string.weo2_chart)
                 }
                 Row(
                     modifier = Modifier
@@ -920,7 +922,7 @@ fun HomeScreen(
                             if (GuestList.getVipList().contains(email.value)) {
                                 detectTapGestures(
                                     onDoubleTap = {
-                                        val newMax = if(selectedChartOption == "혈당" ) {
+                                        val newMax = if(selectedChartOption == context.getString(R.string.chart_option_glucose) ) {
                                             if (currentYMax == 250.0) 500.0 else 250.0
                                         } else {
                                             if (currentYMax == 250.0) {
@@ -958,7 +960,7 @@ fun HomeScreen(
                         val lineColor = Color(0xFF6FB0E5)
                         val markerDecimalFormat =
                             when (selectedChartOption) {
-                                "혈당" -> DecimalFormat("# mg/dL")
+                                context.getString(R.string.chart_option_glucose) -> DecimalFormat("# mg/dL")
                                 else -> DecimalFormat("##.## nA")
                             }
                         val yDecimalFormat = DecimalFormat("#")
@@ -1062,7 +1064,7 @@ fun HomeScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "잠시만 기다려 주세요...",
+                                    text = stringResource(R.string.chart_wait_a_moment),
                                     color = Color(0xFF385DAB),
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Medium
@@ -1072,7 +1074,8 @@ fun HomeScreen(
 
                         RadioButtonSingleSelection(
                             selectedOption = selectedTimeOption,
-                            onOptionSelected = { selectedTimeOption = it }
+                            onOptionSelected = { selectedTimeOption = it },
+                            context = context
                         )
                     } // column
                 } // surface
@@ -1102,7 +1105,7 @@ fun HomeScreen(
                 ) {
 
                     Text(
-                        text = "남은 사용 기간",
+                        text = stringResource(R.string.remaining_usable_period),
                         fontSize = fontSize,
                         fontWeight = FontWeight.Bold,
                     )
@@ -1149,13 +1152,13 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.weight(1f))
                     if (day - 1 > 0) {
                         Text(
-                            text = "${day - 1}일 남았어요",
+                            text = "${day - 1}" + stringResource(R.string.left_day),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Medium
                         )
                     } else {
                         Text(
-                            text = "마지막 날이에요",
+                            text = stringResource(R.string.last_day),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -1170,9 +1173,10 @@ fun HomeScreen(
 fun RadioButtonSingleSelection(
     selectedOption: String,
     onOptionSelected: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    context: Context
 ) {
-    val radioOptions = listOf("6시간", "12시간", "24시간")
+    val radioOptions = listOf(context.getString(R.string.chart_hour_6), context.getString(R.string.chart_hour_12), context.getString(R.string.chart_hour_24))
 
     Row(
         modifier = modifier
@@ -1210,8 +1214,8 @@ fun RadioButtonSingleSelection(
     }
 }
 
-fun getTrendStatus(glucoseValueList: List<UserGlucose>): String {
-    if (glucoseValueList.size < 4) return "유지 중"
+fun getTrendStatus(context: Context, glucoseValueList: List<UserGlucose>): String {
+    if (glucoseValueList.size < 4) return context.getString(R.string.glucose_trend_level_3)// 유지 중
 //    val list = glucoseValueList.takeLast(5)
 
     val sorted = glucoseValueList.sortedBy { it.createdAtLong } // 시간 순 정렬 보장
@@ -1237,12 +1241,12 @@ fun getTrendStatus(glucoseValueList: List<UserGlucose>): String {
     Log.d("TEST", "slope : $slope")
 
     return when {
-        slope >= 10.0 -> "급상승"
-        slope in 2.1..4.9 -> "상승 중"
-        slope in -2.0..2.0 -> "유지 중"
-        slope in -4.9..-2.1 -> "하강 중"
-        slope <= -10.0 -> "급하강"
-        else -> "유지 중"
+        slope >= 10.0 -> context.getString(R.string.glucose_trend_level_5) // "급상승"
+        slope in 2.1..4.9 -> context.getString(R.string.glucose_trend_level_4) // "상승 중"
+        slope in -2.0..2.0 -> context.getString(R.string.glucose_trend_level_3) // "유지 중"
+        slope in -4.9..-2.1 -> context.getString(R.string.glucose_trend_level_2) // "하강 중"
+        slope <= -10.0 -> context.getString(R.string.glucose_trend_level_1)// "급하강"
+        else -> context.getString(R.string.glucose_trend_level_1)
     }
 }
 

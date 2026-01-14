@@ -33,10 +33,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,6 +62,8 @@ fun ScanFailScreen(navController: NavController) {
         speed = 0.3f
     )
 
+    val currentLanguage = Locale.current.language
+    val isKorean = currentLanguage == "ko"
 
     Surface(
         modifier = Modifier
@@ -92,7 +96,7 @@ fun ScanFailScreen(navController: NavController) {
             Text(
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
-                text = "블루투스 연결에\n실패하였습니다.",
+                text = stringResource(R.string.scan_fail_title),
                 fontSize = 25.sp,
                 fontWeight = FontWeight.Bold,
             )
@@ -114,7 +118,7 @@ fun ScanFailScreen(navController: NavController) {
 
             Text(
                 modifier = Modifier.fillMaxWidth(),
-                text = "다시 연결하기 전 블루투스 신호와\n기기 번호를 확인해 주세요.",
+                text = stringResource(R.string.scan_fail_sub_title),
                 fontSize = 18.sp,
                 textAlign = TextAlign.Center
             )
@@ -125,10 +129,11 @@ fun ScanFailScreen(navController: NavController) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(55.dp)
+                    .padding(bottom = 5.dp)
             ) {
                 Image(
-                    painter = painterResource(R.drawable.btn_next),
+                    painter = painterResource(id = if (isKorean) R.drawable.btn_next else R.drawable.btn_eng_continue),
                     contentDescription = "다음 버튼",
                     modifier = Modifier.align(Alignment.Center)
                         .clickable {

@@ -38,6 +38,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -121,7 +122,7 @@ fun RegisterDeviceScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxWidth(),
                 textAlign = TextAlign.Center,
-                text = "블루투스 연결을 위해\n기기 번호를 입력해 주세요.",
+                text = stringResource(R.string.register_device_title),
                 fontSize = 25.sp,
                 fontWeight = FontWeight.Medium
             )
@@ -137,7 +138,7 @@ fun RegisterDeviceScreen(navController: NavController) {
             Spacer(modifier = Modifier.size(10.dp))
 
             Text(
-                text = "제품패키지 라벨의 시리얼 넘버",
+                text = stringResource(R.string.register_device_sub_title),
                 color = Color(0xFF385DAB),
                 fontSize = 20.sp
             )
@@ -153,7 +154,7 @@ fun RegisterDeviceScreen(navController: NavController) {
                         if (focusState.isFocused) {
                             hint.value = "" // 포커스가 들어가면 힌트를 비웁니다
                         } else if (deviceNumber.value.isEmpty()) {
-                            hint.value = "기기 번호를 입력해 주세요." // 포커스를 잃고 입력값이 비어있다면 힌트를 다시 보여줍니다.
+                            hint.value = context.getString(R.string.enter_serial_number_hint) // 포커스를 잃고 입력값이 비어있다면 힌트를 다시 보여줍니다.
                         }
                     },
 

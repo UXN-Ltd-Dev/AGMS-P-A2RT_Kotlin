@@ -33,6 +33,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -102,7 +103,7 @@ fun EnterFirstGlucose(navController: NavController) {
                         if (focusState.isFocused) {
                             hint.value = "" // 포커스가 들어가면 힌트를 비웁니다
                         } else if (glucoseDataFromUser.value.isEmpty()) {
-                            hint.value = "혈당을 입력해 주세요." // 포커스를 잃고 입력값이 비어있다면 힌트를 다시 보여줍니다.
+                            hint.value = context.getString(R.string.enter_glucose_hint) // 포커스를 잃고 입력값이 비어있다면 힌트를 다시 보여줍니다.
                         }
                     },
                 textStyle = TextStyle(
@@ -134,7 +135,7 @@ fun EnterFirstGlucose(navController: NavController) {
             Text(
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
-                text = "자가측정혈당수치를\n입력해 주세요.",
+                text = stringResource(R.string.first_glucose_title),
                 fontSize = 23.sp,
                 color = Color(0xFF385DAB)
             )
@@ -144,7 +145,7 @@ fun EnterFirstGlucose(navController: NavController) {
             Text(
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
-                text = "초기 설정을 위해\n공복 혈당이 필요합니다.",
+                text = stringResource(R.string.first_glucose_sub_title),
                 fontSize = 15.sp,
                 color = Color.Gray
             )
@@ -158,26 +159,26 @@ fun EnterFirstGlucose(navController: NavController) {
                     .height(50.dp)
             ) {
                 Image(
-                    painter = painterResource(R.drawable.btn_complete),
+                    painter = painterResource(id = if (isKorean) R.drawable.btn_complete else R.drawable.btn_eng_complete),
                     contentDescription = "완료 버튼",
                     modifier = Modifier
                         .align(Alignment.Center)
                         .clickable {
                             if (glucoseDataFromUser.value.contains(".") || glucoseDataFromUser.value.contains("-") || glucoseDataFromUser.value.contains(",")) {
                                 coroutineScope.launch(Dispatchers.Main) {
-                                    Toast.makeText(context, "숫자만 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_only_number), Toast.LENGTH_SHORT).show()
                                 }
                             } else if (glucoseDataFromUser.value != "") {
                                 if (glucoseDataFromUser.value.toInt() > 350 ) {
                                     coroutineScope.launch(Dispatchers.Main) {
-                                        Toast.makeText(context, "입력한 혈당이 비정상적으로 높습니다. 혈당계를 다시 사용해 측정해 주세요.", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.toast_invalid_glucose_too_high), Toast.LENGTH_SHORT).show()
                                     }
                                     return@clickable
                                 }
 
                                 if (glucoseDataFromUser.value.toInt() < 50) {
                                     coroutineScope.launch(Dispatchers.Main) {
-                                        Toast.makeText(context, "입력한 혈당이 비정상적으로 낮습니다. 혈당계를 다시 사용해 측정해 주세요.", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.toast_invalid_glucose_too_low), Toast.LENGTH_SHORT).show()
                                     }
                                     return@clickable
                                 }
@@ -229,7 +230,7 @@ fun EnterFirstGlucose(navController: NavController) {
                                         withContext(Dispatchers.Main) {
                                             Toast.makeText(
                                                 context,
-                                                "네트워크를 확인해 주세요.",
+                                                context.getString(R.string.toast_network_error),
                                                 Toast.LENGTH_SHORT
                                             ).show()
                                             Log.e("TEST", "업로드 실패")
@@ -237,7 +238,7 @@ fun EnterFirstGlucose(navController: NavController) {
                                     }
                                 }
                             } else {
-                                Toast.makeText(context, "혈당을 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.toast_req_glucose), Toast.LENGTH_SHORT).show()
                             }
                         }
                 )

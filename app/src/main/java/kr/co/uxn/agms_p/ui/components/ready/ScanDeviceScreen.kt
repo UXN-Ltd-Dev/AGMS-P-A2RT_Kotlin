@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -245,7 +246,7 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
             Text(
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
-                text = "기기를 검색중입니다.",
+                text = stringResource(R.string.scanning_title),
                 fontSize = 25.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -267,7 +268,7 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
             Spacer(modifier = Modifier.size(100.dp))
 
             Text(
-                text = "최소 3분 정도 소요됩니다",
+                text = stringResource(R.string.scanning_sub_title),
                 fontSize = 18.sp
             )
         }

@@ -73,6 +73,66 @@
     <string name="guide_description_5">"어플리케이터를 들어올려 몸에서\n분리합니다. 트랜스미터가 피부에\n붙어 있는지 확인합니다."</string>
     <string name="guide_description_6">"손가락으로 트랜스미터 주위에\n있는 점착패드 주변을 눌러 점착패드가\n피부에 잘 붙도록 합니다."</string>
 
+    <!--  기기 등록 화면 -->
+    <string name="register_device_title">"블루투스 연결을 위해\n기기 번호를 입력해 주세요."</string>
+    <string name="register_device_sub_title">제품패키지 라벨의 시리얼 넘버</string>
+    <string name="enter_serial_number_hint">기기 번호를 입력해 주세요.</string>
+
+    <!--  스캔 화면(연결 중, 실패) -->
+    <string name="scanning_title">기기를 검색중입니다.</string>
+    <string name="scanning_sub_title">최소 3분 정도 소요됩니다</string>
+    <string name="scan_fail_title">블루투스 연결에\n실패하였습니다.</string>
+    <string name="scan_fail_sub_title">다시 연결하기 전 블루투스 신호와\n기기 번호를 확인해 주세요.</string>
+
+    <!--  안정화 화면 -->
+    <string name="stabilizationing_title">남은 시간</string>
+    <string name="minute">분</string>
+    <string name="stabilizationing_sub_title">조금만 기다려 주세요.\n센서 안정화 중입니다.</string>
+    <string name="stabilization_complete_title">센서 안정화가</string>
+    <string name="stabilization_complete_sub_title">완료되었습니다.</string>
+
+    <!-- first glucose 화면 -->
+    <string name="enter_glucose_hint">혈당을 입력해 주세요.</string>
+    <string name="first_glucose_title">자가측정혈당수치를\n입력해 주세요.</string>
+    <string name="first_glucose_sub_title">초기 설정을 위해\n공복 혈당이 필요합니다.</string>
+
+    <!--  메인 화면  -->
+    <string name="chart_option_glucose">혈당</string>
+    <string name="chart_option_weo1">WEO1</string>
+    <string name="chart_option_weo2">WEO2</string>
+    <string name="glucose_chart">혈당 그래프</string>
+    <string name="weo1_chart">WEO1 그래프</string>
+    <string name="weo2_chart">WEO2 그래프</string>
+    <string name="chart_hour_6">6시간</string>
+    <string name="chart_hour_12">12시간</string>
+    <string name="chart_hour_24">24시간</string>
+    <string name="glucose_trend_level_1">급하강</string>
+    <string name="glucose_trend_level_2">하강 중</string>
+    <string name="glucose_trend_level_3">유지 중</string>
+    <string name="glucose_trend_level_4">상승 중</string>
+    <string name="glucose_trend_level_5">급상승</string>
+    <string name="current_glucose">현재 혈당</string>
+    <string name="chart_wait_a_moment">잠시만 기다려 주세요...</string>
+    <string name="remaining_usable_period">남은 사용 기간</string>
+    <string name="left_day">일 남았어요</string>
+    <string name="last_day">마지막 날이에요</string>
+    <string name="label_home">홈</string>
+    <string name="label_event">이벤트</string>
+    <string name="label_setting">설정</string>
+    <string name="track_activity_title">생활 등록</string>
+    <string name="enter_glucose_title">혈당값 입력</string>
+    <string name="recent_activity_title">최근 활동</string>
+    <string name="recent_activity_sub_title">가볍게, 오늘 하루를 남겨보세요</string>
+    <string name="settings_profile">내 정보</string>
+    <string name="settings_sensor_info">센서 정보</string>
+    <string name="settings_version_info">버전 정보</string>
+    <string name="settings_notifications">알림 설정</string>
+    <string name="settings_terms_of_service">이용 약관</string>
+    <string name="settings_privacy_policy">개인정보 처리방침</string>
+    <string name="settings_log_out">로그아웃</string>
+    <string name="settings_sensor_off">센서 종료</string>
+    <string name="settings_delete_account">계정 삭제</string>
+
     <!--  토스트 -->
     <string name="toast_network_error">네트워크를 확인해 주세요.</string>
     <string name="toast_login_error">로그인할 수 없습니다.</string>
@@ -111,6 +171,35 @@
     <string name="toast_req_agree_terms">개인정보 처리방침 및 이용약관에 동의해 주세요.</string>
     <string name="toast_network_error2">네트워크 연결 오류, 잠시 후 시도해 주세요.</string>
     <string name="toast_already_registred">이미 가입된 계정입니다.</string>
+    <string name="toast_only_number">숫자만 입력해 주세요.</string>
+    <string name="toast_invalid_glucose_too_high">입력한 혈당이 비정상적으로 높습니다. 혈당계를 다시 사용해 측정해 주세요.</string>
+    <string name="toast_invalid_glucose_too_low">입력한 혈당이 비정상적으로 낮습니다. 혈당계를 다시 사용해 측정해 주세요.</string>
+    <string name="toast_req_glucose">혈당을 입력해 주세요.</string>
+    <string name="toast_empty_serial_number">시리얼 넘버를 입력해 주세요.</string>
+
+    <!--  노티 -->
+    <string name="notification_sensor_ready">센서가 준비되었습니다.</string>
+
+    <!--  다이얼로그 -->
+    <string name="dialog_daily_enter_glucose_title">혈당 입력 시간입니다.</string>
+    <string name="dialog_daily_enter_glucose_content">정확한 측정을 위해 공복 상태에서 자가 채혈한 혈당값을 입력해 주세요.</string>
+    <string name="dialog_ble_disconnected_title">블루투스 연결이 끊어졌습니다.</string>
+    <string name="dialog_ble_disconnected_content">센서와의 연결이 일시적으로 끊어졌어요.\n스마트폰을 가까이 두고 연결 상태를 확인하세요.</string>
+    <string name="dialog_bluetooth_off_title">블루투스가 꺼져있습니다.</string>
+    <string name="dialog_bluetooth_off_content">블루투스를 켜고 연결 상태를 확인하세요.</string>
+    <string name="dialog_end_measurement_title">센서의 사용 기간이 종료되었습니다.</string>
+    <string name="dialog_end_measurement_content">센서의 사용 기간이 만료되어 더 이상 측정이 불가합니다. 새 센서를 연결해 주세요.</string>
+    <string name="dialog_high_glucose_title">혈당수치가 높습니다.</string>
+    <string name="dialog_high_glucose_content">현재 혈당이 혈당 범위를 초과했어요. 식사나 활동 내용을 확인하세요.</string>
+    <string name="dialog_low_glucose_title">혈당수치가 낮습니다.</string>
+    <string name="dialog_low_glucose_content">저혈당 위험이 있어요. 필요시 조치를 취하고, 안정 후 수치를 다시 확인하세요.</string>
+    <string name="dialog_sensor_off_title">센서 종료</string>
+    <string name="dialog_sensor_off_content">센서 연결을 종료하시겠습니까?</string>
+    <string name="dialog_log_out_title">로그아웃</string>
+    <string name="dialog_log_out_content">정말 로그아웃하시겠습니까?</string>
+    <string name="dialog_ok">확인</string>
+    <string name="dialog_yes">예</string>
+    <string name="dialog_no">아니오</string>
 
     <!--  BLE 권한 -->
     <string name="permission_access_fine_location">BLE 연결을 위해 위치 권한을 허용해 주세요.</string>

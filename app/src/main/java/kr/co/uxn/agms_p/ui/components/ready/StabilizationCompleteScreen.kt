@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -83,7 +84,7 @@ fun StabilizationCompleteScreen(navController: NavController) {
             Text(
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
-                text = "센서 안정화가",
+                text = stringResource(R.string.stabilization_complete_title),
                 fontSize = 30.sp,
 //                fontWeight = FontWeight.Bold,
                 color = Color(0xFF385DAB)
@@ -94,7 +95,7 @@ fun StabilizationCompleteScreen(navController: NavController) {
             Text(
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
-                text = "완료되었습니다.",
+                text = stringResource(R.string.stabilization_complete_sub_title),
                 fontSize = 30.sp,
 //                fontWeight = FontWeight.Bold,
                 color = Color(0xFF385DAB)

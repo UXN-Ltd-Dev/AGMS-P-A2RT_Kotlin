@@ -354,8 +354,7 @@ class MainActivity : ComponentActivity() {
         destination.value?.let {
             startDestination ->
             NavHost(navController, startDestination, modifier = modifier) {
-//            NavHost(navController, "GuideScreen1", modifier = modifier) {
-//            NavHost(navController, "SignUpInfoScreen3/choco5732@gmail.com/chicken2/1801", modifier = modifier) {
+//            NavHost(navController, "RegisterDeviceScreen", modifier = modifier) {
                 composable("Splash") {
                     SplashScreen(navController, activity = this@MainActivity)
                 }

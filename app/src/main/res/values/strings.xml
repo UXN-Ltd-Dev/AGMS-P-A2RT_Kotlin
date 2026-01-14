@@ -19,7 +19,6 @@
     <string name="sign_up_welcome">Welcome!</string>
 
 
-
     <!--  토스트 -->
     <string name="toast_network_error">Please check your network.</string>
     <string name="toast_login_error">Unable to log in.</string>
@@ -115,6 +114,80 @@
     <string name="guide_description_5">Lift the applicator away from\nyour body. Ensure the\ntransmitter is securely\nattached to your skin.</string>
     <string name="guide_description_6">Press around the adhesive pad\nwith your fingers to ensure it is\nfirmly stuck to your skin.</string>
     <string name="guide_tip_1">Application site: Around 10cm to\nthe left or right of the navel.</string>
-
+    <string name="register_device_title">Please enter the\nSerial number to\nconnect Bluetooth.</string>
+    <string name="register_device_sub_title">Serial Number on the package label</string>
+    <string name="enter_serial_number_hint">Enter Serial Number.</string>
+    <string name="scan_fail_title">Bluetooth\nconnection failed.</string>
+    <string name="scan_fail_sub_title">Please check your Bluetooth\nsignal and serial number\nbefore retrying.</string>
+    <string name="scanning_title">Searching for device...</string>
+    <string name="scanning_sub_title">This may take up to 3 minutes.</string>
+    <string name="notification_sensor_ready">The sensor is ready.</string>
+    <string name="stabilizationing_title">Time Remaining</string>
+    <string name="minute">min</string>
+    <string name="stabilizationing_sub_title">Please wait.\nSensor Warm-up in Progress</string>
+    <string name="stabilization_complete_title">Sensor warm-up</string>
+    <string name="stabilization_complete_sub_title">complete.</string>
+    <string name="first_glucose_sub_title">Fasting blood glucose is\nrequired for initial setup</string>
+    <string name="enter_glucose_hint">Enter glucose.</string>
+    <string name="first_glucose_title">Please enter\nyour SMBG value.</string>
+    <string name="toast_only_number">Please enter numbers only.</string>
+    <string name="toast_invalid_glucose_too_high">Entered glucose is abnormally high. Please measure again using your meter.</string>
+    <string name="toast_req_glucose">Please enter your glucose.</string>
+    <string name="toast_invalid_glucose_too_low">Entered glucose is abnormally low. Please measure again using your meter.</string>
+    <string name="toast_empty_serial_number">Please enter serial number.</string>
+    <string name="chart_option_weo1">WEO1</string>
+    <string name="chart_option_weo2">WEO2</string>
+    <string name="chart_option_glucose">glucose</string>
+    <string name="glucose_chart">Glucose Chart</string>
+    <string name="weo1_chart">WEO1 Chart</string>
+    <string name="weo2_chart">WEO2 Chart</string>
+    <string name="chart_hour_6">6hour</string>
+    <string name="chart_hour_12">12hour</string>
+    <string name="chart_hour_24">24hour</string>
+    <string name="current_glucose">Current Glucose</string>
+    <string name="glucose_trend_level_5">Rising Quickly</string>
+    <string name="glucose_trend_level_4">Rising</string>
+    <string name="glucose_trend_level_3">Steady</string>
+    <string name="glucose_trend_level_1">Falling Quickly</string>
+    <string name="glucose_trend_level_2">Falling</string>
+    <string name="left_day">day left</string>
+    <string name="last_day">Ends today</string>
+    <string name="chart_wait_a_moment">Please wait a moment...</string>
+    <string name="remaining_usable_period">Days Remaining</string>
+    <string name="dialog_daily_enter_glucose_content">For accuracy, please enter your fasting glucose level measured via fingerstick.</string>
+    <string name="dialog_daily_enter_glucose_title">Time to Enter Glucose</string>
+    <string name="dialog_ble_disconnected_title">Bluetooth Disconnected</string>
+    <string name="dialog_ble_disconnected_content">Connection to the sensor has been temporarily lost.\nPlease keep your phone nearby and check the connection.</string>
+    <string name="dialog_bluetooth_off_title">Bluetooth is Off</string>
+    <string name="dialog_bluetooth_off_content">Please turn on Bluetooth to check the connection status.</string>
+    <string name="dialog_end_measurement_content">The sensor session has ended and can no longer measure. Please replace with a new sensor.</string>
+    <string name="dialog_end_measurement_title">Sensor Expired</string>
+    <string name="dialog_high_glucose_title">High Glucose Alert</string>
+    <string name="dialog_low_glucose_title">Low Glucose Alert</string>
+    <string name="dialog_low_glucose_content">Risk of low glucose (Hypoglycemia). Please treat if necessary and re-check once stabilized.</string>
+    <string name="dialog_high_glucose_content">Your glucose is above the target range. Please check your recent food or activity.</string>
+    <string name="label_home">Home</string>
+    <string name="label_event">Events</string>
+    <string name="label_setting">Settings</string>
+    <string name="track_activity_title">Track Activity</string>
+    <string name="enter_glucose_title">Enter Glucose Level</string>
+    <string name="recent_activity_title">Recent Activity</string>
+    <string name="recent_activity_sub_title">Simply log your day.</string>
+    <string name="dialog_log_out_title">Log Out</string>
+    <string name="dialog_log_out_content">Are you sure you want to log out?</string>
+    <string name="dialog_sensor_off_title">End Sensor Session</string>
+    <string name="dialog_sensor_off_content">Are you sure you want to end your sensor session?</string>
+    <string name="settings_profile">Profile</string>
+    <string name="settings_sensor_info">Sensor Info</string>
+    <string name="settings_version_info">Version Info</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_terms_of_service">Privacy Policy</string>
+    <string name="settings_log_out">Log Out</string>
+    <string name="settings_delete_account">Delete Account</string>
+    <string name="settings_privacy_policy">Terms of Service</string>
+    <string name="settings_sensor_off">End Sensor Session</string>
+    <string name="dialog_ok">OK</string>
+    <string name="dialog_yes">Yes</string>
+    <string name="dialog_no">No</string>
 
 </resources>
