@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,6 +46,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.BleBridge
@@ -87,10 +89,17 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
         AppDatabase.getInstance(context)
     }
 
+    val currentLanguage = androidx.compose.ui.text.intl.Locale.current.language
+    val isKorean = currentLanguage == "ko"
+
     LaunchedEffect(Unit) {
         val startTimeMilli = DataStoreManager.getStartTime().first() ?: -1
         val endTimeMilli = DataStoreManager.getEndTime().first() ?: -1
-        val formatter = DateTimeFormatter.ofPattern("yyyy년 M월 d일", Locale.KOREAN)
+        val formatter = if(isKorean) {
+            DateTimeFormatter.ofPattern("yyyy년 M월 d일", Locale.KOREAN)
+        } else {
+            DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)
+        }
         val userId = DataStoreManager.getUserId().first() ?: -1
 
         val formattedDate = if (startTimeMilli != -1L) {
@@ -193,8 +202,8 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                 BleBridge.showCaliDialog(false)
                 navController.navigate("GlucoseRegisterScreen")
             },
-            title = "혈당 입력 시간입니다.",
-            content = "정확한 측정을 위해 공복 상태에서 자가 채혈한 혈당값을 입력해 주세요.",
+            title = stringResource(R.string.dialog_daily_enter_glucose_title),
+            content = stringResource(R.string.dialog_daily_enter_glucose_content)
         )
     }
 
@@ -205,8 +214,8 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
             onConfirm = {
                 BleBridge.showBleConnectDialog(false)
             },
-            title = "블루투스 연결이 끊어졌습니다.",
-            content = "센서와의 연결이 일시적으로 끊어졌어요.\n스마트폰을 가까이 두고 연결 상태를 확인하세요.",
+            title = stringResource(R.string.dialog_ble_disconnected_title),
+            content = stringResource(R.string.dialog_ble_disconnected_content)
         )
     }
 
@@ -217,8 +226,8 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
             onConfirm = {
                 BleBridge.showBluetoothOnDialog(false)
             },
-            title = "블루투스가 꺼져있습니다.",
-            content = "블루투스를 켜고 연결 상태를 확인하세요.",
+            title = stringResource(R.string.dialog_bluetooth_off_title),
+            content = stringResource(R.string.dialog_bluetooth_off_content),
         )
     }
 
@@ -276,13 +285,13 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                     } catch (e: Exception) {
                         Log.d("TEST", "sensorOff API통신 실패 : ${e.message}")
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.toast_network_error), Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             },
-            title = "센서의 사용 기간이 종료되었습니다.",
-            content = "센서의 사용 기간이 만료되어 더 이상 측정이 불가합니다. 새 센서를 연결해 주세요.",
+            title = stringResource(R.string.dialog_end_measurement_title),
+            content = stringResource(R.string.dialog_end_measurement_content),
         )
     }
 
@@ -294,8 +303,8 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                 showLowGlucoseDialog(false)
                 NotificationManagerCompat.from(context).cancel(95)
             },
-            title = "혈당수치가 낮습니다.",
-            content = "저혈당 위험이 있어요. 필요시 조치를 취하고, 안정 후 수치를 다시 확인하세요.",
+            title = stringResource(R.string.dialog_low_glucose_title),
+            content = stringResource(R.string.dialog_low_glucose_content),
         )
     }
 
@@ -307,8 +316,8 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                 showHighGlucoseDialog(false)
                 NotificationManagerCompat.from(context).cancel(96)
             },
-            title = "혈당수치가 높습니다.",
-            content = "현재 혈당이 혈당 범위를 초과했어요. 식사나 활동 내용을 확인하세요.",
+            title = stringResource(R.string.dialog_high_glucose_title),
+            content = stringResource(R.string.dialog_high_glucose_content)
         )
     }
 
@@ -332,7 +341,7 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                 },
                 title = {
                     Text(
-                        text = "센서 정보",
+                        text = stringResource(R.string.settings_sensor_info),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -367,7 +376,7 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "센서 시작일",
+                        text = stringResource(R.string.sensor_start_day),
                         fontSize = 16.sp
                     )
                     Text(
@@ -388,22 +397,22 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "남은 사용 기간",
+                        text = stringResource(R.string.remaining_usable_period),
                         fontSize = 16.sp
                     )
                     if (remainingTime.value > 0) {
                         Text(
-                            text = "${remainingTime.value}일",
+                            text = "${remainingTime.value}" + stringResource(R.string.day),
                             fontSize = 16.sp
                         )
                     } else if (remainingTime.value == 0) {
                         Text(
-                            text = "오늘이에요",
+                            text = stringResource(R.string.day),
                             fontSize = 16.sp
                         )
                     } else {
                         Text(
-                            text = "기간이 지났어요",
+                            text = stringResource(R.string.status_expired),
                             fontSize = 16.sp
                         )
                     }
@@ -421,7 +430,7 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "시리얼 번호",
+                        text = stringResource(R.string.serial_number),
                         fontSize = 16.sp
                     )
 

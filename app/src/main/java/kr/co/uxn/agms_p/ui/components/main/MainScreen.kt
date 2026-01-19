@@ -1,6 +1,7 @@
 package kr.co.uxn.agms_p.ui.components.main
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -70,6 +71,8 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
         BleConnectionState.CONNECTING -> if(isKorean) R.drawable.ble_connecting else R.drawable.eng_connecting
     }
 
+    var showDuplicateLoginSessionOffDialog = bleViewModel.showDuplicateLoginSessionOffDialog.collectAsState().value
+
     val configuration = LocalConfiguration.current
     val screenHeightDp = configuration.screenHeightDp
     val iconSize = when {
@@ -81,6 +84,15 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
         screenHeightDp == 783 -> 70.dp // a시리즈
         else -> 65.dp
     }
+
+//    if (!showDuplicateLoginSessionOffDialog) {
+//        NotiDialog(
+//            onDismiss = { showDuplicateLoginSessionOffDialog = false },
+//            onConfirm = { showDuplicateLoginSessionOffDialog = false },
+//            title = "다른 기기에서 로그인이 감지 되었습니다.",
+//            content = "측정이 종료됩니다."
+//        )
+//    }
 
     Scaffold(
         modifier = Modifier
@@ -116,6 +128,10 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
                     }
 
                     Spacer(modifier = Modifier.width(10.dp))
+                },
+                // 세션종료 확인을 위한 기믹, 추후 주석처리 할 것.
+                modifier = Modifier.clickable {
+                    bleViewModel.showDuplicateLoginSessionOffDialog(false)
                 }
             )
         },

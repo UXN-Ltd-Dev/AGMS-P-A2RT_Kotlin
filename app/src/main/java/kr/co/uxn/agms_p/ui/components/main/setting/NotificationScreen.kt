@@ -54,6 +54,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -194,7 +195,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 20.dp),
-                        text = "혈당값 입력 시간",
+                        text = stringResource(R.string.glucose_reminder_glucose_entry_time),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium,
                         style = MaterialTheme.typography.labelMedium
@@ -237,7 +238,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                             border = BorderStroke(1.dp, Color(0xFFD8D8D8)),
                         ) {
                             androidx.compose.material3.Text(
-                                text = "취소",
+                                text = stringResource(R.string.glucose_reminder_cancel),
                                 fontWeight = FontWeight.Medium
                             )
                         }
@@ -264,7 +265,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                                     }
                                     Log.d("TIME", "finalTime : $dailyCalibrationTime")
                                 } else {
-                                    Toast.makeText(context, "시간을 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_req_time), Toast.LENGTH_SHORT).show()
                                 }
                             },
                             shape = RoundedCornerShape(10.dp),
@@ -274,7 +275,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                             modifier = Modifier.weight(1f)
                         ) {
                             androidx.compose.material3.Text(
-                                text = "입력",
+                                text = stringResource(R.string.glucose_reminder_enter),
                                 color = Color.White,
                                 fontWeight = FontWeight.Medium
                             )
@@ -287,6 +288,8 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
 
     }
 
+
+    // 저혈당, 고혈당 한번에 입력하는 다이얼로그 현재 사용안함.
     if (showGlucoseDialog.value) {
         Dialog(onDismissRequest = { showGlucoseDialog.value = false }) {
             Box(
@@ -298,7 +301,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
             ) {
                 Column {
                     Text(
-                        text = "저혈당",
+                        text = stringResource(R.string.low_glucose),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -321,7 +324,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                     Spacer(modifier = Modifier.height(15 .dp))
 
                     Text(
-                        text = "고혈당",
+                        text = stringResource(R.string.high_glucose),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -352,7 +355,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                                 if (targetHighGlucose.value.contains(".") || targetHighGlucose.value.contains("-") || targetHighGlucose.value.contains(",")
                                     || targetLowGlucose.value.contains(".") || targetLowGlucose.value.contains("-") || targetLowGlucose.value.contains(",")
                                 ) {
-                                    Toast.makeText(context, "숫자만 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_enter_only_number), Toast.LENGTH_SHORT).show()
                                 } else if (targetHighGlucose.value != "" && targetLowGlucose.value != "") {
                                     showGlucoseDialog.value = false
                                     coroutineScope.launch(Dispatchers.Main) {
@@ -362,7 +365,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                                         Log.d("TEST", "저장된 저혈당 : ${DataStoreManager.getTargetLowGlucose().first()}")
                                     }
                                 } else {
-                                    Toast.makeText(context, "혈당을 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_enter_glucose), Toast.LENGTH_SHORT).show()
                                 }},
                             shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.buttonColors(
@@ -371,7 +374,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = "입력",
+                                text = stringResource(R.string.glucose_reminder_enter),
                                 color = Color.White,
                                 fontWeight = FontWeight.Medium,
                             )
@@ -393,7 +396,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
             ) {
                 Column {
                     Text(
-                        text = "저혈당",
+                        text = stringResource(R.string.low_glucose),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -423,7 +426,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                             onClick = {
                                 if (targetLowGlucose.value.contains(".") || targetLowGlucose.value.contains("-") || targetLowGlucose.value.contains(",")
                                 ) {
-                                    Toast.makeText(context, "숫자만 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_enter_only_number), Toast.LENGTH_SHORT).show()
                                 } else if (targetLowGlucose.value != "") {
                                     showSetLowGlucoseDialog.value = false
                                     coroutineScope.launch(Dispatchers.Main) {
@@ -431,7 +434,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                                         Log.d("TEST", "저장된 저혈당 : ${DataStoreManager.getTargetLowGlucose().first()}")
                                     }
                                 } else {
-                                    Toast.makeText(context, "혈당을 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_enter_glucose), Toast.LENGTH_SHORT).show()
                                 }},
                             shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.buttonColors(
@@ -440,7 +443,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = "입력",
+                                text = stringResource(R.string.glucose_reminder_enter),
                                 color = Color.White,
                                 fontWeight = FontWeight.Medium,
                             )
@@ -462,7 +465,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
             ) {
                 Column {
                     Text(
-                        text = "고혈당",
+                        text = stringResource(R.string.high_glucose),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -492,7 +495,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                             onClick = {
                                 if (targetHighGlucose.value.contains(".") || targetHighGlucose.value.contains("-") || targetHighGlucose.value.contains(",")
                                 ) {
-                                    Toast.makeText(context, "숫자만 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_enter_only_number), Toast.LENGTH_SHORT).show()
                                 } else if (targetHighGlucose.value != "") {
                                     showSetHighGlucoseDialog.value = false
                                     coroutineScope.launch(Dispatchers.Main) {
@@ -500,7 +503,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                                         Log.d("TEST", "저장된 고혈당 : ${DataStoreManager.getTargetHighGlucose().first()}")
                                     }
                                 } else {
-                                    Toast.makeText(context, "혈당을 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_enter_glucose), Toast.LENGTH_SHORT).show()
                                 }},
                             shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.buttonColors(
@@ -509,7 +512,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = "입력",
+                                text = stringResource(R.string.glucose_reminder_enter),
                                 color = Color.White,
                                 fontWeight = FontWeight.Medium,
                             )
@@ -529,8 +532,8 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                 BleBridge.showCaliDialog(false)
                 navController.navigate("GlucoseRegisterScreen")
             },
-            title = "혈당 입력 시간입니다.",
-            content = "정확한 측정을 위해 공복 상태에서 자가 채혈한 혈당값을 입력해 주세요.",
+            title = stringResource(R.string.dialog_daily_enter_glucose_title),
+            content = stringResource(R.string.dialog_daily_enter_glucose_content)
         )
     }
 
@@ -541,8 +544,8 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
             onConfirm = {
                 BleBridge.showBleConnectDialog(false)
             },
-            title = "블루투스 연결이 끊어졌습니다.",
-            content = "센서와의 연결이 일시적으로 끊어졌어요.\n스마트폰을 가까이 두고 연결 상태를 확인하세요.",
+            title = stringResource(R.string.dialog_ble_disconnected_title),
+            content = stringResource(R.string.dialog_ble_disconnected_content)
         )
     }
 
@@ -553,8 +556,8 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
             onConfirm = {
                 BleBridge.showBluetoothOnDialog(false)
             },
-            title = "블루투스가 꺼져있습니다.",
-            content = "블루투스를 켜고 연결 상태를 확인하세요.",
+            title = stringResource(R.string.dialog_bluetooth_off_title),
+            content = stringResource(R.string.dialog_bluetooth_off_content),
         )
     }
 
@@ -612,13 +615,13 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                     } catch (e: Exception) {
                         Log.d("TEST", "sensorOff API통신 실패 : ${e.message}")
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.toast_network_error), Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             },
-            title = "센서의 사용 기간이 종료되었습니다.",
-            content = "센서의 사용 기간이 만료되어 더 이상 측정이 불가합니다. 새 센서를 연결해 주세요.",
+            title = stringResource(R.string.dialog_end_measurement_title),
+            content = stringResource(R.string.dialog_end_measurement_content),
         )
     }
 
@@ -630,8 +633,8 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                 showLowGlucoseDialog(false)
                 NotificationManagerCompat.from(context).cancel(95)
             },
-            title = "혈당수치가 낮습니다.",
-            content = "저혈당 위험이 있어요. 필요시 조치를 취하고, 안정 후 수치를 다시 확인하세요.",
+            title = stringResource(R.string.dialog_low_glucose_title),
+            content = stringResource(R.string.dialog_low_glucose_content),
         )
     }
 
@@ -643,8 +646,8 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                 showHighGlucoseDialog(false)
                 NotificationManagerCompat.from(context).cancel(96)
             },
-            title = "혈당수치가 높습니다.",
-            content = "현재 혈당이 혈당 범위를 초과했어요. 식사나 활동 내용을 확인하세요.",
+            title = stringResource(R.string.dialog_high_glucose_title),
+            content = stringResource(R.string.dialog_high_glucose_content)
         )
     }
 
@@ -675,7 +678,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                 },
                 title = {
                     Text(
-                        text = "알림 설정",
+                        text = stringResource(R.string.settings_notifications),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -722,7 +725,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "저혈당 알림",
+                                text = stringResource(R.string.low_glucose_notification),
                                 fontSize = 16.sp
                             )
                             Switch(
@@ -790,7 +793,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "고혈당 알림",
+                                text = stringResource(R.string.high_glucose_notification),
                                 fontSize = 16.sp
                             )
 
@@ -853,7 +856,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "신호 소실",
+                            text = stringResource(R.string.lost_signal),
                             fontSize = 16.sp
                         )
                         Switch(
@@ -882,7 +885,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "센서 만료",
+                            text = stringResource(R.string.sensor_expired),
                             fontSize = 16.sp
                         )
                         Switch(
@@ -910,7 +913,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "센서 안정화",
+                            text = stringResource(R.string.sensor_stabilization),
                             fontSize = 16.sp
                         )
                         Switch(
@@ -956,7 +959,7 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "혈당값 입력 시간 알림",
+                                text = stringResource(R.string.glucose_entry_time_notificaition),
                                 fontSize = 16.sp
                             )
                             Switch(

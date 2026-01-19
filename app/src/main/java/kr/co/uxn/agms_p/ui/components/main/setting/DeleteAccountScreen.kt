@@ -44,8 +44,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
@@ -92,6 +94,9 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
         AppDatabase.getInstance(context)
     }
 
+    val currentLanguage = Locale.current.language
+    val isKorean = currentLanguage == "ko"
+
     // 다이얼로그
     // 1. Dialog : 일일 혈당 입력
     if (showCaliDialog.value) {
@@ -101,8 +106,8 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                 BleBridge.showCaliDialog(false)
                 navController.navigate("GlucoseRegisterScreen")
             },
-            title = "혈당 입력 시간입니다.",
-            content = "정확한 측정을 위해 공복 상태에서 자가 채혈한 혈당값을 입력해 주세요.",
+            title = stringResource(R.string.dialog_daily_enter_glucose_title),
+            content = stringResource(R.string.dialog_daily_enter_glucose_content)
         )
     }
 
@@ -113,8 +118,8 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
             onConfirm = {
                 BleBridge.showBleConnectDialog(false)
             },
-            title = "블루투스 연결이 끊어졌습니다.",
-            content = "센서와의 연결이 일시적으로 끊어졌어요.\n스마트폰을 가까이 두고 연결 상태를 확인하세요.",
+            title = stringResource(R.string.dialog_ble_disconnected_title),
+            content = stringResource(R.string.dialog_ble_disconnected_content)
         )
     }
 
@@ -125,8 +130,8 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
             onConfirm = {
                 BleBridge.showBluetoothOnDialog(false)
             },
-            title = "블루투스가 꺼져있습니다.",
-            content = "블루투스를 켜고 연결 상태를 확인하세요.",
+            title = stringResource(R.string.dialog_bluetooth_off_title),
+            content = stringResource(R.string.dialog_bluetooth_off_content),
         )
     }
 
@@ -184,13 +189,13 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                     } catch (e: Exception) {
                         Log.d("TEST", "sensorOff API통신 실패 : ${e.message}")
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.toast_network_error), Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             },
-            title = "센서의 사용 기간이 종료되었습니다.",
-            content = "센서의 사용 기간이 만료되어 더 이상 측정이 불가합니다. 새 센서를 연결해 주세요.",
+            title = stringResource(R.string.dialog_end_measurement_title),
+            content = stringResource(R.string.dialog_end_measurement_content),
         )
     }
 
@@ -202,8 +207,8 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                 showLowGlucoseDialog(false)
                 NotificationManagerCompat.from(context).cancel(95)
             },
-            title = "혈당수치가 낮습니다.",
-            content = "저혈당 위험이 있어요. 필요시 조치를 취하고, 안정 후 수치를 다시 확인하세요.",
+            title = stringResource(R.string.dialog_low_glucose_title),
+            content = stringResource(R.string.dialog_low_glucose_content),
         )
     }
 
@@ -215,8 +220,8 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                 showHighGlucoseDialog(false)
                 NotificationManagerCompat.from(context).cancel(96)
             },
-            title = "혈당수치가 높습니다.",
-            content = "현재 혈당이 혈당 범위를 초과했어요. 식사나 활동 내용을 확인하세요.",
+            title = stringResource(R.string.dialog_high_glucose_title),
+            content = stringResource(R.string.dialog_high_glucose_content)
         )
     }
 
@@ -241,7 +246,7 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                                     if (deleteUserBody != null) {
                                         if (deleteUserBody.isSuccess) {
                                             withContext(Dispatchers.Main) {
-                                                Toast.makeText(context, "계정이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, context.getString(R.string.toast_delete_account), Toast.LENGTH_SHORT).show()
                                             }
 
                                             // 토큰정리 및 앱 종료
@@ -287,7 +292,7 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                                     if (deleteOauthUserBody != null) {
                                         if (deleteOauthUserBody.isSuccess) {
                                             withContext(Dispatchers.Main) {
-                                                Toast.makeText(context, "계정이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, context.getString(R.string.toast_delete_account), Toast.LENGTH_SHORT).show()
                                             }
 
                                             // 토큰정리 및 앱 종료
@@ -330,8 +335,8 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
             onDismiss = {
                 showDialog.value = false
             },
-            title = "계정 삭제",
-            content = "정말 삭제하시겠습니까?"
+            title = context.getString(R.string.dialog_delete_account),
+            content = context.getString(R.string.dialog_delete_ask_again)
         )
     }
 
@@ -357,7 +362,7 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                 },
                 title = {
                     Text(
-                        text = "계정 삭제",
+                        text = stringResource(R.string.settings_delete_account),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -387,7 +392,7 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                         .padding(top = 20.dp),
                 ) {
                     Text(
-                        text = "계정을 삭제하시겠습니까?",
+                        text = stringResource(R.string.delete_account_title),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                     )
@@ -395,7 +400,7 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Text(
-                        text = "계정을 삭제할 경우",
+                        text = stringResource(R.string.delete_account_sub_title),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                     )
@@ -418,10 +423,7 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
 
                         ){
                             Text(
-                                text = "동일한 이메일 주소를 사용하는 관련 Always"
-                            )
-                            Text(
-                                text = "앱 계정의 모든 데이터를 잃게 됩니다."
+                                text = stringResource(R.string.delete_account_content_1)
                             )
                         }
                     }
@@ -445,10 +447,7 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
 
                         ){
                             Text(
-                                text = "현재 사용하고 계신 Always 제품의 연결이 끊"
-                            )
-                            Text(
-                                text = "기게 됩니다."
+                                text = stringResource(R.string.delete_account_content_2)
                             )
                         }
                     }
@@ -456,29 +455,23 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                     Spacer(modifier = Modifier.height(30.dp))
 
                     Text(
-                        text = "계정을 삭제하면 이 앱에서 로그아웃됩니다."
-                    )
-                    Text(
-                        text = "세션이 만료되기까지 최대 1시간이 소요 될 수 있습니다."
+                        text = stringResource(R.string.delete_account_content_3)
                     )
 
                     Spacer(modifier = Modifier.height(30.dp))
 
                     Text(
-                        text = "계정 삭제 후 다시 돌아오셔서 새로운 계정을 만들 수"
-                    )
-                    Text(
-                        text = "있습니다."
+                        text = stringResource(R.string.delete_account_content_4)
                     )
 
                     Spacer(modifier = Modifier.height(30.dp))
 
                     Text(
-                        text = "계정을 삭제하시겠습니까?",
+                        text = stringResource(R.string.delete_account_alert_1),
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "(실행 취소는 불가능 합니다.)",
+                        text = stringResource(R.string.delete_account_alert_2),
                         fontWeight = FontWeight.Bold
                     )
 
@@ -500,7 +493,7 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = "예, 계정을 삭제하겠습니다.",
+                            text = stringResource(R.string.delete_check_description),
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -513,18 +506,18 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                             .height(50.dp)
                     ) {
                         Image(
-                            painter = painterResource(R.drawable.btn_delete_account),
+                            painter = painterResource(id = if (isKorean) R.drawable.btn_delete_account else R.drawable.btn_eng_delete),
                             contentDescription = "계정 삭제 버튼",
                             modifier = Modifier.align(Alignment.Center)
                                 .clickable {
                                     if (!isCheck) {
-                                        Toast.makeText(context, "삭제를 체크해 주세요.", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.toast_check_delete), Toast.LENGTH_SHORT).show()
                                     } else {
                                         if (NetworkUtil.isNetworkAvailable(context)) {
                                             showDialog.value = true
 
                                         } else {
-                                            Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, context.getString(R.string.toast_network_error), Toast.LENGTH_SHORT).show()
                                         }
                                     }
                                 }
@@ -539,7 +532,7 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                             .height(50.dp)
                     ) {
                         Image(
-                            painter = painterResource(R.drawable.btn_cancel),
+                            painter = painterResource(id = if (isKorean) R.drawable.btn_cancel else R.drawable.btn_eng_cancel),
                             contentDescription = "취소 버튼",
                             modifier = Modifier.align(Alignment.Center)
                                 .clickable {

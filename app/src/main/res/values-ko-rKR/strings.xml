@@ -132,6 +132,41 @@
     <string name="settings_log_out">로그아웃</string>
     <string name="settings_sensor_off">센서 종료</string>
     <string name="settings_delete_account">계정 삭제</string>
+    <string name="settings_login_email">현재 이메일 계정</string>
+    <string name="settings_target_glucose_range">목표 혈당 범위</string>
+    <string name="target_glucose_description">일반적인 목표 혈당범위는 80~130mg/dL이며, 식후 최대 혈당은 180mg/dL 미만입니다.</string>
+    <string name="day">일</string>
+    <string name="today">오늘이에요</string>
+    <string name="status_expired">기간이 지났어요</string>
+    <string name="serial_number">시리얼 번호</string>
+    <string name="sensor_start_day">센서 시작일</string>
+    <string name="version">버전</string>
+    <string name="low_glucose_notification">저혈당 알림</string>
+    <string name="high_glucose_notification">고혈당 알림</string>
+    <string name="low_glucose">저혈당</string>
+    <string name="high_glucose">고혈당</string>
+    <string name="am11">오전 11:00</string>
+    <string name="lost_signal">신호 소실</string>
+    <string name="sensor_expired">센서 만료</string>
+    <string name="sensor_stabilization">센서 안정화</string>
+    <string name="glucose_entry_time_notificaition">혈당값 입력 시간 알림</string>
+    <string name="delete_account_title">계정을 삭제하시겠습니까?</string>
+    <string name="delete_account_sub_title">계정을 삭제할 경우</string>
+    <string name="delete_account_content_1">동일한 이메일 주소를 사용하는 관련 Always\n앱 계정의 모든 데이터를 잃게 됩니다.</string>
+    <string name="delete_account_content_2">현재 사용하고 계신 Always 제품의 연결이 끊\n기게 됩니다.</string>
+    <string name="delete_account_content_3">계정을 삭제하면 이 앱에서 로그아웃됩니다.\n세션이 만료되기까지 최대 1시간이 소요 될 수 있습니다.</string>
+    <string name="delete_account_content_4">계정 삭제 후 다시 돌아오셔서 새로운 계정을 만들 수\n있습니다.</string>
+    <string name="delete_account_alert_1">계정을 삭제하시겠습니까?</string>
+    <string name="delete_account_alert_2">(실행 취소는 불가능 합니다.)</string>
+    <string name="delete_check_description">예, 계정을 삭제하겠습니다.</string>
+    <string name="item_meal">식사</string>
+    <string name="item_exercise">운동</string>
+    <string name="item_insulin">인슐린</string>
+    <string name="register_memo">메모</string>
+    <string name="enter_glucose_level">혈당값 입력</string>
+    <string name="enter_glucose_level_title">자가측정혈당수치를\n입력해 주세요.</string>
+    <string name="enter_glucose_level_hint">혈당을 입력해 주세요.</string>
+    <string name="enter_glucose_level_sub_title">정확한 데이터를 위해서\n최소 식후 2시간 후\n입력하는 것이 좋습니다..</string>
 
     <!--  토스트 -->
     <string name="toast_network_error">네트워크를 확인해 주세요.</string>
@@ -176,9 +211,31 @@
     <string name="toast_invalid_glucose_too_low">입력한 혈당이 비정상적으로 낮습니다. 혈당계를 다시 사용해 측정해 주세요.</string>
     <string name="toast_req_glucose">혈당을 입력해 주세요.</string>
     <string name="toast_empty_serial_number">시리얼 넘버를 입력해 주세요.</string>
+    <string name="toast_empty_value_alert">빈 값이 있습니다.\n모든 정보를 입력해 주세요.</string>
+    <string name="toast_req_time">시간을 입력해 주세요.</string>
+    <string name="toast_enter_only_number">숫자만 입력해 주세요.</string>
+    <string name="toast_enter_glucose">혈당을 입력해 주세요.</string>
+    <string name="toast_delete_account">계정이 삭제되었습니다.</string>
+    <string name="toast_check_delete">삭제를 체크해 주세요.</string>
+    <string name="toast_enter_memo">메모를 입력해 주세요.</string>
+    <string name="toast_loading_data">데이터를 가져오는 중입니다..\n잠시만 기다려주세요..</string>
+    <string name="toast_turn_on_bluetooth">블루투스를 켜주세요.</string>
+    <string name="toast_check_serial_number">시리얼 넘버를 다시 확인해 주세요.</string>
 
     <!--  노티 -->
     <string name="notification_sensor_ready">센서가 준비되었습니다.</string>
+    <string name="notification_bluetooth_off">블루투스가 꺼져있습니다</string>
+    <string name="notification_always_running">Always가 작동 중입니다.</string>
+    <string name="notification_agms_running">AGMS 실행 중</string>
+    <string name="notification_alert_high_glucose">고혈당 주의</string>
+    <string name="notification_alert_high_glucose_description">고혈당이 감지되었습니다. \n현재 혈당 : </string>
+    <string name="notification_alert_low_glucose">저혈당 주의</string>
+    <string name="notification_alert_low_glucose_description">저혈당이 감지되었습니다. \n현재 혈당 : </string>
+    <string name="notification_time_to_enter_daily_glucose">혈당 입력 시간입니다</string>
+    <string name="notification_time_to_enter_daily_glucose_description">오늘의 혈당을 입력해 주세요</string>
+    <string name="notification_end_measurement_check_app">측정이 종료되었습니다</string>
+    <string name="notification_end_measurement_check_app_description">앱을 확인해 주세요</string>
+    <string name="notification_disconnect_ble">센서와의 연결이 일시적으로 끊어졌어요</string>
 
     <!--  다이얼로그 -->
     <string name="dialog_daily_enter_glucose_title">혈당 입력 시간입니다.</string>
@@ -200,6 +257,15 @@
     <string name="dialog_ok">확인</string>
     <string name="dialog_yes">예</string>
     <string name="dialog_no">아니오</string>
+    <string name="glucose_reminder_glucose_entry_time">혈당값 입력 시간</string>
+    <string name="glucose_reminder_hour">시</string>
+    <string name="glucose_reminder_minute">분</string>
+    <string name="glucose_reminder_am">오전</string>
+    <string name="glucose_reminder_pm">오후</string>
+    <string name="glucose_reminder_cancel">취소</string>
+    <string name="glucose_reminder_enter">입력</string>
+    <string name="dialog_delete_account">계정 삭제</string>
+    <string name="dialog_delete_ask_again">정말 삭제하시겠습니까?</string>
 
     <!--  BLE 권한 -->
     <string name="permission_access_fine_location">BLE 연결을 위해 위치 권한을 허용해 주세요.</string>

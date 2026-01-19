@@ -21,9 +21,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -41,19 +39,15 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil.network.HttpException
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
@@ -67,6 +61,7 @@ import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.NetworkUtil.isNetworkAvailable
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseLoginError
 import kr.co.uxn.agms_p.api.token.DataStoreManager
+import kr.co.uxn.agms_p.ui.components.main.AlwaysDialog
 
 @Composable
 fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
@@ -76,6 +71,9 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val isLoading by viewModel.isLoading.collectAsState()
+
+    var showDuplicateLoginDialog = viewModel.isShowDuplicateLoginDialog.collectAsState()
+
 
     val currentLanguage = Locale.current.language
     val isKorean = currentLanguage == "ko"
@@ -91,6 +89,15 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
 
     LaunchedEffect(Unit) {
         viewModel.updateIsLoading(false)
+    }
+
+    if (showDuplicateLoginDialog.value) {
+        AlwaysDialog(
+            onDismiss = { viewModel.showDuplicateLoginDialog(false)},
+            onConfirm = { }, // 중복 로그인인거 인지했고 진행해주세요라고 서버에 전송하는 로직 필요
+            title = "다른 기기에서 사용 중인 센서가 있어요!",
+            content = "로그인하면 기존 연결은 종료되고, 새로운 측정이 시작됩니다."
+        )
     }
 
     Surface(
@@ -361,12 +368,18 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                             }
                                         } else {
                                             Log.e("TEST", "API통신 실패 : ${login.errorBody()?.string()}")
+
+                                            // 추후 예외처리
+
                                         }
+//                                        else if (httpCode == xxx) {
+//                                            viewModel.showDuplicateLoginDialog(true)
+//                                        }
                                     } catch (exception: Exception) {
-                                    Log.e("TEST", "네트워크 에러 : ${exception.message}")
-                                    withContext(Dispatchers.Main) {
-                                        Toast.makeText(context, R.string.toast_login_error_incorrect_account_info, Toast.LENGTH_SHORT).show()
-                                    }
+                                        Log.e("TEST", "네트워크 에러 : ${exception.message}")
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(context, R.string.toast_login_error_incorrect_account_info, Toast.LENGTH_SHORT).show()
+                                        }
                                     }
                                 }
                             } else {
@@ -374,6 +387,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                             }
                         } else {
                             Toast.makeText(context, R.string.toast_login_error, Toast.LENGTH_SHORT).show()
+
                         }
                     },
                 contentAlignment = Alignment.CenterStart

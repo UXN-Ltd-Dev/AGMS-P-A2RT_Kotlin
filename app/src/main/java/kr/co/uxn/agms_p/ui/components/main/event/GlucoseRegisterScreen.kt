@@ -44,6 +44,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -75,6 +76,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.abs
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GlucoseRegisterScreen(
@@ -92,6 +94,11 @@ fun GlucoseRegisterScreen(
     val localDbRepository by lazy {
         AppDatabase.getInstance(context)
     }
+
+    val currentLanguage = androidx.compose.ui.text.intl.Locale.current.language
+    val isKorean = currentLanguage == "ko"
+
+
 //    LaunchedEffect(Unit) {
 //        val now = LocalDateTime.now()
 //            .format(DateTimeFormatter.ofPattern("yyyy.MM.dd. a h:mm"))
@@ -120,7 +127,7 @@ fun GlucoseRegisterScreen(
                 },
                 title = {
                     Text(
-                        text = "혈당값 입력",
+                        text = stringResource(R.string.enter_glucose_level),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -168,7 +175,7 @@ fun GlucoseRegisterScreen(
 
                 Text(
                     modifier = Modifier.fillMaxWidth(),
-                    text = "자가측정혈당수치를\n입력해 주세요.",
+                    text = stringResource(R.string.enter_glucose_level_title),
                     fontWeight = FontWeight.Medium,
                     fontSize = 23.sp,
                     color = Color(0xFF385DAB),
@@ -186,7 +193,7 @@ fun GlucoseRegisterScreen(
                             if (focusState.isFocused) {
                                 hint.value = "" // 포커스가 들어가면 힌트를 비웁니다
                             } else if (glucoseDataFromUser.value.isEmpty()) {
-                                hint.value = "혈당을 입력해 주세요." // 포커스를 잃고 입력값이 비어있다면 힌트를 다시 보여줍니다.
+                                hint.value = context.getString(R.string.enter_glucose_level_hint) // 포커스를 잃고 입력값이 비어있다면 힌트를 다시 보여줍니다.
                             }
                         },
                     textStyle = TextStyle(
@@ -218,7 +225,7 @@ fun GlucoseRegisterScreen(
 
                 Text(
                     modifier = Modifier.fillMaxWidth(),
-                    text = "정확한 데이터를 위해서\n최소 식후 2시간 후\n입력하는 것이 좋습니다.",
+                    text = stringResource(R.string.enter_glucose_level_sub_title),
                     fontWeight = FontWeight.Medium,
                     fontSize = 20.sp,
                     color = Color.Gray,
@@ -234,7 +241,7 @@ fun GlucoseRegisterScreen(
                         .padding(bottom = 20.dp)
                 ) {
                     Image(
-                        painter = painterResource(R.drawable.btn_save),
+                        painter = painterResource(id = if (isKorean) R.drawable.btn_save else R.drawable.btn_eng_save),
                         contentDescription = "저장 버튼",
                         modifier = Modifier
                             .align(Alignment.Center)
@@ -243,18 +250,18 @@ fun GlucoseRegisterScreen(
                                     glucoseDataFromUser.value.contains("-") ||
                                     glucoseDataFromUser.value.contains(",")
                                 ) {
-                                    Toast.makeText(context, "숫자만 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_enter_only_number), Toast.LENGTH_SHORT).show()
                                 } else if (glucoseDataFromUser.value != "") {
                                     if (glucoseDataFromUser.value.toInt() > 350 ) {
                                         coroutineScope.launch(Dispatchers.Main) {
-                                            Toast.makeText(context, "입력한 혈당이 비정상적으로 높습니다. 혈당계를 다시 사용해 측정해 주세요.", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, context.getString(R.string.toast_invalid_glucose_too_high), Toast.LENGTH_SHORT).show()
                                         }
                                         return@clickable
                                     }
 
                                     if (glucoseDataFromUser.value.toInt() < 50) {
                                         coroutineScope.launch(Dispatchers.Main) {
-                                            Toast.makeText(context, "입력한 혈당이 비정상적으로 낮습니다. 혈당계를 다시 사용해 측정해 주세요.", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, context.getString(R.string.toast_invalid_glucose_too_low), Toast.LENGTH_SHORT).show()
                                         }
                                         return@clickable
                                     }
@@ -342,7 +349,7 @@ fun GlucoseRegisterScreen(
                                                 withContext(Dispatchers.Main) {
                                                     Toast.makeText(
                                                         context,
-                                                        "네트워크를 확인해 주세요.",
+                                                        context.getString(R.string.toast_network_error),
                                                         Toast.LENGTH_SHORT
                                                     ).show()
                                                 }
@@ -357,7 +364,7 @@ fun GlucoseRegisterScreen(
                                         }
                                     }
                                 } else {
-                                    Toast.makeText(context, "혈당을 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_req_glucose), Toast.LENGTH_SHORT).show()
                                 }
                             }
                     )

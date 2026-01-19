@@ -34,6 +34,14 @@ class BleViewModel(application: Application) : AndroidViewModel(application) {
     private val _bleConnectStatusEvent = MutableSharedFlow<String>(replay = 0)
     val bleConnectStatusEvent = _events.asSharedFlow()
 
+    private val _showDuplicateLoginSessionOffDialog = MutableStateFlow(false)
+    val showDuplicateLoginSessionOffDialog = _showDuplicateLoginSessionOffDialog.asStateFlow()
+
+    fun showDuplicateLoginSessionOffDialog(isShow: Boolean) {
+        _showDuplicateLoginSessionOffDialog.value = isShow
+    }
+
+
     val bleState: StateFlow<BleConnectionState> = BleBridge.bleState
         .stateIn(
             scope = viewModelScope,

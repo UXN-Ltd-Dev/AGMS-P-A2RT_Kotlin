@@ -48,6 +48,10 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
+    // 중복 로그인
+    private val _isShowDuplicateLoginDialog = MutableStateFlow(false)
+    val isShowDuplicateLoginDialog: StateFlow<Boolean> = _isShowDuplicateLoginDialog
+
     fun updateIsLoading(isLoading: Boolean) {
         _isLoading.value = isLoading
     }
@@ -60,6 +64,10 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             handleKakaoLogin(activityContext)
         }
+    }
+
+    fun showDuplicateLoginDialog(isShow: Boolean) {
+        _isShowDuplicateLoginDialog.value = isShow
     }
 
     fun apiTest() {

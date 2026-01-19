@@ -89,8 +89,7 @@ fun GuideScreen3(navController: NavController) {
 
             Text(
                 modifier = Modifier.fillMaxWidth()
-                    .height(55.dp)
-                    .padding(bottom = 5.dp),
+                    .padding(horizontal = 30.dp),
                 textAlign = TextAlign.Center,
                 text = stringResource(R.string.guide_description_3),
                 fontSize = 20.sp

@@ -116,7 +116,7 @@ class BleManager(
 //                removeDeviceBond()
 
 
-                // 본딩 작업 시작
+                // 본딩 작업 필요에따라 주석처리할 것.
 //                val mDevice = gatt?.device?.bondState
 //                if (mDevice == BluetoothDevice.BOND_NONE) {
 //                    val result =  gatt?.device?.createBond()
@@ -150,7 +150,7 @@ class BleManager(
                         withContext(Dispatchers.Main) {
                             sendNotification(
                                 context,
-                                "센서와의 연결이 일시적으로 끊어졌어요",
+                                context.getString(R.string.notification_disconnect_ble),
                                 "",
                                 92
                             )
@@ -245,7 +245,7 @@ class BleManager(
             CoroutineScope(Dispatchers.Main).launch {
                 Toast.makeText(
                     context,
-                    "데이터를 가져오는 중입니다.. \n잠시만 기다려주세요..",
+                    context.getString(R.string.toast_loading_data),
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -817,5 +817,4 @@ class BleManager(
             .build()
         NotificationManagerCompat.from(context).notify(notificationId, notification)
     }
-
 }

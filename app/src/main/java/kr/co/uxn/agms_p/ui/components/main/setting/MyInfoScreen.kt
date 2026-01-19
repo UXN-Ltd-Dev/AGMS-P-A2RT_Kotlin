@@ -54,10 +54,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -121,6 +123,10 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
         AppDatabase.getInstance(context)
     }
 
+    val currentLanguage = Locale.current.language
+    val isKorean = currentLanguage == "ko"
+
+
     LaunchedEffect(Unit) {
         try {
             val userId = DataStoreManager.getUserId().first() ?: -1
@@ -133,13 +139,40 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                     if (userData.isSuccess) {
                         email.value = userData.email
                         name.value = userData.name
-                        sex.value = userData.sex
                         age.value = userData.age.toString()
                         height.value = userData.height.toString()
                         weight.value = userData.weight.toString()
-                        diabetesType.value = userData.diabetesType
                         targetMaxRange.value = userData.targetGlucoseMax.toString()
                         targetMinRange.value = userData.targetGlucoseMin.toString()
+                        if (isKorean) {
+                            sex.value = userData.sex
+                            diabetesType.value = userData.diabetesType
+                        } else {
+                            if(userData.sex == "남성") {
+                                sex.value = "Male"
+                            } else if(userData.sex == "여성") {
+                                sex.value = "Female"
+                            } else {
+                                sex.value = "Prefer not to say"
+                            }
+
+                            if(userData.diabetesType == "정상") {
+                                diabetesType.value = "Normal"
+                            } else if(userData.diabetesType == "당뇨 전단계") {
+                                diabetesType.value = "Prediabetes"
+                            } else if(userData.diabetesType == "제1형 당뇨병") {
+                                diabetesType.value = "Type 1 Diabetes"
+                            } else if(userData.diabetesType == "제2형 당뇨병") {
+                                diabetesType.value = "Type 2 Diabetes"
+                            } else if(userData.diabetesType == "임신성 당뇨병") {
+                                diabetesType.value = "Gestational Diabetes"
+                            } else if(userData.diabetesType == "LADA") {
+                                diabetesType.value = "LADA"
+                            } else { // "모름"
+                                diabetesType.value = "Unknown"
+                            }
+
+                        }
                     }
                 }
             } else {
@@ -159,8 +192,8 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                 BleBridge.showCaliDialog(false)
                 navController.navigate("GlucoseRegisterScreen")
             },
-            title = "혈당 입력 시간입니다.",
-            content = "정확한 측정을 위해 공복 상태에서 자가 채혈한 혈당값을 입력해 주세요.",
+            title = stringResource(R.string.dialog_daily_enter_glucose_title),
+            content = stringResource(R.string.dialog_daily_enter_glucose_content)
         )
     }
 
@@ -171,8 +204,8 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
             onConfirm = {
                 BleBridge.showBleConnectDialog(false)
             },
-            title = "블루투스 연결이 끊어졌습니다.",
-            content = "센서와의 연결이 일시적으로 끊어졌어요.\n스마트폰을 가까이 두고 연결 상태를 확인하세요.",
+            title = stringResource(R.string.dialog_ble_disconnected_title),
+            content = stringResource(R.string.dialog_ble_disconnected_content)
         )
     }
 
@@ -183,8 +216,8 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
             onConfirm = {
                 BleBridge.showBluetoothOnDialog(false)
             },
-            title = "블루투스가 꺼져있습니다.",
-            content = "블루투스를 켜고 연결 상태를 확인하세요.",
+            title = stringResource(R.string.dialog_bluetooth_off_title),
+            content = stringResource(R.string.dialog_bluetooth_off_content),
         )
     }
 
@@ -242,13 +275,13 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                     } catch (e: Exception) {
                         Log.d("TEST", "sensorOff API통신 실패 : ${e.message}")
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.toast_network_error), Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             },
-            title = "센서의 사용 기간이 종료되었습니다.",
-            content = "센서의 사용 기간이 만료되어 더 이상 측정이 불가합니다. 새 센서를 연결해 주세요.",
+            title = stringResource(R.string.dialog_end_measurement_title),
+            content = stringResource(R.string.dialog_end_measurement_content),
         )
     }
 
@@ -260,8 +293,8 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                 showLowGlucoseDialog(false)
                 NotificationManagerCompat.from(context).cancel(95)
             },
-            title = "혈당수치가 낮습니다.",
-            content = "저혈당 위험이 있어요. 필요시 조치를 취하고, 안정 후 수치를 다시 확인하세요.",
+            title = stringResource(R.string.dialog_low_glucose_title),
+            content = stringResource(R.string.dialog_low_glucose_content),
         )
     }
 
@@ -273,8 +306,8 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                 showHighGlucoseDialog(false)
                 NotificationManagerCompat.from(context).cancel(96)
             },
-            title = "혈당수치가 높습니다.",
-            content = "현재 혈당이 혈당 범위를 초과했어요. 식사나 활동 내용을 확인하세요.",
+            title = stringResource(R.string.dialog_high_glucose_title),
+            content = stringResource(R.string.dialog_high_glucose_content)
         )
     }
 
@@ -298,7 +331,7 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                 },
                 title = {
                     Text(
-                        text = "내 정보",
+                        text = stringResource(R.string.settings_profile),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -330,7 +363,7 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                 ) {
                     // 내 정보를 입력하세요.
                     Text(
-                        text = "현재 이메일 계정",
+                        text = stringResource(R.string.settings_login_email),
                         fontSize = 18.sp,
                         color = Color(0xFF828282),
                         fontWeight = FontWeight.Medium,
@@ -358,7 +391,7 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                             .padding(start = 50.dp)
                     ) {
                         Text(
-                            text = "이름",
+                            text = stringResource(R.string.label_name),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -427,7 +460,7 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                         modifier = Modifier.padding(start = 50.dp)
                     ) {
                         Text(
-                            text = "성별",
+                            text = stringResource(R.string.label_gender),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -468,12 +501,12 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = "남성",
+                                        text = stringResource(R.string.item_gender_male),
                                         fontSize = 20.sp
                                     )
                                 },
                                 onClick = {
-                                    sex.value = "남성"
+                                    sex.value = context.getString(R.string.item_gender_male)
                                     expanded = !expanded
                                 }
                             )
@@ -481,12 +514,12 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = "여성",
+                                        text = stringResource(R.string.item_gender_female),
                                         fontSize = 20.sp
                                     )
                                 },
                                 onClick = {
-                                    sex.value = "여성"
+                                    sex.value = context.getString(R.string.item_gender_female)
                                     expanded = !expanded
                                 }
                             )
@@ -494,12 +527,12 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = "선택 안함",
+                                        text = stringResource(R.string.item_gender_none),
                                         fontSize = 20.sp
                                     )
                                 },
                                 onClick = {
-                                    sex.value = "선택 안함"
+                                    sex.value = context.getString(R.string.item_gender_none)
                                     expanded = !expanded
                                 }
                             )
@@ -514,7 +547,7 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                         modifier = Modifier.padding(start = 50.dp)
                     ) {
                         Text(
-                            text = "연령",
+                            text = stringResource(R.string.label_age),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -582,7 +615,7 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                         modifier = Modifier.padding(start = 50.dp)
                     ) {
                         Text(
-                            text = "신장",
+                            text = stringResource(R.string.label_height),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -649,7 +682,7 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                         modifier = Modifier.padding(start = 50.dp)
                     ) {
                         Text(
-                            text = "체중",
+                            text = stringResource(R.string.label_weight),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -717,7 +750,7 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                         modifier = Modifier.padding(start = 50.dp)
                     ) {
                         Text(
-                            text = "당뇨 유형",
+                            text = stringResource(R.string.label_diabetes_type),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -764,12 +797,12 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = "정상",
+                                        text = stringResource(R.string.item_diabetes_type_normal),
                                         fontSize = 20.sp
                                     )
                                },
                                 onClick = {
-                                    diabetesType.value = "정상"
+                                    diabetesType.value = context.getString(R.string.item_diabetes_type_normal)
                                     expandedForDiabetesType = !expandedForDiabetesType
                                 }
                             )
@@ -777,12 +810,12 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = "당뇨 전단계",
+                                        text = stringResource(R.string.item_diabetes_type_prediabetes),
                                         fontSize = 20.sp
                                     )
                                 },
                                 onClick = {
-                                    diabetesType.value = "당뇨 전단계"
+                                    diabetesType.value = context.getString(R.string.item_diabetes_type_prediabetes)
                                     expandedForDiabetesType = !expandedForDiabetesType
                                 }
                             )
@@ -790,12 +823,12 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = "제1형 당뇨병",
+                                        text = stringResource(R.string.item_diabetes_type_1),
                                         fontSize = 20.sp
                                     )
                                 },
                                 onClick = {
-                                    diabetesType.value = "제1형 당뇨병"
+                                    diabetesType.value = context.getString(R.string.item_diabetes_type_1)
                                     expandedForDiabetesType = !expandedForDiabetesType
                                 }
                             )
@@ -803,12 +836,12 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = "제2형 당뇨병",
+                                        text = stringResource(R.string.item_diabetes_type_2),
                                         fontSize = 20.sp
                                     )
                                },
                                 onClick = {
-                                    diabetesType.value = "제2형 당뇨병"
+                                    diabetesType.value = context.getString(R.string.item_diabetes_type_2)
                                     expandedForDiabetesType = !expandedForDiabetesType
                                 }
                             )
@@ -816,12 +849,12 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = "임신성 당뇨병",
+                                        text = stringResource(R.string.item_diabetes_type_gestational),
                                         fontSize = 20.sp
                                     )
                                },
                                 onClick = {
-                                    diabetesType.value = "임신성 당뇨병"
+                                    diabetesType.value = context.getString(R.string.item_diabetes_type_gestational)
                                     expandedForDiabetesType = !expandedForDiabetesType
                                 }
                             )
@@ -829,12 +862,12 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = "LADA",
+                                        text = stringResource(R.string.item_diabetes_type_lada),
                                         fontSize = 20.sp
                                     )
                                 },
                                 onClick = {
-                                    diabetesType.value = "LADA"
+                                    diabetesType.value = context.getString(R.string.item_diabetes_type_lada)
                                     expandedForDiabetesType = !expandedForDiabetesType
                                 }
                             )
@@ -842,12 +875,12 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = "모름",
+                                        text = stringResource(R.string.item_diabetes_type_unknown),
                                         fontSize = 20.sp
                                     )
                                 },
                                 onClick = {
-                                    diabetesType.value = "모름"
+                                    diabetesType.value = context.getString(R.string.item_diabetes_type_unknown)
                                     expandedForDiabetesType = !expandedForDiabetesType
                                 }
                             )
@@ -865,7 +898,7 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                             .padding(start = 50.dp)
                     ) {
                         Text(
-                            text = "목표 혈당 범위",
+                            text = stringResource(R.string.settings_target_glucose_range),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -1001,7 +1034,7 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                             .padding(horizontal = 30.dp),
                     ) {
                         Text(
-                            text = "일반적인 목표 혈당범위는 80~130mg/dL이며, 식후 최대 혈당은 180mg/dL 미만입니다.",
+                            text = stringResource(R.string.target_glucose_description),
                             fontSize = 14.sp,
                             color = Color.Gray
                         )
@@ -1013,7 +1046,7 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                         contentAlignment = Alignment.BottomCenter
                     ) {
                         Image(
-                            painter = painterResource(R.drawable.btn_save),
+                            painter = painterResource(id = if(isKorean) R.drawable.btn_save else R.drawable.btn_eng_save),
                             contentDescription = "저장 버튼",
                             modifier = Modifier
                                 .align(Alignment.Center)
@@ -1024,20 +1057,20 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                                             Log.e("TEST", "저장버튼 에서 불러온 userId : ${userId}")
 
                                             val sex = when (sex.value) {
-                                                "남성" -> 1601
-                                                "여성" -> 1602
+                                                context.getString(R.string.item_gender_male) -> 1601
+                                                context.getString(R.string.item_gender_female) -> 1602
                                                 else -> 1603
                                             }
 
                                             Log.e("TEST", "코드로 변환된 sex : ${sex}")
 
                                             val diabetesType = when (diabetesType.value) {
-                                                "제1형 당뇨병" -> 1701
-                                                "제2형 당뇨병" -> 1702
-                                                "임신성 당뇨병" -> 1703
-                                                "당뇨 전단계" -> 1704
-                                                "LADA" -> 1705
-                                                "정상" -> 1706
+                                                context.getString(R.string.item_diabetes_type_1) -> 1701
+                                                context.getString(R.string.item_diabetes_type_2) -> 1702
+                                                context.getString(R.string.item_diabetes_type_gestational) -> 1703
+                                                context.getString(R.string.item_diabetes_type_prediabetes) -> 1704
+                                                context.getString(R.string.item_diabetes_type_lada) -> 1705
+                                                context.getString(R.string.item_diabetes_type_normal) -> 1706
                                                 else -> 1707
                                             }
 
@@ -1082,7 +1115,7 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                                                 if(e.message!!.contains("For input string")) {
                                                  Log.d("TEST", "입력 문구 확인")
                                                     coroutineScope.launch(Dispatchers.Main) {
-                                                        Toast.makeText(context, "빈 값이 있습니다.\n모든 정보를 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(context, context.getString(R.string.toast_empty_value_alert), Toast.LENGTH_SHORT).show()
                                                     }
                                                 }
                                             }

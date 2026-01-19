@@ -1,120 +1,94 @@
 package kr.co.uxn.agms_p.api.token
 
 import android.util.Log
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kr.co.uxn.agms_p.api.RetrofitClient
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kr.co.uxn.agms_p.api.RetrofitClient.refreshRetrofit
-import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestRefreshToken
-import kr.co.uxn.agms_p.ui.viewmodel.AuthEventNotifier
 import okhttp3.Authenticator
+import okhttp3.Request
 import okhttp3.Response
 import okhttp3.Route
-import okhttp3.Request
 
-// 401 에러가 났을경우, 리프레쉬토큰을 헤더에 담아서 요청
-class TokenAuthenticator() : Authenticator {
+class TokenAuthenticator : Authenticator {
+
+    // 1. Mutex 인스턴스 생성 (동기화 락 역할)
+    private val mutex = Mutex()
+
     override fun authenticate(route: Route?, response: Response): Request? {
-
         Log.d("AUTH", "authenticator 진입")
 
-        if (responseCount(response) >= 2) return null
-
-        val refreshToken = runBlocking {
-            DataStoreManager.getRefreshToken().first()
-        }
-        val userId = runBlocking {
-            DataStoreManager.getUserId().first() ?: -1
-        }
-
-//        if (response.message == "REFRESH_TOKEN_EXPIRED") {
-//            // 이벤트 전송
-//            // 메인 엑티비티에서 수신하다고 있다가, 로그인화면으로 이동.
-//            AuthEventNotifier.notifyRefreshTokenExpired()
-//            response.close()
-//            return null
-//        }
-
-        if (refreshToken.isNullOrEmpty()) {
-            response.close()
+        // 2. 무한 루프 방지 (기존 코드 유지)
+        if (responseCount(response) >= 2) {
+            Log.d("AUTH", "response count가 2이상으로 return null")
             return null
         }
 
-//        runBlocking {
-//            val result = tokenRetrofit.getNewAccessToken(RequestRefreshToken(userId, refreshToken))
-//            val newAccessToken = result.body()?.accessToken
-//            if (newAccessToken != null) {
-//                DataStoreManager.deleteAccessToken()
-//                DataStoreManager.saveAccessToken(newAccessToken)
-//            }
-//        }
-//        if (response.code == 401) {
-//            // 이벤트 전송
-//            // 메인엑티비에서 수신하다고 있다가, 로그인화면으로 이동.
-//            Log.d("AUTH", "TOKEN Expired")
-//            response.close()
-//            return null
-//        }
+        return runBlocking {
+            // 3. Mutex 획득 (한 번에 하나의 스레드만 진입)
+            mutex.withLock {
 
-        return newRequestWithToken(refreshToken, userId, response.request)
+                // 4. [중요] 락을 얻은 후, 현재 저장된 토큰을 다시 확인합니다.
+                // 대기하던 다른 요청이 이미 토큰을 갱신했을 수 있기 때문입니다.
+                val currentAccessToken = DataStoreManager.getAccessToken().first()
+                val currentRefreshToken = DataStoreManager.getRefreshToken().first()
+                val userId = DataStoreManager.getUserId().first() ?: -1
+
+                // 방금 실패한 요청(response)의 헤더에 있던 토큰 추출
+                val failedAccessToken = response.request.header("Authorization")
+                    ?.replace("Bearer ", "")
+
+                // 5. 시나리오 분기
+                // Case A: 저장소의 토큰이 요청 실패한 토큰과 다르다면? -> 이미 다른 요청이 갱신 성공함!
+                if (currentAccessToken != null && currentAccessToken != failedAccessToken) {
+                    Log.d("AUTH", "이미 다른 스레드에서 토큰이 갱신되었습니다. 재요청만 진행합니다.")
+                    return@withLock newRequestWithAccessToken(response.request, currentAccessToken)
+                }
+
+                // Case B: 여전히 토큰이 같다면? -> 내가 갱신해야 함 (API 호출)
+                Log.d("AUTH", "토큰 갱신 API 호출 시작")
+
+                // 리프레시 토큰이 없거나 유저 아이디가 없으면 종료
+                if (currentRefreshToken.isNullOrEmpty() || userId == -1) {
+                    return@withLock null
+                }
+
+                try {
+                    val tokenResponse = refreshRetrofit.getNewAccessToken(
+                        refreshToken = "Bearer $currentRefreshToken",
+                        userInfo = RequestRefreshToken(userId, currentRefreshToken)
+                    )
+
+                    if (tokenResponse.isSuccessful && tokenResponse.body() != null) {
+                        val newAccessToken = tokenResponse.body()!!.accessToken
+
+                        // 새 토큰 저장
+                        DataStoreManager.deleteAccessToken()
+                        DataStoreManager.saveAccessToken(newAccessToken)
+                        Log.d("AUTH", "토큰 갱신 및 저장 성공")
+
+                        return@withLock newRequestWithAccessToken(response.request, newAccessToken)
+                    } else {
+                        Log.e("AUTH", "API 에러: ${tokenResponse.errorBody()?.string()}")
+                        return@withLock null
+                    }
+                } catch (e: Exception) {
+                    Log.e("AUTH", "네트워크 에러: ${e.message}")
+                    return@withLock null
+                }
+            }
+        }
     }
 
-    private fun newRequestWithToken(refreshToken: String, userId: Int, request: Request): Request? {
-        Log.d("TEST", "newRequestWithToken() 0 call!")
-        if (userId == -1) {
-            return null
-        }
-
-        Log.d("TEST", "newRequestWithToken() 1 call!")
-
-
-        val newAccessToken: String? = runBlocking {
-            try {
-                Log.d("TEST", "newRequestWithToken() 3 call!")
-                val response = refreshRetrofit.getNewAccessToken(
-                    refreshToken = "Bearer $refreshToken",
-                    userInfo = RequestRefreshToken(userId, refreshToken)
-                    )
-                if (response.isSuccessful) {
-                    val responseBody = response.body()
-                    Log.d("TEST", "newRequestWithToken() 4 call!")
-                    if (responseBody != null) {
-
-                        Log.d("TEST", "newRequestWithToken() 5 call!")
-                        Log.d("TEST", "body : ${responseBody.toString()}")
-                        DataStoreManager.deleteAccessToken()
-                        DataStoreManager.saveAccessToken(responseBody.accessToken)
-//                        Log.d("TEST", "새 accessToken 저장 완료: ${responseBody.accessToken}")
-                        return@runBlocking responseBody.accessToken
-                    }
-                } else {
-                    Log.e("TEST", "API 에러 : ${response.errorBody()?.string()}")
-                    Log.d("TEST", "newRequestWithToken() 6 call!")
-                }
-            } catch (e: Exception) {
-                Log.e("TEST", "네트워크 에러: ${e.message}")
-                Log.d("TEST", "newRequestWithToken() 7 call!")
-            }
-            Log.d("TEST", "newRequestWithToken() 8 call!")
-            null
-        }
-//        Log.d("TEST", "newAccessToken : ${newAccessToken}")
-        Log.d("TEST", "newRequestWithToken() 9 call!")
-
-        if (newAccessToken == null) return null
-
-        // 새 accessToken으로 원래 요청 복사
+    // 헤더만 교체해서 Request를 다시 만드는 헬퍼 함수
+    private fun newRequestWithAccessToken(request: Request, accessToken: String): Request {
         return request.newBuilder()
-            .header("Authorization", "Bearer $newAccessToken")
+            .header("Authorization", "Bearer $accessToken")
             .build()
     }
 
-
-    // Too many follow-up requests: 21 에러 방어코드
     private fun responseCount(response: Response): Int {
         var count = 1
         var prior = response.priorResponse
@@ -124,5 +98,4 @@ class TokenAuthenticator() : Authenticator {
         }
         return count
     }
-
 }

@@ -46,7 +46,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -78,6 +80,9 @@ fun ActivityRegisterScreen(navController: NavController) {
 
     var interactionSource = remember { MutableInteractionSource() }
 
+    val currentLanguage = Locale.current.language
+    val isKorean = currentLanguage == "ko"
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -98,7 +103,7 @@ fun ActivityRegisterScreen(navController: NavController) {
                 },
                 title = {
                     Text(
-                        text = "생활 등록",
+                        text = stringResource(R.string.track_activity_title),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -140,7 +145,7 @@ fun ActivityRegisterScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(10.dp))
 
                 SegmentedControl(
-                    items = listOf("식사", "운동", "인슐린"),
+                    items = listOf(context.getString(R.string.item_meal), context.getString(R.string.item_exercise), context.getString(R.string.item_insulin)),
                     selectedIndex = isSelected.value,
                     onItemSelected = { selectedIndex ->
                         if (isSelected.value != selectedIndex) {
@@ -164,7 +169,7 @@ fun ActivityRegisterScreen(navController: NavController) {
                     )
                 ) {
                     Text(
-                        text = "메모",
+                        text = stringResource(R.string.register_memo),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(start = 15.dp, top = 15.dp)
@@ -196,7 +201,7 @@ fun ActivityRegisterScreen(navController: NavController) {
                         .padding(bottom = 20.dp)
                 ) {
                     Image(
-                        painter = painterResource(R.drawable.btn_save),
+                        painter = painterResource(id = if (isKorean) R.drawable.btn_save else R.drawable.btn_eng_save),
                         contentDescription = "저장 버튼",
                         modifier = Modifier.align(Alignment.Center)
                             .clickable(
@@ -250,13 +255,13 @@ fun ActivityRegisterScreen(navController: NavController) {
                                             Log.e("EVENT", "네트워크 또는 userId null 에러 : ${e.message}")
 
                                             withContext(Dispatchers.Main) {
-                                                Toast.makeText(context, "네트워크를 확인해 주세요.", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, context.getString(R.string.toast_network_error), Toast.LENGTH_SHORT).show()
                                                 Log.e("EVENT", "활동 이벤트 업로드 실패")
                                             }
                                         }
                                     }
                                 } else {
-                                    Toast.makeText(context, "메모를 입력해 주세요.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_enter_memo), Toast.LENGTH_SHORT).show()
                                 }
                             }
                     )

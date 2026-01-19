@@ -12,7 +12,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -348,7 +350,8 @@ class MainActivity : ComponentActivity() {
         if (isSplash) {
             modifier = Modifier.fillMaxSize()
         } else {
-            modifier = Modifier.safeDrawingPadding()
+            modifier = Modifier.navigationBarsPadding()
+                .statusBarsPadding()
         }
 
         destination.value?.let {

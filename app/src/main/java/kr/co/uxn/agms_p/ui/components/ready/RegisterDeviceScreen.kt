@@ -204,7 +204,7 @@ fun RegisterDeviceScreen(navController: NavController) {
 
                                 if (getBleStatus(context) != STATUS_BLE_ENABLED) {
                                     coroutineScope.launch(Dispatchers.Main) {
-                                        Toast.makeText(context, "블루투스를 켜주세요.", Toast.LENGTH_SHORT)
+                                        Toast.makeText(context, context.getString(R.string.toast_turn_on_bluetooth), Toast.LENGTH_SHORT)
                                             .show()
                                     }
                                 } else {
@@ -228,7 +228,7 @@ fun RegisterDeviceScreen(navController: NavController) {
                                                 withContext(Dispatchers.Main) {
                                                     Toast.makeText(
                                                         context,
-                                                        "시리얼 넘버를 다시 확인해 주세요.",
+                                                        context.getString(R.string.toast_check_serial_number),
                                                         Toast.LENGTH_SHORT
                                                     ).show()
                                                 }
@@ -240,7 +240,7 @@ fun RegisterDeviceScreen(navController: NavController) {
                                     }
                                 }
                             } else {
-                                Toast.makeText(context, "시리얼 넘버를 입력해 주세요.", Toast.LENGTH_SHORT)
+                                Toast.makeText(context, context.getString(R.string.toast_empty_serial_number), Toast.LENGTH_SHORT)
                                     .show()
                             }
                         }

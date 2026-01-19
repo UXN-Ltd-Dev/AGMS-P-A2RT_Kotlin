@@ -151,7 +151,7 @@ class AlwaysService() : Service() {
                             Log.d("BLE", "BLE 권한 허용 안됨")
                             return@withContext
                         }
-                        sendBleConnectNotification(baseContext, "블루투스가 꺼져있습니다", "", 91)
+                        sendBleConnectNotification(baseContext, baseContext.getString(R.string.notification_bluetooth_off), "", 91)
                         BleBridge.showBluetoothOnDialog(true)
                     }
                 }
@@ -208,7 +208,7 @@ class AlwaysService() : Service() {
                 override fun run() {
                     val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
                         .setOngoing(true)
-                        .setContentTitle("Always가 작동 중입니다.")
+                        .setContentTitle(baseContext.getString(R.string.notification_agms_running))
                         .setSmallIcon(R.mipmap.ic_launcher_round)
                         .setContentIntent(pendingIntent)
                         .setSilent(true)
@@ -220,8 +220,8 @@ class AlwaysService() : Service() {
             // 노티 생성 및 설정
             val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
                 .setOngoing(true)
-                .setContentTitle("AGMS 실행 중")
-                .setContentText("Always가 작동 중입니다.")
+                .setContentTitle(baseContext.getString(R.string.notification_agms_running))
+                .setContentText(baseContext.getString(R.string.notification_always_running))
                 .setSmallIcon(R.mipmap.ic_launcher_round)
                 .setContentIntent(pendingIntent)
                 .setSilent(true)
@@ -330,8 +330,8 @@ class AlwaysService() : Service() {
                                             if (lastGlucose > targetHigh) {
                                                 sendNotification(
                                                     baseContext,
-                                                    "고혈당 주의",
-                                                    "고혈당이 감지되었습니다. \n현재 혈당 : ${lastGlucose} mg/dL",
+                                                    baseContext.getString(R.string.notification_alert_high_glucose),
+                                                    baseContext.getString(R.string.notification_alert_high_glucose_description) + "${lastGlucose} mg/dL",
                                                     96
                                                 )
                                                 showHighGlucoseDialog(true)
@@ -343,8 +343,8 @@ class AlwaysService() : Service() {
                                             if (lastGlucose < targetLow) {
                                                 sendNotification(
                                                     baseContext,
-                                                    "저혈당 주의",
-                                                    "저혈당이 감지되었습니다 \n현재 혈당 : ${lastGlucose} mg/dL",
+                                                    baseContext.getString(R.string.notification_alert_low_glucose),
+                                                    baseContext.getString(R.string.notification_alert_low_glucose_description) + "${lastGlucose} mg/dL",
                                                     95
                                                 )
                                                 showLowGlucoseDialog(true)
@@ -456,7 +456,7 @@ class AlwaysService() : Service() {
                                                 }
                                             } else {
                                                 Log.d(
-                                                    "TEST", 
+                                                    "TEST",
                                                     "recent time API통신 실패 : ${lastTime.errorBody()?.string()}"
                                                 )
                                             }
@@ -623,8 +623,8 @@ class AlwaysService() : Service() {
                                     Log.d("CALI", "3분 이내! 알림 실행 diff : ${diff}")
                                     sendNotification(
                                         baseContext,
-                                        "혈당 입력 시간입니다",
-                                        "오늘의 혈당을 입력해 주세요",
+                                        baseContext.getString(R.string.notification_time_to_enter_daily_glucose),
+                                        baseContext.getString(R.string.notification_time_to_enter_daily_glucose_description),
                                         93
                                     )
                                     BleBridge.showCaliDialog(true)
@@ -737,8 +737,8 @@ class AlwaysService() : Service() {
                                     if (lastGlucose > targetHigh) {
                                         sendNotification(
                                             baseContext,
-                                            "고혈당 주의",
-                                            "고혈당이 감지되었습니다. \n현재 혈당 : ${lastGlucose} mg/dL",
+                                            baseContext.getString(R.string.notification_alert_high_glucose),
+                                            baseContext.getString(R.string.notification_alert_high_glucose_description) + "${lastGlucose} mg/dL",
                                             96
                                         )
                                         showHighGlucoseDialog(true)
@@ -749,8 +749,9 @@ class AlwaysService() : Service() {
                                     if (lastGlucose < targetLow) {
                                         sendNotification(
                                             baseContext,
-                                            "저혈당 주의",
-                                            "저혈당이 감지되었습니다 \n현재 혈당 : ${lastGlucose} mg/dL",
+                                            baseContext.getString(R.string.notification_alert_low_glucose),
+                                            baseContext.getString(R.string.notification_alert_low_glucose_description) + "${lastGlucose} mg/dL",
+
                                             95
                                         )
                                         showLowGlucoseDialog(true)
@@ -783,7 +784,7 @@ class AlwaysService() : Service() {
 
                         if (endTime != null && now > endTime) {
                             Log.d("SERVICE", "측정종료 프로세스 작동!")
-                            sendNotification(baseContext, "측정이 종료되었습니다", "앱을 확인해 주세요", 94)
+                            sendNotification(baseContext, baseContext.getString(R.string.notification_end_measurement_check_app), baseContext.getString(R.string.notification_end_measurement_check_app_description), 94)
                             BleBridge.showEndMeasurementDialog(true)
                         }
 
@@ -885,7 +886,7 @@ class AlwaysService() : Service() {
                             Log.d("BLE", "BLE 권한 허용 안됨")
                             return@withContext
                         }
-                        sendBleConnectNotification(baseContext, "블루투스가 꺼져있습니다", "", 91)
+                        sendBleConnectNotification(baseContext, baseContext.getString(R.string.notification_bluetooth_off), "", 91)
                         BleBridge.showBluetoothOnDialog(true)
                     }
                 }

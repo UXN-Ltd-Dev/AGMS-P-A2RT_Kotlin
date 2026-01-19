@@ -26,12 +26,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kr.co.uxn.agms_p.R
 import java.time.format.TextStyle
 
 @Composable
@@ -81,7 +83,7 @@ fun CustomTimePicker(
                     keyboardType = KeyboardType.Number
                 ),
             )
-            Text("시", fontSize = 12.sp)
+            Text(stringResource(R.string.glucose_reminder_hour), fontSize = 12.sp)
         }
 
         Text(
@@ -123,7 +125,7 @@ fun CustomTimePicker(
                     keyboardType = KeyboardType.Number
                 ),
             )
-            Text("분", fontSize = 12.sp)
+            Text(stringResource(R.string.glucose_reminder_minute), fontSize = 12.sp)
         }
 
         Spacer(modifier = Modifier.width(8.dp))
@@ -143,7 +145,7 @@ fun CustomTimePicker(
                     .clickable { isAfternoon.value = false },
                 contentAlignment = Alignment.Center
             ) {
-                Text("오전", fontSize = 14.sp)
+                Text(stringResource(R.string.glucose_reminder_am), fontSize = 14.sp)
             }
             Divider(color = Color.Gray, thickness = 1.dp)
             Box(
@@ -154,7 +156,7 @@ fun CustomTimePicker(
                     .clickable { isAfternoon.value = true },
                 contentAlignment = Alignment.Center
             ) {
-                Text("오후", fontSize = 14.sp)
+                Text(stringResource(R.string.glucose_reminder_pm), fontSize = 14.sp)
             }
         }
     }
