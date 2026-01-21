@@ -84,6 +84,8 @@ import kr.co.uxn.agms_p.ui.components.main.CustomTimePicker
 import kr.co.uxn.agms_p.ui.components.main.NotiDialog
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import java.text.SimpleDateFormat
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 import kotlin.system.exitProcess
@@ -129,6 +131,10 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
     var showLowGlucoseDialog = bleViewModel.showLowGlucoseDialog.collectAsState()
     var showHighGlucoseDialog = bleViewModel.showHighGlucoseDialog.collectAsState()
     var showEndMeasurementDialog = bleViewModel.showEndMeasurementDialog.collectAsState()
+
+
+    val currentLanguage = androidx.compose.ui.text.intl.Locale.current.language
+    val isKorean = currentLanguage == "ko"
 
     val localDbRepository by lazy {
         AppDatabase.getInstance(context)
@@ -982,10 +988,11 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                             horizontalArrangement = Arrangement.Start
                         ) {
                             Text(
-                                text = dailyCalibrationTime.value,
+                                text = convertToDisplayTime(dailyCalibrationTime.value, isKorean),
                                 color = Color(0xFF828282),
                                 fontSize = 15.sp
                             )
+
                             Spacer(modifier = Modifier.width(15.dp))
                             Surface(
                                 modifier = Modifier
@@ -1006,6 +1013,32 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
 
             }
         }
+    }
+}
+
+fun convertToDisplayTime(savedTime: String, isKorean: Boolean): String {
+    if (savedTime.isEmpty()) return ""
+
+    return try {
+        // 1. 저장된 데이터가 한국어 포맷("오전 11:00")이라고 가정하고 파싱
+        // (저장할 때 Locale.KOREAN으로 저장했으므로 읽을 때도 KOREAN으로 읽어야 함)
+        val parseFormatter = DateTimeFormatter.ofPattern("a hh:mm", Locale.KOREAN)
+        val time = LocalTime.parse(savedTime, parseFormatter)
+
+        // 2. 현재 폰의 언어 설정(Locale.getDefault())에 맞춰서 다시 포맷팅
+        // Locale이 US면 "11:00 AM", KOREA면 "오전 11:00"으로 자동 변환됨
+        val displayFormatter = if (isKorean) {
+            DateTimeFormatter.ofPattern("a hh:mm", Locale.KOREAN)
+        } else {
+            DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault())
+        }
+
+        time.format(displayFormatter)
+
+    } catch (e: Exception) {
+        // 3. 만약 파싱에 실패하면(데이터가 깨졌거나 형식이 다르면)
+        // 억지로 바꾸지 말고 원본 그대로 보여줌 (안전장치)
+        savedTime
     }
 }
 

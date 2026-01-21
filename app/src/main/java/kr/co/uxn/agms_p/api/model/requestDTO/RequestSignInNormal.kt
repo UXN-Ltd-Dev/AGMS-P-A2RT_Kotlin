@@ -10,5 +10,8 @@ data class RequestSignInNormal(
     val pwd: String,
 
     @SerializedName("device")
-    val device: Int = 0
+    val device: Int = 0,
+
+    @SerializedName("is_forced")
+    val isForced: Boolean = false
 )

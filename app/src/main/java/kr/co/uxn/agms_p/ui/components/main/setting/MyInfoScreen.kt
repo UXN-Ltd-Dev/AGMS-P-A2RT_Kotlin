@@ -388,19 +388,24 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .padding(start = 50.dp)
+//                            .padding(start = 50.dp)
+                            .fillMaxWidth()
+                            .padding(start = 50.dp, end = 20.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.label_name),
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.width(90.dp)
                         )
 
-                        Spacer(modifier = Modifier.size(60.dp, 27.dp))
+//                        Spacer(modifier = Modifier.size(60.dp, 27.dp))
 
                         Box(
                             modifier = Modifier
-                                .width(120.dp)
+//                                .width(120.dp)
+                                .fillMaxWidth()
+                                .padding(start = 5.dp)
                                 .drawBehind {
                                     val strokeWidth = 1.dp.toPx()  // 선 굵기
                                     val y = size.height - strokeWidth / 2
@@ -457,18 +462,23 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                     // 2. 성별
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(start = 50.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 50.dp, end = 20.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.label_gender),
+                            modifier = Modifier.width(90.dp),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium
                         )
-                        Spacer(modifier = Modifier.size(60.dp, 27.dp))
+//                        Spacer(modifier = Modifier.size(60.dp, 27.dp))
                         var expanded by remember { mutableStateOf(false) }
                         Box(
                             modifier = Modifier
-                                .width(120.dp)
+//                                .width(120.dp)
+                                .fillMaxWidth()
+                                .padding(start = 5.dp)
                                 .clickable {
                                     expanded = !expanded
                                 }
@@ -544,18 +554,23 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                     // 3. 연령
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(start = 50.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 50.dp, end = 20.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.label_age),
+                            modifier = Modifier.width(90.dp),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium
                         )
-                        Spacer(modifier = Modifier.size(60.dp, 27.dp))
+//                        Spacer(modifier = Modifier.size(60.dp, 27.dp))
 
                         Box(
                             modifier = Modifier
-                                .width(120.dp)
+//                                .width(120.dp)
+                                .fillMaxWidth()
+                                .padding(start = 5.dp)
                                 .drawBehind {
                                     val strokeWidth = 1.dp.toPx()  // 선 굵기
                                     val y = size.height - strokeWidth / 2
@@ -612,17 +627,22 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                     // 4. 신장
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(start = 50.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 50.dp, end = 20.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.label_height),
+                            modifier = Modifier.width(90.dp),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium
                         )
-                        Spacer(modifier = Modifier.size(60.dp, 27.dp))
+//                        Spacer(modifier = Modifier.size(60.dp, 27.dp))
                         Box(
                             modifier = Modifier
-                                .width(120.dp)
+                                .fillMaxWidth()
+                                .padding(start = 5.dp)
+//                                .width(120.dp)
                                 .drawBehind {
                                     val strokeWidth = 1.dp.toPx()  // 선 굵기
                                     val y = size.height - strokeWidth / 2
@@ -679,18 +699,23 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                     // 5. 체중
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(start = 50.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 50.dp, end = 20.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.label_weight),
+                            modifier = Modifier.width(90.dp),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium
                         )
-                        Spacer(modifier = Modifier.size(60.dp, 27.dp))
+//                        Spacer(modifier = Modifier.size(60.dp, 27.dp))
 
                         Box(
                             modifier = Modifier
-                                .width(120.dp)
+//                                .width(120.dp)
+                                .fillMaxWidth()
+                                .padding(start = 5.dp)
                                 .drawBehind {
                                     val strokeWidth = 1.dp.toPx()  // 선 굵기
                                     val y = size.height - strokeWidth / 2
@@ -747,10 +772,13 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                     // 6. 당뇨 정보
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(start = 50.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 50.dp, end = 20.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.label_diabetes_type),
+                            modifier = Modifier.width(90.dp),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -760,11 +788,13 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                         // 당뇨 전단계
                         // LADA(Latent Autoimmune Diabetes in Adults)
                         // 정상
-                        Spacer(modifier = Modifier.width(22.dp))
+//                        Spacer(modifier = Modifier.width(22.dp))
 
                         Box(
                             modifier = Modifier
-                                .width(120.dp)
+//                                .width(120.dp)
+                                .fillMaxWidth()
+                                .padding(start =  5.dp)
                                 .clickable {
                                     expandedForDiabetesType = !expandedForDiabetesType
                                 }

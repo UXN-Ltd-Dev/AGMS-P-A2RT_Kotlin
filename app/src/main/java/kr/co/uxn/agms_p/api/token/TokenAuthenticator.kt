@@ -5,6 +5,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kr.co.uxn.agms_p.AuthEvent
+import kr.co.uxn.agms_p.AuthEventNotifier
 import kr.co.uxn.agms_p.api.RetrofitClient.refreshRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestRefreshToken
 import okhttp3.Authenticator
@@ -71,7 +73,15 @@ class TokenAuthenticator : Authenticator {
 
                         return@withLock newRequestWithAccessToken(response.request, newAccessToken)
                     } else {
-                        Log.e("AUTH", "API 에러: ${tokenResponse.errorBody()?.string()}")
+                        val errorCode = tokenResponse.code()
+
+                        if (errorCode == 401) {
+                            Log.e("AUTH", "다중로그인 발생 401 에러")
+                            AuthEventNotifier.notify(AuthEvent.DUPLICATE_LOGIN)
+                            return@withLock null
+                        }
+
+                        Log.e("AUTH", "API 에러: ${tokenResponse.errorBody()?.string()}, 에러 코드 : $errorCode")
                         return@withLock null
                     }
                 } catch (e: Exception) {

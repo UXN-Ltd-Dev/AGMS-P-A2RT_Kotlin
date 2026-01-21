@@ -1,5 +1,7 @@
 package kr.co.uxn.agms_p.ui.components.main
 
+import android.util.DisplayMetrics
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,10 +24,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,9 +40,21 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kr.co.uxn.agms_p.AuthEvent
+import kr.co.uxn.agms_p.AuthEventNotifier
 import kr.co.uxn.agms_p.BleConnectionState
 import kr.co.uxn.agms_p.R
+import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
+import kr.co.uxn.agms_p.api.token.DataStoreManager
+import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.ui.components.main.event.EventScreen
 import kr.co.uxn.agms_p.ui.components.main.home.HomeScreen
 import kr.co.uxn.agms_p.ui.components.main.setting.SettingScreen
@@ -46,6 +62,7 @@ import kr.co.uxn.agms_p.ui.model.NavItem
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
+import kotlin.system.exitProcess
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,7 +88,11 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
         BleConnectionState.CONNECTING -> if(isKorean) R.drawable.ble_connecting else R.drawable.eng_connecting
     }
 
-    var showDuplicateLoginSessionOffDialog = bleViewModel.showDuplicateLoginSessionOffDialog.collectAsState().value
+
+    val showDuplicateLoginSessionOffDialog = remember { mutableStateOf(false) }
+    val localDbRepository by lazy {
+        AppDatabase.getInstance(context)
+    }
 
     val configuration = LocalConfiguration.current
     val screenHeightDp = configuration.screenHeightDp
@@ -85,12 +106,71 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
         else -> 65.dp
     }
 
-//    if (!showDuplicateLoginSessionOffDialog) {
+    val coroutineScope = rememberCoroutineScope()
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(Unit) {
+        // 앱이 포그라운드(화면에 보임) 상태일 때만 블록 실행, 백그라운드 가면 자동 중지
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            AuthEventNotifier.eventFlow.collect { event ->
+                when (event) {
+                    AuthEvent.DUPLICATE_LOGIN -> {
+                        showDuplicateLoginSessionOffDialog.value = true
+                    }
+                }
+            }
+        }
+    }
+
+//    if (showDuplicateLoginSessionOffDialog.value) {
 //        NotiDialog(
-//            onDismiss = { showDuplicateLoginSessionOffDialog = false },
-//            onConfirm = { showDuplicateLoginSessionOffDialog = false },
-//            title = "다른 기기에서 로그인이 감지 되었습니다.",
-//            content = "측정이 종료됩니다."
+//            onDismiss = {
+//                showDuplicateLoginSessionOffDialog.value = false
+//            },
+//            onConfirm = {
+//                showDuplicateLoginSessionOffDialog.value = false
+//
+//                coroutineScope.launch(Dispatchers.IO) {
+//                    val userId = DataStoreManager.getUserId().first() ?: -1
+//                    try {
+//                        // userId의 db삭제
+//                        localDbRepository?.dataDao()?.deleteUserValueTable(userId)
+//                        localDbRepository?.dataDao()?.deleteUserGlucoseTable(userId)
+//                        localDbRepository?.dataDao()?.deleteUserCalibrationTable(userId)
+//
+//                        DataStoreManager.saveIsMain(false)
+//                        DataStoreManager.deleteRoute()
+//                        DataStoreManager.saveRoute("Splash")
+//                        Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
+//                        DataStoreManager.deleteAccessToken()
+//                        DataStoreManager.deleteRefreshToken()
+//                        DataStoreManager.deleteUserId()
+//                        DataStoreManager.deleteDeviceMac()
+////                                    DataStoreManager.deleteDeviceMac()
+//                        DataStoreManager.setNotiHighGlucose(false)
+//                        DataStoreManager.setNotiLowGlucose(false)
+//                        DataStoreManager.deleteStartTime()
+//                        DataStoreManager.deleteEndTime()
+//                        DataStoreManager.deleteDailyCalibrationTime()
+//                        DataStoreManager.deleteDailyCalibrationLastTime()
+//                        DataStoreManager.setLandScapeMode(false)
+//                        DataStoreManager.deleteTargetLowGlucose()
+//                        DataStoreManager.deleteTargetHighGlucose()
+//                        DataStoreManager.deleteEmail()
+//                        withContext(Dispatchers.Main) {
+//                            // 1. 서비스 종료
+//                            bleViewModel.emit("STOP_SERVICE")
+//                            // 앱 강제 종료
+//                            android.os.Process.killProcess(android.os.Process.myPid())
+//                            exitProcess(0)
+//                        }
+//                    } catch (e: Exception) {
+//                        Log.e("TEST", "중복로그인 다이얼로그 confirm 에러 : ${e.message}")
+//                    }
+//                }
+//            },
+//            title = context.getString(R.string.dialog_detect_other_login_title),
+//            content = context.getString(R.string.dialog_detect_other_login_content)
 //        )
 //    }
 
@@ -129,10 +209,6 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
 
                     Spacer(modifier = Modifier.width(10.dp))
                 },
-                // 세션종료 확인을 위한 기믹, 추후 주석처리 할 것.
-                modifier = Modifier.clickable {
-                    bleViewModel.showDuplicateLoginSessionOffDialog(false)
-                }
             )
         },
         bottomBar = {

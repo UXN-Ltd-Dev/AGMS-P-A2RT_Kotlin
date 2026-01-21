@@ -102,7 +102,7 @@ fun GuideScreen1(
                 color = Color(0xFF385DAB)
             )
 
-            Spacer(modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             // 이미지
             Surface(
@@ -129,7 +129,7 @@ fun GuideScreen1(
                 fontSize = 20.sp,
             )
 
-            Spacer(modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             Text(
                 modifier = Modifier.fillMaxWidth()

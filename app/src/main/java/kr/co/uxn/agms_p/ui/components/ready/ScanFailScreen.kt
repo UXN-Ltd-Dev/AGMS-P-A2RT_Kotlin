@@ -123,7 +123,7 @@ fun ScanFailScreen(navController: NavController) {
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(102.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             // 다음 버튼
             Box(

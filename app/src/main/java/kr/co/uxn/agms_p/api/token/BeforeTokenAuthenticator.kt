@@ -11,7 +11,6 @@ import kr.co.uxn.agms_p.api.RetrofitClient
 import kr.co.uxn.agms_p.api.RetrofitClient.refreshRetrofit
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestRefreshToken
-import kr.co.uxn.agms_p.ui.viewmodel.AuthEventNotifier
 import okhttp3.Authenticator
 import okhttp3.Response
 import okhttp3.Route

@@ -475,7 +475,7 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                         fontWeight = FontWeight.Bold
                     )
 
-                    Spacer(modifier = Modifier.height(30.dp))
+                    Spacer(modifier = Modifier.weight(1f))
 
 
                     Row(

@@ -137,5 +137,8 @@ interface RemoteDataSource {
         @Header("Authorization") refreshToken: String,
         @Body userInfo: RequestRefreshToken
     ): Response<ResponseRefreshToken>
+
+    @POST("/api/logout")
+    suspend fun logout() : Response<Void>
 }
 

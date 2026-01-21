@@ -85,6 +85,15 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
             onConfirm = {
                 showLogOutDialog.value = false
                 coroutineScope.launch {
+                    // 로그아웃 api 전송
+                    try {
+                        withContext(Dispatchers.IO) {
+                            val result2 = tokenRetrofit.logout()
+                        }
+                    } catch (e: Exception) {
+                        Log.d("TEST", "로그아웃 API통신 실패 : ${e.message}")
+                    }
+
                     // 0. 토큰 정리
                     // 메인화면으로 고정 isMain = true
                     DataStoreManager.saveIsMain(false)
@@ -104,14 +113,14 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
 
                     // 1. 서비스 종료
                     bleViewModel.emit("STOP_SERVICE")
+                    // 2. 데이터 전송
+                    // 3. 로그인 화면으로 이동
+                    navController.navigate("Login") {
+                        popUpTo(0)
+                    }
                     // 앱 강제 종료
                     Process.killProcess(Process.myPid())
                     exitProcess(0)
-                }
-                // 2. 데이터 전송
-                // 3. 로그인 화면으로 이동
-                navController.navigate("Login") {
-                    popUpTo(0)
                 }
             },
             onDismiss = {
@@ -132,6 +141,18 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                 coroutineScope.launch(Dispatchers.IO) {
                     // 0. 토큰 정리
                     val userId = DataStoreManager.getUserId().first() ?: -1
+
+                    // 로그아웃 api 전송
+                    try {
+                        withContext(Dispatchers.IO) {
+                            val result2 = tokenRetrofit.logout()
+                        }
+                    } catch (e: Exception) {
+                        Log.d("TEST", "로그아웃 API통신 실패 : ${e.message}")
+                    }
+
+
+
                     try {
                         val sensorOff = tokenRetrofit.doSensorOff(userId)
                         if (sensorOff.isSuccessful) {

@@ -32,6 +32,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -350,7 +351,8 @@ fun SettingPermissionScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.size(80.dp))
+//            Spacer(modifier = Modifier.size(80.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             // 확인 버튼
             Box(
@@ -374,7 +376,7 @@ fun SettingPermissionScreen(
                             Log.d("TEST", "요구된 권한은 : ")
                         },
                     painter = painterResource(id = if(isKorean) R.drawable.btn_confirm else R.drawable.btn_eng_confirm),
-                    contentDescription = "확인 버튼",
+                    contentDescription = "확인 버튼"
                 )
             }
         }
@@ -500,7 +502,7 @@ fun SettingPermissionScreenOld(
                 Spacer(modifier = Modifier.width(15.dp))
                 Column() {
                     Text(
-                        text = "근처 기기(필수)"
+                        text = "근처 기기(필수)!!!"
                     )
                     Text(
                         text = "근처기기 연결, 상대적 위치 파악",

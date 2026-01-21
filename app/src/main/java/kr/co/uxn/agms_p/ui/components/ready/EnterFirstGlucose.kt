@@ -150,7 +150,8 @@ fun EnterFirstGlucose(navController: NavController) {
                 color = Color.Gray
             )
 
-            Spacer(modifier = Modifier.height(50.dp))
+//            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             // 완료 버튼
             Box(

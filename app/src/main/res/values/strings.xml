@@ -8,11 +8,11 @@
 
     <!--  로그인 화면 -->
     <string name="login_email">Email</string>
-    <string name="login_email_hint">"Enter your email "</string>
+    <string name="login_email_hint">"Enter your email."</string>
     <string name="login_pwd">Password</string>
     <string name="login_pwd_hint">Enter your password.</string>
     <string name="login_sign_up">SignUp</string>
-    <string name="login_find_pwd">forgot password?</string>
+    <string name="login_find_pwd">Forgot Password?</string>
     <string name="login_or">Or</string>
 
     <!--  회원가입 화면1  -->
@@ -255,5 +255,9 @@
     <string name="toast_loading_data">Loading data...\nPlease wait.</string>
     <string name="toast_turn_on_bluetooth">Please turn on Bluetooth.</string>
     <string name="toast_check_serial_number">Please check the serial number.</string>
+    <string name="dialog_detect_other_login_title">Login detected on another device</string>
+    <string name="dialog_detect_other_login_content">Measurement will be stopped.</string>
+    <string name="dialog_detect_other_login_title_in_login_screen">Sensor in use on another device</string>
+    <string name="dialog_detect_other_login_content_in_login_screen">Logging in will disconnect the current session and start a new measurement.</string>
 
 </resources>

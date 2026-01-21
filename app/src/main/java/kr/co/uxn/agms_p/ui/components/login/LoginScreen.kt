@@ -59,6 +59,7 @@ import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignInNormal
 import kr.co.uxn.agms_p.ui.viewmodel.LoginViewModel
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.NetworkUtil.isNetworkAvailable
+import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDuplicateLoginError
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseLoginError
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ui.components.main.AlwaysDialog
@@ -94,9 +95,129 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
     if (showDuplicateLoginDialog.value) {
         AlwaysDialog(
             onDismiss = { viewModel.showDuplicateLoginDialog(false)},
-            onConfirm = { }, // 중복 로그인인거 인지했고 진행해주세요라고 서버에 전송하는 로직 필요
-            title = "다른 기기에서 사용 중인 센서가 있어요!",
-            content = "로그인하면 기존 연결은 종료되고, 새로운 측정이 시작됩니다."
+            onConfirm = {
+                // 중복 로그인인거 인지했고 진행해주세요라고 서버에 전송하는 로직 필요
+                viewModel.showDuplicateLoginDialog(false)
+
+                if (isNetworkAvailable(context)) {
+                    if (email.value != "" && pwd.value != "") {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            try {
+                                // 로그인
+                                // 이메일 공백 처리
+                                val trimEmail = email.value.trim()
+                                Log.d(
+                                    "TEST",
+                                    "originalEmail : ${email.value}\ntrimEmail : $trimEmail"
+                                )
+
+                                val login =
+                                    emptyRetrofit.uxnLogin(
+                                        signInInfo = RequestSignInNormal(
+                                            trimEmail,
+                                            pwd.value,
+                                            isForced = true
+                                        )
+                                    )
+
+                                val httpCode = login.code()
+                                Log.e("TEST", "http 코드 : $httpCode")
+
+                                if (login.isSuccessful && httpCode == 200) {
+                                    val loginResult = login.body()
+                                    // 로그인이 성공적으로 되었을 때
+
+                                    if (loginResult?.accessToken != null) {
+//                                                Log.e("login","로그인 결과 : ${loginResult.toString()}")
+//
+                                        // 토큰 저장
+                                        DataStoreManager.deleteAccessToken()
+                                        DataStoreManager.saveAccessToken(loginResult.accessToken)
+                                        DataStoreManager.saveRefreshToken(loginResult.refreshToken)
+
+                                        // userId 저장
+                                        DataStoreManager.deleteUserId()
+                                        DataStoreManager.saveUserId(loginResult.userId)
+                                        DataStoreManager.deleteEmail()
+                                        DataStoreManager.saveEmail(trimEmail)
+
+                                        // mac 정리
+                                        DataStoreManager.deleteDeviceMac()
+
+                                        // 세팅 화면으로 이동
+                                        withContext(Dispatchers.Main) {
+                                            navController.navigate("SettingPermissionScreen/${1803}")
+                                        }
+                                    } else {
+                                        Log.e("TEST", "엑세스 토큰 없음 ")
+                                    }
+                                } else if (httpCode == 401) {
+                                    val errorBody = login.errorBody()?.string()
+                                    val gson = Gson()
+                                    val errorResponse = gson.fromJson(errorBody, ResponseLoginError::class.java)
+                                    when (errorResponse.resultCode) {
+                                        // 1. 1002 : 비번 틀릴 때
+                                        1002 -> {
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(context, R.string.toast_login_error, Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                        // 2. 1003 : 횟수 5회 이상 초과
+                                        1003 -> {
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(context, R.string.toast_login_error_over_five, Toast.LENGTH_SHORT).show()
+                                                navController.navigate("PasswordResetScreen")
+                                            }
+                                        }
+
+                                    }
+                                } else if (httpCode == 409) {
+                                    val errorBody = login.errorBody()?.string()
+                                    val gson = Gson()
+                                    val errorResponse = gson.fromJson(errorBody, ResponseDuplicateLoginError::class.java)
+//                                            Log.d("TEST", "errorResponse : $errorResponse")
+                                    // 중복로그인 다이얼로그 show
+                                    viewModel.showDuplicateLoginDialog(true)
+                                } else if (httpCode == 410) {
+                                    val errorBody = login.errorBody()?.string()
+                                    val gson = Gson()
+                                    val errorResponse = gson.fromJson(errorBody, ResponseLoginError::class.java)
+                                    when (errorResponse.resultCode) {
+                                        // 1. 1004 : 6개월 지났을 경우
+                                        1004 -> {
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(context, R.string.toast_login_error_authentication_expired, Toast.LENGTH_SHORT).show()
+                                                navController.navigate("PasswordResetScreen")
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    Log.e("TEST", "API통신 실패 : ${login.errorBody()?.string()}")
+
+                                    // 추후 예외처리
+
+                                }
+//                                        else if (httpCode == xxx) {
+//                                            viewModel.showDuplicateLoginDialog(true)
+//                                        }
+                            } catch (exception: Exception) {
+                                Log.e("TEST", "네트워크 에러 : ${exception.message}")
+                                withContext(Dispatchers.Main) {
+                                    Toast.makeText(context, R.string.toast_login_error_incorrect_account_info, Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    } else {
+                        Toast.makeText(context, R.string.toast_request_enter_email, Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(context, R.string.toast_login_error, Toast.LENGTH_SHORT).show()
+
+                }
+
+            },
+            title = stringResource(R.string.dialog_detect_other_login_title_in_login_screen),
+            content = stringResource(R.string.dialog_detect_other_login_content_in_login_screen)
         )
     }
 
@@ -352,6 +473,13 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                                 }
 
                                             }
+                                        } else if (httpCode == 409) {
+                                            val errorBody = login.errorBody()?.string()
+                                            val gson = Gson()
+                                            val errorResponse = gson.fromJson(errorBody, ResponseDuplicateLoginError::class.java)
+//                                            Log.d("TEST", "errorResponse : $errorResponse")
+                                            // 중복로그인 다이얼로그 show
+                                            viewModel.showDuplicateLoginDialog(true)
                                         } else if (httpCode == 410) {
                                             val errorBody = login.errorBody()?.string()
                                             val gson = Gson()

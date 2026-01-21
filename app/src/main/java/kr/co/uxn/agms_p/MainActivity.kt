@@ -20,10 +20,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavHostController
@@ -40,18 +43,21 @@ import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.ble.AlwaysService
+import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.ui.components.login.LoginScreen
 import kr.co.uxn.agms_p.ui.components.login.PassWordResetScreen
 import kr.co.uxn.agms_p.ui.components.login.SignUpAgreeScreen1
 import kr.co.uxn.agms_p.ui.components.login.SignUpCheckScreen2
 import kr.co.uxn.agms_p.ui.components.login.SignUpInfoScreen3
 import kr.co.uxn.agms_p.ui.components.main.MainScreen
+import kr.co.uxn.agms_p.ui.components.main.NotiDialog
 import kr.co.uxn.agms_p.ui.components.main.event.ActivityRegisterScreen
 import kr.co.uxn.agms_p.ui.components.main.event.GlucoseRegisterScreen
 import kr.co.uxn.agms_p.ui.components.main.setting.DeleteAccountScreen
@@ -76,7 +82,6 @@ import kr.co.uxn.agms_p.ui.components.ready.StabilizationCompleteScreen
 import kr.co.uxn.agms_p.ui.components.ready.StabilizationScreen
 import kr.co.uxn.agms_p.ui.components.splash.SplashScreen
 import kr.co.uxn.agms_p.ui.theme.AGMSPTheme
-import kr.co.uxn.agms_p.ui.viewmodel.AuthEventNotifier
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.EventScreenViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
@@ -86,6 +91,7 @@ import kr.co.uxn.agms_p.ui.viewmodel.PermissionViewModel
 import java.net.URLDecoder
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
+import kotlin.system.exitProcess
 
 class MainActivity : ComponentActivity() {
     private val loginViewModel: LoginViewModel by viewModels()
@@ -142,6 +148,7 @@ class MainActivity : ComponentActivity() {
                 Navigation()
             }
         }
+
 
 
         // 서비스 실행 이벤트 처리
@@ -293,10 +300,18 @@ class MainActivity : ComponentActivity() {
     fun Navigation(
 //        modifier: Modifier = Modifier.safeDrawingPadding(),
         modifier: Modifier = Modifier.fillMaxSize(),
-        navController: NavHostController = rememberNavController()
+        navController: NavHostController = rememberNavController(),
     ) {
 
         val destination = remember { mutableStateOf<String?>(null) }
+        val lifecycleOwner = LocalLifecycleOwner.current
+        val showDuplicateLoginSessionOffDialog = remember { mutableStateOf (false) }
+
+        val context = LocalContext.current
+        val localDbRepository by lazy {
+            AppDatabase.getInstance(context)
+        }
+        val coroutineScope = rememberCoroutineScope()
 
         LaunchedEffect(Unit) {
 //            val isMain = DataStoreManager.getIsMain().first() ?: false
@@ -311,10 +326,67 @@ class MainActivity : ComponentActivity() {
         }
 
         LaunchedEffect(Unit) {
-            AuthEventNotifier.refreshTokenExpired.collect {
-                Log.e("토큰", "토큰 만료됨.")
-                navController.navigate("Login")
+            lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                AuthEventNotifier.eventFlow.collect { event ->
+                    when (event) {
+                        AuthEvent.DUPLICATE_LOGIN -> {
+                            showDuplicateLoginSessionOffDialog.value = true
+                        }
+                    }
+                }
             }
+        }
+
+        if (showDuplicateLoginSessionOffDialog.value) {
+            NotiDialog(
+                onDismiss = {
+                    showDuplicateLoginSessionOffDialog.value = false
+                },
+                onConfirm = {
+                    showDuplicateLoginSessionOffDialog.value = false
+
+                    coroutineScope.launch(Dispatchers.IO) {
+                        val userId = DataStoreManager.getUserId().first() ?: -1
+                        try {
+                            // userId의 db삭제
+                            localDbRepository?.dataDao()?.deleteUserValueTable(userId)
+                            localDbRepository?.dataDao()?.deleteUserGlucoseTable(userId)
+                            localDbRepository?.dataDao()?.deleteUserCalibrationTable(userId)
+
+                            DataStoreManager.saveIsMain(false)
+                            DataStoreManager.deleteRoute()
+                            DataStoreManager.saveRoute("Splash")
+                            Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
+                            DataStoreManager.deleteAccessToken()
+                            DataStoreManager.deleteRefreshToken()
+                            DataStoreManager.deleteUserId()
+                            DataStoreManager.deleteDeviceMac()
+//                                    DataStoreManager.deleteDeviceMac()
+                            DataStoreManager.setNotiHighGlucose(false)
+                            DataStoreManager.setNotiLowGlucose(false)
+                            DataStoreManager.deleteStartTime()
+                            DataStoreManager.deleteEndTime()
+                            DataStoreManager.deleteDailyCalibrationTime()
+                            DataStoreManager.deleteDailyCalibrationLastTime()
+                            DataStoreManager.setLandScapeMode(false)
+                            DataStoreManager.deleteTargetLowGlucose()
+                            DataStoreManager.deleteTargetHighGlucose()
+                            DataStoreManager.deleteEmail()
+                            withContext(Dispatchers.Main) {
+                                // 1. 서비스 종료
+                                bleViewModel.emit("STOP_SERVICE")
+                                // 앱 강제 종료
+                                android.os.Process.killProcess(android.os.Process.myPid())
+                                exitProcess(0)
+                            }
+                        } catch (e: Exception) {
+                            Log.e("TEST", "중복로그인 다이얼로그 confirm 에러 : ${e.message}")
+                        }
+                    }
+                },
+                title = context.getString(R.string.dialog_detect_other_login_title),
+                content = context.getString(R.string.dialog_detect_other_login_content)
+            )
         }
 
         LaunchedEffect(Unit) {
