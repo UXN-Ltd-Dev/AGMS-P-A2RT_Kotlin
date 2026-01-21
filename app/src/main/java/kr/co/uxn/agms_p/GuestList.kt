@@ -29,7 +29,7 @@ object GuestList {
     fun getVipList(): ArrayList<String> {
         return arrayListOf(
             "jyjang@uxn.co.kr",
-            "beterlife4999@naver.com",
+            "betterlife4999@naver.com",
             "choco5732@gmail.com",
             "spark@uxn.co.kr",
             "parksejin70@naver.com"

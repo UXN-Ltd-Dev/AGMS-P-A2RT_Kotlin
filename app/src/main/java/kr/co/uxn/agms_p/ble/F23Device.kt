@@ -290,9 +290,9 @@ class F23Device() : Protocol {
                 val nWMiddle: Int = 19 + i * step
                 val nWLow: Int = 20 + i * step
                 Log.e(TEST, "WE Address : $nWHigh : $nWMiddle : $nWLow")
-                val nAHigh: Int = 21 + i * 6
-                val nAMiddle: Int = 22 + i * 6
-                val nALow: Int = 23 + i * 6
+                val nAHigh: Int = 21 + i * step
+                val nAMiddle: Int = 22 + i * step
+                val nALow: Int = 23 + i * step
                 Log.e(TEST, "AE Address : " + nAHigh + " : " + nAMiddle + " : " + nALow)
 
                 val time: Long = startTime + (1000 * 10 * i)
