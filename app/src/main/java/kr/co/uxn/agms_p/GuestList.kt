@@ -28,11 +28,13 @@ object GuestList {
 
     fun getVipList(): ArrayList<String> {
         return arrayListOf(
-            "jyjang@uxn.co.kr",
-            "betterlife4999@naver.com",
-            "choco5732@gmail.com",
-            "spark@uxn.co.kr",
-            "parksejin70@naver.com"
+            "jyjang@uxn.co.kr", // 나
+            "betterlife4999@naver.com", // 나
+            "choco5732@gmail.com", // 나
+            "spark@uxn.co.kr", // 대표님
+            "parksejin70@naver.com", // 대표님 부캐
+            "jhkim@uxn.co.kr", // 소장님
+            "jykim@uxn.co.kr" // 팀장님
         )
     }
 }

@@ -137,7 +137,7 @@
     <string name="toast_empty_serial_number">Please enter serial number.</string>
     <string name="chart_option_weo1">WEO1</string>
     <string name="chart_option_weo2">WEO2</string>
-    <string name="chart_option_glucose">glucose</string>
+    <string name="chart_option_glucose">GLUCOSE</string>
     <string name="glucose_chart">Glucose Chart</string>
     <string name="weo1_chart">WEO1 Chart</string>
     <string name="weo2_chart">WEO2 Chart</string>

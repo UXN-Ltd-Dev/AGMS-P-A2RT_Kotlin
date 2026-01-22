@@ -341,8 +341,10 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                                         R.string.toast_already_registed_account,
                                                         Toast.LENGTH_SHORT
                                                     ).show()
-                                                    delay(1000)
-                                                    navController.navigate("Login")
+//                                                    delay(1000)
+//                                                    navController.navigate("Login")
+
+                                                    sendRegisterBtnEnabled.value = false
 
                                                 }
                                             } else {

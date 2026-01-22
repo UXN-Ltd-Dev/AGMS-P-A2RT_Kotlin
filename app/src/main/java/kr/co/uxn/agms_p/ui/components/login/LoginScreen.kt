@@ -74,6 +74,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
     val isLoading by viewModel.isLoading.collectAsState()
 
     var showDuplicateLoginDialog = viewModel.isShowDuplicateLoginDialog.collectAsState()
+    var showDuplicateLoginKakaoDialog = viewModel.isShowDuplicateKakaoLoginDialog.collectAsState()
 
 
     val currentLanguage = Locale.current.language
@@ -120,8 +121,8 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                         )
                                     )
 
-                                val httpCode = login.code()
-                                Log.e("TEST", "http 코드 : $httpCode")
+                            val httpCode = login.code()
+                            Log.e("TEST", "http 코드 : $httpCode")
 
                                 if (login.isSuccessful && httpCode == 200) {
                                     val loginResult = login.body()
@@ -215,6 +216,45 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
 
                 }
 
+            },
+            title = stringResource(R.string.dialog_detect_other_login_title_in_login_screen),
+            content = stringResource(R.string.dialog_detect_other_login_content_in_login_screen)
+        )
+    }
+
+    if (showDuplicateLoginKakaoDialog.value.isShow) {
+
+        val type = showDuplicateLoginKakaoDialog.value.type
+
+        AlwaysDialog(
+            onDismiss = { viewModel.showDuplicateKakaoLoginDialog(false, type)},
+            onConfirm = {
+                // 중복 로그인인거 인지했고 진행해주세요라고 서버에 전송하는 로직 필요
+                viewModel.showDuplicateKakaoLoginDialog(false, type)
+
+                if (isNetworkAvailable(context)) {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            when (type) {
+                                // 1. 구글
+                                1801 -> {
+                                    viewModel.googleLogin(activityContext = context, isForced = true)
+                                }
+                                // 2. 카카오
+                                1802 -> {
+                                    viewModel.kakaoLogin(activityContext = context, isForced = true)
+                                }
+                            }
+                        } catch (exception: Exception) {
+                            Log.e("TEST", "네트워크 에러 : ${exception.message}")
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(context, R.string.toast_login_error_incorrect_account_info, Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                } else {
+                    Toast.makeText(context, R.string.toast_login_error, Toast.LENGTH_SHORT).show()
+                }
             },
             title = stringResource(R.string.dialog_detect_other_login_title_in_login_screen),
             content = stringResource(R.string.dialog_detect_other_login_content_in_login_screen)
@@ -566,7 +606,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     .wrapContentWidth()
                     .clickable {
                         if (isNetworkAvailable(context) ) {
-                            viewModel.googleLogin(context)
+                            viewModel.googleLogin(context, false)
                             viewModel.updateIsLoading(true)
                         } else {
                             Toast.makeText(context, R.string.toast_network_error, Toast.LENGTH_SHORT).show()
@@ -599,7 +639,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     .wrapContentWidth()
                     .clickable {
                         if (isNetworkAvailable(context)) {
-                            viewModel.kakaoLogin(context)
+                            viewModel.kakaoLogin(context, false)
                             viewModel.updateIsLoading(true)
                         } else {
                             Toast.makeText(context, R.string.toast_network_error, Toast.LENGTH_SHORT).show()
@@ -623,6 +663,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     )
                 }
             }
+//            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }

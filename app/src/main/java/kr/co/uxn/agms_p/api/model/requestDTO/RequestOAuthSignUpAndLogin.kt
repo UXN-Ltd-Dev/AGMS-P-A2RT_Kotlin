@@ -7,5 +7,11 @@ data class RequestOAuthSignUpAndLogin(
     val authCode: String,
 
     @SerializedName("login_type")
-    val loginType: Int
+    val loginType: Int,
+
+    @SerializedName("device_type_num")
+    val deviceTypeNum: Int = 1101,
+
+    @SerializedName("is_forced")
+    val isForced: Boolean = false
 )

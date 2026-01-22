@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
 import androidx.navigation.NavController
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -143,13 +144,13 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                     val userId = DataStoreManager.getUserId().first() ?: -1
 
                     // 로그아웃 api 전송
-                    try {
-                        withContext(Dispatchers.IO) {
-                            val result2 = tokenRetrofit.logout()
-                        }
-                    } catch (e: Exception) {
-                        Log.d("TEST", "로그아웃 API통신 실패 : ${e.message}")
-                    }
+//                    try {
+//                        withContext(Dispatchers.IO) {
+//                            val result2 = tokenRetrofit.logout()
+//                        }
+//                    } catch (e: Exception) {
+//                        Log.d("TEST", "로그아웃 API통신 실패 : ${e.message}")
+//                    }
 
 
 
@@ -160,6 +161,8 @@ fun SettingScreen(navController: NavController, paddingValues: PaddingValues, bl
                             if (sensorOffBody != null) {
                                 Log.w("TEST", "sensorOff responseBody : ${sensorOffBody}")
                                 if (sensorOffBody.isSuccess) {
+                                    tokenRetrofit.logout()
+                                    delay(1000)
                                     // userId의 db삭제
                                     localDbRepository?.dataDao()?.deleteUserValueTable(userId)
                                     localDbRepository?.dataDao()?.deleteUserGlucoseTable(userId)

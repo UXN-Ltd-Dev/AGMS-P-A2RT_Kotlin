@@ -9,6 +9,6 @@ data class RequestDeleteOauthUserInfo(
     @SerializedName("oauth_type")
     val oauthType: Int,
 
-    @SerializedName("device")
+    @SerializedName("device_type")
     val device: Int = 1101
 )

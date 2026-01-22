@@ -295,7 +295,7 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                                                 Toast.makeText(context, context.getString(R.string.toast_delete_account), Toast.LENGTH_SHORT).show()
                                             }
 
-                                            // 토큰정리 및 앱 종료
+                                            // 토큰 정리 및 앱 종료
 
                                             localDbRepository?.dataDao()?.deleteUserValueTable(userId)
                                             localDbRepository?.dataDao()?.deleteUserGlucoseTable(userId)
