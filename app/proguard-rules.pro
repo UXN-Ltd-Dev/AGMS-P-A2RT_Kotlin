@@ -131,15 +131,21 @@
 -dontwarn org.openjsse.**
 
 # 릴리즈모드에서, Something went wrong 에러
-# 1. Google Play Services 연결 관련 (이 에러의 직접적 원인)
-#-keep class com.google.android.gms.common.** { *; }
-#-keep class com.google.android.gms.auth.** { *; }
-#-keep class com.google.android.gms.tasks.** { *; }
-#
-## 2. Credential Manager (로그인 기능 보호)
-#-keep class androidx.credentials.** { *; }
-#-keep class com.google.android.libraries.identity.googleid.** { *; }
-#
-## 3. 안전장치 (Coroutines 등)
-#-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
-#-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+# Google Play Services
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.android.gms.**
+
+# Google Identity Services
+-keep class com.google.android.libraries.identity.googleid.** { *; }
+-dontwarn com.google.android.libraries.identity.googleid.**
+
+# Credentials API
+-keep class androidx.credentials.** { *; }
+-dontwarn androidx.credentials.**
+
+# Play Core (App Update)
+-keep class com.google.android.play.** { *; }
+-dontwarn com.google.android.play.**
+
+# Tasks API
+-keep class com.google.android.gms.tasks.** { *; }
