@@ -29,8 +29,8 @@ class TokenInterceptor() : Interceptor {
             DataStoreManager.getRefreshToken().firstOrNull()
         }
 
-        Log.e("TEST", "DataStoreManager.getAccessToken : ${token}")
-        Log.e("TEST", "DataStoreManager.getRefreshToken : ${refreshToken}")
+//        Log.e("TEST", "DataStoreManager.getAccessToken : ${token}")
+//        Log.e("TEST", "DataStoreManager.getRefreshToken : ${refreshToken}")
         val request = chain.request().newBuilder().header("Authorization", "Bearer $token").build()
         val response = chain.proceed(request)
         return response

@@ -205,15 +205,15 @@ class MainActivity : ComponentActivity() {
 
                         if (currentHash.equals(VALID_SIGNATURE_HASH, ignoreCase = true)) {
                             Log.e("TEST", "무결성 검증 통과!")
-//                            Toast.makeText(this@MainActivity, R.string.toast_integrity_check_pass, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this@MainActivity, R.string.toast_integrity_check_pass, Toast.LENGTH_SHORT).show();
                         } else {
                             withContext(Dispatchers.Main) {
-//                                Toast.makeText(this@MainActivity, R.string.toast_integrity_check_fail, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this@MainActivity, R.string.toast_integrity_check_fail, Toast.LENGTH_SHORT).show()
                             }
                         }
                     } catch (e: NoSuchAlgorithmException) {
                         withContext(Dispatchers.Main) {
-//                            Toast.makeText(this@MainActivity, R.string.toast_integrity_check_fail, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@MainActivity, R.string.toast_integrity_check_fail, Toast.LENGTH_SHORT).show()
                         }
                         Log.e("TEST", "무결성 검증 실패: " + e.message)
                         throw RuntimeException(e)
@@ -222,7 +222,7 @@ class MainActivity : ComponentActivity() {
             } catch (e: PackageManager.NameNotFoundException) {
                 Log.e("TEST", "무결성 검증 실패: " + e.message)
                 withContext(Dispatchers.Main) {
-//                    Toast.makeText(this@MainActivity, R.string.toast_integrity_check_fail, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, R.string.toast_integrity_check_fail, Toast.LENGTH_SHORT).show()
                 }
                 throw RuntimeException(e)
             }

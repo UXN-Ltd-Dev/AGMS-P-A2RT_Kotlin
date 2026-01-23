@@ -14,7 +14,7 @@ object RetrofitClient {
 
     private val okHttpClient by lazy {
         OkHttpClient.Builder()
-            .addInterceptor(HttpLoggingInterceptor(logger = HttpLoggingInterceptor.Logger.DEFAULT).apply { level = HttpLoggingInterceptor.Level.BODY })
+//            .addInterceptor(HttpLoggingInterceptor(logger = HttpLoggingInterceptor.Logger.DEFAULT).apply { level = HttpLoggingInterceptor.Level.BODY })
             .build()
     }
 
@@ -30,7 +30,7 @@ object RetrofitClient {
 
     private val okHttpClient2 by lazy {
         OkHttpClient.Builder()
-            .addInterceptor(HttpLoggingInterceptor(logger = HttpLoggingInterceptor.Logger.DEFAULT).apply { level = HttpLoggingInterceptor.Level.BODY })
+//            .addInterceptor(HttpLoggingInterceptor(logger = HttpLoggingInterceptor.Logger.DEFAULT).apply { level = HttpLoggingInterceptor.Level.BODY })
             .addInterceptor(TokenInterceptor())
             .authenticator(TokenAuthenticator())
             .build()
@@ -47,7 +47,7 @@ object RetrofitClient {
 
     private val okHttpClient3 by lazy {
         OkHttpClient.Builder()
-            .addInterceptor(HttpLoggingInterceptor(logger = HttpLoggingInterceptor.Logger.DEFAULT).apply { level = HttpLoggingInterceptor.Level.BODY })
+//            .addInterceptor(HttpLoggingInterceptor(logger = HttpLoggingInterceptor.Logger.DEFAULT).apply { level = HttpLoggingInterceptor.Level.BODY })
             .build()
     }
 
