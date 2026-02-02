@@ -58,6 +58,7 @@ import kr.co.uxn.agms_p.api.RetrofitClient.emptyRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignInNormal
 import kr.co.uxn.agms_p.ui.viewmodel.LoginViewModel
 import kotlinx.coroutines.withContext
+import kr.co.uxn.agms_p.BuildConfig
 import kr.co.uxn.agms_p.NetworkUtil.isNetworkAvailable
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseDuplicateLoginError
 import kr.co.uxn.agms_p.api.model.responseDTO.ResponseLoginError
@@ -641,6 +642,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                         if (isNetworkAvailable(context)) {
                             viewModel.kakaoLogin(context, false)
                             viewModel.updateIsLoading(true)
+                            Log.d("TEST", "카카오 네이티브 키 확인 : ${BuildConfig.kakao_native_app_key}")
                         } else {
                             Toast.makeText(context, R.string.toast_network_error, Toast.LENGTH_SHORT).show()
                         }

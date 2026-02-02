@@ -212,49 +212,44 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                         val responseBody = response.body()
                         if (responseBody != null) {
                             if (responseBody.isSignUp) {
-                                // isSignUp 이 true 일 경우, 회원 가입
-                                // 회원 아님, 회원 가입 화면으로 보내는 이벤트 처리
-                                // 및 일단 토큰을 받는다.
+                                // isSignUp = true, 회원 가입
                                 val accessToken = responseBody.accessToken
                                 val refreshToken = responseBody.refreshToken
+
                                 val oAuthEmail = responseBody.email
-//                            Log.d("TEST", "responseBody.email: $oAuthEmail")
+                                Log.d("TEST", "responseBody.email: $oAuthEmail")
+
+                                val preToken = responseBody.preToken
+                                Log.d("TEST", "responseBody.preToken: $preToken")
 
                                 val userId = responseBody.userId
-//                            Log.d("TEST", "responseBody.userId: $userId")
                                 // 토큰 저장
-                                DataStoreManager.deleteAccessToken()
-                                DataStoreManager.deleteUserId()
-                                DataStoreManager.saveAccessToken(accessToken)
-                                DataStoreManager.saveRefreshToken(refreshToken)
-                                DataStoreManager.saveUserId(userId)
+
+                                DataStoreManager.deletePreToken()
+                                DataStoreManager.deleteEmail()
+                                DataStoreManager.savePreToken(preToken)
 
                                 // mac 정리
                                 DataStoreManager.deleteDeviceMac()
-                                // 토큰 저장 테스트
-                                val verifyAccessToken = DataStoreManager.getAccessToken().first()
-                                val verifyRefreshToken = DataStoreManager.getRefreshToken().first()
-                                val verifyUserId = DataStoreManager.getUserId().first()
-                                withContext(Dispatchers.Main) {
-//                                Log.d("TEST", "TokenManager | accessToken : $verifyAccessToken\nrefreshToken : $verifyRefreshToken\nuserId : $verifyUserId")
-                                    updateIsLoading(false)
-                                }
                                 // 회원가입 화면으로 이동
-//                            Log.e("TEST", "userId : ${userId}, type : ${type}, oAuthEmail : ${oAuthEmail}")
                                 _navigationEvent.value = LoginNavigationEvent.NavigateToSignUp(userId, type.toString(), oAuthEmail)
-//                            signUpType = type
 
                             } else {
                                 // isSignUp 이 false 일 경우, 로그인
                                 val accessToken = responseBody.accessToken
                                 val refreshToken = responseBody.refreshToken
                                 val userId = responseBody.userId
+                                val email = responseBody.email
                                 // 토큰 저장
                                 DataStoreManager.deleteAccessToken()
                                 DataStoreManager.deleteUserId()
+                                DataStoreManager.deleteRefreshToken()
+                                DataStoreManager.deleteEmail()
+
                                 DataStoreManager.saveAccessToken(accessToken)
                                 DataStoreManager.saveRefreshToken(refreshToken)
                                 DataStoreManager.saveUserId(userId)
+                                DataStoreManager.saveEmail(email)
                                 // mac 정리
                                 DataStoreManager.deleteDeviceMac()
                                 // 토큰 저장 테스트
@@ -312,12 +307,16 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                                 val accessToken = responseBody.accessToken
                                 val refreshToken = responseBody.refreshToken
                                 val userId = responseBody.userId
+                                val email = responseBody.email
                                 // 토큰 저장
                                 DataStoreManager.deleteAccessToken()
                                 DataStoreManager.deleteUserId()
+                                DataStoreManager.deleteEmail()
                                 DataStoreManager.saveAccessToken(accessToken)
                                 DataStoreManager.saveRefreshToken(refreshToken)
                                 DataStoreManager.saveUserId(userId)
+                                DataStoreManager.saveEmail(email)
+
                                 // mac 정리
                                 DataStoreManager.deleteDeviceMac()
                                 // 토큰 저장 테스트

@@ -23,6 +23,7 @@ object DataStoreManager {
     // normal
     private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
     private val REFRESH_TOKEN_KEY = stringPreferencesKey("refresh_token")
+    private val PRE_TOKEN_KEY = stringPreferencesKey("pre_token")
     private val EMAIL = stringPreferencesKey("email")
     private val USER_ID = intPreferencesKey("user_id")
     private val START_TIME = longPreferencesKey("start_time")
@@ -69,6 +70,12 @@ object DataStoreManager {
     fun getRefreshToken(): Flow<String?> {
         return dataStore.data.map { prefs ->
             prefs[REFRESH_TOKEN_KEY]
+        }
+    }
+
+    fun getPreToken(): Flow<String?> {
+        return dataStore.data.map { prefs ->
+            prefs[PRE_TOKEN_KEY]
         }
     }
 
@@ -148,6 +155,7 @@ object DataStoreManager {
     suspend fun saveEmail(email: String) {
         dataStore.edit { prefs ->
             prefs[EMAIL] = email
+            Log.d("TEST", "email saved!  : $email")
         }
     }
 
@@ -223,6 +231,12 @@ object DataStoreManager {
         }
     }
 
+    suspend fun savePreToken(preToken: String) {
+        dataStore.edit { prefs ->
+            prefs[PRE_TOKEN_KEY] = preToken
+        }
+    }
+
     suspend fun deleteAccessToken() {
         dataStore.edit { prefs ->
             prefs.remove(ACCESS_TOKEN_KEY)
@@ -232,6 +246,12 @@ object DataStoreManager {
     suspend fun deleteRefreshToken() {
         dataStore.edit { prefs ->
             prefs.remove(REFRESH_TOKEN_KEY)
+        }
+    }
+
+    suspend fun deletePreToken() {
+        dataStore.edit { prefs ->
+            prefs.remove(PRE_TOKEN_KEY)
         }
     }
 

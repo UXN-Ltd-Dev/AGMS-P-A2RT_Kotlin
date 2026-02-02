@@ -19,6 +19,12 @@ data class ResponseSignUpOauthAndLogin(
     val accessToken: String,
 
     @SerializedName("refresh_token")
-    val refreshToken: String
+    val refreshToken: String,
+
+    @SerializedName("OAuth_type")
+    val oAuthType: Int,
+
+    @SerializedName("pre_signup_token")
+    val preToken: String
 )
 

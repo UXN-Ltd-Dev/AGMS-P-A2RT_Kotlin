@@ -59,10 +59,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.emptyRetrofit
+import kr.co.uxn.agms_p.api.RetrofitClient.preRetrofit
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignInNormal
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestSignUpNormal
@@ -720,8 +722,6 @@ fun SignUpInfoScreen3(
                     modifier = Modifier
                         .align(Alignment.Center)
                         .clickable {
-                            // TODO : int로 변환해야할 체중, 신장, 나이는 string값이 포함되면 runtimeError가 발생한다.
-                            // TODO : Picker로 바꿔야 하나.?
                             if (name.value == "") {
                                 Toast.makeText(context, R.string.toast_req_name, Toast.LENGTH_SHORT).show()
                             } else if (sex.value == "") {
@@ -772,7 +772,8 @@ fun SignUpInfoScreen3(
                                     )
 
                                     val requestSignUpOauthDetail = RequestSignUpOauthDetail(
-                                        userId = loginViewModel.userIdTest,
+                                        socialType = type,
+                                        deviceType = 1101,
                                         email = email,
                                         name = name.value,
                                         sex = sexCode,
@@ -790,14 +791,13 @@ fun SignUpInfoScreen3(
                                         // 간편로그인 회원가입 및 로그인
                                         try {
                                             // oAuth 상세 정보입력
+                                            val preToken = DataStoreManager.getPreToken().first() ?: ""
                                             val result =
-                                                tokenRetrofit.oAuthSaveDetailInfo(
-                                                    requestSignUpOauthDetail
-                                                )
+                                                preRetrofit.oAuthSaveDetailInfo(preToken = "Bearer $preToken", requestSignUpOauthDetail)
                                             withContext(Dispatchers.Main) {
                                                 Log.d(
                                                     "TEST",
-                                                    "oAuthSaveDetailInfo requestDto : ${requestSignUpOauthDetail.toString()}"
+                                                    "oAuthSaveDetailInfo preToken : ${preToken}"
                                                 )
                                             }
                                             if (result.isSuccessful) {
@@ -806,13 +806,22 @@ fun SignUpInfoScreen3(
                                                     if (resultBody.isSuccess) {
 
                                                         // 토큰 저장 테스트
-                                                        val verifyAccessToken =
-                                                            DataStoreManager.getAccessToken()
-                                                        val verifyRefreshToken =
-                                                            DataStoreManager.getRefreshToken()
+                                                        val accessToken = resultBody.accessToken
+                                                        val refreshToken = resultBody.refreshToken
+                                                        val userId = resultBody.userId
+                                                        val email = resultBody.email
+
+                                                        DataStoreManager.deleteAccessToken()
+                                                        DataStoreManager.deleteRefreshToken()
+                                                        DataStoreManager.deleteUserId()
+                                                        DataStoreManager.deleteEmail()
+
+                                                        DataStoreManager.saveAccessToken(accessToken)
+                                                        DataStoreManager.saveRefreshToken(refreshToken)
+                                                        DataStoreManager.saveUserId(userId)
+                                                        DataStoreManager.saveEmail(email)
+
                                                         withContext(Dispatchers.Main) {
-                                                            Log.d("TEST", "oAuthSaveDetailInfo responseBody: $resultBody")
-                                                            Log.d("TEST", "TokenManager | accessToken : $verifyAccessToken\nrefreshToken : $verifyRefreshToken")
 
                                                             navController.navigate("SettingPermissionScreen/${type}") {
                                                                 popUpTo("Splash") {
@@ -867,6 +876,7 @@ fun SignUpInfoScreen3(
                                                                 DataStoreManager.saveAccessToken(
                                                                     loginResult.accessToken
                                                                 )
+                                                                DataStoreManager.deleteRefreshToken()
                                                                 DataStoreManager.saveRefreshToken(
                                                                     loginResult.refreshToken
                                                                 )

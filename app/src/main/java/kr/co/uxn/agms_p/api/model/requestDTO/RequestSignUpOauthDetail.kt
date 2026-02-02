@@ -3,8 +3,13 @@ package kr.co.uxn.agms_p.api.model.requestDTO
 import com.google.gson.annotations.SerializedName
 
 data class RequestSignUpOauthDetail(
-    @SerializedName("user_id")
-    val userId: Int,
+//    @SerializedName("user_id")
+//    val userId: Int,
+    @SerializedName("social_type")
+    val socialType: Int,
+
+    @SerializedName("device_type_num")
+    val deviceType: Int,
 
     @SerializedName("email")
     val email: String,

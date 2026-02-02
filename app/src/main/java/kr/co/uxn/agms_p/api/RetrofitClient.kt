@@ -60,6 +60,21 @@ object RetrofitClient {
             .build()
     }
 
+    private val okHttpClient4 by lazy {
+        OkHttpClient.Builder()
+//            .addInterceptor(HttpLoggingInterceptor(logger = HttpLoggingInterceptor.Logger.DEFAULT).apply { level = HttpLoggingInterceptor.Level.BODY })
+            .build()
+    }
+
+    private val retrofit4 by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL_SERVER)
+            .client(okHttpClient4)
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
     val emptyRetrofit: RemoteDataSource by lazy {
         retrofit.create(RemoteDataSource::class.java)
     }
@@ -70,5 +85,9 @@ object RetrofitClient {
 
     val refreshRetrofit: RemoteDataSource by lazy {
         retrofit3.create(RemoteDataSource::class.java)
+    }
+
+    val preRetrofit: RemoteDataSource by lazy {
+        retrofit4.create(RemoteDataSource::class.java)
     }
 }

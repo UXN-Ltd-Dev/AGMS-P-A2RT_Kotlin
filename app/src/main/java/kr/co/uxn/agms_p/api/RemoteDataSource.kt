@@ -59,8 +59,11 @@ interface RemoteDataSource {
     suspend fun oAuthSignUpAndLogin(@Body oAuthSignUpAndLogin: RequestOAuthSignUpAndLogin): Response<ResponseSignUpOauthAndLogin>
 
     // Oauth 세부 정보 등록
-    @POST("/api/user/detail")
-    suspend fun oAuthSaveDetailInfo(@Body oAuthDetailInfo: RequestSignUpOauthDetail): Response<ResponseSignUpOauthDetail>
+    @POST("/api/user/detail_oauth")
+    suspend fun oAuthSaveDetailInfo(
+        @Header("Authorization") preToken: String,
+        @Body oAuthDetailInfo: RequestSignUpOauthDetail
+    ): Response<ResponseSignUpOauthDetail>
 
     // 혈당, 식사, 운동, 인슐린 전송
     @POST("/api/event/add")
