@@ -95,7 +95,7 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
     val buttonSize = remember { mutableStateOf(IntSize.Zero) }
 
     val currentLanguage = Locale.current.language
-    val isKorean = currentLanguage == "ko"
+//    val isKorean = currentLanguage == "ko"
 
     LaunchedEffect(timerKey.value) {
         if (isTimerRunning.value) {
@@ -699,7 +699,8 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                     .align(Alignment.CenterHorizontally)
                             ) {
                                 Image(
-                                    painter = painterResource(id = if(isKorean) R.drawable.btn_next else R.drawable.btn_eng_continue),
+//                                    painter = painterResource(id = if(isKorean) R.drawable.btn_next else R.drawable.btn_eng_continue),
+                                    painter = painterResource(id = R.drawable.btn_next),
                                     contentDescription = "다음 버튼",
                                     modifier = Modifier
                                         .align(Alignment.Center)

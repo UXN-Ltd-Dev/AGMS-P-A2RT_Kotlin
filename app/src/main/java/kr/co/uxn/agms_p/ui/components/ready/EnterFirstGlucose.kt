@@ -160,7 +160,8 @@ fun EnterFirstGlucose(navController: NavController) {
                     .height(50.dp)
             ) {
                 Image(
-                    painter = painterResource(id = if (isKorean) R.drawable.btn_complete else R.drawable.btn_eng_complete),
+//                    painter = painterResource(id = if (isKorean) R.drawable.btn_complete else R.drawable.btn_eng_complete),
+                    painter = painterResource(id = R.drawable.btn_complete),
                     contentDescription = "완료 버튼",
                     modifier = Modifier
                         .align(Alignment.Center)

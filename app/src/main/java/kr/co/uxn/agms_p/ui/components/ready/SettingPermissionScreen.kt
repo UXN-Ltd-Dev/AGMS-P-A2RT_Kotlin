@@ -375,7 +375,8 @@ fun SettingPermissionScreen(
                             permissions.requestPermission()
                             Log.d("TEST", "요구된 권한은 : ")
                         },
-                    painter = painterResource(id = if(isKorean) R.drawable.btn_confirm else R.drawable.btn_eng_confirm),
+//                    painter = painterResource(id = if(isKorean) R.drawable.btn_confirm else R.drawable.btn_eng_confirm),
+                    painter = painterResource(id = R.drawable.btn_confirm),
                     contentDescription = "확인 버튼"
                 )
             }

@@ -335,7 +335,7 @@ fun EventScreen(
             }
             Spacer(modifier = Modifier.height(2.dp))
 
-            if (isKorean) {
+//            if (isKorean) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -374,51 +374,51 @@ fun EventScreen(
                         contentDescription = "입력 아이콘"
                     )
                 }
-            } else {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
-                ) {
+//            } else {
+//                Row(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(horizontal = 20.dp)
+//                ) {
+////                    Text(
+////                        text = "Record your daily activities such",
+////                        fontWeight = FontWeight.Medium,
+////                        fontSize = fontSize
+////                    )
 //                    Text(
 //                        text = "Record your daily activities such",
 //                        fontWeight = FontWeight.Medium,
+//                        color = Color(0xFF828282),
 //                        fontSize = fontSize
 //                    )
-                    Text(
-                        text = "Record your daily activities such",
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF828282),
-                        fontSize = fontSize
-                    )
-                }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "as",
-                        color = Color(0xFF828282),
-                        fontWeight = FontWeight.Medium,
-                        fontSize = fontSize
-                    )
-                    Text(
-                        text = " meals, exercise, and insulin.",
-                        fontWeight = FontWeight.Medium,
-                        fontSize = fontSize
-                    )
-                    Image(
-                        modifier = Modifier
-                            .size(70.dp, 26.dp)
-                            .padding(bottom = 3.dp),
-                        painter = painterResource(R.drawable.eng_btn_add),
-                        contentDescription = "입력 아이콘"
-                    )
-                }
-            }
+//                }
+//
+//                Row(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(horizontal = 20.dp),
+//                    horizontalArrangement = Arrangement.SpaceBetween
+//                ) {
+//                    Text(
+//                        text = "as",
+//                        color = Color(0xFF828282),
+//                        fontWeight = FontWeight.Medium,
+//                        fontSize = fontSize
+//                    )
+//                    Text(
+//                        text = " meals, exercise, and insulin.",
+//                        fontWeight = FontWeight.Medium,
+//                        fontSize = fontSize
+//                    )
+//                    Image(
+//                        modifier = Modifier
+//                            .size(70.dp, 26.dp)
+//                            .padding(bottom = 3.dp),
+//                        painter = painterResource(R.drawable.eng_btn_add),
+//                        contentDescription = "입력 아이콘"
+//                    )
+//                }
+//            }
         }
 
         // 혈당값 입력 카드
@@ -454,79 +454,44 @@ fun EventScreen(
 
             Spacer(modifier = Modifier.height(2.dp))
 
-            if (isKorean) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
-                ) {
-                    Text(
-                        text = "최소 ",
-                        fontWeight = FontWeight.Medium,
-                        fontSize = fontSize,
-                        color = Color(0xFF828282),
-                    )
-                    Text(
-                        text = "1일 1회",
-                        fontWeight = FontWeight.Medium,
-                        textDecoration = TextDecoration.Underline,
-                        fontSize = fontSize
-                    )
-                }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            ) {
+                Text(
+                    text = "최소 ",
+                    fontWeight = FontWeight.Medium,
+                    fontSize = fontSize,
+                    color = Color(0xFF828282),
+                )
+                Text(
+                    text = "1일 1회",
+                    fontWeight = FontWeight.Medium,
+                    textDecoration = TextDecoration.Underline,
+                    fontSize = fontSize
+                )
+            }
 
-                Row(
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "공복 혈당을 입력하세요",
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF828282),
+                    fontSize = fontSize
+                )
+                Image(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "공복 혈당을 입력하세요",
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF828282),
-                        fontSize = fontSize
-                    )
-                    Image(
-                        modifier = Modifier
-                            .size(70.dp, 26.dp)
-                            .padding(bottom = 3.dp),
-                        painter = painterResource(R.drawable.enter_icon),
-                        contentDescription = "입력 아이콘"
-                    )
-                }
-            } else {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
-                ) {
-                    Text(
-                        text = "Enter your fasting glucose",
-                        fontWeight = FontWeight.Medium,
-                        fontSize = fontSize,
-                        color = Color(0xFF828282),
-                    )
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "at least once a day.",
-                        fontWeight = FontWeight.Medium,
-                        textDecoration = TextDecoration.Underline,
-                        fontSize = fontSize
-                    )
-                    Image(
-                        modifier = Modifier
-                            .size(70.dp, 26.dp)
-                            .padding(bottom = 3.dp),
-                        painter = painterResource(R.drawable.eng_btn_add),
-                        contentDescription = "입력 아이콘"
-                    )
-                }
+                        .size(70.dp, 26.dp)
+                        .padding(bottom = 3.dp),
+                    painter = painterResource(R.drawable.enter_icon),
+                    contentDescription = "입력 아이콘"
+                )
             }
         }
 

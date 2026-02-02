@@ -562,7 +562,8 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                 contentAlignment = Alignment.CenterStart
             ) {
                 Image(
-                    painter = painterResource(id = if(isKorean) R.drawable.email_login_high else R.drawable.btn_eng_start_with_email),
+//                    painter = painterResource(id = if(isKorean) R.drawable.email_login_high else R.drawable.btn_eng_start_with_email),
+                    painter = painterResource(id = R.drawable.email_login_high),
                     contentDescription = "메일 로그인 배경",
                     modifier = Modifier
                         .size(width = 300.dp, height = 50.dp)
@@ -616,7 +617,8 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                 contentAlignment = Alignment.CenterStart
             ) {
                 Image(
-                    painter = painterResource(id = if (isKorean) R.drawable.google_login_high else R.drawable.btn_eng_start_google),
+//                    painter = painterResource(id = if (isKorean) R.drawable.google_login_high else R.drawable.btn_eng_start_google),
+                    painter = painterResource(id = R.drawable.google_login_high),
                     contentDescription = "구글 로그인 배경",
                     modifier = Modifier
                         .size(width = 300.dp, height = 50.dp)
@@ -650,7 +652,8 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                 contentAlignment = Alignment.CenterStart
             ) {
                 Image(
-                    painter = painterResource(id = if (isKorean) R.drawable.kakao_icon_high else R.drawable.btn_eng_start_with_kakao),
+//                    painter = painterResource(id = if (isKorean) R.drawable.kakao_icon_high else R.drawable.btn_eng_start_with_kakao),
+                    painter = painterResource(id = R.drawable.kakao_icon_high),
                     contentDescription = "카카오 로그인 배경",
                     modifier = Modifier
                         .size(width = 300.dp, height = 50.dp)

@@ -717,7 +717,8 @@ fun SignUpInfoScreen3(
                 contentAlignment = Alignment.BottomCenter
             ) {
                 Image(
-                    painter = painterResource(id = if (isKorean) R.drawable.btn_confirm else R.drawable.btn_eng_confirm),
+//                    painter = painterResource(id = if (isKorean) R.drawable.btn_confirm else R.drawable.btn_eng_confirm),
+                    painter = painterResource(id = R.drawable.btn_confirm),
                     contentDescription = "확인 버튼",
                     modifier = Modifier
                         .align(Alignment.Center)

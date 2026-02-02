@@ -144,35 +144,35 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                         weight.value = userData.weight.toString()
                         targetMaxRange.value = userData.targetGlucoseMax.toString()
                         targetMinRange.value = userData.targetGlucoseMin.toString()
-                        if (isKorean) {
+//                        if (isKorean) {
                             sex.value = userData.sex
                             diabetesType.value = userData.diabetesType
-                        } else {
-                            if(userData.sex == "남성") {
-                                sex.value = "Male"
-                            } else if(userData.sex == "여성") {
-                                sex.value = "Female"
-                            } else {
-                                sex.value = "Prefer not to say"
-                            }
-
-                            if(userData.diabetesType == "정상") {
-                                diabetesType.value = "Normal"
-                            } else if(userData.diabetesType == "당뇨 전단계") {
-                                diabetesType.value = "Prediabetes"
-                            } else if(userData.diabetesType == "제1형 당뇨병") {
-                                diabetesType.value = "Type 1 Diabetes"
-                            } else if(userData.diabetesType == "제2형 당뇨병") {
-                                diabetesType.value = "Type 2 Diabetes"
-                            } else if(userData.diabetesType == "임신성 당뇨병") {
-                                diabetesType.value = "Gestational Diabetes"
-                            } else if(userData.diabetesType == "LADA") {
-                                diabetesType.value = "LADA"
-                            } else { // "모름"
-                                diabetesType.value = "Unknown"
-                            }
-
-                        }
+//                        } else {
+//                            if(userData.sex == "남성") {
+//                                sex.value = "Male"
+//                            } else if(userData.sex == "여성") {
+//                                sex.value = "Female"
+//                            } else {
+//                                sex.value = "Prefer not to say"
+//                            }
+//
+//                            if(userData.diabetesType == "정상") {
+//                                diabetesType.value = "Normal"
+//                            } else if(userData.diabetesType == "당뇨 전단계") {
+//                                diabetesType.value = "Prediabetes"
+//                            } else if(userData.diabetesType == "제1형 당뇨병") {
+//                                diabetesType.value = "Type 1 Diabetes"
+//                            } else if(userData.diabetesType == "제2형 당뇨병") {
+//                                diabetesType.value = "Type 2 Diabetes"
+//                            } else if(userData.diabetesType == "임신성 당뇨병") {
+//                                diabetesType.value = "Gestational Diabetes"
+//                            } else if(userData.diabetesType == "LADA") {
+//                                diabetesType.value = "LADA"
+//                            } else { // "모름"
+//                                diabetesType.value = "Unknown"
+//                            }
+//
+//                        }
                     }
                 }
             } else {
@@ -1076,7 +1076,8 @@ fun MyInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
                         contentAlignment = Alignment.BottomCenter
                     ) {
                         Image(
-                            painter = painterResource(id = if(isKorean) R.drawable.btn_save else R.drawable.btn_eng_save),
+//                            painter = painterResource(id = if(isKorean) R.drawable.btn_save else R.drawable.btn_eng_save),
+                            painter = painterResource(id = R.drawable.btn_save),
                             contentDescription = "저장 버튼",
                             modifier = Modifier
                                 .align(Alignment.Center)

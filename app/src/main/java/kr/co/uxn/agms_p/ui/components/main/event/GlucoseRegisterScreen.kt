@@ -241,7 +241,8 @@ fun GlucoseRegisterScreen(
                         .padding(bottom = 20.dp)
                 ) {
                     Image(
-                        painter = painterResource(id = if (isKorean) R.drawable.btn_save else R.drawable.btn_eng_save),
+//                        painter = painterResource(id = if (isKorean) R.drawable.btn_save else R.drawable.btn_eng_save),
+                        painter = painterResource(id = R.drawable.btn_save),
                         contentDescription = "저장 버튼",
                         modifier = Modifier
                             .align(Alignment.Center)

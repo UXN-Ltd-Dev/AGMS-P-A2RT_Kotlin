@@ -95,11 +95,7 @@ fun SensorInfoScreen(navController: NavController, bleViewModel: BleViewModel) {
     LaunchedEffect(Unit) {
         val startTimeMilli = DataStoreManager.getStartTime().first() ?: -1
         val endTimeMilli = DataStoreManager.getEndTime().first() ?: -1
-        val formatter = if(isKorean) {
-            DateTimeFormatter.ofPattern("yyyy년 M월 d일", Locale.KOREAN)
-        } else {
-            DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)
-        }
+        val formatter = DateTimeFormatter.ofPattern("yyyy년 M월 d일", Locale.KOREAN)
         val userId = DataStoreManager.getUserId().first() ?: -1
 
         val formattedDate = if (startTimeMilli != -1L) {

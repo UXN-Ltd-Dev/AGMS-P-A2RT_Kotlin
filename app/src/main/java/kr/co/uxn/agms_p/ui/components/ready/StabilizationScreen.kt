@@ -288,19 +288,19 @@ fun StabilizationScreen(navController: NavController, mac: String, bleViewModel:
 
             Spacer(modifier = Modifier.size(30.dp))
 
-            if (isKorean) {
+//            if (isKorean) {
                 Image(
                     painter = painterResource(id = R.drawable.one_hundred_twenty_min),
                     contentDescription = "120분 소요",
                     modifier = Modifier.size(width = 90.dp, 30.dp)
                 )
-            } else {
-                Image(
-                    painter = painterResource(id = R.drawable.test),
-                    contentDescription = "120분 소요",
-                    modifier = Modifier.size(width = 130.dp, 30.dp)
-                )
-            }
+//            } else {
+//                Image(
+//                    painter = painterResource(id = R.drawable.test),
+//                    contentDescription = "120분 소요",
+//                    modifier = Modifier.size(width = 130.dp, 30.dp)
+//                )
+//            }
 
             Spacer(modifier = Modifier.height(30.dp))
             // 로티 애니메이션

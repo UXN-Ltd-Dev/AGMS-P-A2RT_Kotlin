@@ -506,7 +506,8 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                             .height(50.dp)
                     ) {
                         Image(
-                            painter = painterResource(id = if (isKorean) R.drawable.btn_delete_account else R.drawable.btn_eng_delete),
+//                            painter = painterResource(id = if (isKorean) R.drawable.btn_delete_account else R.drawable.btn_eng_delete),
+                            painter = painterResource(id = R.drawable.btn_delete_account),
                             contentDescription = "계정 삭제 버튼",
                             modifier = Modifier.align(Alignment.Center)
                                 .clickable {
@@ -532,7 +533,8 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                             .height(50.dp)
                     ) {
                         Image(
-                            painter = painterResource(id = if (isKorean) R.drawable.btn_cancel else R.drawable.btn_eng_cancel),
+//                            painter = painterResource(id = if (isKorean) R.drawable.btn_cancel else R.drawable.btn_eng_cancel),
+                            painter = painterResource(id = R.drawable.btn_cancel),
                             contentDescription = "취소 버튼",
                             modifier = Modifier.align(Alignment.Center)
                                 .clickable {

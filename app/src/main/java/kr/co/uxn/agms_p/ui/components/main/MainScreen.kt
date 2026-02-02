@@ -83,9 +83,12 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
     val bleState by bleViewModel.bleState.collectAsState()
 
     val blePainter = when (bleState) {
-        BleConnectionState.CONNECTED -> if(isKorean) R.drawable.ble_connected else R.drawable.eng_connected
-        BleConnectionState.DISCONNECTED -> if(isKorean) R.drawable.ble_disconnected else R.drawable.eng_disconnected
-        BleConnectionState.CONNECTING -> if(isKorean) R.drawable.ble_connecting else R.drawable.eng_connecting
+//        BleConnectionState.CONNECTED -> if(isKorean) R.drawable.ble_connected else R.drawable.eng_connected
+        BleConnectionState.CONNECTED -> R.drawable.ble_connected
+//        BleConnectionState.DISCONNECTED -> if(isKorean) R.drawable.ble_disconnected else R.drawable.eng_disconnected
+        BleConnectionState.DISCONNECTED -> R.drawable.ble_disconnected
+//        BleConnectionState.CONNECTING -> if(isKorean) R.drawable.ble_connecting else R.drawable.eng_connecting
+        BleConnectionState.CONNECTING -> R.drawable.ble_connecting
     }
 
 
@@ -191,21 +194,21 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
                     )
                 },
                 actions = {
-                    if (isKorean) {
+//                    if (isKorean) {
                         Image(
                             painter = painterResource(blePainter),
                             contentDescription = "ble 연결상태 아이콘",
                             modifier = Modifier.size(80.dp, 40.dp)
 //                            .padding(end = 10.dp)
                         )
-                    } else {
-                        Image(
-                            painter = painterResource(blePainter),
-                            contentDescription = "ble 연결상태 아이콘",
-                            modifier = Modifier.size(110.dp, 40.dp)
-//                            .padding(end = 10.dp)
-                        )
-                    }
+//                    } else {
+//                        Image(
+//                            painter = painterResource(blePainter),
+//                            contentDescription = "ble 연결상태 아이콘",
+//                            modifier = Modifier.size(110.dp, 40.dp)
+////                            .padding(end = 10.dp)
+//                        )
+//                    }
 
                     Spacer(modifier = Modifier.width(10.dp))
                 },

@@ -988,7 +988,8 @@ fun NotificationScreen(navController: NavController, bleViewModel: BleViewModel)
                             horizontalArrangement = Arrangement.Start
                         ) {
                             Text(
-                                text = convertToDisplayTime(dailyCalibrationTime.value, isKorean),
+//                                text = convertToDisplayTime(dailyCalibrationTime.value, isKorean),
+                                text = convertToDisplayTime(dailyCalibrationTime.value, true),
                                 color = Color(0xFF828282),
                                 fontSize = 15.sp
                             )

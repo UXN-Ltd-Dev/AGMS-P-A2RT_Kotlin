@@ -106,7 +106,8 @@ fun GuideScreen2(navController: NavController) {
                     .padding(bottom = 5.dp)
             ) {
                 Image(
-                    painter = painterResource(id = if(isKorean) R.drawable.btn_next else R.drawable.btn_eng_continue),
+//                    painter = painterResource(id = if(isKorean) R.drawable.btn_next else R.drawable.btn_eng_continue),
+                    painter = painterResource(id = R.drawable.btn_next),
                     contentDescription = "다음 버튼",
                     modifier = Modifier.align(Alignment.Center)
                         .clickable {
