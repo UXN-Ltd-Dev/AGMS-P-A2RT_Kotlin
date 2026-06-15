@@ -57,6 +57,7 @@ import kr.co.uxn.agms_p.api.token.DataStoreManager
 import kr.co.uxn.agms_p.room.AppDatabase
 import kr.co.uxn.agms_p.ui.components.main.event.EventScreen
 import kr.co.uxn.agms_p.ui.components.main.home.HomeScreen
+import kr.co.uxn.agms_p.ui.components.main.past.PastGlucoseScreen
 import kr.co.uxn.agms_p.ui.components.main.setting.SettingScreen
 import kr.co.uxn.agms_p.ui.model.NavItem
 import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
@@ -74,6 +75,7 @@ fun MainScreen(navController: NavController, homeViewModel: HomeViewModel, bleVi
 
     val navItemList = listOf(
         NavItem(icon = painterResource(id = R.drawable.home_icon), selectedIcon = painterResource(id = R.drawable.home_selected), label = stringResource(R.string.label_home)),
+        NavItem(icon = painterResource(id = R.drawable.round_access_time_clicked_24), selectedIcon = painterResource(id = R.drawable.round_access_time_24), label = stringResource(R.string.label_past)),
         NavItem(icon = painterResource(id = R.drawable.event_icon), selectedIcon = painterResource(id = R.drawable.event_selected), label = stringResource(R.string.label_event)),
         NavItem(icon = painterResource(id = R.drawable.setting_icon), selectedIcon = painterResource(id = R.drawable.settings_selected), label = stringResource(R.string.label_setting))
     )
@@ -271,9 +273,12 @@ fun ContentScreen(paddingValues: PaddingValues, selectedIndex: Int, navControlle
             HomeScreen(navController, paddingValues, homeViewModel, bleViewModel)
         }
         1 -> {
-            EventScreen(navController, paddingValues, eventScreenViewModel, bleViewModel)
+            PastGlucoseScreen(navController, paddingValues, homeViewModel, bleViewModel)
         }
         2 -> {
+            EventScreen(navController, paddingValues, eventScreenViewModel, bleViewModel)
+        }
+        3 -> {
             SettingScreen(navController, paddingValues, bleViewModel)
         }
     }

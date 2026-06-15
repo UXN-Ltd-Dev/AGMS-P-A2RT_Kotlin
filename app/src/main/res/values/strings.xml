@@ -125,6 +125,7 @@
     <string name="last_day">마지막 날이에요</string>
     <string name="label_home">홈</string>
     <string name="label_event">이벤트</string>
+    <string name="label_past">과거 혈당</string>
     <string name="label_setting">설정</string>
     <string name="track_activity_title">생활 등록</string>
     <string name="enter_glucose_title">혈당값 입력</string>
