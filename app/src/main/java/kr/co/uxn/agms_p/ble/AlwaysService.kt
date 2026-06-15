@@ -41,6 +41,7 @@ import kr.co.uxn.agms_p.BleConnectionState
 import kr.co.uxn.agms_p.GuestList
 import kr.co.uxn.agms_p.MainActivity
 import kr.co.uxn.agms_p.PythonManager
+import kr.co.uxn.agms_p.PythonManager2
 import kr.co.uxn.agms_p.R
 import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.api.model.requestDTO.RequestDataValue
@@ -654,25 +655,6 @@ class AlwaysService() : Service() {
                                 Log.d("TEST", "seperatedUserValueList : ${seperatedUserValueList}")
                             }
 
-                            var convertedList = seperatedUserValueList?.map {
-                                RequestDataValue(
-                                    userId = it.userId,
-                                    createdAt = it.createdAt,
-                                    weCurrent = it.weCurrent,
-                                    aeCurrent = it.aeCurrent
-                                )
-                            }
-
-                            Log.d("TEST", "convertedList : ${convertedList}")
-
-                            val currentList = userValueList?.map {
-                                RequestDataValue(
-                                    userId = userId,
-                                    createdAt = it.createdAt,
-                                    weCurrent = it.weCurrent,
-                                    aeCurrent = it.aeCurrent
-                                )
-                            }
 
                             val calibrationList: List<RequestEventListData> =
                                 localDbRepository?.dataDao()?.getCalibrationList(userId)?.map {
@@ -683,32 +665,31 @@ class AlwaysService() : Service() {
                                 } ?: emptyList()
 
 
-                            val glucoseList2 = PythonManager.instance.calculateGlucose(
-                                convertedList!!,
+                            val pythonData = PythonManager2.instance.calculateGlucose(
+                                seperatedUserValueList!!,
                                 calibrationList
                             )
 
-                            Log.d("PYTHON", "glucoseList2 : ${glucoseList2}")
+                            Log.d("PYTHON", "받아온 pythonData : ${pythonData?.glucoseList}")
 
-                            if (glucoseList2.isNotEmpty()) {
-                                val insertDataList = glucoseList2.map {
-                                    val formatter =
-                                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                                    val zoneId = ZoneId.of("Asia/Seoul") // 타임존 설정 (필수!)
-                                    val convertToLocalDateTime =
-                                        LocalDateTime.parse(it.createdAt, formatter)
-                                    val parsedLongTime =
-                                        convertToLocalDateTime.atZone(zoneId).toInstant()
-                                            .toEpochMilli()
+                            if (pythonData != null) {
+                                val insertDataList = pythonData.glucoseList.mapIndexed { index, glucose ->
+
+                                    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+
+                                    val time = pythonData.timeStampList[index]
+                                    val timeString = Instant.ofEpochMilli(time)
+                                        .atZone(ZoneId.of("Asia/Seoul"))
+                                        .toLocalDateTime()
+                                        .format(formatter)
                                     UserGlucose(
                                         userId = userId,
-                                        glucose = it.glucose.toDouble(),
-                                        weo1 = it.weo1,
-                                        weo2 = it.weo2,
-                                        createdAt = it.createdAt,
-                                        createdAtLong = parsedLongTime
+                                        glucose = glucose,
+                                        weo1 = seperatedUserValueList[index].weCurrent,
+                                        weo2 = seperatedUserValueList[index].aeCurrent,
+                                        createdAt = timeString,
+                                        createdAtLong = time
                                     )
-
                                 }
 
                                 Log.e("TEST", "insertDataList : ${insertDataList}")
@@ -716,14 +697,9 @@ class AlwaysService() : Service() {
                                 localDbRepository?.dataDao()?.insertGlucose(insertDataList)
 
                                 // ui에 마지막 글루코즈 값 갱신
-                                Log.d(
-                                    "TEST",
-                                    "glucoseList first : ${glucoseList2.first().createdAt}, last : ${glucoseList2.last().createdAt}"
-                                )
-                                BleBridge.updateGlucose(glucoseList2.last().glucose)
-
-                                val lastGlucose = glucoseList2.last().glucose
-
+                                val lastGlucose = pythonData.glucoseList.last().toInt()
+                                BleBridge.updateGlucose(lastGlucose)
+                                Log.d("TEST", "lastGlucose : $lastGlucose")
 
                                 // 알람을 위한 target glucose 값 불러 오기
                                 val targetHigh = DataStoreManager.getTargetHighGlucose().first() ?: -1
@@ -761,7 +737,7 @@ class AlwaysService() : Service() {
                                 BleBridge.activateTrigger()
 
                             } else {
-                                Log.d("PYTHON", "glucoseLis is empty! ${glucoseList2.size}")
+                                Log.d("PYTHON", "glucoseList is empty! ${pythonData?.glucoseList?.size}")
                             }
                         }
 
