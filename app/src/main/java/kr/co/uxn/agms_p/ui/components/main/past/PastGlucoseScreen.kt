@@ -5,10 +5,7 @@ import android.content.Context
 import android.os.Process
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -19,20 +16,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -45,15 +34,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -100,6 +85,7 @@ import kr.co.uxn.agms_p.ui.viewmodel.BleViewModel
 import kr.co.uxn.agms_p.ui.viewmodel.HomeViewModel
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
@@ -118,6 +104,18 @@ import kr.co.uxn.agms_p.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p.ble.BleBridge.showHighGlucoseDialog
 import kr.co.uxn.agms_p.ble.BleBridge.showLowGlucoseDialog
 
+// 화면 테스트용 더미 데이터입니다. 실제 DB에는 저장하지 않습니다.
+// 더미를 빼려면 아래 값을 false로 바꾸면 됩니다.
+private const val USE_PAST_GLUCOSE_DUMMY_DATA = false
+private const val PAST_GLUCOSE_DUMMY_INTERVAL_MINUTES = 10
+
+private data class PastGlucoseChartCardData(
+    val dateKey: String,
+    val title: String,
+    val dayStartMillis: Long,
+    val glucoseList: List<UserGlucose>
+)
+
 @SuppressLint("RestrictedApi")
 @Composable
 fun PastGlucoseScreen(
@@ -128,12 +126,8 @@ fun PastGlucoseScreen(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val day by homeViewModel.day.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    val totalEntryCount = remember { mutableStateOf(0) }
-
-    val glucose by bleViewModel.glucose.collectAsState()
     val chartTrigger by bleViewModel.chartTrigger.collectAsState()
 
     // 다이얼로그 변수 모음
@@ -151,25 +145,11 @@ fun PastGlucoseScreen(
     val glucoseTrendImgResource = remember { mutableStateOf(R.drawable.level3) }
 
     var email = rememberSaveable { mutableStateOf("") }
+    var chartCards by remember { mutableStateOf<List<PastGlucoseChartCardData>>(emptyList()) }
 
-    // Vico Chart
-    val modelProducer = remember { CartesianChartModelProducer() }
-
-    val chartScrollSpec = rememberVicoScrollState(
-        scrollEnabled = true,
-        initialScroll = Scroll.Absolute.End,
-        autoScroll = Scroll.Absolute.End,
-        autoScrollCondition = AutoScrollCondition.OnModelGrowth
-    )
     val (yMax, setYMax) = remember { mutableStateOf(250.0) }
     val currentYMax by rememberUpdatedState(yMax)
     var forceRecompose by remember { mutableStateOf(0) }
-    val rangeProvider = remember(yMax) {
-        CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = yMax)
-    }
-
-    val x = remember { mutableListOf<Number>() }
-    val y = remember { mutableListOf<Number>() }
 
     val isLoading = remember { mutableStateOf(false) }
 
@@ -233,9 +213,6 @@ fun PastGlucoseScreen(
         }
     }
 
-    // RadioButton
-    var selectedTimeOption by remember { mutableStateOf(context.getString(R.string.chart_hour_6)) }
-
     val localDbRepository by lazy {
         AppDatabase.getInstance(context)
     }
@@ -257,11 +234,6 @@ fun PastGlucoseScreen(
         checkedForLandscapeMode.value = verifiedDSLandscapeMode
     }
 
-    // 시간 옵션, 차트 옵션 변경 시 줌 리셋
-    LaunchedEffect(selectedTimeOption) {
-        forceRecompose++
-    }
-
     LaunchedEffect(selectedChartOption) {
         when (selectedChartOption) {
             context.getString(R.string.chart_option_glucose) -> setYMax(250.0)
@@ -272,217 +244,64 @@ fun PastGlucoseScreen(
         forceRecompose++
     }
 
-    LaunchedEffect(chartTrigger, selectedTimeOption, selectedChartOption) {
+    LaunchedEffect(chartTrigger) {
         withContext(Dispatchers.IO) {
             // delay는 추후에 ANR이 발생하면 다시 활성화할 것!!
             delay(500)
-            x.clear()
-            y.clear()
             val userId = DataStoreManager.getUserId().first() ?: -1
 
-            Log.e("TEST", "selectedOption : ${selectedTimeOption}")
-            val lastTime = when (selectedTimeOption) {
-                context.getString(R.string.chart_hour_6) -> System.currentTimeMillis() - (6 * 60 * 60 * 1000L)
-                context.getString(R.string.chart_hour_12) -> System.currentTimeMillis() - (12 * 60 * 60 * 1000L)
-                else -> System.currentTimeMillis() - (24 * 60 * 60 * 1000L)
-            }
-            Log.e("DB", "lastTime : ${lastTime}")
-            val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA)
-            formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
-            val convertedLastTime = formatter.format(Date(lastTime))
-
-            Log.e("DB", "converted : ${convertedLastTime}")
-
             // db로부터 불러오기
-            val localDBDataListAfterLastTime =
-                localDbRepository?.dataDao()
-                    ?.getGlucoseListAfterLastTime(userId = userId, lastTime = lastTime)
-                    ?.toMutableList()
+            val localDBDataList =
+                localDbRepository?.dataDao()?.getGlucoseList(userId = userId)
+                    ?.sortedBy { it.createdAtLong }
+                    ?: emptyList()
 
-            if (localDBDataListAfterLastTime != null) {
-                totalEntryCount.value = localDBDataListAfterLastTime.size
-            }
-
-            when (selectedTimeOption) {
-                context.getString(R.string.chart_hour_6) -> {
-                    if (totalEntryCount.value < 360 && totalEntryCount.value > 0) {
-                        val str = localDBDataListAfterLastTime?.first()?.createdAt
-                        val lastTimeLong = localDBDataListAfterLastTime?.first()?.createdAtLong!!
-                        Log.e(
-                            "TEST",
-                            "first str : ${str}, last str : ${localDBDataListAfterLastTime.last().createdAt}"
-                        )
-
-                        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-
-                        val lastCount = (360 + 0) - totalEntryCount.value
-//                        Log.e("TEST", "추출한 minute : ${minute}")
-                        if (!localDBDataListAfterLastTime.isNullOrEmpty()) {
-                            for (i in 1..lastCount) {
-                                val time = lastTimeLong - (1000L * 60 * i)
-                                val convertedTime = formatter.format(Date(time))
-                                localDBDataListAfterLastTime.add(
-                                    UserGlucose(
-                                        userId = userId,
-                                        glucose = 0.0,
-                                        weo1 = 0.0,
-                                        weo2 = 0.0,
-                                        createdAt = convertedTime,
-                                        createdAtLong = time
-                                    )
-                                )
-                            }
-                        }
-                        localDBDataListAfterLastTime.sortedBy { it.createdAtLong }
-//                        localDBDataListAfterLastTime.sortedByDescending { it.createdAtLong }
-                        Log.d(
-                            "TEST",
-                            "localDBDataListAfterLastTime size: ${localDBDataListAfterLastTime.size}"
-                        )
-                        Log.d(
-                            "TEST",
-                            "localDBDataListAfterLastTime first : ${localDBDataListAfterLastTime.first()}, localDBDataListAfterLastTime last : ${localDBDataListAfterLastTime.last()}"
-                        )
-                    }
-                }
-
-                context.getString(R.string.chart_hour_12) -> {
-                    if (totalEntryCount.value < 720 && totalEntryCount.value > 0) {
-                        val str = localDBDataListAfterLastTime?.first()?.createdAt
-                        val lastTimeLong = localDBDataListAfterLastTime?.first()?.createdAtLong!!
-                        Log.e(
-                            "TEST",
-                            "first str : ${str}, last str : ${localDBDataListAfterLastTime.last().createdAt}"
-                        )
-
-
-                        val lastCount = 720 - totalEntryCount.value
-                        if (!localDBDataListAfterLastTime.isNullOrEmpty()) {
-                            for (i in 1..lastCount) {
-                                val time = lastTimeLong - (1000L * 60 * i)
-                                localDBDataListAfterLastTime.add(
-                                    UserGlucose(
-                                        userId = userId,
-                                        glucose = 0.0,
-                                        weo1 = 0.0,
-                                        weo2 = 0.0,
-                                        createdAt = "I'm dummy!",
-                                        createdAtLong = time
-                                    )
-                                )
-                            }
-                        }
-
-                        localDBDataListAfterLastTime.sortedBy { it.createdAtLong }
-                        Log.d(
-                            "TEST",
-                            "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}"
-                        )
-                    }
-                }
-
-                else -> {
-                    if (totalEntryCount.value < 1440 && totalEntryCount.value > 0) {
-                        val str = localDBDataListAfterLastTime?.first()?.createdAt
-                        val lastTimeLong = localDBDataListAfterLastTime?.first()?.createdAtLong!!
-                        Log.d(
-                            "TEST",
-                            "first str : ${str}, last str : ${localDBDataListAfterLastTime.last().createdAt}"
-                        )
-
-                        val lastCount = 1440 - totalEntryCount.value
-                        if (!localDBDataListAfterLastTime.isNullOrEmpty()) {
-                            for (i in 1..lastCount) {
-                                val time = lastTimeLong - (1000L * 60 * i)
-                                localDBDataListAfterLastTime.add(
-                                    UserGlucose(
-                                        userId = userId,
-                                        glucose = 0.0,
-                                        weo1 = 0.0,
-                                        weo2 = 0.0,
-                                        createdAt = "I'm dummy!",
-                                        createdAtLong = time
-                                    )
-                                )
-                            }
-                        }
-
-                        localDBDataListAfterLastTime.sortedBy { it.createdAtLong }
-                        Log.d(
-                            "TEST",
-                            "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}"
-                        )
-
-                    }
-                }
-            }
-
-            val baseTime = 1743442800000L // 25년 4월 1일 00시 00분 00초
-            for (i in 0 until localDBDataListAfterLastTime!!.size) {
-                val timeDiffMillis = localDBDataListAfterLastTime[i].createdAtLong - baseTime
-                val timeDiffMinutes =
-                    (timeDiffMillis / 1000 / 60).toDouble() // millis → seconds → minutes
-                when (selectedChartOption) {
-                    context.getString(R.string.chart_option_glucose) -> { // 혈당
-                        x.add(
-                            timeDiffMinutes
-                        )
-                        y.add(
-                            localDBDataListAfterLastTime[i].glucose.toFloat()
-                        )
-                    }
-
-                    context.getString(R.string.chart_option_weo1) -> { // weo1
-                        x.add(
-                            timeDiffMinutes
-                        )
-                        y.add(
-                            localDBDataListAfterLastTime[i].weo1.toFloat()
-                        )
-                    }
-
-                    else -> { // weo2
-                        x.add(
-                            timeDiffMinutes
-                        )
-                        y.add(
-                            localDBDataListAfterLastTime[i].weo2.toFloat()
-                        )
-                    }
-                }
-            }
-
-            Log.d("DB", "localDBDataListAfterLastTime : ${localDBDataListAfterLastTime}")
-            Log.d("TEST", "x : ${x}  y : ${y.size}")
-
-            withContext(Dispatchers.Main) {
-                delay(100)
-//                modelProducer.setEntries(dataSetForModel)
-
-                if (x.isNotEmpty() && y.isNotEmpty()) {
-                    modelProducer.runTransaction {
-                        lineSeries { series(x, y) }
-                    }
-                    isLoading.value = true
+            val timeZone = TimeZone.getTimeZone("Asia/Seoul")
+            val chartSourceData =
+                if (USE_PAST_GLUCOSE_DUMMY_DATA) {
+                    (localDBDataList + buildPastGlucoseDummyData(userId, timeZone))
+                        .sortedBy { it.createdAtLong }
                 } else {
-                    Log.d("VICO", "Empty dataset! Skipping model update.")
+                    localDBDataList
                 }
 
-                isLoading.value = true
-                delay(100)
-                chartScrollSpec.animateScroll(
-                    Scroll.Absolute.End
-                )
+            val dateKeyFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.KOREA).apply {
+                this.timeZone = timeZone
+            }
+            val titleFormatter = SimpleDateFormat("M월 d일", Locale.KOREA).apply {
+                this.timeZone = timeZone
             }
 
-            // 추세 변화 알고리즘
-            glucoseTrend.value = getTrendStatus(context, localDBDataListAfterLastTime)
-            glucoseTrendImgResource.value = when (glucoseTrend.value) {
+            val groupedChartCards = chartSourceData
+                .groupBy { dateKeyFormatter.format(Date(it.createdAtLong)) }
+                .map { (dateKey, values) ->
+                    val dayStartMillis = dateKeyFormatter.parse(dateKey)?.time ?: values.first().createdAtLong
+                    PastGlucoseChartCardData(
+                        dateKey = dateKey,
+                        title = titleFormatter.format(Date(dayStartMillis)),
+                        dayStartMillis = dayStartMillis,
+                        glucoseList = values.sortedBy { it.createdAtLong }
+                    )
+                }
+                .sortedBy { it.dateKey }
+
+            Log.d("DB", "past chart card count : ${groupedChartCards.size}")
+
+            val trendStatus = getTrendStatus(context, chartSourceData)
+            val trendImageResource = when (trendStatus) {
                 context.getString(R.string.glucose_trend_level_5) -> R.drawable.level5 // 급 상승
                 context.getString(R.string.glucose_trend_level_4) -> R.drawable.level4 // 상승 중
                 context.getString(R.string.glucose_trend_level_3) -> R.drawable.level3 // 유지 중
                 context.getString(R.string.glucose_trend_level_2) -> R.drawable.level2 // 하강 중
                 else -> R.drawable.level1//"급하강"
+            }
+
+            withContext(Dispatchers.Main) {
+                delay(100)
+                chartCards = groupedChartCards
+                isLoading.value = true
+                glucoseTrend.value = trendStatus
+                glucoseTrendImgResource.value = trendImageResource
             }
         }
     }
@@ -651,260 +470,281 @@ fun PastGlucoseScreen(
         )
     }
 
-    Column(
+    BoxWithConstraints(
         modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
+            .fillMaxSize()
             .padding(paddingValues)
     ) {
-        // 2. 그래프 표시 카드
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp)
-                .wrapContentHeight(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White, // 카드 배경색 설정
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 10.dp
-            )
-        ) {
-            Spacer(modifier = Modifier.height(10.dp))
-            val mode = when (selectedChartOption) {
-                context.getString(R.string.chart_option_glucose) -> context.getString(R.string.glucose_chart)
-                context.getString(R.string.chart_option_weo1) -> context.getString(R.string.weo1_chart)
-                else -> context.getString(R.string.weo2_chart)
+        val cardSlotHeight = maxHeight / 2
+
+        if (isLoading.value && chartCards.isNotEmpty()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(
+                    items = chartCards,
+                    key = { it.dateKey }
+                ) { chartCardData ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(cardSlotHeight)
+                            .padding(horizontal = 10.dp, vertical = 5.dp)
+                    ) {
+                        PastGlucoseChartCard(
+                            chartCardData = chartCardData,
+                            selectedChartOption = selectedChartOption,
+                            yMax = yMax,
+                            currentYMax = currentYMax,
+                            setYMax = setYMax,
+                            forceRecompose = forceRecompose,
+                            onForceRecompose = { forceRecompose++ },
+                            isVip = GuestList.getVipList().contains(email.value),
+                            email = email.value,
+                            fontSize = fontSize,
+                            customItemPlacer = customItemPlacer,
+                            modifier = Modifier.fillMaxSize(),
+                            context = context
+                        )
+                    }
+                }
             }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                verticalAlignment = Alignment.CenterVertically
+        } else {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = mode,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = fontSize
+                    text = stringResource(R.string.chart_wait_a_moment),
+                    color = Color(0xFF385DAB),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium
                 )
             }
-
-            // VICO 그래프
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 10.dp)
-                    .weight(1f)
-                    .pointerInput(Unit) {
-                        if (GuestList.getVipList().contains(email.value)) {
-                            detectTapGestures(
-                                onDoubleTap = {
-                                    val newMax =
-                                        if (selectedChartOption == context.getString(R.string.chart_option_glucose)) {
-                                            if (currentYMax == 250.0) 500.0 else 250.0
-                                        } else {
-                                            if (currentYMax == 250.0) {
-                                                50.0
-                                            } else if (currentYMax == 50.0) {
-                                                10.0
-                                            } else if (currentYMax == 10.0) {
-                                                5.0
-                                            } else {
-                                                50.0
-                                            }
-                                        }
-                                    Log.d("TEST", "email : ${email.value}")
-                                    Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
-                                    setYMax(newMax)
-                                    forceRecompose++
-                                }
-                            )
-
-                        } else {
-
-                            detectTapGestures(
-                                onDoubleTap = {
-                                    Log.d("TEST", "I'm guest : ${email.value}")
-                                }
-                            )
-
-                        }
-                    },
-                color = Color.Transparent
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    val lineColor = Color(0xFF6FB0E5)
-                    val markerDecimalFormat =
-                        when (selectedChartOption) {
-                            context.getString(R.string.chart_option_glucose) -> DecimalFormat("# mg/dL")
-                            else -> DecimalFormat("##.## nA")
-                        }
-                    val yDecimalFormat = DecimalFormat("#")
-                    val startAxisValueFormatter = CartesianValueFormatter.decimal(yDecimalFormat)
-                    val bottomAxisFormatter = CartesianValueFormatter { _, value, _ ->
-                        val baseTime = 1743442801000L
-                        val timeMillis = baseTime + (value * 60 * 1000).toLong()
-                        val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
-                        formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
-                        formatter.format(Date(timeMillis))
-                    }
-                    val MarkerValueFormatter =
-                        DefaultCartesianMarker.ValueFormatter.default(markerDecimalFormat)
-
-                    if (isLoading.value == true && x.isNotEmpty() && y.isNotEmpty()) {
-                        key(yMax, forceRecompose) {
-                            CartesianChartHost(
-                                chart = rememberCartesianChart(
-                                    rememberLineCartesianLayer(
-                                        lineProvider =
-                                            LineCartesianLayer.LineProvider.series(
-                                                LineCartesianLayer.rememberLine(
-                                                    fill = LineCartesianLayer.LineFill.single(
-                                                        fill(
-                                                            lineColor
-                                                        )
-                                                    ),
-                                                    areaFill =
-                                                        LineCartesianLayer.AreaFill.single(
-                                                            fill(
-                                                                ShaderProvider.verticalGradient(
-                                                                    arrayOf(
-                                                                        lineColor.copy(alpha = 0.8f),
-                                                                        Color.Transparent
-                                                                    )
-                                                                )
-                                                            )
-                                                        ),
-                                                    pointConnector = LineCartesianLayer.PointConnector.cubic(
-                                                        curvature = 0.8f
-                                                    )
-                                                )
-                                            ),
-                                        rangeProvider = rangeProvider
-                                    ),
-                                    startAxis = VerticalAxis.rememberStart(
-                                        valueFormatter = startAxisValueFormatter,
-                                        label = rememberAxisLabelComponent(color = Color.Black),
-                                        itemPlacer = if (yMax == 500.0) {
-                                            VerticalAxis.ItemPlacer.count({ 6 })
-                                        } else {
-                                            VerticalAxis.ItemPlacer.count({ 6 })
-                                        },
-//                                            guideline = null
-                                    ),
-                                    bottomAxis = HorizontalAxis.rememberBottom(
-                                        valueFormatter = bottomAxisFormatter,
-                                        label = rememberAxisLabelComponent(color = Color.Black),
-//                                            itemPlacer = HorizontalAxis.ItemPlacer.aligned(
-//                                                spacing = { 20 }, // 5개의 xStep마다 하나의 라벨
-//                                                offset = { 2 },
-//                                                shiftExtremeLines = true,
-//                                                addExtremeLabelPadding = true
-//                                            ),
-//                                            itemPlacer = HorizontalAxis.ItemPlacer.segmented(false),
-                                        itemPlacer = customItemPlacer,
-//                                            guideline = null
-                                        labelRotationDegrees = 90f
-                                    ),
-                                    marker = rememberMarker(MarkerValueFormatter),
-                                    fadingEdges = FadingEdges( // 또는 FadingEdges.horizontal() 도 가능
-                                        startWidthDp = 0f,
-                                        endWidthDp = 0f,
-                                        visibilityThresholdDp = 15f
-                                    ),
-//                                        layerPadding = {
-//                                            cartesianLayerPadding(
-//                                                scalableStart = 10.dp,
-//                                                unscalableStart = 10.dp,
-//                                                scalableEnd = 10.dp,
-//                                                unscalableEnd = 10.dp
-//                                            )
-//                                        }
-                                ),
-                                modelProducer = modelProducer,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f),
-                                scrollState = chartScrollSpec,
-                                zoomState = rememberVicoZoomState(
-                                    zoomEnabled = true,
-                                    initialZoom = Zoom.Content
-                                )
-                            )
-                        }
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = stringResource(R.string.chart_wait_a_moment),
-                                color = Color(0xFF385DAB),
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
-
-                    RadioButtonSingleSelection(
-                        selectedOption = selectedTimeOption,
-                        onOptionSelected = { selectedTimeOption = it },
-                        context = context
-                    )
-                } // column
-            } // surface
         }
     }
 }
 
 @Composable
-fun RadioButtonSingleSelection(
-    selectedOption: String,
-    onOptionSelected: (String) -> Unit,
+private fun PastGlucoseChartCard(
+    chartCardData: PastGlucoseChartCardData,
+    selectedChartOption: String,
+    yMax: Double,
+    currentYMax: Double,
+    setYMax: (Double) -> Unit,
+    forceRecompose: Int,
+    onForceRecompose: () -> Unit,
+    isVip: Boolean,
+    email: String,
+    fontSize: androidx.compose.ui.unit.TextUnit,
+    customItemPlacer: HorizontalAxis.ItemPlacer,
     modifier: Modifier = Modifier,
     context: Context
 ) {
-    val radioOptions = listOf(
-        context.getString(R.string.chart_hour_6),
-        context.getString(R.string.chart_hour_12),
-        context.getString(R.string.chart_hour_24)
+    val modelProducer = remember(chartCardData.dateKey) { CartesianChartModelProducer() }
+    val chartScrollSpec = rememberVicoScrollState(
+        scrollEnabled = true,
+        initialScroll = Scroll.Absolute.End,
+        autoScroll = Scroll.Absolute.End,
+        autoScrollCondition = AutoScrollCondition.OnModelGrowth
     )
+    val rangeProvider = remember(yMax) {
+        CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = yMax)
+    }
+    val chartPoints = remember(chartCardData, selectedChartOption) {
+        val duplicated = chartCardData.glucoseList
+            .groupBy {
+                ((it.createdAtLong - chartCardData.dayStartMillis) / 1000 / 60)
+            }
+            .filter { it.value.size > 1 }
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .selectableGroup()
-            .height(60.dp)
-            .padding(horizontal = 30.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
+        Log.d("DUP", "${chartCardData.title} duplicated x: $duplicated")
+
+
+        val chartX = mutableListOf<Number>()
+        val chartY = mutableListOf<Number>()
+        chartCardData.glucoseList.forEach { glucose ->
+            val timeDiffMinutes =
+                ((glucose.createdAtLong - chartCardData.dayStartMillis) / 1000 / 60).toDouble()
+            chartX.add(timeDiffMinutes)
+            chartY.add(
+                when (selectedChartOption) {
+                    context.getString(R.string.chart_option_glucose) -> glucose.glucose.toFloat()
+                    context.getString(R.string.chart_option_weo1) -> glucose.weo1.toFloat()
+                    else -> glucose.weo2.toFloat()
+                }
+            )
+        }
+        chartX to chartY
+    }
+
+    LaunchedEffect(chartPoints, selectedChartOption) {
+        if (chartPoints.first.isNotEmpty() && chartPoints.second.isNotEmpty()) {
+            modelProducer.runTransaction {
+                lineSeries { series(chartPoints.first, chartPoints.second) }
+            }
+            delay(100)
+            chartScrollSpec.animateScroll(Scroll.Absolute.End)
+        }
+    }
+
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White,
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 10.dp
+        )
     ) {
-        radioOptions.forEach { text ->
-            Row(
-                Modifier
-                    .weight(1f)
-                    .height(56.dp)
-                    .selectable(
-                        selected = (text == selectedOption),
-                        onClick = { onOptionSelected(text) },
-                        role = Role.RadioButton
-                    ),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+        Spacer(modifier = Modifier.height(10.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = chartCardData.title,
+                fontWeight = FontWeight.Bold,
+                fontSize = fontSize
+            )
+        }
+
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 10.dp)
+                .weight(1f)
+                .pointerInput(isVip, selectedChartOption, currentYMax) {
+                    if (isVip) {
+                        detectTapGestures(
+                            onDoubleTap = {
+                                val newMax =
+                                    if (selectedChartOption == context.getString(R.string.chart_option_glucose)) {
+                                        if (currentYMax == 250.0) 500.0 else 250.0
+                                    } else {
+                                        if (currentYMax == 250.0) {
+                                            50.0
+                                        } else if (currentYMax == 50.0) {
+                                            10.0
+                                        } else if (currentYMax == 10.0) {
+                                            5.0
+                                        } else {
+                                            50.0
+                                        }
+                                    }
+                                Log.d("TEST", "email : $email")
+                                Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
+                                setYMax(newMax)
+                                onForceRecompose()
+                            }
+                        )
+                    } else {
+                        detectTapGestures(
+                            onDoubleTap = {
+                                Log.d("TEST", "I'm guest : $email")
+                            }
+                        )
+                    }
+                },
+            color = Color.Transparent
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth()
             ) {
-                RadioButton(
-                    selected = (text == selectedOption),
-                    onClick = null
-                )
-                Text(
-                    text = text,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(start = 10.dp)
-                )
+                val lineColor = Color(0xFF6FB0E5)
+                val markerDecimalFormat =
+                    when (selectedChartOption) {
+                        context.getString(R.string.chart_option_glucose) -> DecimalFormat("# mg/dL")
+                        else -> DecimalFormat("##.## nA")
+                    }
+                val yDecimalFormat = DecimalFormat("#")
+                val startAxisValueFormatter = CartesianValueFormatter.decimal(yDecimalFormat)
+                val bottomAxisFormatter = CartesianValueFormatter { _, value, _ ->
+                    val timeMillis = chartCardData.dayStartMillis + (value * 60 * 1000).toLong()
+                    val formatter = SimpleDateFormat("HH:mm", Locale.KOREAN)
+                    formatter.timeZone = TimeZone.getTimeZone("Asia/Seoul")
+                    formatter.format(Date(timeMillis))
+                }
+                val markerValueFormatter =
+                    DefaultCartesianMarker.ValueFormatter.default(markerDecimalFormat)
+
+                if (chartPoints.first.isNotEmpty() && chartPoints.second.isNotEmpty()) {
+                    key(yMax, forceRecompose, chartCardData.dateKey) {
+                        CartesianChartHost(
+                            chart = rememberCartesianChart(
+                                rememberLineCartesianLayer(
+                                    lineProvider =
+                                        LineCartesianLayer.LineProvider.series(
+                                            LineCartesianLayer.rememberLine(
+                                                fill = LineCartesianLayer.LineFill.single(
+                                                    fill(
+                                                        lineColor
+                                                    )
+                                                ),
+                                                areaFill =
+                                                    LineCartesianLayer.AreaFill.single(
+                                                        fill(
+                                                            ShaderProvider.verticalGradient(
+                                                                arrayOf(
+                                                                    lineColor.copy(alpha = 0.8f),
+                                                                    Color.Transparent
+                                                                )
+                                                            )
+                                                        )
+                                                    ),
+                                                pointConnector = LineCartesianLayer.PointConnector.cubic(
+                                                    curvature = 0.8f
+                                                )
+                                            )
+                                        ),
+                                    rangeProvider = rangeProvider
+                                ),
+                                startAxis = VerticalAxis.rememberStart(
+                                    valueFormatter = startAxisValueFormatter,
+                                    label = rememberAxisLabelComponent(color = Color.Black),
+                                    itemPlacer = VerticalAxis.ItemPlacer.count({ 6 }),
+                                ),
+                                bottomAxis = HorizontalAxis.rememberBottom(
+                                    valueFormatter = bottomAxisFormatter,
+                                    label = rememberAxisLabelComponent(color = Color.Black),
+                                    itemPlacer = customItemPlacer,
+                                    labelRotationDegrees = 90f
+                                ),
+                                marker = rememberMarker(markerValueFormatter),
+                                fadingEdges = FadingEdges(
+                                    startWidthDp = 0f,
+                                    endWidthDp = 0f,
+                                    visibilityThresholdDp = 15f
+                                ),
+                            ),
+                            modelProducer = modelProducer,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            scrollState = chartScrollSpec,
+                            zoomState = rememberVicoZoomState(
+                                zoomEnabled = true,
+                                initialZoom = Zoom.Content
+                            )
+                        )
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.chart_wait_a_moment),
+                            color = Color(0xFF385DAB),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
             }
         }
     }
@@ -946,5 +786,46 @@ fun getTrendStatus(context: Context, glucoseValueList: List<UserGlucose>): Strin
     }
 }
 
+private fun buildPastGlucoseDummyData(userId: Int, timeZone: TimeZone): List<UserGlucose> {
+    val now = Calendar.getInstance(timeZone)
+    val start = Calendar.getInstance(timeZone).apply {
+        set(Calendar.YEAR, now.get(Calendar.YEAR))
+        set(Calendar.MONTH, Calendar.JUNE)
+        set(Calendar.DAY_OF_MONTH, 10)
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+    if (start.timeInMillis > now.timeInMillis) return emptyList()
 
+    val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA).apply {
+        this.timeZone = timeZone
+    }
+    val result = mutableListOf<UserGlucose>()
+    var currentTime = start.timeInMillis
+    var index = 0
 
+    while (currentTime <= now.timeInMillis) {
+        val minutesFromStart = index * PAST_GLUCOSE_DUMMY_INTERVAL_MINUTES
+        val dayWave = kotlin.math.sin(minutesFromStart / 180.0) * 28.0
+        val mealWave = kotlin.math.max(0.0, kotlin.math.sin(minutesFromStart / 45.0)) * 18.0
+        val glucose = (122.0 + dayWave + mealWave).coerceIn(70.0, 210.0)
+
+        result.add(
+            UserGlucose(
+                userId = userId,
+                glucose = glucose,
+                weo1 = 2.0 + kotlin.math.sin(minutesFromStart / 90.0) * 0.35,
+                weo2 = 1.8 + kotlin.math.cos(minutesFromStart / 120.0) * 0.28,
+                createdAt = formatter.format(Date(currentTime)),
+                createdAtLong = currentTime
+            )
+        )
+
+        currentTime += PAST_GLUCOSE_DUMMY_INTERVAL_MINUTES * 60 * 1000L
+        index++
+    }
+
+    return result
+}
