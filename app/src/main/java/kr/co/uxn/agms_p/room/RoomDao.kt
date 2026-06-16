@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 
 @Dao
 interface RoomDao {
@@ -13,6 +14,12 @@ interface RoomDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertGlucose(glucoseList: List<UserGlucose>)
+
+    @Transaction
+    suspend fun replaceUserGlucoseTable(userId: Int, glucoseList: List<UserGlucose>) {
+        deleteUserGlucoseTable(userId)
+        insertGlucose(glucoseList)
+    }
 
     // 캘리 저장하기
     @Insert(onConflict = OnConflictStrategy.REPLACE)

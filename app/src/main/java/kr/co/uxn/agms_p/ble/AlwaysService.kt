@@ -693,8 +693,10 @@ class AlwaysService() : Service() {
                                 }
 
                                 Log.e("TEST", "insertDataList : ${insertDataList}")
-                                // db에 저장
-                                localDbRepository?.dataDao()?.insertGlucose(insertDataList)
+                                if (insertDataList.isNotEmpty()) {
+                                    // Python 계산 결과를 최종 혈당 데이터로 사용하므로 기존 혈당을 지우고 다시 저장한다.
+                                    localDbRepository?.dataDao()?.replaceUserGlucoseTable(userId, insertDataList)
+                                }
 
                                 // ui에 마지막 글루코즈 값 갱신
                                 val lastGlucose = pythonData.glucoseList.last().toInt()
@@ -991,4 +993,3 @@ class AlwaysService() : Service() {
         fun getService(): AlwaysService = this@AlwaysService
     }
 }
-
