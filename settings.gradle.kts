@@ -21,6 +21,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AGMS-P"
+rootProject.name = "AGMS-A2RT"
 include(":app")
  

@@ -49,7 +49,7 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <application
-        android:name=".AlwaysApplication"
+        android:name=".AlwaysA2RTApplication"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -93,11 +93,11 @@
         </activity>
 
         <service
-            android:name=".ble.AlwaysService"
+            android:name=".ble.AlwaysA2RTService"
             android:foregroundServiceType="connectedDevice" />
 
         <receiver
-            android:name=".ble.AlwaysBroadcastReceiver"
+            android:name=".ble.AlwaysA2RTBroadcastReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>

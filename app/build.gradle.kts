@@ -20,15 +20,15 @@ if (propertiesFile.exists()) {
 
 
 android {
-    namespace = "kr.co.uxn.agms_p"
+    namespace = "kr.co.uxn.agms_p_a2rt"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "kr.co.uxn.agms_p"
+        applicationId = "kr.co.uxn.agms_p_a2rt"
         minSdk = 29
         targetSdk = 36
         versionCode = 40
-        versionName = "0.3.5"
+        versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

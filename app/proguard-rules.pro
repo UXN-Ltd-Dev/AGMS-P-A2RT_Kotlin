@@ -8,7 +8,7 @@
 
 
 
--keep class kr.co.uxn.agms_p.api.model.** { *; }
+-keep class kr.co.uxn.agms_p_a2rt.api.model.** { *; }
 
 
 # GSON
@@ -108,14 +108,14 @@
 
 # (필수) 여러분의 API 인터페이스 패키지 (예: com.myapp.network)
 # 이 패키지 밑의 모든 인터페이스와 그 메서드들을 유지합니다.
--keep interface kr.co.uxn.agms_p.api.** { *; }
+-keep interface kr.co.uxn.agms_p_a2rt.api.** { *; }
 
 # --- 2. Gson 규칙 (Converter-Gson) ---
 
 # (필수) 여러분의 데이터 모델/DTO 패키지 (예: com.myapp.data.dto)
 # 이 패키지 밑의 모든 클래스와 그 멤버(필드, 메서드)를 유지합니다.
--keep class kr.co.uxn.agms_p.api.model.requestDTO.** { *; }
--keep class kr.co.uxn.agms_p.api.model.responseDTO.** { *; }
+-keep class kr.co.uxn.agms_p_a2rt.api.model.requestDTO.** { *; }
+-keep class kr.co.uxn.agms_p_a2rt.api.model.responseDTO.** { *; }
 
 # Gson의 TypeAdapter를 상속받는 클래스들 유지
 -keep class * extends com.google.gson.TypeAdapter
