@@ -123,14 +123,14 @@ class I10Device() : Protocol {
                 }
                 CMD_IMPEDANCE -> {
                     Log.d(TEST, "IMPEDANCE START!")
-                    val success: Boolean = insertImpedance(db, data, userId)
-                    if (success) {
-                        response = makeByteArray(STATUS_NO_ERROR, cmdId)
-                        Log.e(TEST, "==============IMPEDANCE_NO_ERROR========================")
-                    } else {
-                        response = makeByteArray(STATUS_UNKNOWN, cmdId)
-                        Log.e(TEST, "==============IMPEDANCE_ERROR========================")
-                    }
+//                    val success: Boolean = insertImpedance(db, data, userId)
+//                    if (success) {
+//                        response = makeByteArray(STATUS_NO_ERROR, cmdId)
+//                        Log.e(TEST, "==============IMPEDANCE_NO_ERROR========================")
+//                    } else {
+//                        response = makeByteArray(STATUS_UNKNOWN, cmdId)
+//                        Log.e(TEST, "==============IMPEDANCE_ERROR========================")
+//                    }
 
                 }
             }
@@ -353,11 +353,11 @@ class I10Device() : Protocol {
         }
     }
 
-    private fun insertImpedance(db: AppDatabase?, data: ByteArray, userId: Int): Boolean {
-        try {
-
-        }
-    }
+//    private fun insertImpedance(db: AppDatabase?, data: ByteArray, userId: Int): Boolean {
+//        try {
+//
+//        }
+//    }
     private fun convertToCurrentDataDouble(
         weoFirst: Byte,
         weoSecond: Byte,
