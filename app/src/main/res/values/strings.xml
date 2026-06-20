@@ -15,8 +15,10 @@
     <string name="login_pwd">비밀번호</string>
     <string name="login_pwd_hint">비밀번호를 입력해 주세요.</string>
     <string name="login_sign_up">회원가입</string>
+    <string name="start_with_email">이메일로 시작하기</string>
     <string name="login_find_pwd">비밀번호 찾기</string>
     <string name="login_or">또는</string>
+    <string name="guide_privacy_policy">개인정보처리방침 안내</string>
 
     <!--  회원가입 화면1  -->
     <string name="sign_up_welcome">안녕하세요!</string>
@@ -39,7 +41,7 @@
     <!--  회원가입 화면3  -->
     <string name="toast_already_registed_account">회원가입할 수 없습니다.</string>
     <string name="title_enter_my_info">내 정보를 입력하세요.</string>
-    <string name="desc_user_info_detail">혈당, 혈당 추세 등 더욱 정확한 결과를 제공할려면 이 정보가 필요합니다. Always가 제공하는 알고리즘을 적용하기 위해서는 나이 외에도 이러한 추가 정보를 입력해야 여러분에게 꼭 맞는 데이터를 제공할 수 있습니다. 자세히 보기</string>
+    <string name="desc_user_info_detail">혈당, 혈당 추세 등 더욱 정확한 결과를 제공할려면 이 정보가 필요합니다. Always RT가 제공하는 알고리즘을 적용하기 위해서는 나이 외에도 이러한 추가 정보를 입력해야 여러분에게 꼭 맞는 데이터를 제공할 수 있습니다. 자세히 보기</string>
     <string name="label_name">이름</string>
     <string name="label_gender">성별</string>
     <string name="label_age">연령</string>
@@ -61,16 +63,19 @@
     <!--  권한 화면 -->
     <string name="setting_permissions_title">"Always앱에서 사용하는\n권한을 알려드려요."</string>
     <string name="setting_permissions_sub_title">모든 권한을 허용하지 않아도 앱을 사용할 수 있으나 일부 기능이 제한될 수 있어요</string>
-    <string name="notification_permission_title">알림(필수)</string>
+    <string name="notification_permission_title">알림</string>
+    <string name="notification_permission_neccessary">[필수]</string>
     <string name="notification_permission_sub_title">알림 메세지 전송</string>
-    <string name="nearby_permission_title">근처 기기(필수)</string>
+    <string name="nearby_permission_title">근처 기기</string>
     <string name="nearby_permission_sub_title">근처 기기 검색</string>
-    <string name="location_permission_title">위치(필수)</string>
+    <string name="location_permission_title">위치</string>
     <string name="location_permission_sub_title">BLE 연결 및 통신</string>
-    <string name="battery_optimization_permission_title">배터리 사용량 최적화 중지(필수)</string>
+    <string name="battery_optimization_permission_title">배터리 사용량 최적화 중지</string>
     <string name="battery_optimization_permission_sub_title">백그라운드 배터리 사용량 제한</string>
 
     <!--  가이드 화면 -->
+    <string name="guide_notice_title">사용 시 주의 사항</string>
+    <string name="guide_notice_description">1. 본 제품은 의료기관의 진료를 대체할 수 없으며, 당뇨병 진단 목적으로 사용해서는 안 됩니다.\n\n2. 만 19세 미만, 임신 중인 여성, 피부 면역질환이 있는 사람 또는 중증 환자를 대상으로 사용하지 마십시오.\n\n3. MRI, CT, X-ray 검사 또는 투열치료를 받기 전에는 반드시 센서를 제거하십시오.\n\n4. 유효기간이 지나거나 멸균 포장이 손상된 경우 사용하지 마십시오. 감염의 위험이 있거나 측정 결과가 부정확할 수 있습니다.\n\n5. 센서 장착 부위에 심한 출혈이나 멍이 발생한 경우 즉시 사용을 중단하고 센서를 제거한 후 의사 또는 의료전문가와 상담하십시오.</string>
     <string name="guide_title">사용 설명</string>
     <string name="guide_tip_1">착용 부위 : 배꼽 기준 좌우 10cm 내외</string>
     <string name="guide_description_1">"알코올 스왑으로 부착 부위 피부를\n깨끗이 닦은 후 건조시킵니다."</string>
@@ -81,9 +86,9 @@
     <string name="guide_description_6">"손가락으로 트랜스미터 주위에\n있는 점착패드 주변을 눌러 점착패드가\n피부에 잘 붙도록 합니다."</string>
 
     <!--  기기 등록 화면 -->
-    <string name="register_device_title">"블루투스 연결을 위해\n기기 번호를 입력해 주세요."</string>
-    <string name="register_device_sub_title">제품패키지 라벨의 시리얼 넘버</string>
-    <string name="enter_serial_number_hint">기기 번호를 입력해 주세요.</string>
+    <string name="register_device_title">"블루투스 연결을 위해\n시리얼 번호를 입력해 주세요."</string>
+    <string name="register_device_sub_title">제품패키지 라벨의 시리얼 번호</string>
+    <string name="enter_serial_number_hint">시리얼 번호를 입력해 주세요.</string>
 
     <!--  스캔 화면(연결 중, 실패) -->
     <string name="scanning_title">기기를 검색중입니다.</string>
