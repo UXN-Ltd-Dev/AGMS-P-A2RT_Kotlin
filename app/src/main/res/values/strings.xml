@@ -110,8 +110,8 @@
 
     <!--  메인 화면  -->
     <string name="chart_option_glucose">혈당</string>
-    <string name="chart_option_weo1">WEO1</string>
-    <string name="chart_option_weo2">WEO2</string>
+    <string name="chart_option_weo1">WE1</string>
+    <string name="chart_option_weo2">WE2</string>
     <string name="glucose_chart">혈당 그래프</string>
     <string name="weo1_chart">WEO1 그래프</string>
     <string name="weo2_chart">WEO2 그래프</string>

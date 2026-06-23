@@ -11,6 +11,7 @@
     <color name="background_white">#FFFFFF</color>
     <color name="default_color">#FAF9FD</color>
     <color name="text_secondary">#727070</color>
+    <color name="background_grey">#EEEEEF</color>
     <color name="main">#FFA334</color>
 
 </resources>
