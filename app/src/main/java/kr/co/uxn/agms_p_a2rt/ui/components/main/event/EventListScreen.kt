@@ -71,11 +71,12 @@ val dummyRecords = listOf(
 @Composable
 fun EventListScreen(
     modifier: Modifier = Modifier,
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    startDestination: String = "list"
 ) {
     NavHost(
         navController = navController,
-        startDestination = "list",
+        startDestination = startDestination,
         modifier = modifier
             .fillMaxSize()
             .background(BackgroundGray)
@@ -171,6 +172,10 @@ fun RecordListScreen(onNavigateToSelect: () -> Unit) {
         }
 
         // 하단 기록하기 버튼
+
+
+
+
         Button(
             onClick = onNavigateToSelect,
             colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
@@ -180,7 +185,20 @@ fun RecordListScreen(onNavigateToSelect: () -> Unit) {
                 .height(50.dp),
             shape = RoundedCornerShape(25.dp)
         ) {
-            Text("⊕ 기록하기", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+//            Text("⊕ 기록하기", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.add),
+                    contentDescription = ""
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("기록하기", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+
+            }
         }
     }
 }

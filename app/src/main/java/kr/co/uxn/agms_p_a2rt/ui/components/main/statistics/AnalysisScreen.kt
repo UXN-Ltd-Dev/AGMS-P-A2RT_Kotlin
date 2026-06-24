@@ -1,10 +1,13 @@
 package kr.co.uxn.agms_p_a2rt.ui.components.main.statistics
 
+import PrimaryOrange
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -14,6 +17,7 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
@@ -24,9 +28,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kr.co.uxn.agms_p_a2rt.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -42,7 +48,10 @@ val LineDashedBlue = Color(0xFF64B5F6)
 val LineDashedOrange = Color(0xFFFFB74D)
 
 @Composable
-fun AnalysisScreen(paddingValues: PaddingValues) {
+fun AnalysisScreen(
+    paddingValues: PaddingValues,
+    onBloodSugarRecordClick: () -> Unit
+) {
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("일일기록", "상세")
 
@@ -92,7 +101,7 @@ fun AnalysisScreen(paddingValues: PaddingValues) {
         // 탭 상태에 따른 화면 분기
         Box(modifier = Modifier.weight(1f)) {
             when (selectedTabIndex) {
-                0 -> DailyRecordContent()
+                0 -> DailyRecordContent(onBloodSugarRecordClick)
                 1 -> DetailRecordContent()
             }
         }
@@ -104,7 +113,7 @@ fun AnalysisScreen(paddingValues: PaddingValues) {
 // ==========================================
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DailyRecordContent() {
+fun DailyRecordContent(onBloodSugarRecordClick: () -> Unit) {
     val scrollState = rememberScrollState()
     var showDatePicker by remember { mutableStateOf(false) }
     var selectedDateMillis by remember { mutableStateOf(System.currentTimeMillis()) }
@@ -252,17 +261,39 @@ fun DailyRecordContent() {
 
         // 하단 버튼 영역
         Button(
-            onClick = { /* 기록하기 */ },
+            onClick = onBloodSugarRecordClick,
             colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(0.1f),
             shape = RoundedCornerShape(25.dp)
         ) {
-            Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("기록하기", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.add),
+                    contentDescription = ""
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("기록하기", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+
+            }
         }
+
+//        Button(
+//            onClick = onNavigateToSelect,
+//            colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(16.dp)
+//                .height(50.dp),
+//            shape = RoundedCornerShape(25.dp)
+//        ) {
+//            Text("⊕ 기록하기", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+//        }
     }
 }
 
