@@ -6,6 +6,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kr.co.uxn.agms_p_a2rt.ble.BleManager.Companion.TEST
+import kr.co.uxn.agms_p_a2rt.room.A2RTData
 import kr.co.uxn.agms_p_a2rt.room.AppDatabase
 import kr.co.uxn.agms_p_a2rt.room.UserValue
 import java.time.Instant
@@ -51,6 +52,28 @@ class I10Device() : Protocol {
     val AE_END_SEQ = AE_MIDDLE_SEQ + 1 // 21
 
     // IMPEDANCE
+    val BATTERY_A2RT_START_SEQ = PAYLOAD_DATA_LENGTH // 12
+    val BATTERY_A2RT_END_SEQ = BATTERY_A2RT_START_SEQ + 1 // 13
+    val INDEX_A2RT_TEMPERATURE_START = BATTERY_A2RT_END_SEQ + 1 // 14
+    val INDEX_A2RT_TEMPERATURE_END = INDEX_A2RT_TEMPERATURE_START + 1 // 15
+    val INDEX_REAL_FIRST = INDEX_A2RT_TEMPERATURE_END + 1 // 16
+    val INDEX_REAL_SECOND = INDEX_REAL_FIRST + 1 // 17
+    val INDEX_REAL_THIRD = INDEX_REAL_SECOND + 1 // 18
+    val INDEX_REAL_FOURTH = INDEX_REAL_THIRD + 1 // 19
+    val INDEX_IMAGINARY_FIRST = INDEX_REAL_FOURTH + 1 // 20
+    val INDEX_IMAGINARY_SECOND = INDEX_IMAGINARY_FIRST + 1 // 21
+    val INDEX_IMAGINARY_THIRD = INDEX_IMAGINARY_SECOND + 1 // 22
+    val INDEX_IMAGINARY_FOURTH = INDEX_IMAGINARY_THIRD + 1 // 23
+    val INDEX_MAGNITUDE_FIRST = INDEX_IMAGINARY_FOURTH + 1 // 24
+    val INDEX_MAGNITUDE_SECOND = INDEX_MAGNITUDE_FIRST + 1 // 25
+    val INDEX_MAGNITUDE_THIRD = INDEX_MAGNITUDE_SECOND + 1 // 26
+    val INDEX_MAGNITUDE_FOURTH = INDEX_MAGNITUDE_THIRD + 1 // 27
+    val INDEX_PHASE_FIRST = INDEX_MAGNITUDE_FOURTH + 1 // 28
+    val INDEX_PHASE_SECOND = INDEX_PHASE_FIRST + 1 // 29
+    val INDEX_PHASE_THIRD = INDEX_PHASE_SECOND + 1 // 30
+    val INDEX_PHASE_FOURTH = INDEX_PHASE_THIRD + 1 // 31
+
+
     val START_CODE_H = 0xA0.toByte()
     val START_CODE_L = 0x81.toByte()
     val CMD_RTC = 0x41.toByte()
@@ -123,15 +146,14 @@ class I10Device() : Protocol {
                 }
                 CMD_IMPEDANCE -> {
                     Log.d(TEST, "IMPEDANCE START!")
-//                    val success: Boolean = insertImpedance(db, data, userId)
-//                    if (success) {
-//                        response = makeByteArray(STATUS_NO_ERROR, cmdId)
-//                        Log.e(TEST, "==============IMPEDANCE_NO_ERROR========================")
-//                    } else {
-//                        response = makeByteArray(STATUS_UNKNOWN, cmdId)
-//                        Log.e(TEST, "==============IMPEDANCE_ERROR========================")
-//                    }
-
+                    val success: Boolean = insertImpedance(db, data, userId)
+                    if (success) {
+                        response = makeByteArray(STATUS_NO_ERROR, cmdId)
+                        Log.e(TEST, "==============IMPEDANCE_NO_ERROR========================")
+                    } else {
+                        response = makeByteArray(STATUS_UNKNOWN, cmdId)
+                        Log.e(TEST, "==============IMPEDANCE_ERROR========================")
+                    }
                 }
             }
             return response
@@ -347,17 +369,87 @@ class I10Device() : Protocol {
             }
 
             return true
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             Log.e(TEST, "DB Error: ${e.message}")
             return false
         }
     }
 
-//    private fun insertImpedance(db: AppDatabase?, data: ByteArray, userId: Int): Boolean {
-//        try {
-//
-//        }
-//    }
+    private fun insertImpedance(db: AppDatabase?, data: ByteArray, userId: Int): Boolean {
+        try {
+            val frequencyType = "10Khz"
+
+            val dataSize = ((data[INDEX_DATA_LENGTH].toInt() and 0xFF) shl 8) or (data[INDEX_RESERVED].toInt() and 0xFF)
+
+            val unixFirst = data[INDEX_UNIX_FIRST]
+            val unixSecond = data[INDEX_UNIX_SECOND]
+            val unixThird = data[INDEX_UNIX_THIRD]
+            val unixFourth = data[INDEX_UNIX_FOURTH]
+            Log.d("IMPEDANCE", "unixFirst data : $unixFirst")
+            Log.d("IMPEDANCE", "unixSecond data : $unixSecond")
+            Log.d("IMPEDANCE", "unixThird data : $unixThird")
+            Log.d("IMPEDANCE", "unixFourth data : $unixFourth")
+
+            val rawTime = (data[INDEX_UNIX_FIRST].toLong() and 0xFFL) or
+                        ((data[INDEX_UNIX_SECOND].toLong() and 0xFFL) shl 8) or
+                        ((data[INDEX_UNIX_THIRD].toLong() and 0xFFL) shl 16) or
+                        ((data[INDEX_UNIX_FOURTH].toLong() and 0xFFL) shl 24)
+            Log.e("IMPEDANCE", "rawTime : $rawTime")
+
+            val time = (rawTime + BASE_TIME) * 1000L
+            val instant = Instant.ofEpochMilli(time)
+            val koreaZoneId = ZoneId.of("Asia/Seoul")
+            val kstTime = instant.atZone(koreaZoneId)
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            val formattedString = kstTime.format(formatter)
+            Log.e("IMPEDANCE", "변환된 한국 시간 time: " + formattedString)
+
+            val battery = ((data[BATTERY_START_SEQ].toInt() and 0xFF) shl 8) or
+                    (data[BATTERY_END_SEQ].toInt() and 0xFF)
+            Log.e("IMPEDANCE", "a2rt Battery : $battery")
+
+            val vTemperature = ((data[INDEX_A2RT_TEMPERATURE_START].toInt() and 0xFF) shl 8) or
+                    (data[INDEX_A2RT_TEMPERATURE_END].toInt() and 0xFF)
+            Log.e("IMPEDANCE", "a2rt temperature : $vTemperature")
+            val temperature = (vTemperature / 100.0)
+
+            val real = (((data[INDEX_REAL_FIRST].toLong() and 0xFFL) shl 24) or
+                            ((data[INDEX_REAL_SECOND].toLong() and 0xFFL) shl 16) or
+                            ((data[INDEX_REAL_THIRD].toLong() and 0xFFL) shl 8) or
+                            (data[INDEX_REAL_FOURTH].toLong() and 0xFFL)
+                    ).toInt().toLong()
+
+            val imaginary = (((data[INDEX_IMAGINARY_FIRST].toLong() and 0xFFL) shl 24) or
+                            ((data[INDEX_IMAGINARY_SECOND].toLong() and 0xFFL) shl 16) or
+                            ((data[INDEX_IMAGINARY_THIRD].toLong() and 0xFFL) shl 8) or
+                            (data[INDEX_IMAGINARY_FOURTH].toLong() and 0xFFL)
+                    ).toInt().toLong()
+
+            val magnitude = (((data[INDEX_MAGNITUDE_FIRST].toLong() and 0xFFL) shl 24) or
+                            ((data[INDEX_IMAGINARY_SECOND].toLong() and 0xFFL) shl 16) or
+                            ((data[INDEX_IMAGINARY_THIRD].toLong() and 0xFFL) shl 8) or
+                            (data[INDEX_IMAGINARY_FOURTH].toLong() and 0xFFL)
+                    ).toInt().toLong()
+
+            val phase = (((data[INDEX_PHASE_FIRST].toLong() and 0xFFL) shl 24) or
+                            ((data[INDEX_PHASE_SECOND].toLong() and 0xFFL) shl 16) or
+                            ((data[INDEX_PHASE_THIRD].toLong() and 0xFFL) shl 8) or
+                            (data[INDEX_PHASE_FOURTH].toLong() and 0xFFL)
+                    ).toInt().toLong()
+            Log.e("IMPEDANCE", "real : $real | imaginary : $imaginary | magnitude : $magnitude | phase : $phase")
+
+            val saveData = A2RTData(userId = userId, frequencyType = frequencyType, createdAt = time, temperature = temperature, real = real, imaginary = imaginary, magnitude = magnitude, phase = phase)
+            CoroutineScope(Dispatchers.IO).launch {
+                db?.dataDao()?.insertA2RTData(saveData)
+                Log.e("IMPEDANCE", "======== IMPEDANCE DB INSERT 성공 =========")
+            }
+            return true
+        } catch (e: Exception) {
+            Log.e("IMPEDANCE", "${e.message}")
+            return false
+        }
+    }
+
     private fun convertToCurrentDataDouble(
         weoFirst: Byte,
         weoSecond: Byte,
@@ -382,6 +474,5 @@ class I10Device() : Protocol {
 
         return result
     }
-
 
 }

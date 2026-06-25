@@ -1,3 +1,5 @@
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -14,19 +16,34 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p_a2rt.R
+import kr.co.uxn.agms_p_a2rt.api.RetrofitClient.tokenRetrofit
+import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestEventData
+import kr.co.uxn.agms_p_a2rt.api.token.DataStoreManager
+import kr.co.uxn.agms_p_a2rt.ui.model.ItemData
+import kr.co.uxn.agms_p_a2rt.ui.viewmodel.EventScreenViewModel
 import java.time.Instant
+import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.collections.map
 
 // 테마 컬러 설정 (이미지의 주황색 포인트 컬러)
 val PrimaryOrange = Color(0xFFFCA937)
@@ -59,6 +76,135 @@ private fun recordCategoryIconRes(category: RecordCategory): Int {
     }
 }
 
+private fun eventTypeToRecordCategory(eventType: Int): RecordCategory {
+    return when (eventType) {
+        1401 -> RecordCategory.MEAL
+        1402 -> RecordCategory.EXERCISE
+        1403 -> RecordCategory.BLOOD_SUGAR
+        1404 -> RecordCategory.INSULIN
+        else -> RecordCategory.ALL
+    }
+}
+
+private fun recordCategoryToEventType(category: RecordCategory): Int? {
+    return when (category) {
+        RecordCategory.MEAL -> 1401
+        RecordCategory.EXERCISE -> 1402
+        RecordCategory.BLOOD_SUGAR -> 1403
+        RecordCategory.INSULIN -> 1404
+        RecordCategory.ALL -> null
+    }
+}
+
+private fun formatEventTime(createdAt: String): String {
+    return runCatching {
+        LocalDateTime.parse(
+            createdAt,
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        )
+            .atZone(ZoneId.of("UTC"))
+            .withZoneSameInstant(ZoneId.systemDefault())
+            .format(DateTimeFormatter.ofPattern("MM.dd HH:mm"))
+    }.getOrDefault(createdAt)
+}
+
+private fun parseEventInstant(createdAt: String): Instant? {
+    return runCatching {
+        LocalDateTime.parse(
+            createdAt,
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        )
+            .atZone(ZoneId.of("UTC"))
+            .toInstant()
+    }.getOrNull()
+}
+
+private fun extractEventContentValue(content: String, key: String): String {
+    return content
+        .split(",")
+        .map { it.trim() }
+        .firstOrNull { it.startsWith("$key:") }
+        ?.substringAfter(":")
+        ?.trim()
+        .orEmpty()
+}
+
+private fun extractEventContentBetween(content: String, startKey: String, endKey: String): String {
+    return content
+        .substringAfter("$startKey:", missingDelimiterValue = "")
+        .substringBefore("$endKey:", missingDelimiterValue = "")
+        .trim()
+        .trimEnd(',')
+        .trim()
+}
+
+private fun extractEventContentAfter(content: String, key: String): String {
+    return content
+        .substringAfter("$key:", missingDelimiterValue = "")
+        .trim()
+}
+
+private fun ItemData.toRecordItem(): RecordItem {
+    val category = eventTypeToRecordCategory(eventType)
+
+    if (category == RecordCategory.EXERCISE) {
+        val exerciseType = extractEventContentBetween(content, "운동 종류", "운동 시간")
+        val exerciseTime = extractEventContentBetween(content, "운동 시간", "강도")
+        val exerciseIntensity = extractEventContentAfter(content, "강도")
+
+        return RecordItem(
+            category = category,
+            title = exerciseType.ifBlank { category.title },
+            description = listOf(exerciseTime, exerciseIntensity)
+                .filter { it.isNotBlank() }
+                .joinToString(" "),
+            time = formatEventTime(time)
+        )
+    }
+
+    if (category == RecordCategory.MEAL) {
+        val mealName = extractEventContentBetween(content, "식사 이름", "식사 내용")
+        val mealContent = extractEventContentAfter(content, "식사 내용")
+
+        return RecordItem(
+            category = category,
+            title = mealName.ifBlank { category.title },
+            description = mealContent,
+            time = formatEventTime(time)
+        )
+    }
+
+    if (category == RecordCategory.BLOOD_SUGAR) {
+        return RecordItem(
+            category = category,
+            title = "자가 채혈",
+            description = "${content.trim()} mg/dL",
+            time = formatEventTime(time)
+        )
+    }
+
+    if (category == RecordCategory.INSULIN) {
+        val insulinType = extractEventContentBetween(content, "인슐린 종류", "투여량")
+        val insulinDose = extractEventContentAfter(content, "투여량")
+
+        return RecordItem(
+            category = category,
+            title = "인슐린 투여",
+            description = listOf(insulinType, insulinDose, "단위")
+                .filter { it.isNotBlank() }
+                .joinToString(" "),
+            time = formatEventTime(time)
+        )
+    }
+
+    return RecordItem(
+        category = category,
+        title = category.title,
+        description = content,
+        time = formatEventTime(time)
+    )
+}
+
 // 임시 데이터
 val dummyRecords = listOf(
     RecordItem(RecordCategory.EXERCISE, "조깅", "30분 가볍게", "07:00"),
@@ -72,7 +218,8 @@ val dummyRecords = listOf(
 fun EventListScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    startDestination: String = "list"
+    startDestination: String = "list",
+    eventScreenViewModel: EventScreenViewModel
 ) {
     NavHost(
         navController = navController,
@@ -84,7 +231,8 @@ fun EventListScreen(
         // 첫 번째 화면: 기록 리스트 화면
         composable("list") {
             RecordListScreen(
-                onNavigateToSelect = { navController.navigate("select") }
+                onNavigateToSelect = { navController.navigate("select") },
+                eventScreenViewModel = eventScreenViewModel
             )
         }
         // 두 번째 화면: 기록 종류 선택 화면
@@ -111,15 +259,63 @@ fun EventListScreen(
 // [첫 번째 화면] 리스트 및 탭 필터링
 // ==========================================
 @Composable
-fun RecordListScreen(onNavigateToSelect: () -> Unit) {
+fun RecordListScreen(onNavigateToSelect: () -> Unit, eventScreenViewModel: EventScreenViewModel) {
     var selectedTab by remember { mutableStateOf(RecordCategory.ALL) }
 
     // 선택된 탭에 따라 리스트 필터링
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val coroutineScope = rememberCoroutineScope()
+    val eventList by eventScreenViewModel.eventItemList.collectAsState()
+
+    val recordList = eventList
+        .sortedByDescending { parseEventInstant(it.time) ?: Instant.EPOCH }
+        .map { it.toRecordItem() }
     val filteredRecords = if (selectedTab == RecordCategory.ALL) {
-        dummyRecords
+        recordList
     } else {
-        dummyRecords.filter { it.category == selectedTab }
+        recordList.filter { it.category == selectedTab }
     }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // onResume 시점에만 실행!
+                // 서버로부터 이벤트 목록 받아와서 화면 갱신해주기
+                Log.d("TEST", "이벤트 화면에서 onResume일때 DisposableEffect 실행")
+                coroutineScope.launch(Dispatchers.IO) {
+                    try {
+                        val userId = DataStoreManager.getUserId().first() ?: -1
+                        val eventList = tokenRetrofit.getEventList(userId)
+                        if (eventList.isSuccessful) {
+                            val eventListBody = eventList.body()
+                            if (eventListBody != null) {
+                                Log.e("TEST", "불러온 eventListBody : ${eventListBody}")
+                                val items = eventListBody.map { it ->
+                                    ItemData(
+                                        eventType = it.eventTypeCode,
+                                        time = it.createdAt,
+                                        content = it.content
+                                    )
+                                }
+                                eventScreenViewModel.setItems(items)
+                            }
+                        } else {
+                            Log.e("TEST", "API 에러 : ${eventList.errorBody()}")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("TEST", "네트워크 에러 : ${e.message}")
+                    }
+                }
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
 
     Column(modifier = Modifier.fillMaxSize()) {
         // 탭 영역
@@ -343,7 +539,27 @@ private fun formatRecordTime(millis: Long): String {
 // ==========================================
 @Composable
 fun RecordDetailScreen(category: RecordCategory, onBackClick: () -> Unit) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val recordTimeText = remember { formatRecordTime(System.currentTimeMillis()) }
+    var exerciseType by remember { mutableStateOf("") }
+    var exerciseTime by remember { mutableStateOf("") }
+    var exerciseIntensity by remember { mutableStateOf("보통") }
+    var mealName by remember { mutableStateOf("") }
+    var mealContent by remember { mutableStateOf("") }
+    var bloodSugarValue by remember { mutableStateOf("") }
+    var insulinDose by remember { mutableStateOf("") }
+    var insulinType by remember { mutableStateOf("초속효성") }
+
+    fun buildContent(): String {
+        return when (category) {
+            RecordCategory.EXERCISE -> "운동 종류: $exerciseType, 운동 시간: $exerciseTime, 강도: $exerciseIntensity"
+            RecordCategory.MEAL -> "식사 이름: $mealName, 식사 내용: $mealContent"
+            RecordCategory.BLOOD_SUGAR -> bloodSugarValue
+            RecordCategory.INSULIN -> "인슐린 종류: $insulinType, 투여량: $insulinDose"
+            else -> ""
+        }.trim()
+    }
 
     Column(
         modifier = Modifier
@@ -368,17 +584,87 @@ fun RecordDetailScreen(category: RecordCategory, onBackClick: () -> Unit) {
         // 아이템 종류에 따라 다른 UI 출력
         Column(modifier = Modifier.weight(1f)) {
             when (category) {
-                RecordCategory.EXERCISE -> ExerciseInputForm(recordTimeText)
-                RecordCategory.MEAL -> MealInputForm(recordTimeText)
-                RecordCategory.BLOOD_SUGAR -> BloodSugarInputForm(recordTimeText)
-                RecordCategory.INSULIN -> InsulinInputForm(recordTimeText)
+                RecordCategory.EXERCISE -> ExerciseInputForm(
+                    recordTimeText = recordTimeText,
+                    type = exerciseType,
+                    onTypeChange = { exerciseType = it },
+                    time = exerciseTime,
+                    onTimeChange = { exerciseTime = it },
+                    intensity = exerciseIntensity,
+                    onIntensityChange = { exerciseIntensity = it }
+                )
+                RecordCategory.MEAL -> MealInputForm(
+                    recordTimeText = recordTimeText,
+                    mealName = mealName,
+                    onMealNameChange = { mealName = it },
+                    mealContent = mealContent,
+                    onMealContentChange = { mealContent = it }
+                )
+                RecordCategory.BLOOD_SUGAR -> BloodSugarInputForm(
+                    recordTimeText = recordTimeText,
+                    value = bloodSugarValue,
+                    onValueChange = { bloodSugarValue = it }
+                )
+                RecordCategory.INSULIN -> InsulinInputForm(
+                    recordTimeText = recordTimeText,
+                    dose = insulinDose,
+                    onDoseChange = { insulinDose = it },
+                    insulinType = insulinType,
+                    onInsulinTypeChange = { insulinType = it }
+                )
                 else -> {}
             }
         }
 
         // 하단 저장 버튼
         Button(
-            onClick = { /* 저장 로직 */ },
+            onClick = {
+                val eventTypeCode = recordCategoryToEventType(category)
+                val content = buildContent()
+
+                if (eventTypeCode == null || content.isBlank()) {
+                    Toast.makeText(context, "기록 내용을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                    return@Button
+                }
+
+                coroutineScope.launch(Dispatchers.IO) {
+                    try {
+                        val userId = DataStoreManager.getUserId().first() ?: -1
+                        val createdAt = LocalDateTime.now(ZoneId.of("UTC"))
+                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+
+                        Log.e("TEST", "이벤트 전송하기 전 값 확인 userId : $userId eventCode : $eventTypeCode, createdAt : $createdAt content : $content")
+
+                        val upload = tokenRetrofit.uploadEvent(
+                            RequestEventData(
+                                userId = userId,
+                                createdAt = createdAt,
+                                eventTypeCode = eventTypeCode,
+                                content = content
+                            )
+                        )
+
+                        if (upload.isSuccessful) {
+                            val uploadBody = upload.body()
+                            Log.d("EVENT", "uploadBody : $uploadBody")
+                            if (uploadBody?.isSuccess == true) {
+                                Log.d("EVENT", "EVENT 업로드 성공, ${uploadBody.message}")
+                                withContext(Dispatchers.Main) {
+                                    onBackClick()
+                                }
+                            }
+                        } else {
+                            Log.e("EVENT", "API 에러 : ${upload.errorBody()?.string()}")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("EVENT", "네트워크 또는 userId null 에러 : ${e.message}")
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(context, "네트워크 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                            Log.e("EVENT", "이벤트 업로드 실패")
+                        }
+                    }
+                }
+            },
             colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
             modifier = Modifier.fillMaxWidth().height(50.dp),
             shape = RoundedCornerShape(25.dp)
@@ -408,18 +694,22 @@ fun RecordFilterChip(
 }
 
 @Composable
-fun ExerciseInputForm(recordTimeText: String) {
-    var type by remember { mutableStateOf("") }
-    var time by remember { mutableStateOf("") }
-    var intensity by remember { mutableStateOf("보통") }
-
+fun ExerciseInputForm(
+    recordTimeText: String,
+    type: String,
+    onTypeChange: (String) -> Unit,
+    time: String,
+    onTimeChange: (String) -> Unit,
+    intensity: String,
+    onIntensityChange: (String) -> Unit
+) {
     OutlinedTextField(
-        value = type, onValueChange = { type = it },
+        value = type, onValueChange = onTypeChange,
         label = { Text("운동 종류 (예: 조깅, 수영)") },
         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
     )
     OutlinedTextField(
-        value = time, onValueChange = { time = it },
+        value = time, onValueChange = onTimeChange,
         label = { Text("운동 시간 (분)") },
         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
     )
@@ -428,7 +718,7 @@ fun ExerciseInputForm(recordTimeText: String) {
         listOf("가벼움", "보통", "격렬함").forEach { level ->
             RecordFilterChip(
                 selected = intensity == level,
-                onClick = { intensity = level },
+                onClick = { onIntensityChange(level) },
                 label = level
             )
         }
@@ -437,17 +727,20 @@ fun ExerciseInputForm(recordTimeText: String) {
 }
 
 @Composable
-fun MealInputForm(recordTimeText: String) {
-    var mealName by remember { mutableStateOf("") }
-    var mealContent by remember { mutableStateOf("") }
-
+fun MealInputForm(
+    recordTimeText: String,
+    mealName: String,
+    onMealNameChange: (String) -> Unit,
+    mealContent: String,
+    onMealContentChange: (String) -> Unit
+) {
     OutlinedTextField(
-        value = mealName, onValueChange = { mealName = it },
+        value = mealName, onValueChange = onMealNameChange,
         label = { Text("식사 이름 (예: 아침)") },
         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
     )
     OutlinedTextField(
-        value = mealContent, onValueChange = { mealContent = it },
+        value = mealContent, onValueChange = onMealContentChange,
         label = { Text("식사 내용 (예: 밥, 된장국)") },
         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
     )
@@ -455,11 +748,13 @@ fun MealInputForm(recordTimeText: String) {
 }
 
 @Composable
-fun BloodSugarInputForm(recordTimeText: String) {
-    var value by remember { mutableStateOf("") }
-
+fun BloodSugarInputForm(
+    recordTimeText: String,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
     OutlinedTextField(
-        value = value, onValueChange = { value = it },
+        value = value, onValueChange = onValueChange,
         label = { Text("혈당값 (mg/dL)") },
         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
     )
@@ -467,10 +762,13 @@ fun BloodSugarInputForm(recordTimeText: String) {
 }
 
 @Composable
-fun InsulinInputForm(recordTimeText: String) {
-    var dose by remember { mutableStateOf("") }
-    var insulinType by remember { mutableStateOf("초속효성") }
-
+fun InsulinInputForm(
+    recordTimeText: String,
+    dose: String,
+    onDoseChange: (String) -> Unit,
+    insulinType: String,
+    onInsulinTypeChange: (String) -> Unit
+) {
     Text("인슐린 종류", fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
     // 2줄로 칩 배치 (가상의 그리드 느낌)
     Column(modifier = Modifier.padding(bottom = 16.dp)) {
@@ -478,7 +776,7 @@ fun InsulinInputForm(recordTimeText: String) {
             listOf("초속효성", "속효성", "지속형").forEach { level ->
                 RecordFilterChip(
                     selected = insulinType == level,
-                    onClick = { insulinType = level },
+                    onClick = { onInsulinTypeChange(level) },
                     label = level
                 )
             }
@@ -487,7 +785,7 @@ fun InsulinInputForm(recordTimeText: String) {
             listOf("혼합형", "중간형").forEach { level ->
                 RecordFilterChip(
                     selected = insulinType == level,
-                    onClick = { insulinType = level },
+                    onClick = { onInsulinTypeChange(level) },
                     label = level
                 )
             }
@@ -495,7 +793,7 @@ fun InsulinInputForm(recordTimeText: String) {
     }
 
     OutlinedTextField(
-        value = dose, onValueChange = { dose = it },
+        value = dose, onValueChange = onDoseChange,
         label = { Text("투여량 (Unit)") },
         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
     )

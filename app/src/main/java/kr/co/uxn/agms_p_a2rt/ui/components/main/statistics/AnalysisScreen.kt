@@ -186,7 +186,11 @@ fun DailyRecordContent(onBloodSugarRecordClick: () -> Unit) {
                     .clickable { showDatePicker = true },
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.DateRange, contentDescription = "Calendar")
+                Image(
+                    painter = painterResource(id = R.drawable.calendar_icon),
+                    contentDescription = "Calendar"
+                )
+//                Icon(Icons.Default.DateRange, contentDescription = "Calendar")
             }
         }
 
