@@ -635,6 +635,7 @@ fun RecordDetailScreen(category: RecordCategory, onBackClick: () -> Unit) {
 
                         Log.e("TEST", "이벤트 전송하기 전 값 확인 userId : $userId eventCode : $eventTypeCode, createdAt : $createdAt content : $content")
 
+
                         val upload = tokenRetrofit.uploadEvent(
                             RequestEventData(
                                 userId = userId,
