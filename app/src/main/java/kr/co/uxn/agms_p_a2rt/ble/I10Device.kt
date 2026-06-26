@@ -217,16 +217,11 @@ class I10Device() : Protocol {
         Log.d("choco5732", "========Send RTC Running=============")
         val rtc = Calendar.getInstance()
 
-        val year = rtc[Calendar.YEAR] - 2000
-        val month = rtc[Calendar.MONTH] + 1
-        val date = rtc[Calendar.DATE]
+        val unixTime = System.currentTimeMillis() / 1000L
+        val processedUnixTime = unixTime - BASE_TIME
 
-        val hour24 = rtc[Calendar.HOUR_OF_DAY]
-        val minute = rtc[Calendar.MINUTE]
-        val second = rtc[Calendar.SECOND]
-
-        val data = ByteArray(14)
-
+        Log.e("TEST", "now unix time(s) : " + unixTime + "\n 베이스타임 뺀 unix time(s) : " + processedUnixTime)
+        val data = ByteArray(12)
         data[0] = 0xA0.toByte() // stx_start
         data[1] = 0x81.toByte() // stx_end
         data[2] = 0x41.toByte() // cmd
@@ -237,21 +232,17 @@ class I10Device() : Protocol {
         data[7] = 0x00.toByte() // crc_end
 
         // time
-        data[8] = year.toByte()
-        data[9] = month.toByte()
-        data[10] = date.toByte()
-        data[11] = hour24.toByte()
-        data[12] = minute.toByte()
-        data[13] = second.toByte()
+        data[8] = processedUnixTime.toByte()
+        data[9] = (processedUnixTime shr 8).toByte()
+        data[10] = (processedUnixTime shr 16).toByte()
+        data[11] = (processedUnixTime shr 24).toByte()
 
-        Log.e(TEST, "now time: $year-$month-$date $hour24:$minute:$second")
 
         val crc: Int = checkCrc(data)
 
         data[6] = (crc shr 8).toByte()
         data[7] = crc.toByte()
 
-        Log.e("choco5732", "rtc now time: $year-$month-$date $hour24:$minute:$second")
 
         return data
     }

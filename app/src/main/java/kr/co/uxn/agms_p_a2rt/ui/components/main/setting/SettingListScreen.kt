@@ -1,10 +1,15 @@
 package kr.co.uxn.agms_p_a2rt.ui.components.main.setting
 
+import android.os.Process
+import android.util.Log
+import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -14,14 +19,40 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kr.co.uxn.agms_p_a2rt.api.RetrofitClient.tokenRetrofit
+import kr.co.uxn.agms_p_a2rt.api.token.DataStoreManager
+import kr.co.uxn.agms_p_a2rt.room.AppDatabase
+import kr.co.uxn.agms_p_a2rt.ui.components.main.AlwaysDialog
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import kotlin.system.exitProcess
+import kr.co.uxn.agms_p_a2rt.R
+import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestDeleteOauthUserInfo
+import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestDeleteUserInfo
+import kr.co.uxn.agms_p_a2rt.ui.viewmodel.BleViewModel
 
 // 테마 컬러
 val BackgroundGray = Color(0xFFF2F2F2)
@@ -33,14 +64,15 @@ val AlertRed = Color(0xFFFF5252)
 @Composable
 fun SettingListScreen(
     modifier: Modifier = Modifier,
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    bleViewModel: BleViewModel
 ) {
     NavHost(
         navController = navController,
         startDestination = "settings_main",
         modifier = modifier.fillMaxSize().background(BackgroundGray)
     ) {
-        composable("settings_main") { SettingsMainScreen(navController) }
+        composable("settings_main") { SettingsMainScreen(navController, bleViewModel) }
         composable("user_info") { UserInfoScreen(navController) }
         composable("sensor_info") { SensorInfoScreen(navController) }
         composable("alarm_settings") { AlarmSettingsScreen(navController) }
@@ -52,7 +84,99 @@ fun SettingListScreen(
 // [첫 번째 화면] 설정 메인 화면
 // ==========================================
 @Composable
-fun SettingsMainScreen(navController: NavHostController) {
+fun SettingsMainScreen(navController: NavHostController, bleViewModel: BleViewModel) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val coroutineScope = rememberCoroutineScope()
+    val name = remember { mutableStateOf("") }
+    val email = remember { mutableStateOf("") }
+    val showLogOutDialog = remember { mutableStateOf(false) }
+
+    if (showLogOutDialog.value) {
+        AlwaysDialog(
+            onConfirm = {
+                showLogOutDialog.value = false
+                coroutineScope.launch {
+                    // 로그아웃 api 전송
+                    try {
+                        withContext(Dispatchers.IO) {
+                            val result2 = tokenRetrofit.logout()
+                        }
+                    } catch (e: Exception) {
+                        Log.d("TEST", "로그아웃 API통신 실패 : ${e.message}")
+                    }
+
+                    // 0. 토큰 정리
+                    // 메인화면으로 고정 isMain = true
+                    DataStoreManager.saveIsMain(false)
+                    DataStoreManager.deleteRoute()
+                    DataStoreManager.saveRoute("Splash")
+                    Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
+                    Log.e("TEST", "DS에 저장된 Route는${DataStoreManager.getRoute().first()}")
+                    DataStoreManager.deleteAccessToken()
+                    DataStoreManager.deleteRefreshToken()
+                    DataStoreManager.deleteUserId()
+                    DataStoreManager.deleteDeviceMac()
+//                    DataStoreManager.deleteStartTime()
+//                    DataStoreManager.deleteEndTime()
+                    DataStoreManager.deleteTargetLowGlucose()
+                    DataStoreManager.deleteTargetHighGlucose()
+                    DataStoreManager.deleteEmail()
+
+                    // 1. 서비스 종료
+                    bleViewModel.emit("STOP_SERVICE")
+                    // 2. 데이터 전송
+                    // 3. 로그인 화면으로 이동
+                    navController.navigate("Login") {
+                        popUpTo(0)
+                    }
+                    // 앱 강제 종료
+                    android.os.Process.killProcess(Process.myPid())
+                    exitProcess(0)
+                }
+            },
+            onDismiss = {
+                showLogOutDialog.value = false
+            },
+            title = stringResource(R.string.dialog_log_out_title),
+            content = stringResource(R.string.dialog_log_out_content)
+        )
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                coroutineScope.launch(Dispatchers.IO) {
+                    try {
+                        val userId = DataStoreManager.getUserId().first() ?: -1
+                        Log.e("TEST", "설정 메인에서 불러온 userId : $userId")
+
+                        val getUserData = tokenRetrofit.getUser(userId)
+                        if (getUserData.isSuccessful) {
+                            val userData = getUserData.body()
+                            Log.d("TEST", "SettingsMain userDataBody : $userData")
+
+                            if (userData?.isSuccess == true) {
+                                withContext(Dispatchers.Main) {
+                                    name.value = userData.name
+                                    email.value = userData.email
+                                }
+                            }
+                        } else {
+                            Log.e("TEST", "SettingsMain API 에러 : ${getUserData.errorBody()?.string()}")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("TEST", "SettingsMain 네트워크 에러 : ${e.message}")
+                    }
+                }
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
         // 상단 사용자 프로필 영역 (흰색 배경)
         Column(
@@ -61,9 +185,9 @@ fun SettingsMainScreen(navController: NavHostController) {
                 .background(Color.White)
                 .padding(horizontal = 24.dp, vertical = 24.dp)
         ) {
-            Text("김민준", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(name.value, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(4.dp))
-            Text("계정: mjkim@naver.com", fontSize = 14.sp, color = TextGray)
+            Text("계정: ${email.value}", fontSize = 14.sp, color = TextGray)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -96,13 +220,15 @@ fun SettingsMainScreen(navController: NavHostController) {
             SettingsSingleCard("사용 설명서") { /* 설명서 화면 이동 로직 */ }
             SettingsSingleCard("앱 정보") { navController.navigate("app_info") }
 
-            // 3. 로그아웃 (빨간색 텍스트)
+            // 3. 로그아웃
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { /* 로그아웃 로직 */ }
+                    .clickable {
+                        showLogOutDialog.value = true
+                    }
             ) {
                 Text(
                     text = "로그아웃",
@@ -175,30 +301,236 @@ fun SubScreenHeader(title: String, onBackClick: () -> Unit) {
 // ==========================================
 @Composable
 fun UserInfoScreen(navController: NavHostController) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val coroutineScope = rememberCoroutineScope()
+    val name = remember { mutableStateOf("") }
+    val email = remember { mutableStateOf("") }
+    val sex = remember { mutableStateOf("") }
+    val age = remember { mutableStateOf("") }
+    val height = remember { mutableStateOf("") }
+    val weight = remember { mutableStateOf("") }
+    val diabetesType = remember { mutableStateOf("") }
+    val targetGlucoseRange = remember { mutableStateOf("") }
+    val showDeleteAccountDialog = remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    val localDbRepository by lazy { AppDatabase.getInstance(context) }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                coroutineScope.launch(Dispatchers.IO) {
+                    try {
+                        val userId = DataStoreManager.getUserId().first() ?: -1
+                        Log.e("TEST", "사용자 정보에서 불러온 userId : $userId")
+
+                        val getUserData = tokenRetrofit.getUser(userId)
+                        if (getUserData.isSuccessful) {
+                            val userData = getUserData.body()
+                            Log.d("TEST", "UserInfo userDataBody : $userData")
+
+                            if (userData?.isSuccess == true) {
+                                withContext(Dispatchers.Main) {
+                                    name.value = userData.name
+                                    email.value = userData.email
+                                    sex.value = userData.sex
+                                    age.value = userData.age.toString()
+                                    height.value = userData.height.toString()
+                                    weight.value = userData.weight.toString()
+                                    diabetesType.value = userData.diabetesType
+                                    targetGlucoseRange.value =
+                                        "${userData.targetGlucoseMin} ~ ${userData.targetGlucoseMax} mg/dL"
+                                }
+                            }
+                        } else {
+                            Log.e("TEST", "UserInfo API 에러 : ${getUserData.errorBody()?.string()}")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("TEST", "UserInfo 네트워크 에러 : ${e.message}")
+                    }
+                }
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    if (showDeleteAccountDialog.value) {
+        AlwaysDialog(
+            onConfirm = {
+                showDeleteAccountDialog.value = false
+
+                coroutineScope.launch(Dispatchers.IO) {
+                    val type = DataStoreManager.getType().first() ?: -1
+                    val userId = DataStoreManager.getUserId().first() ?: -1
+
+                    if (type != -1) {
+                        Log.e("TEST", "type : $type")
+                        if (type == 1803) {
+                            try {
+                                val deleteUser =
+                                    tokenRetrofit.deleteUser(RequestDeleteUserInfo(userId))
+                                val deleteUserBody = deleteUser.body()
+                                Log.e("TEST", "deleteUserBody : $deleteUserBody")
+                                if (deleteUser.isSuccessful) {
+                                    if (deleteUserBody != null) {
+                                        if (deleteUserBody.isSuccess) {
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(
+                                                    context,
+                                                    context.getString(R.string.toast_delete_account),
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+
+                                            // 토큰정리 및 앱 종료
+
+                                            localDbRepository?.dataDao()
+                                                ?.deleteUserValueTable(userId)
+                                            localDbRepository?.dataDao()
+                                                ?.deleteUserGlucoseTable(userId)
+                                            localDbRepository?.dataDao()
+                                                ?.deleteUserCalibrationTable(userId)
+
+                                            Log.w("TEST", "sensorOff 성공")
+                                            DataStoreManager.saveIsMain(false)
+                                            DataStoreManager.deleteRoute()
+                                            DataStoreManager.saveRoute("Splash")
+                                            Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
+                                            Log.e(
+                                                "TEST",
+                                                "DS에 저장된 Route : ${
+                                                    DataStoreManager.getRoute().first()
+                                                }"
+                                            )
+                                            DataStoreManager.deleteAccessToken()
+                                            DataStoreManager.deleteRefreshToken()
+                                            DataStoreManager.deleteUserId()
+                                            DataStoreManager.deleteDeviceMac()
+                                            DataStoreManager.deleteStartTime()
+                                            DataStoreManager.deleteEndTime()
+                                            withContext(Dispatchers.Main) {
+                                                // 1. 서비스 종료
+//                                                bleViewModel.emit("STOP_SERVICE")
+                                                // 앱 강제종료
+                                                android.os.Process.killProcess(android.os.Process.myPid())
+                                                exitProcess(0)
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    Log.e("TEST", "API 에러 : ${deleteUser.errorBody()?.string()}")
+                                }
+                            } catch (e: Exception) {
+                                Log.e("TEST", "네트워크 에러 : $e")
+
+                            }
+                        } else {
+                            try {
+                                val deleteOauthUser = tokenRetrofit.deleteOauthUser(
+                                    RequestDeleteOauthUserInfo(
+                                        userId,
+                                        type
+                                    )
+                                )
+                                val deleteOauthUserBody = deleteOauthUser.body()
+                                Log.e("TEST", "deleteOauthUserBody : $deleteOauthUserBody")
+                                if (deleteOauthUser.isSuccessful) {
+                                    if (deleteOauthUserBody != null) {
+                                        if (deleteOauthUserBody.isSuccess) {
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(
+                                                    context,
+                                                    context.getString(R.string.toast_delete_account),
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+
+                                            // 토큰 정리 및 앱 종료
+
+                                            localDbRepository?.dataDao()
+                                                ?.deleteUserValueTable(userId)
+                                            localDbRepository?.dataDao()
+                                                ?.deleteUserGlucoseTable(userId)
+                                            localDbRepository?.dataDao()
+                                                ?.deleteUserCalibrationTable(userId)
+
+                                            Log.w("TEST", "sensorOff 성공")
+                                            DataStoreManager.saveIsMain(false)
+                                            DataStoreManager.deleteRoute()
+                                            DataStoreManager.saveRoute("Splash")
+                                            Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
+                                            Log.e(
+                                                "TEST",
+                                                "DS에 저장된 Route : ${
+                                                    DataStoreManager.getRoute().first()
+                                                }"
+                                            )
+                                            DataStoreManager.deleteAccessToken()
+                                            DataStoreManager.deleteRefreshToken()
+                                            DataStoreManager.deleteUserId()
+                                            DataStoreManager.deleteDeviceMac()
+                                            DataStoreManager.deleteStartTime()
+                                            DataStoreManager.deleteEndTime()
+                                            withContext(Dispatchers.Main) {
+                                                // 1. 서비스 종료
+//                                                bleViewModel.emit("STOP_SERVICE")
+                                                // 앱 강제종료
+                                                android.os.Process.killProcess(android.os.Process.myPid())
+                                                exitProcess(0)
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    Log.e(
+                                        "TEST",
+                                        "API 에러 : ${deleteOauthUser.errorBody()?.string()}"
+                                    )
+                                }
+                            } catch (e: Exception) {
+                                Log.e("TEST", "네트워크 에러 : $e")
+                            }
+                        }
+                    }
+                }
+            },
+            onDismiss = {
+                showDeleteAccountDialog.value = false
+            },
+            title = context.getString(R.string.dialog_delete_account),
+            content = context.getString(R.string.dialog_delete_ask_again)
+        )
+    }
+
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         SubScreenHeader("사용자 정보", onBackClick = { navController.popBackStack() })
 
         Column(modifier = Modifier.padding(horizontal = 24.dp)) {
             Text("기본정보", color = TextGray, fontSize = 14.sp, modifier = Modifier.padding(vertical = 12.dp))
-            InfoRow("이름", "김민준")
-            InfoRow("이메일", "mjkim@naver.com")
+            InfoRow("이름", name.value)
+            InfoRow("이메일", email.value)
             Text("비밀번호 변경하기", fontSize = 16.sp, modifier = Modifier.padding(vertical = 12.dp).clickable { })
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Text("부가정보", color = TextGray, fontSize = 14.sp, modifier = Modifier.padding(vertical = 12.dp))
-            InfoRow("성별", "")
-            InfoRow("연령", "")
-            InfoRow("신장", "")
-            InfoRow("체중", "")
-            InfoRow("당뇨 유형", "")
-            InfoRow("목표 혈당 범위", "")
+            InfoRow("성별", sex.value)
+            InfoRow("연령", age.value)
+            InfoRow("신장", height.value)
+            InfoRow("체중", weight.value)
+            InfoRow("당뇨 유형", diabetesType.value)
+            InfoRow("목표 혈당 범위", targetGlucoseRange.value)
             
             Spacer(modifier = Modifier.height(16.dp))
             Text("일반적인 목표 혈당범위는 80~130 mg/dL이며, 식후 최대 혈당은 180 mg/dL미만입니다.", fontSize = 12.sp, color = TextGray)
 
             Spacer(modifier = Modifier.height(32.dp))
-            Text("회원탈퇴", color = AlertRed, fontSize = 14.sp, modifier = Modifier.clickable { })
+            Text("회원탈퇴", color = AlertRed, fontSize = 14.sp, modifier = Modifier.clickable {
+                showDeleteAccountDialog.value = true
+            })
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
@@ -209,16 +541,144 @@ fun UserInfoScreen(navController: NavHostController) {
 // ==========================================
 @Composable
 fun SensorInfoScreen(navController: NavHostController) {
+
+    val startTime = remember { mutableStateOf("") }
+    val remainingTime = remember { mutableStateOf(-1) }
+    var serialNumber = remember { mutableStateOf("")}
+    val showSensorOffDialog = remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val localDbRepository by lazy {
+        AppDatabase.getInstance(context)
+    }
+
+
+
+    LaunchedEffect(Unit) {
+        val startTimeMilli = DataStoreManager.getStartTime().first() ?: -1
+        val endTimeMilli = DataStoreManager.getEndTime().first() ?: -1
+        val formatter = DateTimeFormatter.ofPattern("yyyy년 M월 d일", Locale.KOREAN)
+        val userId = DataStoreManager.getUserId().first() ?: -1
+
+        val formattedDate = if (startTimeMilli != -1L) {
+            Instant.ofEpochMilli(startTimeMilli)
+                .atZone(ZoneId.of("Asia/Seoul"))
+                .format(formatter)
+        } else {
+            ""
+        }
+        // 센서 시작 시간 설정
+        startTime.value = formattedDate
+
+        val remainingDays = if (startTimeMilli != -1L && endTimeMilli != -1L) {
+            val diffMillis = endTimeMilli - System.currentTimeMillis()
+            (diffMillis / (1000 * 60 * 60 * 24)).toInt()
+        } else {
+            -1 // 오류 처리
+        }
+
+        // 남은 사용 기간 설정
+        remainingTime.value = remainingDays
+
+        // 시리얼번호 가져오기
+        withContext(Dispatchers.IO) {
+            serialNumber.value = DataStoreManager.getSerialNumber().first() ?: ""
+        }
+    }
+
+    if (showSensorOffDialog.value) {
+        AlwaysDialog(
+            onDismiss = {
+                showSensorOffDialog.value = false
+            },
+            onConfirm = {
+                showSensorOffDialog.value = false
+                coroutineScope.launch(Dispatchers.IO) {
+                    // 0. 토큰 정리
+                    val userId = DataStoreManager.getUserId().first() ?: -1
+
+                    // 로그아웃 api 전송
+//                    try {
+//                        withContext(Dispatchers.IO) {
+//                            val result2 = tokenRetrofit.logout()
+//                        }
+//                    } catch (e: Exception) {
+//                        Log.d("TEST", "로그아웃 API통신 실패 : ${e.message}")
+//                    }
+
+                    try {
+                        val sensorOff = tokenRetrofit.doSensorOff(userId)
+                        if (sensorOff.isSuccessful) {
+                            val sensorOffBody = sensorOff.body()
+                            if (sensorOffBody != null) {
+                                Log.w("TEST", "sensorOff responseBody : ${sensorOffBody}")
+                                if (sensorOffBody.isSuccess) {
+                                    tokenRetrofit.logout()
+                                    delay(1000)
+                                    // userId의 db삭제
+                                    localDbRepository?.dataDao()?.deleteUserValueTable(userId)
+                                    localDbRepository?.dataDao()?.deleteUserGlucoseTable(userId)
+                                    localDbRepository?.dataDao()?.deleteUserCalibrationTable(userId)
+
+                                    Log.w("TEST", "sensorOff 성공")
+                                    DataStoreManager.saveIsMain(false)
+                                    DataStoreManager.deleteRoute()
+                                    DataStoreManager.saveRoute("Splash")
+                                    Log.e("TEST", "${DataStoreManager.getIsMain().first()}")
+                                    DataStoreManager.deleteAccessToken()
+                                    DataStoreManager.deleteRefreshToken()
+                                    DataStoreManager.deleteUserId()
+                                    DataStoreManager.deleteDeviceMac()
+//                                    DataStoreManager.deleteDeviceMac()
+                                    DataStoreManager.setNotiHighGlucose(false)
+                                    DataStoreManager.setNotiLowGlucose(false)
+                                    DataStoreManager.deleteStartTime()
+                                    DataStoreManager.deleteEndTime()
+                                    DataStoreManager.deleteDailyCalibrationTime()
+                                    DataStoreManager.deleteDailyCalibrationLastTime()
+                                    DataStoreManager.setLandScapeMode(false)
+                                    DataStoreManager.deleteTargetLowGlucose()
+                                    DataStoreManager.deleteTargetHighGlucose()
+                                    DataStoreManager.deleteEmail()
+                                    withContext(Dispatchers.Main) {
+                                        // 1. 서비스 종료
+//                                        bleViewModel.emit("STOP_SERVICE")
+                                        // 앱 강제 종료
+                                        android.os.Process.killProcess(android.os.Process.myPid())
+                                        exitProcess(0)
+                                    }
+                                } else {
+                                    Log.w("TEST", "sensorOff 실패")
+                                }
+                            }
+                        } else {
+                            Log.w("TEST", "sensorOff API통신 실패 : ${sensorOff.errorBody()?.string()}")
+                        }
+                    } catch (e: Exception) {
+                        Log.d("TEST", "sensorOff API통신 실패 : ${e.message}")
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(context, context.getString(R.string.toast_network_error), Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            },
+            title = stringResource(R.string.dialog_sensor_off_title),
+            content = stringResource(R.string.dialog_sensor_off_content)
+        )
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
         SubScreenHeader("센서 정보", onBackClick = { navController.popBackStack() })
 
         Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)) {
-            InfoRow("센서 시작일", "2025년 03월 18일")
-            InfoRow("남은 사용 기간", "13일")
-            InfoRow("시리얼 번호", "342")
+            InfoRow("센서 시작일", startTime.value)
+            InfoRow("남은 사용 기간", "${remainingTime.value}일")
+            InfoRow("시리얼 번호", serialNumber.value)
             
             Spacer(modifier = Modifier.height(32.dp))
-            Text("센서종료", color = AlertRed, fontSize = 16.sp, modifier = Modifier.clickable { })
+            Text("센서종료", color = AlertRed, fontSize = 16.sp, modifier = Modifier.clickable {
+                showSensorOffDialog.value = true
+            })
         }
     }
 }
@@ -241,24 +701,174 @@ fun InfoRow(label: String, value: String) {
 // ==========================================
 @Composable
 fun AlarmSettingsScreen(navController: NavHostController) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    val checkedForHighGlucose = remember { mutableStateOf(false) }
+    val checkedForLowGlucose = remember { mutableStateOf(false) }
+    val checkedForLostSignal = remember { mutableStateOf(false) }
+    val checkedForExpiredSensor = remember { mutableStateOf(false) }
+    val checkedForStabilization = remember { mutableStateOf(false) }
+    val checkedForCalibration = remember { mutableStateOf(false) }
+    val targetLowGlucose = remember { mutableStateOf("") }
+    val targetHighGlucose = remember { mutableStateOf("") }
+    val showSetLowGlucoseDialog = remember { mutableStateOf(false) }
+    val showSetHighGlucoseDialog = remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        val notificationSettings = withContext(Dispatchers.IO) {
+            // DS로부터 값 불러오기
+            val verifiedDSHigh = DataStoreManager.getNotiHighGlucose().first() ?: false
+            val verifiedDSLow = DataStoreManager.getNotiLowGlucose().first() ?: false
+            val verifiedDSLostSignal = DataStoreManager.getNotiLostSignal().first() ?: true
+            val verifiedDSExpiredSensor = DataStoreManager.getNotiExpiredSensor().first() ?: true
+            val verifiedDSStabilization = DataStoreManager.getNotiStabilization().first() ?: true
+            val verifiedDSCalibration = DataStoreManager.getNotiCalibration().first() ?: true
+            val verifiedDSTargetLowGlucose = DataStoreManager.getTargetLowGlucose().first() ?: 70
+            val verifiedDSTargetHighGlucose = DataStoreManager.getTargetHighGlucose().first() ?: 170
+            val verifiedDSDailyCalibrationTime = DataStoreManager.getDailyCalibrationTime().first() ?: "오전 11:00"
+
+            // 로그 띄우기
+            Log.e("NOTI", "After High : ${verifiedDSHigh}, Low : ${verifiedDSLow} " +
+                    "\n Lost : ${verifiedDSLostSignal} ExpiredSensor : ${verifiedDSExpiredSensor}" +
+                    "\n Stabilization : ${verifiedDSStabilization} Calibration : ${verifiedDSCalibration}" +
+                    "\n Target High Glucose : ${verifiedDSTargetHighGlucose} Target Low Glucose : ${verifiedDSTargetLowGlucose}")
+
+            NotificationSettings(
+                highGlucose = verifiedDSHigh,
+                lowGlucose = verifiedDSLow,
+                lostSignal = verifiedDSLostSignal,
+                expiredSensor = verifiedDSExpiredSensor,
+                stabilization = verifiedDSStabilization,
+                calibration = verifiedDSCalibration,
+                targetLowGlucose = verifiedDSTargetLowGlucose.toString(),
+                targetHighGlucose = verifiedDSTargetHighGlucose.toString()
+            )
+        }
+
+        checkedForHighGlucose.value = notificationSettings.highGlucose
+        checkedForLowGlucose.value = notificationSettings.lowGlucose
+        checkedForLostSignal.value = notificationSettings.lostSignal
+        checkedForExpiredSensor.value = notificationSettings.expiredSensor
+        checkedForStabilization.value = notificationSettings.stabilization
+        checkedForCalibration.value = notificationSettings.calibration
+        targetLowGlucose.value = notificationSettings.targetLowGlucose
+        targetHighGlucose.value = notificationSettings.targetHighGlucose
+    }
+
+    if (showSetLowGlucoseDialog.value) {
+        TargetGlucoseDialog(
+            title = "저혈당 알림",
+            value = targetLowGlucose.value,
+            onValueChange = { targetLowGlucose.value = it },
+            onDismiss = { showSetLowGlucoseDialog.value = false },
+            onConfirm = {
+                val target = targetLowGlucose.value
+                if (target.isBlank()) {
+                    Toast.makeText(context, "혈당값을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                    return@TargetGlucoseDialog
+                }
+
+                val targetValue = target.toIntOrNull()
+                if (targetValue == null) {
+                    Toast.makeText(context, "숫자만 입력해주세요.", Toast.LENGTH_SHORT).show()
+                    return@TargetGlucoseDialog
+                }
+
+                showSetLowGlucoseDialog.value = false
+                coroutineScope.launch(Dispatchers.IO) {
+                    DataStoreManager.setTargetLowGlucose(targetValue)
+                }
+            }
+        )
+    }
+
+    if (showSetHighGlucoseDialog.value) {
+        TargetGlucoseDialog(
+            title = "고혈당 알림",
+            value = targetHighGlucose.value,
+            onValueChange = { targetHighGlucose.value = it },
+            onDismiss = { showSetHighGlucoseDialog.value = false },
+            onConfirm = {
+                val target = targetHighGlucose.value
+                if (target.isBlank()) {
+                    Toast.makeText(context, "혈당값을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                    return@TargetGlucoseDialog
+                }
+
+                val targetValue = target.toIntOrNull()
+                if (targetValue == null) {
+                    Toast.makeText(context, "숫자만 입력해주세요.", Toast.LENGTH_SHORT).show()
+                    return@TargetGlucoseDialog
+                }
+
+                showSetHighGlucoseDialog.value = false
+                coroutineScope.launch(Dispatchers.IO) {
+                    DataStoreManager.setTargetHighGlucose(targetValue)
+                }
+            }
+        )
+    }
+
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         SubScreenHeader("알림 설정", onBackClick = { navController.popBackStack() })
 
         Column(modifier = Modifier.padding(horizontal = 24.dp)) {
-            AlarmSwitchRow("무음 모드", true)
-            AlarmSwitchRow("저혈당 알림", false, "70 mg/dL")
-            AlarmSwitchRow("고혈당 알림", false, "170 mg/dL")
-            AlarmSwitchRow("신호 소실", true)
-            AlarmSwitchRow("센서 만료", true)
-            AlarmSwitchRow("센서 안정화", true)
+            AlarmSwitchRow("무음 모드", false)
+            AlarmSwitchRow(
+                title = "저혈당 알림",
+                checked = checkedForLowGlucose.value,
+                subValue = "${targetLowGlucose.value} mg/dL",
+                onRowClick = { showSetLowGlucoseDialog.value = true },
+                onCheckedChange = {
+                    checkedForLowGlucose.value = it
+                    coroutineScope.launch(Dispatchers.IO) {
+                        DataStoreManager.setNotiLowGlucose(it)
+                    }
+                }
+            )
+            AlarmSwitchRow(
+                title = "고혈당 알림",
+                checked = checkedForHighGlucose.value,
+                subValue = "${targetHighGlucose.value} mg/dL",
+                onRowClick = { showSetHighGlucoseDialog.value = true },
+                onCheckedChange = {
+                    checkedForHighGlucose.value = it
+                    coroutineScope.launch(Dispatchers.IO) {
+                        DataStoreManager.setNotiHighGlucose(it)
+                    }
+                }
+            )
+            AlarmSwitchRow("신호 소실", checkedForLostSignal.value) {
+                checkedForLostSignal.value = it
+                coroutineScope.launch(Dispatchers.IO) {
+                    DataStoreManager.setNotiLostSignal(it)
+                }
+            }
+            AlarmSwitchRow("센서 만료", checkedForExpiredSensor.value) {
+                checkedForExpiredSensor.value = it
+                coroutineScope.launch(Dispatchers.IO) {
+                    DataStoreManager.setNotiExpiredSensor(it)
+                }
+            }
+            AlarmSwitchRow("센서 안정화", checkedForStabilization.value) {
+                checkedForStabilization.value = it
+                coroutineScope.launch(Dispatchers.IO) {
+                    DataStoreManager.setNotiStabilization(it)
+                }
+            }
         }
     }
 }
 
 @Composable
-fun AlarmSwitchRow(title: String, defaultChecked: Boolean, subValue: String? = null) {
-    var checked by remember { mutableStateOf(defaultChecked) }
-
+fun AlarmSwitchRow(
+    title: String,
+    checked: Boolean,
+    subValue: String? = null,
+    onRowClick: (() -> Unit)? = null,
+    onCheckedChange: (Boolean) -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -266,7 +876,17 @@ fun AlarmSwitchRow(title: String, defaultChecked: Boolean, subValue: String? = n
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Column {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .then(
+                    if (onRowClick != null) {
+                        Modifier.clickable { onRowClick() }
+                    } else {
+                        Modifier
+                    }
+                )
+        ) {
             Text(title, fontSize = 16.sp)
             if (subValue != null) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -278,10 +898,10 @@ fun AlarmSwitchRow(title: String, defaultChecked: Boolean, subValue: String? = n
         }
         Switch(
             checked = checked,
-            onCheckedChange = { checked = it },
+            onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
-                checkedTrackColor = PrimaryOrange,
+                checkedTrackColor = colorResource(R.color.main),
                 uncheckedThumbColor = Color.White,
                 uncheckedTrackColor = Color.LightGray,
                 uncheckedBorderColor = Color.Transparent
@@ -290,11 +910,62 @@ fun AlarmSwitchRow(title: String, defaultChecked: Boolean, subValue: String? = n
     }
 }
 
+private data class NotificationSettings(
+    val highGlucose: Boolean,
+    val lowGlucose: Boolean,
+    val lostSignal: Boolean,
+    val expiredSensor: Boolean,
+    val stabilization: Boolean,
+    val calibration: Boolean,
+    val targetLowGlucose: String,
+    val targetHighGlucose: String
+)
+
+@Composable
+private fun TargetGlucoseDialog(
+    title: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = title, fontWeight = FontWeight.Bold)
+        },
+        text = {
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = true,
+                suffix = { Text("mg/dL") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("확인")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("취소")
+            }
+        }
+    )
+}
+
 // ==========================================
 // [다섯 번째 화면] 앱 정보
 // ==========================================
 @Composable
 fun AppInfoScreen(navController: NavHostController) {
+
+    val context = LocalContext.current
+    val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+    val versionName = packageInfo.versionName
+
     Column(modifier = Modifier.fillMaxSize()) {
         SubScreenHeader("앱 정보", onBackClick = { navController.popBackStack() })
 
@@ -304,9 +975,14 @@ fun AppInfoScreen(navController: NavHostController) {
         ) {
             Spacer(modifier = Modifier.height(20.dp))
             // 로고 대체 텍스트 (실제 앱에서는 Image 컴포저블 사용)
-            Text("Always RT", fontSize = 28.sp, fontWeight = FontWeight.Bold)
+            Image(
+                modifier = Modifier.fillMaxWidth(0.4f),
+                painter = painterResource(id = R.drawable.always_icon_rt),
+                contentDescription = "App Logo",
+            )
+//            Text("Always RT", fontSize = 28.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
-            Text("버전 0.3.5", fontSize = 16.sp)
+            Text("버전 $versionName", fontSize = 16.sp)
             Spacer(modifier = Modifier.height(16.dp))
             Text("현재 최신버전입니다.", fontSize = 12.sp, color = TextGray)
             
