@@ -28,9 +28,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -41,6 +38,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p_a2rt.api.RetrofitClient.tokenRetrofit
+import kr.co.uxn.agms_p_a2rt.api.UserInfoCache
 import kr.co.uxn.agms_p_a2rt.api.token.DataStoreManager
 import kr.co.uxn.agms_p_a2rt.room.AppDatabase
 import kr.co.uxn.agms_p_a2rt.ui.components.main.AlwaysDialog
@@ -85,7 +83,6 @@ fun SettingListScreen(
 // ==========================================
 @Composable
 fun SettingsMainScreen(navController: NavHostController, bleViewModel: BleViewModel) {
-    val lifecycleOwner = LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()
     val name = remember { mutableStateOf("") }
     val email = remember { mutableStateOf("") }
@@ -142,38 +139,17 @@ fun SettingsMainScreen(navController: NavHostController, bleViewModel: BleViewMo
         )
     }
 
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                coroutineScope.launch(Dispatchers.IO) {
-                    try {
-                        val userId = DataStoreManager.getUserId().first() ?: -1
-                        Log.e("TEST", "설정 메인에서 불러온 userId : $userId")
-
-                        val getUserData = tokenRetrofit.getUser(userId)
-                        if (getUserData.isSuccessful) {
-                            val userData = getUserData.body()
-                            Log.d("TEST", "SettingsMain userDataBody : $userData")
-
-                            if (userData?.isSuccess == true) {
-                                withContext(Dispatchers.Main) {
-                                    name.value = userData.name
-                                    email.value = userData.email
-                                }
-                            }
-                        } else {
-                            Log.e("TEST", "SettingsMain API 에러 : ${getUserData.errorBody()?.string()}")
-                        }
-                    } catch (e: Exception) {
-                        Log.e("TEST", "SettingsMain 네트워크 에러 : ${e.message}")
-                    }
-                }
+    LaunchedEffect(Unit) {
+        try {
+            val userInfo = withContext(Dispatchers.IO) {
+                UserInfoCache.getUserInfo()
             }
-        }
-
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
+            if (userInfo != null) {
+                name.value = userInfo.name
+                email.value = userInfo.email
+            }
+        } catch (e: Exception) {
+            Log.e("TEST", "SettingsMain 사용자 정보 로드 실패 : ${e.message}")
         }
     }
 
@@ -301,7 +277,6 @@ fun SubScreenHeader(title: String, onBackClick: () -> Unit) {
 // ==========================================
 @Composable
 fun UserInfoScreen(navController: NavHostController) {
-    val lifecycleOwner = LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()
     val name = remember { mutableStateOf("") }
     val email = remember { mutableStateOf("") }
@@ -316,45 +291,24 @@ fun UserInfoScreen(navController: NavHostController) {
 
     val localDbRepository by lazy { AppDatabase.getInstance(context) }
 
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                coroutineScope.launch(Dispatchers.IO) {
-                    try {
-                        val userId = DataStoreManager.getUserId().first() ?: -1
-                        Log.e("TEST", "사용자 정보에서 불러온 userId : $userId")
-
-                        val getUserData = tokenRetrofit.getUser(userId)
-                        if (getUserData.isSuccessful) {
-                            val userData = getUserData.body()
-                            Log.d("TEST", "UserInfo userDataBody : $userData")
-
-                            if (userData?.isSuccess == true) {
-                                withContext(Dispatchers.Main) {
-                                    name.value = userData.name
-                                    email.value = userData.email
-                                    sex.value = userData.sex
-                                    age.value = userData.age.toString()
-                                    height.value = userData.height.toString()
-                                    weight.value = userData.weight.toString()
-                                    diabetesType.value = userData.diabetesType
-                                    targetGlucoseRange.value =
-                                        "${userData.targetGlucoseMin} ~ ${userData.targetGlucoseMax} mg/dL"
-                                }
-                            }
-                        } else {
-                            Log.e("TEST", "UserInfo API 에러 : ${getUserData.errorBody()?.string()}")
-                        }
-                    } catch (e: Exception) {
-                        Log.e("TEST", "UserInfo 네트워크 에러 : ${e.message}")
-                    }
-                }
+    LaunchedEffect(Unit) {
+        try {
+            val userInfo = withContext(Dispatchers.IO) {
+                UserInfoCache.getUserInfo()
             }
-        }
-
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
+            if (userInfo != null) {
+                name.value = userInfo.name
+                email.value = userInfo.email
+                sex.value = userInfo.sex
+                age.value = userInfo.age.toString()
+                height.value = userInfo.height.toString()
+                weight.value = userInfo.weight.toString()
+                diabetesType.value = userInfo.diabetesType
+                targetGlucoseRange.value =
+                    "${userInfo.targetGlucoseMin} ~ ${userInfo.targetGlucoseMax} mg/dL"
+            }
+        } catch (e: Exception) {
+            Log.e("TEST", "UserInfo 사용자 정보 로드 실패 : ${e.message}")
         }
     }
 
