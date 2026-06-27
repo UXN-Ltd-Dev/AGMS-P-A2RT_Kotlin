@@ -172,6 +172,13 @@ dependencies {
     // Coroutine
     implementation("io.github.ParkSangGwon:tedpermission-coroutine:3.4.2")
 
+    // CameraX QR preview
+    val cameraXVersion = "1.4.2"
+    implementation("androidx.camera:camera-camera2:$cameraXVersion")
+    implementation("androidx.camera:camera-lifecycle:$cameraXVersion")
+    implementation("androidx.camera:camera-view:$cameraXVersion")
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
+
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
 
     // numberpicker

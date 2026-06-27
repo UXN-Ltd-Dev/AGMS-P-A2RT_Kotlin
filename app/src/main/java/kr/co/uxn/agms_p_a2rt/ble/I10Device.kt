@@ -4,7 +4,9 @@ import android.icu.text.DecimalFormat
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kr.co.uxn.agms_p_a2rt.api.token.DataStoreManager
 import kr.co.uxn.agms_p_a2rt.ble.BleManager.Companion.TEST
 import kr.co.uxn.agms_p_a2rt.room.A2RTData
 import kr.co.uxn.agms_p_a2rt.room.AppDatabase
@@ -429,10 +431,15 @@ class I10Device() : Protocol {
                     ).toInt().toLong()
             Log.e("IMPEDANCE", "real : $real | imaginary : $imaginary | magnitude : $magnitude | phase : $phase")
 
-            val saveData = A2RTData(userId = userId, frequencyType = frequencyType, createdAt = time, temperature = temperature, real = real, imaginary = imaginary, magnitude = magnitude, phase = phase)
             CoroutineScope(Dispatchers.IO).launch {
-                db?.dataDao()?.insertA2RTData(saveData)
-                Log.e("IMPEDANCE", "======== IMPEDANCE DB INSERT 성공 =========")
+                val userDeviceId = DataStoreManager.getUserDeviceId().first()
+                if (userDeviceId != null) {
+                    val saveData = A2RTData(userDeviceId = userDeviceId, frequencyType = frequencyType, createdAt = time, temperature = temperature, real = real, imaginary = imaginary, magnitude = magnitude, phase = phase)
+                    db?.dataDao()?.insertA2RTData(saveData)
+                    Log.e("IMPEDANCE", "======== IMPEDANCE DB INSERT 성공 =========")
+                } else {
+                    Log.e("IMPEDANCE", "user_device_id가 없어 IMPEDANCE DB INSERT를 건너뜁니다.")
+                }
             }
             return true
         } catch (e: Exception) {

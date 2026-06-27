@@ -107,6 +107,7 @@
     <string name="enter_glucose_hint">혈당을 입력해 주세요.</string>
     <string name="first_glucose_title">자가측정혈당수치를\n입력해 주세요.</string>
     <string name="first_glucose_sub_title">초기 설정을 위해\n공복 혈당이 필요합니다.</string>
+    <string name="first_glucose_skip">건너뛰기</string>
 
     <!--  메인 화면  -->
     <string name="chart_option_glucose">혈당</string>

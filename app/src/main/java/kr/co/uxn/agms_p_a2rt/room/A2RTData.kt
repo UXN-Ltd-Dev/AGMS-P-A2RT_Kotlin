@@ -4,11 +4,11 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import com.google.firebase.crashlytics.buildtools.reloc.javax.annotation.Nonnull
 
-@Entity(primaryKeys = ["user_id", "created_at"])
+@Entity(primaryKeys = ["user_device_id", "created_at"])
 data class A2RTData(
     @Nonnull
-    @ColumnInfo(name = "user_id")
-    val userId: Int,
+    @ColumnInfo(name = "user_device_id")
+    val userDeviceId: Int,
 
     @ColumnInfo(name = "frequency_type")
     val frequencyType: String,

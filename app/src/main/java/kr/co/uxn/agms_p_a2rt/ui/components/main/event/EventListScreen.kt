@@ -249,7 +249,9 @@ fun EventListScreen(
             val category = RecordCategory.valueOf(categoryName)
             RecordDetailScreen(
                 category = category,
-                onBackClick = { navController.popBackStack() }
+                onBackClick = {
+                    navController.popBackStack(route = "list", inclusive = false)
+                }
             )
         }
     }
@@ -270,10 +272,22 @@ fun RecordListScreen(onNavigateToSelect: () -> Unit, eventScreenViewModel: Event
     val recordList = eventList
         .sortedByDescending { parseEventInstant(it.time) ?: Instant.EPOCH }
         .map { it.toRecordItem() }
+
+    // 임시 데이터
+    val dummyRecords = listOf(
+        RecordItem(RecordCategory.EXERCISE, "조깅", "30분 가볍게", "07:00"),
+        RecordItem(RecordCategory.MEAL, "아침 식사", "밥, 국, 반찬 3가지", "08:00"),
+        RecordItem(RecordCategory.BLOOD_SUGAR, "식후 혈당", "115 mg/dL", "09:00"),
+        RecordItem(RecordCategory.INSULIN, "인슐린 투여", "속효성 4단위", "18:00")
+    )
+    val recordsWithDemo = recordList + dummyRecords
+
     val filteredRecords = if (selectedTab == RecordCategory.ALL) {
-        recordList
+//        recordList
+        recordsWithDemo
     } else {
-        recordList.filter { it.category == selectedTab }
+//        recordList.filter { it.category == selectedTab }
+        recordsWithDemo.filter { it.category == selectedTab }
     }
 
     DisposableEffect(lifecycleOwner) {

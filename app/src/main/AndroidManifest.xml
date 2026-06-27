@@ -35,6 +35,12 @@
     <!-- 인터넷 사용 권한 설정 -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- QR 코드 스캔을 위한 카메라 권한 -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature
+        android:name="android.hardware.camera.any"
+        android:required="false" />
+
     <!--안드로이드에서 노티를 사용 해서 화면을 전환 위한 권한  -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
