@@ -36,6 +36,7 @@ import kr.co.uxn.agms_p_a2rt.R
 import kr.co.uxn.agms_p_a2rt.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestEventData
 import kr.co.uxn.agms_p_a2rt.api.token.DataStoreManager
+import kr.co.uxn.agms_p_a2rt.ui.components.main.home.DemoGlucoseConfig
 import kr.co.uxn.agms_p_a2rt.ui.model.ItemData
 import kr.co.uxn.agms_p_a2rt.ui.viewmodel.EventScreenViewModel
 import java.time.Instant
@@ -280,7 +281,11 @@ fun RecordListScreen(onNavigateToSelect: () -> Unit, eventScreenViewModel: Event
         RecordItem(RecordCategory.BLOOD_SUGAR, "식후 혈당", "115 mg/dL", "09:00"),
         RecordItem(RecordCategory.INSULIN, "인슐린 투여", "속효성 4단위", "18:00")
     )
-    val recordsWithDemo = recordList + dummyRecords
+    val recordsWithDemo = if (DemoGlucoseConfig.ENABLED) {
+        recordList + dummyRecords
+    } else {
+        recordList
+    }
 
     val filteredRecords = if (selectedTab == RecordCategory.ALL) {
 //        recordList
