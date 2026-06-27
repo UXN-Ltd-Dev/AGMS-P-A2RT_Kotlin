@@ -4,6 +4,12 @@ import PrimaryOrange
 import android.annotation.SuppressLint
 import android.graphics.DashPathEffect
 import android.graphics.Paint
+import android.graphics.Typeface
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.AbsoluteSizeSpan
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -33,6 +39,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -50,6 +57,7 @@ import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
 import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
 import com.patrykandpatrick.vico.compose.common.fill
 import com.patrykandpatrick.vico.core.cartesian.AutoScrollCondition
+import com.patrykandpatrick.vico.core.cartesian.CartesianChart
 import com.patrykandpatrick.vico.core.cartesian.FadingEdges
 import com.patrykandpatrick.vico.core.cartesian.Scroll
 import com.patrykandpatrick.vico.core.cartesian.Zoom
@@ -64,6 +72,7 @@ import com.patrykandpatrick.vico.core.cartesian.decoration.Decoration
 import com.patrykandpatrick.vico.core.cartesian.layer.CartesianLayerDimensions
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarker
+import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarkerVisibilityListener
 import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
 import com.patrykandpatrick.vico.core.cartesian.marker.LineCartesianLayerMarkerTarget
 import com.patrykandpatrick.vico.core.common.data.ExtraStore
@@ -72,6 +81,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p_a2rt.R
+import kr.co.uxn.agms_p_a2rt.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p_a2rt.api.token.DataStoreManager
 import kr.co.uxn.agms_p_a2rt.rememberMarker
 import kr.co.uxn.agms_p_a2rt.room.AppDatabase
@@ -82,11 +92,13 @@ import com.patrykandpatrick.vico.core.cartesian.CartesianMeasuringContext
 import java.text.DecimalFormat
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
+import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
@@ -102,8 +114,39 @@ private val AnalysisGlucoseLineColor = Color(0xFFD0D0D0)
 private val AnalysisGlucoseNormalColor = Color(0xFF65B66F)
 private val AnalysisGlucoseHighColor = Color(0xFFFFA12B)
 private val AnalysisGlucoseLowColor = Color(0xFF8FAEFF)
+private val AnalysisGlucoseTargetRangeColor = Color(0x2E9CCC65)
+private val AnalysisEventTextColor = Color(0xFFC74B3C)
 private const val MissingGlucoseValue = -10.0
 private const val DailyBucketMinutes = 5L
+
+private data class AnalysisEvent(
+    val timeMillis: Long,
+    val title: String
+)
+
+private data class AnalysisEventPoint(
+    val x: Double,
+    val y: Double,
+    val title: String
+)
+
+private fun analysisEventTitle(eventTypeCode: Int): String = when (eventTypeCode) {
+    1401 -> "식사"
+    1402 -> "운동"
+    1403 -> "채혈"
+    1404 -> "인슐린"
+    else -> "기록"
+}
+
+private fun parseServerEventTime(createdAt: String): Long? = runCatching {
+    LocalDateTime.parse(
+        createdAt,
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    )
+        .atZone(ZoneOffset.UTC)
+        .toInstant()
+        .toEpochMilli()
+}.getOrNull()
 
 private class AnalysisDashedLineDecoration(
     private val yValue: Double,
@@ -128,6 +171,37 @@ private class AnalysisDashedLineDecoration(
             canvasY,
             context.layerBounds.right,
             canvasY,
+            paint
+        )
+    }
+}
+
+private class AnalysisTargetRangeDecoration(
+    private val minYValue: Double,
+    private val maxYValue: Double,
+    color: Color
+) : Decoration {
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+        this.color = color.toArgb()
+    }
+
+    override fun drawUnderLayers(context: CartesianDrawingContext) {
+        val yRange = context.ranges.getYRange(null)
+        val visibleMin = minYValue.coerceAtLeast(yRange.minY)
+        val visibleMax = maxYValue.coerceAtMost(yRange.maxY)
+        if (visibleMin >= visibleMax) return
+
+        fun canvasY(value: Double): Float =
+            context.layerBounds.bottom -
+                ((value - yRange.minY) / yRange.length).toFloat() *
+                context.layerBounds.height()
+
+        context.canvas.drawRect(
+            context.layerBounds.left,
+            canvasY(visibleMax),
+            context.layerBounds.right,
+            canvasY(visibleMin),
             paint
         )
     }
@@ -242,7 +316,7 @@ private fun createAnalysisDemoGlucoseData(
 @Composable
 fun AnalysisScreen(
     paddingValues: PaddingValues,
-    onBloodSugarRecordClick: () -> Unit
+    onBloodSugarRecordClick: (Long) -> Unit
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("일일기록", "상세")
@@ -305,14 +379,16 @@ fun AnalysisScreen(
 // ==========================================
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DailyRecordContent(onBloodSugarRecordClick: () -> Unit) {
+fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     var showDatePicker by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var dailyGlucoseData by remember { mutableStateOf<List<UserGlucose>>(emptyList()) }
+    var dailyEvents by remember { mutableStateOf<List<AnalysisEvent>>(emptyList()) }
     var isChartLoading by remember { mutableStateOf(true) }
     var selectedDayStartMillis by remember { mutableLongStateOf(0L) }
+    var selectedMarkerTimeMillis by remember(selectedDate) { mutableStateOf<Long?>(null) }
     val formattedDate = remember(selectedDate) {
         selectedDate.format(
             DateTimeFormatter.ofPattern("yy.MM.dd(E)", Locale.getDefault())
@@ -339,6 +415,7 @@ fun DailyRecordContent(onBloodSugarRecordClick: () -> Unit) {
     LaunchedEffect(selectedDate) {
         isChartLoading = true
         dailyGlucoseData = emptyList()
+        dailyEvents = emptyList()
         val zoneId = ZoneId.systemDefault()
         val dayStartMillis = selectedDate
             .atStartOfDay(zoneId)
@@ -352,7 +429,7 @@ fun DailyRecordContent(onBloodSugarRecordClick: () -> Unit) {
         val now = System.currentTimeMillis()
         val today = LocalDate.now(zoneId)
 
-        val chartData = withContext(Dispatchers.IO) {
+        val (chartData, events) = withContext(Dispatchers.IO) {
             val userId = DataStoreManager.getUserId().first() ?: -1
             val source = if (DemoGlucoseConfig.ENABLED) {
                 createAnalysisDemoGlucoseData(
@@ -373,7 +450,7 @@ fun DailyRecordContent(onBloodSugarRecordClick: () -> Unit) {
             }
                 .filter { selectedDate != today || it.createdAtLong <= now }
 
-            if (source.isEmpty()) {
+            val filledChartData = if (source.isEmpty()) {
                 emptyList()
             } else {
                 val fillEndMillis = if (selectedDate == today) {
@@ -389,10 +466,31 @@ fun DailyRecordContent(onBloodSugarRecordClick: () -> Unit) {
                     zoneId = zoneId
                 )
             }
+
+            val selectedDayEvents = runCatching {
+                val response = tokenRetrofit.getEventList(userId)
+                if (response.isSuccessful) {
+                    response.body().orEmpty()
+                        .mapNotNull { event ->
+                            parseServerEventTime(event.createdAt)?.let { timeMillis ->
+                                AnalysisEvent(
+                                    timeMillis = timeMillis,
+                                    title = analysisEventTitle(event.eventTypeCode)
+                                )
+                            }
+                        }
+                        .filter { it.timeMillis in dayStartMillis until nextDayStartMillis }
+                } else {
+                    emptyList()
+                }
+            }.getOrDefault(emptyList())
+
+            filledChartData to selectedDayEvents
         }
 
         selectedDayStartMillis = dayStartMillis
         dailyGlucoseData = chartData
+        dailyEvents = events
         isChartLoading = false
     }
 
@@ -509,8 +607,10 @@ fun DailyRecordContent(onBloodSugarRecordClick: () -> Unit) {
                     )
                     else -> DailyGlucoseChart(
                         data = dailyGlucoseData,
+                        events = dailyEvents,
                         dayStartMillis = selectedDayStartMillis,
                         zoneId = ZoneId.systemDefault(),
+                        onMarkerTimeSelected = { selectedMarkerTimeMillis = it },
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -586,7 +686,11 @@ fun DailyRecordContent(onBloodSugarRecordClick: () -> Unit) {
 
         // 하단 버튼 영역
         Button(
-            onClick = onBloodSugarRecordClick,
+            onClick = {
+                onBloodSugarRecordClick(
+                    selectedMarkerTimeMillis ?: System.currentTimeMillis()
+                )
+            },
             colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
             modifier = Modifier
                 .fillMaxWidth()
@@ -692,8 +796,10 @@ fun DetailRecordContent() {
 @Composable
 private fun DailyGlucoseChart(
     data: List<UserGlucose>,
+    events: List<AnalysisEvent>,
     dayStartMillis: Long,
     zoneId: ZoneId,
+    onMarkerTimeSelected: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val modelProducer = remember { CartesianChartModelProducer() }
@@ -701,7 +807,36 @@ private fun DailyGlucoseChart(
         data.map { ((it.createdAtLong - dayStartMillis) / 60_000L).toDouble() }
     }
     val yValues = remember(data) { data.map { it.glucose } }
+    val eventPoints = remember(data, events, dayStartMillis) {
+        val validGlucosePoints = data
+            .mapIndexedNotNull { index, glucose ->
+                glucose.glucose
+                    .takeIf { it != MissingGlucoseValue }
+                    ?.let { xValues[index] to it }
+            }
+
+        events.mapNotNull { event ->
+            val eventMinute = (event.timeMillis - dayStartMillis) / 60_000.0
+            val snappedX =
+                (eventMinute / DailyBucketMinutes).roundToInt() * DailyBucketMinutes.toDouble()
+            if (snappedX < xValues.first() || snappedX > xValues.last()) {
+                return@mapNotNull null
+            }
+
+            val exactIndex = xValues.indices.minByOrNull { abs(xValues[it] - snappedX) }
+            val exactY = exactIndex
+                ?.let(yValues::get)
+                ?.takeIf { it != MissingGlucoseValue }
+            val eventY = exactY ?: validGlucosePoints
+                .minByOrNull { (x, _) -> abs(x - snappedX) }
+                ?.second
+                ?: return@mapNotNull null
+
+            AnalysisEventPoint(x = snappedX, y = eventY, title = event.title)
+        }.distinctBy { it.x }
+    }
     val firstX = xValues.first()
+    val middleX = xValues[xValues.lastIndex / 2]
     val lastX = xValues.last()
     val scrollState = rememberVicoScrollState(
         scrollEnabled = true,
@@ -713,9 +848,17 @@ private fun DailyGlucoseChart(
         CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 300.0)
     }
 
-    LaunchedEffect(xValues, yValues) {
+    LaunchedEffect(xValues, yValues, eventPoints) {
         modelProducer.runTransaction {
-            lineSeries { series(xValues, yValues) }
+            lineSeries {
+                series(xValues, yValues)
+                if (eventPoints.isNotEmpty()) {
+                    series(
+                        eventPoints.map { it.x },
+                        eventPoints.map { it.y }
+                    )
+                }
+            }
         }
     }
 
@@ -726,6 +869,9 @@ private fun DailyGlucoseChart(
             .format(DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault()))
     }
     val yAxisFormatter = CartesianValueFormatter.decimal(DecimalFormat("#"))
+    val emphasizedGlucoseSizePx = with(LocalDensity.current) {
+        14.sp.toPx().roundToInt()
+    }
     val markerValueFormatter = DefaultCartesianMarker.ValueFormatter { _, targets ->
         val point = targets
             .filterIsInstance<LineCartesianLayerMarkerTarget>()
@@ -738,9 +884,46 @@ private fun DailyGlucoseChart(
             .atZone(zoneId)
             .format(DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault()))
         val valueText = DecimalFormat("#").format(point.entry.y)
-        "$timeText, $valueText mg/dL"
+        val eventTitle = eventPoints
+            .firstOrNull { abs(it.x - point.entry.x) < 0.0001 }
+            ?.title
+        val markerText = SpannableString(
+            buildString {
+                append("$timeText, $valueText mg/dL")
+                eventTitle?.let { append(", $it") }
+            }
+        )
+        val valueStart = timeText.length + 2
+        val valueEnd = valueStart + valueText.length
+        markerText.setSpan(
+            StyleSpan(Typeface.BOLD),
+            valueStart,
+            valueEnd,
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        markerText.setSpan(
+            AbsoluteSizeSpan(emphasizedGlucoseSizePx),
+            valueStart,
+            valueEnd,
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        eventTitle?.let { title ->
+            val titleStart = markerText.length - title.length
+            markerText.setSpan(
+                ForegroundColorSpan(AnalysisEventTextColor.toArgb()),
+                titleStart,
+                markerText.length,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+        markerText
     }
-    val defaultMarker = rememberMarker(markerValueFormatter)
+    val defaultMarker = rememberMarker(
+        valueFormatter = markerValueFormatter,
+        indicatorColorProvider = { sourceColor ->
+            if (sourceColor == Color.Red) Color.Red else PrimaryOrange
+        }
+    )
     val filteredMarker = remember(defaultMarker) {
         object : CartesianMarker by defaultMarker {
             private fun hasVisibleValue(targets: List<CartesianMarker.Target>): Boolean {
@@ -770,6 +953,52 @@ private fun DailyGlucoseChart(
             }
         }
     }
+    var persistentMarkerX by remember(dayStartMillis) { mutableStateOf<Double?>(null) }
+    val markerVisibilityListener = remember(dayStartMillis) {
+        object : CartesianMarkerVisibilityListener {
+            private var latestValidX: Double? = null
+
+            private fun updateLatestX(targets: List<CartesianMarker.Target>) {
+                latestValidX = targets
+                    .filterIsInstance<LineCartesianLayerMarkerTarget>()
+                    .flatMap { it.points }
+                    .firstOrNull { it.entry.y != MissingGlucoseValue }
+                    ?.entry
+                    ?.x
+            }
+
+            override fun onShown(
+                marker: CartesianMarker,
+                targets: List<CartesianMarker.Target>
+            ) {
+                persistentMarkerX = null
+                latestValidX = null
+                updateLatestX(targets)
+            }
+
+            override fun onUpdated(
+                marker: CartesianMarker,
+                targets: List<CartesianMarker.Target>
+            ) {
+                updateLatestX(targets)
+            }
+
+            override fun onHidden(marker: CartesianMarker) {
+                latestValidX?.let { xValue ->
+                    persistentMarkerX = xValue
+                    onMarkerTimeSelected(
+                        dayStartMillis + (xValue * 60_000.0).toLong()
+                    )
+                }
+                latestValidX = null
+            }
+        }
+    }
+    val persistentMarkers:
+        (CartesianChart.PersistentMarkerScope.(ExtraStore) -> Unit)? =
+        persistentMarkerX?.let { xValue ->
+            { filteredMarker at xValue }
+        }
 
     val hiddenPoint = LineCartesianLayer.point(
         rememberShapeComponent(
@@ -819,15 +1048,35 @@ private fun DailyGlucoseChart(
             }
         }
     }
-    val itemPlacer = remember(firstX, lastX) {
+    val eventPoint = LineCartesianLayer.point(
+        rememberShapeComponent(
+            fill = fill(Color.Red),
+            shape = CorneredShape.Pill
+        ),
+        size = 7.dp
+    )
+    val eventPointProvider = remember(eventPoint) {
+        LineCartesianLayer.PointProvider.single(eventPoint)
+    }
+    val itemPlacer = remember(firstX, middleX, lastX) {
         object : HorizontalAxis.ItemPlacer {
+            override fun getFirstLabelValue(
+                context: CartesianMeasuringContext,
+                maxLabelWidth: Float
+            ): Double = firstX
+
+            override fun getLastLabelValue(
+                context: CartesianMeasuringContext,
+                maxLabelWidth: Float
+            ): Double = lastX
+
             override fun getLabelValues(
                 context: CartesianDrawingContext,
                 visibleXRange: ClosedFloatingPointRange<Double>,
                 fullXRange: ClosedFloatingPointRange<Double>,
                 maxLabelWidth: Float
             ): List<Double> {
-                return listOf(firstX, (firstX + lastX) / 2.0, lastX)
+                return listOf(firstX, middleX, lastX).distinct()
             }
 
             override fun getStartLayerMargin(
@@ -835,27 +1084,27 @@ private fun DailyGlucoseChart(
                 layerDimensions: CartesianLayerDimensions,
                 tickThickness: Float,
                 maxLabelWidth: Float
-            ): Float = 32f
+            ): Float = maxLabelWidth / 2f + 4.dp.value * context.density
 
             override fun getEndLayerMargin(
                 context: CartesianMeasuringContext,
                 layerDimensions: CartesianLayerDimensions,
                 tickThickness: Float,
                 maxLabelWidth: Float
-            ): Float = 32f
+            ): Float = maxLabelWidth / 2f + 4.dp.value * context.density
 
             override fun getWidthMeasurementLabelValues(
                 context: CartesianMeasuringContext,
                 layerDimensions: CartesianLayerDimensions,
                 fullXRange: ClosedFloatingPointRange<Double>
-            ): List<Double> = listOf(firstX, (firstX + lastX) / 2.0, lastX)
+            ): List<Double> = listOf(firstX, middleX, lastX).distinct()
 
             override fun getHeightMeasurementLabelValues(
                 context: CartesianMeasuringContext,
                 layerDimensions: CartesianLayerDimensions,
                 fullXRange: ClosedFloatingPointRange<Double>,
                 maxLabelWidth: Float
-            ): List<Double> = listOf(firstX, (firstX + lastX) / 2.0, lastX)
+            ): List<Double> = listOf(firstX, middleX, lastX).distinct()
         }
     }
 
@@ -870,6 +1119,11 @@ private fun DailyGlucoseChart(
                         stroke = LineCartesianLayer.LineStroke.Continuous(thicknessDp = 1f),
                         pointProvider = pointProvider,
                         pointConnector = LineCartesianLayer.PointConnector.cubic(curvature = 0.8f)
+                    ),
+                    LineCartesianLayer.rememberLine(
+                        fill = LineCartesianLayer.LineFill.single(fill(Color.Red)),
+                        stroke = LineCartesianLayer.LineStroke.Continuous(thicknessDp = 0f),
+                        pointProvider = eventPointProvider
                     )
                 ),
                 rangeProvider = rangeProvider
@@ -883,15 +1137,22 @@ private fun DailyGlucoseChart(
                 valueFormatter = bottomAxisFormatter,
                 label = rememberAxisLabelComponent(color = Color.Black),
                 itemPlacer = itemPlacer,
-                labelRotationDegrees = 90f
+                labelRotationDegrees = 0f
             ),
             marker = filteredMarker,
+            markerVisibilityListener = markerVisibilityListener,
+            persistentMarkers = persistentMarkers,
             fadingEdges = FadingEdges(
                 startWidthDp = 0f,
                 endWidthDp = 0f,
                 visibilityThresholdDp = 15f
             ),
             decorations = listOf(
+                AnalysisTargetRangeDecoration(
+                    minYValue = 80.0,
+                    maxYValue = 180.0,
+                    color = AnalysisGlucoseTargetRangeColor
+                ),
                 AnalysisDashedLineDecoration(80.0, AnalysisGlucoseLowColor),
                 AnalysisDashedLineDecoration(180.0, AnalysisGlucoseHighColor)
             )

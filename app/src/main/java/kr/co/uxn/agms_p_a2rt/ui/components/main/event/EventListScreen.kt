@@ -42,8 +42,10 @@ import kr.co.uxn.agms_p_a2rt.ui.viewmodel.EventScreenViewModel
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import java.util.TimeZone
 import kotlin.collections.map
 
 // 테마 컬러 설정 (이미지의 주황색 포인트 컬러)
@@ -220,7 +222,8 @@ fun EventListScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
     startDestination: String = "list",
-    eventScreenViewModel: EventScreenViewModel
+    eventScreenViewModel: EventScreenViewModel,
+    initialRecordTimeMillis: Long? = null
 ) {
     NavHost(
         navController = navController,
@@ -240,18 +243,36 @@ fun EventListScreen(
         composable("select") {
             RecordTypeSelectScreen(
                 onTypeSelected = { category ->
-                    navController.navigate("detail/${category.name}")
+                    navController.navigate(
+                        "detail/${category.name}/${initialRecordTimeMillis ?: -1L}"
+                    )
                 }
             )
         }
         // 세 번째 화면: 상세 입력 화면
-        composable("detail/{categoryName}") { backStackEntry ->
+        composable("detail/{categoryName}/{recordTimeMillis}") { backStackEntry ->
             val categoryName = backStackEntry.arguments?.getString("categoryName") ?: ""
             val category = RecordCategory.valueOf(categoryName)
+            val recordTimeMillis = backStackEntry.arguments
+                ?.getString("recordTimeMillis")
+                ?.toLongOrNull()
+                ?.takeIf { it >= 0L }
             RecordDetailScreen(
                 category = category,
+                initialRecordTimeMillis = recordTimeMillis,
                 onBackClick = {
-                    navController.popBackStack(route = "list", inclusive = false)
+                    val returnedToList = navController.popBackStack(
+                        route = "list",
+                        inclusive = false
+                    )
+                    if (!returnedToList) {
+                        navController.navigate("list") {
+                            popUpTo(navController.graph.startDestinationId) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
                 }
             )
         }
@@ -547,9 +568,10 @@ private fun recordCategoryDescription(type: RecordCategory): String {
 }
 
 private fun formatRecordTime(millis: Long): String {
+    val deviceZoneId = TimeZone.getDefault().toZoneId()
     val formattedTime = Instant.ofEpochMilli(millis)
-        .atZone(ZoneId.systemDefault())
-        .format(DateTimeFormatter.ofPattern("a h:mm", Locale.KOREAN))
+        .atZone(deviceZoneId)
+        .format(DateTimeFormatter.ofPattern("MM월 dd일 HH:mm", Locale.getDefault()))
     return "기록 시간: $formattedTime"
 }
 
@@ -557,10 +579,17 @@ private fun formatRecordTime(millis: Long): String {
 // [세 번째 화면] 동적 입력 화면
 // ==========================================
 @Composable
-fun RecordDetailScreen(category: RecordCategory, onBackClick: () -> Unit) {
+fun RecordDetailScreen(
+    category: RecordCategory,
+    initialRecordTimeMillis: Long?,
+    onBackClick: () -> Unit
+) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val recordTimeText = remember { formatRecordTime(System.currentTimeMillis()) }
+    val recordTimeMillis = remember(initialRecordTimeMillis) {
+        initialRecordTimeMillis ?: System.currentTimeMillis()
+    }
+    val recordTimeText = remember(recordTimeMillis) { formatRecordTime(recordTimeMillis) }
     var exerciseType by remember { mutableStateOf("") }
     var exerciseTime by remember { mutableStateOf("") }
     var exerciseIntensity by remember { mutableStateOf("보통") }
@@ -649,7 +678,8 @@ fun RecordDetailScreen(category: RecordCategory, onBackClick: () -> Unit) {
                 coroutineScope.launch(Dispatchers.IO) {
                     try {
                         val userId = DataStoreManager.getUserId().first() ?: -1
-                        val createdAt = LocalDateTime.now(ZoneId.of("UTC"))
+                        val createdAt = Instant.ofEpochMilli(recordTimeMillis)
+                            .atZone(ZoneOffset.UTC)
                             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
                         Log.e("TEST", "이벤트 전송하기 전 값 확인 userId : $userId eventCode : $eventTypeCode, createdAt : $createdAt content : $content")
