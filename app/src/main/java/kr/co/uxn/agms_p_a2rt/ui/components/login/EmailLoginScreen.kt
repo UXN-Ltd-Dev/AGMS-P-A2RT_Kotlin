@@ -315,7 +315,7 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
 
                     Text(
                         text = stringResource(id = R.string.login_email),
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier
                             .align(Alignment.Start)
@@ -335,7 +335,7 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
                             keyboardController?.hide()
                         }),
                         textStyle = TextStyle(
-                            fontSize = 18.sp,
+                            fontSize = 16.sp,
                             letterSpacing = 1.sp,
                             fontWeight = FontWeight.Medium,
                             textDecoration = TextDecoration.None
@@ -363,7 +363,7 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                     Text(
                                         text = stringResource(id = R.string.login_email_hint),
                                         color = Color.Gray,
-                                        fontSize = 18.sp
+                                        fontSize = 16.sp
                                     )
                                 }
                                 innerTextField()
@@ -373,7 +373,7 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
                     Spacer(modifier = Modifier.size(40.dp))
                     Text(
                         text = stringResource(id = R.string.login_pwd),
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.align(Alignment.Start)
                             .padding(start = 5.dp)
@@ -388,7 +388,7 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
                             keyboardController?.hide()
                         }),
                         textStyle = TextStyle(
-                            fontSize = 18.sp,
+                            fontSize = 16.sp,
                             letterSpacing = 1.sp,
                             fontWeight = FontWeight.Medium,
                         ),
@@ -415,7 +415,7 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                     Text(
                                         text = stringResource(id = R.string.login_pwd_hint),
                                         color = Color.Gray,
-                                        fontSize = 18.sp
+                                        fontSize = 16.sp
                                     )
                                 }
                                 innerTextField()
