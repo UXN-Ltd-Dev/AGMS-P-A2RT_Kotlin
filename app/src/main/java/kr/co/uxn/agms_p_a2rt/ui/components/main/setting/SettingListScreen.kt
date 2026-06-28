@@ -64,7 +64,8 @@ val AlertRed = Color(0xFFFF5252)
 fun SettingListScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    bleViewModel: BleViewModel
+    bleViewModel: BleViewModel,
+    onSensorEnded: () -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -73,7 +74,9 @@ fun SettingListScreen(
     ) {
         composable("settings_main") { SettingsMainScreen(navController, bleViewModel) }
         composable("user_info") { UserInfoScreen(navController) }
-        composable("sensor_info") { SensorInfoScreen(navController) }
+        composable("sensor_info") {
+            SensorInfoScreen(navController, bleViewModel, onSensorEnded)
+        }
         composable("alarm_settings") { AlarmSettingsScreen(navController) }
         composable("app_info") { AppInfoScreen(navController) }
     }
@@ -495,7 +498,11 @@ fun UserInfoScreen(navController: NavHostController) {
 // [세 번째 화면] 센서 정보
 // ==========================================
 @Composable
-fun SensorInfoScreen(navController: NavHostController) {
+fun SensorInfoScreen(
+    navController: NavHostController,
+    bleViewModel: BleViewModel,
+    onSensorEnded: () -> Unit
+) {
 
     val startTime = remember { mutableStateOf("") }
     val remainingTime = remember { mutableStateOf(-1) }
@@ -568,6 +575,8 @@ fun SensorInfoScreen(navController: NavHostController) {
                             if (sensorOffBody != null) {
                                 Log.w("TEST", "sensorOff responseBody : ${sensorOffBody}")
                                 if (sensorOffBody.isSuccess) {
+                                    /*
+                                     * 기존 센서 종료 로직. 필요 시 아래 블록을 복원할 수 있도록 보존한다.
                                     tokenRetrofit.logout()
                                     delay(1000)
                                     // userId의 db삭제
@@ -601,6 +610,30 @@ fun SensorInfoScreen(navController: NavHostController) {
                                         // 앱 강제 종료
                                         android.os.Process.killProcess(android.os.Process.myPid())
                                         exitProcess(0)
+                                    }
+                                     */
+
+                                    // 새 센서 종료 로직: 로그인 정보와 토큰은 유지한다.
+                                    localDbRepository?.dataDao()?.deleteUserValueTable(userId)
+                                    localDbRepository?.dataDao()?.deleteUserGlucoseTable(userId)
+                                    localDbRepository?.dataDao()?.deleteUserCalibrationTable(userId)
+
+                                    DataStoreManager.saveIsSensorEnded(true)
+                                    DataStoreManager.deleteDeviceMac()
+                                    DataStoreManager.deleteUserDeviceId()
+                                    DataStoreManager.deleteSerialNumber()
+                                    DataStoreManager.deleteStartTime()
+                                    DataStoreManager.deleteMeasurementTime()
+                                    DataStoreManager.deleteEndTime()
+                                    DataStoreManager.deleteDailyCalibrationTime()
+                                    DataStoreManager.deleteDailyCalibrationLastTime()
+                                    DataStoreManager.setNotiHighGlucose(false)
+                                    DataStoreManager.setNotiLowGlucose(false)
+                                    DataStoreManager.setLandScapeMode(false)
+
+                                    withContext(Dispatchers.Main) {
+                                        bleViewModel.emit("STOP_SERVICE")
+                                        onSensorEnded()
                                     }
                                 } else {
                                     Log.w("TEST", "sensorOff 실패")
