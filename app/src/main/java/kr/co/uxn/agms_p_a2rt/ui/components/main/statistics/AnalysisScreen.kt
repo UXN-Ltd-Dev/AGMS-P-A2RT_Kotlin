@@ -36,6 +36,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
@@ -93,9 +94,12 @@ import java.text.DecimalFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.YearMonth
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAdjusters
+import java.time.temporal.WeekFields
 import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
@@ -129,6 +133,25 @@ private data class AnalysisEventPoint(
     val y: Double,
     val title: String
 )
+
+private data class AverageGlucosePoint(
+    val primaryLabel: String,
+    val secondaryLabel: String,
+    val average: Double?
+)
+
+private data class GlucoseAveragePeriod(
+    val startTimeMillis: Long,
+    val endTimeMillis: Long,
+    val primaryLabel: String,
+    val secondaryLabel: String
+)
+
+private enum class DetailAverageUnit {
+    DAY,
+    WEEK,
+    MONTH
+}
 
 private fun analysisEventTitle(eventTypeCode: Int): String = when (eventTypeCode) {
     1401 -> "식사"
@@ -311,6 +334,133 @@ private fun createAnalysisDemoGlucoseData(
         time += intervalMillis
     }
     return result
+}
+
+private fun buildDetailAveragePeriods(
+    unit: DetailAverageUnit,
+    today: LocalDate,
+    zoneId: ZoneId,
+    locale: Locale
+): List<GlucoseAveragePeriod> {
+    val dayFormatter = DateTimeFormatter.ofPattern("MM/dd", locale)
+
+    return when (unit) {
+        DetailAverageUnit.DAY -> {
+            (6L downTo 0L).map { dayOffset ->
+                val date = today.minusDays(dayOffset)
+                GlucoseAveragePeriod(
+                    startTimeMillis = date.atStartOfDay(zoneId).toInstant().toEpochMilli(),
+                    endTimeMillis = date.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli(),
+                    primaryLabel = date.format(dayFormatter),
+                    secondaryLabel = date.format(DateTimeFormatter.ofPattern("E", locale))
+                )
+            }
+        }
+
+        DetailAverageUnit.WEEK -> {
+            val firstDayOfWeek = WeekFields.of(locale).firstDayOfWeek
+            val currentWeekStart = today.with(TemporalAdjusters.previousOrSame(firstDayOfWeek))
+
+            (6L downTo 0L).map { weekOffset ->
+                val startDate = currentWeekStart.minusWeeks(weekOffset)
+                val endDate = startDate.plusWeeks(1)
+                GlucoseAveragePeriod(
+                    startTimeMillis = startDate.atStartOfDay(zoneId).toInstant().toEpochMilli(),
+                    endTimeMillis = endDate.atStartOfDay(zoneId).toInstant().toEpochMilli(),
+                    primaryLabel = startDate.format(dayFormatter),
+                    secondaryLabel = "주"
+                )
+            }
+        }
+
+        DetailAverageUnit.MONTH -> {
+            val currentMonth = YearMonth.from(today)
+            (6L downTo 0L).map { monthOffset ->
+                val month = currentMonth.minusMonths(monthOffset)
+                val startDate = month.atDay(1)
+                val endDate = month.plusMonths(1).atDay(1)
+                GlucoseAveragePeriod(
+                    startTimeMillis = startDate.atStartOfDay(zoneId).toInstant().toEpochMilli(),
+                    endTimeMillis = endDate.atStartOfDay(zoneId).toInstant().toEpochMilli(),
+                    primaryLabel = month.format(DateTimeFormatter.ofPattern("yy/MM", locale)),
+                    secondaryLabel = "월"
+                )
+            }
+        }
+    }
+}
+
+private fun createDetailDemoAverages(
+    periods: List<GlucoseAveragePeriod>,
+    currentTimeMillis: Long
+): List<AverageGlucosePoint> {
+    if (periods.isEmpty()) return emptyList()
+
+    val sums = DoubleArray(periods.size)
+    val counts = IntArray(periods.size)
+    val random = Random(20260627)
+    val intervalMillis = DemoGlucoseConfig.ANALYSIS_INTERVAL_MINUTES * 60_000L
+    val generationEnd = minOf(periods.last().endTimeMillis, currentTimeMillis + 1L)
+    var glucose = 115.0
+    var targetGlucose = 115.0
+    var pointIndex = 0L
+    var periodIndex = 0
+    var time = periods.first().startTimeMillis
+
+    while (time < generationEnd && periodIndex < periods.size) {
+        while (periodIndex < periods.lastIndex && time >= periods[periodIndex].endTimeMillis) {
+            periodIndex++
+        }
+
+        if (pointIndex % 12L == 0L) {
+            targetGlucose = random.nextDouble(20.0, 225.0)
+        }
+        glucose = (glucose +
+            (targetGlucose - glucose) * 0.1 +
+            random.nextDouble(-1.5, 1.5))
+            .coerceIn(0.0, 240.0)
+
+        val period = periods[periodIndex]
+        if (time >= period.startTimeMillis && time < period.endTimeMillis) {
+            sums[periodIndex] += glucose
+            counts[periodIndex]++
+        }
+
+        pointIndex++
+        time += intervalMillis
+    }
+
+    return periods.mapIndexed { index, period ->
+        AverageGlucosePoint(
+            primaryLabel = period.primaryLabel,
+            secondaryLabel = period.secondaryLabel,
+            average = counts[index].takeIf { it > 0 }?.let { sums[index] / it }
+        )
+    }
+}
+
+private fun aggregateRoomGlucose(
+    periods: List<GlucoseAveragePeriod>,
+    glucoseValues: List<UserGlucose>,
+    currentTimeMillis: Long
+): List<AverageGlucosePoint> {
+    return periods.map { period ->
+        val effectiveEnd = minOf(period.endTimeMillis, currentTimeMillis + 1L)
+        val values = glucoseValues.asSequence()
+            .filter {
+                it.glucose >= 0.0 &&
+                    it.createdAtLong >= period.startTimeMillis &&
+                    it.createdAtLong < effectiveEnd
+            }
+            .map(UserGlucose::glucose)
+            .toList()
+
+        AverageGlucosePoint(
+            primaryLabel = period.primaryLabel,
+            secondaryLabel = period.secondaryLabel,
+            average = values.takeIf { it.isNotEmpty() }?.average()
+        )
+    }
 }
 
 @Composable
@@ -733,6 +883,43 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
 fun DetailRecordContent() {
     var selectedFilter by remember { mutableStateOf("일") }
     val filters = listOf("일", "주", "월")
+    val context = LocalContext.current
+    val zoneId = remember { ZoneId.systemDefault() }
+    var averagePoints by remember { mutableStateOf<List<AverageGlucosePoint>>(emptyList()) }
+
+    LaunchedEffect(selectedFilter) {
+        val now = System.currentTimeMillis()
+        val today = LocalDate.now(zoneId)
+        val unit = when (selectedFilter) {
+            "주" -> DetailAverageUnit.WEEK
+            "월" -> DetailAverageUnit.MONTH
+            else -> DetailAverageUnit.DAY
+        }
+        val periods = buildDetailAveragePeriods(
+            unit = unit,
+            today = today,
+            zoneId = zoneId,
+            locale = Locale.getDefault()
+        )
+
+        averagePoints = withContext(Dispatchers.IO) {
+            val userId = DataStoreManager.getUserId().first() ?: -1
+
+            if (DemoGlucoseConfig.ENABLED) {
+                createDetailDemoAverages(periods, now)
+            } else {
+                val glucoseValues = AppDatabase.getInstance(context)
+                    ?.dataDao()
+                    ?.getGlucoseListBetween(
+                        userId = userId,
+                        startTime = periods.first().startTimeMillis,
+                        endTime = minOf(periods.last().endTimeMillis, now + 1L)
+                    )
+                    .orEmpty()
+                aggregateRoomGlucose(periods, glucoseValues, now)
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -783,8 +970,7 @@ fun DetailRecordContent() {
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // 상세 차트 영역 (목업)
-                DetailChartMockup()
+                AverageGlucoseChart(averagePoints)
             }
         }
     }
@@ -1205,31 +1391,112 @@ fun DailyChartMockup() {
 }
 
 @Composable
-fun DetailChartMockup() {
-    Canvas(modifier = Modifier.fillMaxWidth().height(150.dp)) {
-        val width = size.width
-        val height = size.height
+private fun AverageGlucoseChart(data: List<AverageGlucosePoint>) {
+    val displayData = if (data.isEmpty()) {
+        List(7) { AverageGlucosePoint("--", "", null) }
+    } else {
+        data
+    }
 
-        val points = listOf(
-            Offset(0f, height * 0.4f),
-            Offset(width * 0.16f, height * 0.5f),
-            Offset(width * 0.33f, height * 0.4f),
-            Offset(width * 0.5f, height * 0.45f),
-            Offset(width * 0.66f, height * 0.6f),
-            Offset(width * 0.83f, height * 0.35f),
-            Offset(width, height * 0.55f)
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(210.dp)
+    ) {
+        val chartLeft = 18.dp.toPx()
+        val chartRight = size.width - 18.dp.toPx()
+        val chartTop = 28.dp.toPx()
+        val chartBottom = size.height - 58.dp.toPx()
+        val chartWidth = chartRight - chartLeft
+        val chartHeight = chartBottom - chartTop
+        val xStep = chartWidth / (displayData.size - 1).coerceAtLeast(1)
+
+        val validValues = displayData.mapNotNull(AverageGlucosePoint::average)
+        val minValue = ((validValues.minOrNull() ?: 80.0) - 15.0).coerceAtLeast(0.0)
+        var maxValue = (validValues.maxOrNull() ?: 180.0) + 15.0
+        if (maxValue <= minValue) maxValue = minValue + 1.0
+        val valueRange = maxValue - minValue
+
+        fun pointFor(index: Int, value: Double): Offset {
+            val x = chartLeft + xStep * index
+            val normalized = ((value - minValue) / valueRange).toFloat().coerceIn(0f, 1f)
+            val y = chartBottom - chartHeight * normalized
+            return Offset(x, y)
+        }
+
+        val linePath = Path()
+        var hasPreviousPoint = false
+        displayData.forEachIndexed { index, item ->
+            val average = item.average
+            if (average == null) {
+                hasPreviousPoint = false
+            } else {
+                val point = pointFor(index, average)
+                if (hasPreviousPoint) {
+                    linePath.lineTo(point.x, point.y)
+                } else {
+                    linePath.moveTo(point.x, point.y)
+                }
+                hasPreviousPoint = true
+            }
+        }
+
+        drawPath(
+            path = linePath,
+            color = Color(0xFF808080),
+            style = Stroke(width = 3.dp.toPx())
         )
 
-        // 선 그리기
-        val path = Path().apply {
-            moveTo(points.first().x, points.first().y)
-            points.drop(1).forEach { lineTo(it.x, it.y) }
+        val valuePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = TextDark.toArgb()
+            textSize = 13.sp.toPx()
+            textAlign = Paint.Align.CENTER
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         }
-        drawPath(path = path, color = Color.Gray, style = Stroke(width = 6f))
+        val axisPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = TextDark.toArgb()
+            textSize = 12.sp.toPx()
+            textAlign = Paint.Align.CENTER
+        }
 
-        // 점 그리기
-        points.forEach { point ->
-            drawCircle(color = Color.LightGray, radius = 12f, center = point)
+        displayData.forEachIndexed { index, item ->
+            val x = chartLeft + xStep * index
+            val average = item.average
+
+            if (average != null) {
+                val point = pointFor(index, average)
+                drawCircle(
+                    color = Color(0xFFD3D3D3),
+                    radius = 8.dp.toPx(),
+                    center = point
+                )
+                drawContext.canvas.nativeCanvas.drawText(
+                    average.roundToInt().toString(),
+                    point.x,
+                    (point.y - 14.dp.toPx()).coerceAtLeast(valuePaint.textSize),
+                    valuePaint
+                )
+            } else {
+                drawContext.canvas.nativeCanvas.drawText(
+                    "--",
+                    x,
+                    chartTop + chartHeight / 2f,
+                    valuePaint
+                )
+            }
+
+            drawContext.canvas.nativeCanvas.drawText(
+                item.primaryLabel,
+                x,
+                chartBottom + 28.dp.toPx(),
+                axisPaint
+            )
+            drawContext.canvas.nativeCanvas.drawText(
+                item.secondaryLabel,
+                x,
+                chartBottom + 48.dp.toPx(),
+                axisPaint
+            )
         }
     }
 }

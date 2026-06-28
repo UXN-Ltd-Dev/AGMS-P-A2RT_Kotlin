@@ -133,6 +133,7 @@
     <string name="label_event">기록</string>
     <string name="label_past">분석</string>
     <string name="label_setting">설정</string>
+    <string name="label_notification">알림</string>
     <string name="track_activity_title">생활 등록</string>
     <string name="enter_glucose_title">혈당값 입력</string>
     <string name="recent_activity_title">최근 활동</string>
