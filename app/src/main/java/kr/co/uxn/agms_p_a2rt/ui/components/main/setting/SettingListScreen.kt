@@ -28,6 +28,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -664,6 +665,7 @@ fun AlarmSettingsScreen(navController: NavHostController) {
     val checkedForExpiredSensor = remember { mutableStateOf(false) }
     val checkedForStabilization = remember { mutableStateOf(false) }
     val checkedForCalibration = remember { mutableStateOf(false) }
+    val checkedForSilentMode = remember { mutableStateOf(false) }
     val targetLowGlucose = remember { mutableStateOf("") }
     val targetHighGlucose = remember { mutableStateOf("") }
     val showSetLowGlucoseDialog = remember { mutableStateOf(false) }
@@ -678,6 +680,7 @@ fun AlarmSettingsScreen(navController: NavHostController) {
             val verifiedDSExpiredSensor = DataStoreManager.getNotiExpiredSensor().first() ?: true
             val verifiedDSStabilization = DataStoreManager.getNotiStabilization().first() ?: true
             val verifiedDSCalibration = DataStoreManager.getNotiCalibration().first() ?: true
+            val verifiedDSSilentMode = DataStoreManager.getNotiSilentMode().first()
             val verifiedDSTargetLowGlucose = DataStoreManager.getTargetLowGlucose().first() ?: 70
             val verifiedDSTargetHighGlucose = DataStoreManager.getTargetHighGlucose().first() ?: 170
             val verifiedDSDailyCalibrationTime = DataStoreManager.getDailyCalibrationTime().first() ?: "오전 11:00"
@@ -695,6 +698,7 @@ fun AlarmSettingsScreen(navController: NavHostController) {
                 expiredSensor = verifiedDSExpiredSensor,
                 stabilization = verifiedDSStabilization,
                 calibration = verifiedDSCalibration,
+                silentMode = verifiedDSSilentMode,
                 targetLowGlucose = verifiedDSTargetLowGlucose.toString(),
                 targetHighGlucose = verifiedDSTargetHighGlucose.toString()
             )
@@ -706,6 +710,7 @@ fun AlarmSettingsScreen(navController: NavHostController) {
         checkedForExpiredSensor.value = notificationSettings.expiredSensor
         checkedForStabilization.value = notificationSettings.stabilization
         checkedForCalibration.value = notificationSettings.calibration
+        checkedForSilentMode.value = notificationSettings.silentMode
         targetLowGlucose.value = notificationSettings.targetLowGlucose
         targetHighGlucose.value = notificationSettings.targetHighGlucose
     }
@@ -768,7 +773,12 @@ fun AlarmSettingsScreen(navController: NavHostController) {
         SubScreenHeader("알림 설정", onBackClick = { navController.popBackStack() })
 
         Column(modifier = Modifier.padding(horizontal = 24.dp)) {
-            AlarmSwitchRow("무음 모드", false)
+            AlarmSwitchRow("무음 모드", checkedForSilentMode.value) {
+                checkedForSilentMode.value = it
+                coroutineScope.launch(Dispatchers.IO) {
+                    DataStoreManager.setNotiSilentMode(it)
+                }
+            }
             AlarmSwitchRow(
                 title = "저혈당 알림",
                 checked = checkedForLowGlucose.value,
@@ -871,6 +881,7 @@ private data class NotificationSettings(
     val expiredSensor: Boolean,
     val stabilization: Boolean,
     val calibration: Boolean,
+    val silentMode: Boolean,
     val targetLowGlucose: String,
     val targetHighGlucose: String
 )
@@ -883,31 +894,85 @@ private fun TargetGlucoseDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(text = title, fontWeight = FontWeight.Bold)
-        },
-        text = {
-            OutlinedTextField(
-                value = value,
-                onValueChange = onValueChange,
-                singleLine = true,
-                suffix = { Text("mg/dL") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text("확인")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("취소")
+    val primaryOrange = Color(0xFFE67A15)
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(0.8f),
+            shape = RoundedCornerShape(24.dp),
+            color = Color.White,
+            tonalElevation = 8.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+            ) {
+                Text(
+                    text = title,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1E27)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    modifier = Modifier.fillMaxWidth(),
+                    suffix = {
+                        Text(
+                            text = "mg/dL",
+                            color = Color.Gray,
+                            fontSize = 16.sp
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = primaryOrange,
+                        cursorColor = primaryOrange,
+                        unfocusedBorderColor = Color(0xFFE0E0E0)
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text(
+                            text = "취소",
+                            color = Color.Gray,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 16.sp
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = onConfirm,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = primaryOrange,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = "확인",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                    }
+                }
             }
         }
-    )
+    }
 }
 
 // ==========================================
