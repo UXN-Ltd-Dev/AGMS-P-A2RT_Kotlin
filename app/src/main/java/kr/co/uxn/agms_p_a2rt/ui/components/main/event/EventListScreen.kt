@@ -36,6 +36,8 @@ import kr.co.uxn.agms_p_a2rt.R
 import kr.co.uxn.agms_p_a2rt.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestEventData
 import kr.co.uxn.agms_p_a2rt.api.token.DataStoreManager
+import kr.co.uxn.agms_p_a2rt.room.AppDatabase
+import kr.co.uxn.agms_p_a2rt.room.UserCalibration
 import kr.co.uxn.agms_p_a2rt.ui.components.main.home.DemoGlucoseConfig
 import kr.co.uxn.agms_p_a2rt.ui.model.ItemData
 import kr.co.uxn.agms_p_a2rt.ui.viewmodel.EventScreenViewModel
@@ -586,6 +588,7 @@ fun RecordDetailScreen(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val localDbRepository = remember(context) { AppDatabase.getInstance(context) }
     val recordTimeMillis = remember(initialRecordTimeMillis) {
         initialRecordTimeMillis ?: System.currentTimeMillis()
     }
@@ -675,20 +678,62 @@ fun RecordDetailScreen(
                     return@Button
                 }
 
+                val calibrationGlucose = if (category == RecordCategory.BLOOD_SUGAR) {
+                    content.toDoubleOrNull()
+                } else {
+                    null
+                }
+                if (category == RecordCategory.BLOOD_SUGAR && calibrationGlucose == null) {
+                    Toast.makeText(context, "올바른 혈당값을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                    return@Button
+                }
+
                 coroutineScope.launch(Dispatchers.IO) {
                     try {
                         val userId = DataStoreManager.getUserId().first() ?: -1
-                        val createdAt = Instant.ofEpochMilli(recordTimeMillis)
+                        val recordInstant = Instant.ofEpochMilli(recordTimeMillis)
+                        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                        val createdAtUtc = recordInstant
                             .atZone(ZoneOffset.UTC)
-                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                            .format(formatter)
+                        val createdAtKst = recordInstant
+                            .atZone(ZoneId.of("Asia/Seoul"))
+                            .format(formatter)
 
-                        Log.e("TEST", "이벤트 전송하기 전 값 확인 userId : $userId eventCode : $eventTypeCode, createdAt : $createdAt content : $content")
+                        Log.e(
+                            "TEST",
+                            "이벤트 전송 전 userId : $userId eventCode : $eventTypeCode, " +
+                                "createdAt(UTC) : $createdAtUtc, createdAt(KST) : $createdAtKst, " +
+                                "createdAtLong : $recordTimeMillis content : $content"
+                        )
 
+                        if (
+                            category == RecordCategory.BLOOD_SUGAR &&
+                            calibrationGlucose != null
+                        ) {
+                            try {
+                                localDbRepository?.dataDao()?.insertCalibration(
+                                    UserCalibration(
+                                        userId = userId,
+                                        glucoseValue = calibrationGlucose,
+                                        createdAt = createdAtKst,
+                                        createdAtLong = recordTimeMillis
+                                    )
+                                )
+                                Log.d("EVENT", "채혈 보정값 Room 저장 성공")
+                            } catch (dbException: Exception) {
+                                Log.e(
+                                    "EVENT",
+                                    "채혈 보정값 Room 저장 실패 : ${dbException.message}",
+                                    dbException
+                                )
+                            }
+                        }
 
                         val upload = tokenRetrofit.uploadEvent(
                             RequestEventData(
                                 userId = userId,
-                                createdAt = createdAt,
+                                createdAt = createdAtUtc,
                                 eventTypeCode = eventTypeCode,
                                 content = content
                             )

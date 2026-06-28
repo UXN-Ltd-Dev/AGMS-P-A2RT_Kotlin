@@ -517,7 +517,7 @@ fun SensorInfoScreen(navController: NavHostController) {
 
         val formattedDate = if (startTimeMilli != -1L) {
             Instant.ofEpochMilli(startTimeMilli)
-                .atZone(ZoneId.of("Asia/Seoul"))
+                .atZone(ZoneId.systemDefault())
                 .format(formatter)
         } else {
             ""
