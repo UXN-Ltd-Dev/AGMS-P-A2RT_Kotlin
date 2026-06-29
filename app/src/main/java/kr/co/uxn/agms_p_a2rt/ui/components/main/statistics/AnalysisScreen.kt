@@ -114,7 +114,6 @@ val TextDark = Color(0xFF333333)
 val TextGray = Color(0xFF888888)
 val LineDashedBlue = Color(0xFF64B5F6)
 val LineDashedOrange = Color(0xFFFFB74D)
-private val AnalysisGlucoseLineColor = Color(0xFFD0D0D0)
 private val AnalysisGlucoseNormalColor = Color(0xFF65B66F)
 private val AnalysisGlucoseHighColor = Color(0xFFFFA12B)
 private val AnalysisGlucoseLowColor = Color(0xFF8FAEFF)
@@ -1300,14 +1299,14 @@ private fun DailyGlucoseChart(
                 lineProvider = LineCartesianLayer.LineProvider.series(
                     LineCartesianLayer.rememberLine(
                         fill = LineCartesianLayer.LineFill.single(
-                            fill(AnalysisGlucoseLineColor)
+                            fill(Color.Transparent)
                         ),
-                        stroke = LineCartesianLayer.LineStroke.Continuous(thicknessDp = 1f),
+                        stroke = LineCartesianLayer.LineStroke.Continuous(thicknessDp = 0f),
                         pointProvider = pointProvider,
                         pointConnector = LineCartesianLayer.PointConnector.cubic(curvature = 0.8f)
                     ),
                     LineCartesianLayer.rememberLine(
-                        fill = LineCartesianLayer.LineFill.single(fill(Color.Red)),
+                        fill = LineCartesianLayer.LineFill.single(fill(Color.Transparent)),
                         stroke = LineCartesianLayer.LineStroke.Continuous(thicknessDp = 0f),
                         pointProvider = eventPointProvider
                     )

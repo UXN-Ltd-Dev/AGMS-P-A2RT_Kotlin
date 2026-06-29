@@ -6,6 +6,6 @@ data class ResponseA2RTLastTime(
     @SerializedName("success")
     val success: Boolean,
 
-    @SerializedName(value = "experiment_date", alternate = ["target_time", "targetTime"])
-    val targetTime: Long? = null
+    @SerializedName(value = "experiment_date")
+    val targetTime: String? = null
 )

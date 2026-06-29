@@ -44,6 +44,7 @@ android {
             properties.getProperty("google_web_client_id")
         )
         buildConfigField("String", "base_url", properties.getProperty("base_url"))
+        buildConfigField("String", "DEVICE_PROTOCOL", "\"I10\"")
 
         ndk {
             // On Apple silicon, you can omit x86_64.
@@ -98,6 +99,17 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+    }
+
+    flavorDimensions += "deviceProtocol"
+    productFlavors {
+        create("i10") {
+            dimension = "deviceProtocol"
+        }
+        create("f23Utc") {
+            dimension = "deviceProtocol"
+            buildConfigField("String", "DEVICE_PROTOCOL", "\"F23UTC\"")
         }
     }
 
