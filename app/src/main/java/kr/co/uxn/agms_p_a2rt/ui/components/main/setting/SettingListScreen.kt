@@ -87,6 +87,7 @@ fun SettingListScreen(
 // ==========================================
 @Composable
 fun SettingsMainScreen(navController: NavHostController, bleViewModel: BleViewModel) {
+    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val name = remember { mutableStateOf("") }
     val email = remember { mutableStateOf("") }
@@ -197,7 +198,13 @@ fun SettingsMainScreen(navController: NavHostController, bleViewModel: BleViewMo
 
             // 2. 단일 메뉴 카드들
             SettingsSingleCard("알림 설정") { navController.navigate("alarm_settings") }
-            SettingsSingleCard("사용 설명서") { /* 설명서 화면 이동 로직 */ }
+            SettingsSingleCard("사용 설명서") {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.toast_user_manual_in_development),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
             SettingsSingleCard("앱 정보") { navController.navigate("app_info") }
 
             // 3. 로그아웃

@@ -2,6 +2,7 @@ package kr.co.uxn.agms_p_a2rt.ui.components.ready
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -74,6 +75,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p_a2rt.R
 import kr.co.uxn.agms_p_a2rt.api.RetrofitClient.tokenRetrofit
+import kr.co.uxn.agms_p_a2rt.api.token.DataStoreManager
 import kr.co.uxn.agms_p_a2rt.ble.BleUtils.STATUS_BLE_ENABLED
 import kr.co.uxn.agms_p_a2rt.ble.BleUtils.getBleStatus
 import androidx.compose.runtime.rememberCoroutineScope
@@ -128,7 +130,7 @@ fun RegisterDeviceScreenQR(navController: NavController) {
         ) {
 //            RegisterDeviceTopBar(onBackClick = navController::popBackStack)
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.weight(40f))
             Text(
                 modifier = Modifier.fillMaxWidth(),
                 text = "QR 코드를 스캔해\n기기를 연결해주세요.",
@@ -139,7 +141,7 @@ fun RegisterDeviceScreenQR(navController: NavController) {
                 textAlign = TextAlign.Start
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.weight(12f))
 
             Image(
                 modifier = Modifier.size(200.dp),
@@ -157,7 +159,7 @@ fun RegisterDeviceScreenQR(navController: NavController) {
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.weight(50f))
 
             CameraScannerPreview(
                 hasCameraPermission = hasCameraPermission,
@@ -192,6 +194,8 @@ fun RegisterDeviceScreenQR(navController: NavController) {
                                     val responseBody = result.body()
 
                                     if (result.isSuccessful && responseBody?.isExists == true) {
+                                        Log.e("TEST", "deviceType : ${responseBody.deviceType}")
+                                        DataStoreManager.replaceDeviceType(responseBody.deviceType)
                                         navController.navigate(
                                             "ScanDeviceScreen/${responseBody.deviceMac}/$serialNumber"
                                         )
@@ -225,7 +229,7 @@ fun RegisterDeviceScreenQR(navController: NavController) {
                     .aspectRatio(1f)
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.weight(8f))
 
             Row(
                 modifier = Modifier.graphicsLayer {
@@ -251,7 +255,7 @@ fun RegisterDeviceScreenQR(navController: NavController) {
                 )
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(36f))
 
             Text(
                 modifier = Modifier

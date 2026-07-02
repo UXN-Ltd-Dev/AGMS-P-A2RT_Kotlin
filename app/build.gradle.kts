@@ -44,7 +44,7 @@ android {
             properties.getProperty("google_web_client_id")
         )
         buildConfigField("String", "base_url", properties.getProperty("base_url"))
-        buildConfigField("String", "DEVICE_PROTOCOL", "\"I10\"")
+        buildConfigField("Boolean", "DEMO_GLUCOSE_ENABLED", "false")
 
         ndk {
             // On Apple silicon, you can omit x86_64.
@@ -102,14 +102,15 @@ android {
         }
     }
 
-    flavorDimensions += "deviceProtocol"
+    flavorDimensions += "demoMode"
     productFlavors {
-        create("i10") {
-            dimension = "deviceProtocol"
+        create("original") {
+            dimension = "demoMode"
+            buildConfigField("Boolean", "DEMO_GLUCOSE_ENABLED", "false")
         }
-        create("f23Utc") {
-            dimension = "deviceProtocol"
-            buildConfigField("String", "DEVICE_PROTOCOL", "\"F23UTC\"")
+        create("dummy") {
+            dimension = "demoMode"
+            buildConfigField("Boolean", "DEMO_GLUCOSE_ENABLED", "true")
         }
     }
 

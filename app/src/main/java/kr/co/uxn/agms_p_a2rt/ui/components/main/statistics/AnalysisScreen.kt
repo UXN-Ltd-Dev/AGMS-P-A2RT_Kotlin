@@ -1030,7 +1030,7 @@ private fun DailyGlucoseChart(
         autoScrollCondition = AutoScrollCondition.OnModelGrowth
     )
     val rangeProvider = remember {
-        CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 300.0)
+        CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 250.0)
     }
 
     LaunchedEffect(xValues, yValues, eventPoints) {

@@ -61,7 +61,7 @@
     <string name="label_agree_terms_privacy">개인정보 처리방침 및 이용약관에 동의합니다.</string>
 
     <!--  권한 화면 -->
-    <string name="setting_permissions_title">"Always앱에서 사용하는\n권한을 알려드려요."</string>
+    <string name="setting_permissions_title">"Always RT앱에서 사용하는\n권한을 알려드려요."</string>
     <string name="setting_permissions_sub_title">모든 권한을 허용하지 않아도 앱을 사용할 수 있으나 일부 기능이 제한될 수 있어요</string>
     <string name="notification_permission_title">알림</string>
     <string name="notification_permission_neccessary">[필수]</string>
@@ -77,12 +77,12 @@
     <string name="guide_notice_title">사용 시 주의 사항</string>
     <string name="guide_notice_description">1. 본 제품은 의료기관의 진료를 대체할 수 없으며, 당뇨병 진단 목적으로 사용해서는 안 됩니다.\n\n2. 만 19세 미만, 임신 중인 여성, 피부 면역질환이 있는 사람 또는 중증 환자를 대상으로 사용하지 마십시오.\n\n3. MRI, CT, X-ray 검사 또는 투열치료를 받기 전에는 반드시 센서를 제거하십시오.\n\n4. 유효기간이 지나거나 멸균 포장이 손상된 경우 사용하지 마십시오. 감염의 위험이 있거나 측정 결과가 부정확할 수 있습니다.\n\n5. 센서 장착 부위에 심한 출혈이나 멍이 발생한 경우 즉시 사용을 중단하고 센서를 제거한 후 의사 또는 의료전문가와 상담하십시오.</string>
     <string name="guide_title">사용 설명</string>
-    <string name="guide_tip_1">착용 부위 : 배꼽 기준 좌우 10cm 내외</string>
+    <string name="guide_tip_1">착용 부위 : 팔 위쪽 뒷부분</string>
     <string name="guide_description_1">"알코올 스왑으로 부착 부위 피부를\n깨끗이 닦은 후 건조시킵니다."</string>
     <string name="guide_description_2">"보호 덮개를 손으로 단단히 잡고,\n본체를 시계반대 방향으로 돌려서\n보호 덮개와 분리합니다."</string>
     <string name="guide_description_3">"어플리케이터를 삽입하는 피부에\n수평하게 위치시킵니다."</string>
-    <string name="guide_description_4">"어플리케이터를 본체 위에\n손바닥을 대고 소리가 날때까지\n끝까지 누릅니다."</string>
-    <string name="guide_description_5">"어플리케이터를 들어올려 몸에서\n분리합니다. 트랜스미터가 피부에\n붙어 있는지 확인합니다."</string>
+    <string name="guide_description_4">"어플리케이터를 본체를\n피부에 대고 소리가 날때까지\n끝까지 누릅니다."</string>
+    <string name="guide_description_5">"어플리케이터를 들어올려\n몸에서 분리합니다"</string>
     <string name="guide_description_6">"손가락으로 트랜스미터 주위에\n있는 점착패드 주변을 눌러 점착패드가\n피부에 잘 붙도록 합니다."</string>
 
     <!--  기기 등록 화면 -->
@@ -295,4 +295,5 @@
 
     <!--  스낵바  -->
     <string name="snakbar_complete_update">새 버전 다운로드가 완료되었습니다.</string>
+    <string name="toast_user_manual_in_development">사용 설명서는 현재 준비 중입니다.</string>
 </resources>
