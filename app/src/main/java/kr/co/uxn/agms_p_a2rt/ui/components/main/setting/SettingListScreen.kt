@@ -198,13 +198,6 @@ fun SettingsMainScreen(navController: NavHostController, bleViewModel: BleViewMo
 
             // 2. 단일 메뉴 카드들
             SettingsSingleCard("알림 설정") { navController.navigate("alarm_settings") }
-            SettingsSingleCard("사용 설명서") {
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.toast_user_manual_in_development),
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
             SettingsSingleCard("앱 정보") { navController.navigate("app_info") }
 
             // 3. 로그아웃
@@ -1051,10 +1044,15 @@ fun AppInfoScreen(navController: NavHostController) {
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                Text("의료기기 허가정보", fontSize = 14.sp, modifier = Modifier.clickable { })
-                Text("서비스 이용약관", fontSize = 14.sp, modifier = Modifier.clickable { })
-                Text("개인정보 처리방침", fontSize = 14.sp, modifier = Modifier.clickable { })
-                Text("앱 접근권한 안내", fontSize = 14.sp, modifier = Modifier.clickable { })
+                Text("의료기기 허가정보", fontSize = 14.sp, modifier = Modifier.clickable {
+                    Toast.makeText(context, "의료기기 허가정보는 추후 기입 예정입니다.", Toast.LENGTH_SHORT).show()
+                })
+                Text("서비스 이용약관", fontSize = 14.sp, modifier = Modifier.clickable {
+                    Toast.makeText(context, "서비스 이용약관은 추후 제공될 예정입니다.", Toast.LENGTH_SHORT).show()
+                })
+                Text("개인정보 처리방침", fontSize = 14.sp, modifier = Modifier.clickable {
+                    Toast.makeText(context, "개인정보 처리방침은 추후 제공될 예정입니다.", Toast.LENGTH_SHORT).show()
+                })
             }
         }
     }

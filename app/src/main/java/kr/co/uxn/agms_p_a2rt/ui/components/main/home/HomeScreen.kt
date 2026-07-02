@@ -328,9 +328,9 @@ fun HomeScreen(
         glucose
     }
     val currentGlucoseColor = when {
-        displayedGlucose == 0 -> Color.Black
-        displayedGlucose > 180 -> Color.Red
-        displayedGlucose < 80 -> GlucoseLowPointColor
+//        displayedGlucose == 0 -> Color.Black
+//        displayedGlucose > 180 -> Color.Red
+        displayedGlucose < 70 -> Color.Red
         else -> GlucoseNormalPointColor
     }
 
@@ -349,7 +349,7 @@ fun HomeScreen(
     val currentYMax by rememberUpdatedState(yMax)
     var forceRecompose by remember { mutableStateOf(0) }
     val rangeProvider = remember(yMax) {
-        CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = yMax)
+        CartesianLayerRangeProvider.fixed(minY = 50.0, maxY = 350.0)
     }
 
     val x = remember { mutableListOf<Number>() }
@@ -1066,7 +1066,7 @@ fun HomeScreen(
                         // 잔여 시간 타이틀
                         Text(
                             text = "잔여 시간",
-                            fontSize = 15.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black
                         )
@@ -1426,11 +1426,11 @@ fun HomeScreen(
                             ): LineCartesianLayer.Point {
                                 return when {
                                     entry.y == -10.0 -> hiddenPoint
-                                    entry.x == latestChartX && entry.y > 180.0 -> latestHighPoint
-                                    entry.x == latestChartX && entry.y < 80.0 -> latestLowPoint
+//                                    entry.x == latestChartX && entry.y > 180.0 -> latestHighPoint
+//                                    entry.x == latestChartX && entry.y < 80.0 -> latestLowPoint
                                     entry.x == latestChartX -> latestNormalPoint
-                                    entry.y > 180.0 -> highPoint
-                                    entry.y < 80.0 -> lowPoint
+//                                    entry.y > 180.0 -> highPoint
+//                                    entry.y < 80.0 -> lowPoint
                                     else -> normalPoint
                                 }
                             }
@@ -1467,13 +1467,15 @@ fun HomeScreen(
                     val chartDecorations =
                         if (selectedChartOption == context.getString(R.string.chart_option_glucose)) {
                             listOf(
+                                // 가운데 배경
                                 GlucoseTargetRangeDecoration(
                                     minYValue = 80.0,
                                     maxYValue = 180.0,
                                     color = GlucoseTargetRangeColor
                                 ),
-                                DashedGlucoseLineDecoration(80.0, GlucoseLowPointColor),
-                                DashedGlucoseLineDecoration(180.0, GlucoseHighPointColor)
+                                // 위아래 점선
+//                                DashedGlucoseLineDecoration(80.0, GlucoseLowPointColor),
+//                                DashedGlucoseLineDecoration(180.0, GlucoseHighPointColor)
                             )
                         } else {
                             emptyList()

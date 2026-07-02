@@ -85,7 +85,7 @@ private fun eventTypeToRecordCategory(eventType: Int): RecordCategory {
     return when (eventType) {
         1401 -> RecordCategory.MEAL
         1402 -> RecordCategory.EXERCISE
-        1403 -> RecordCategory.BLOOD_SUGAR
+        1403, 1406 -> RecordCategory.BLOOD_SUGAR
         1404 -> RecordCategory.INSULIN
         else -> RecordCategory.ALL
     }
@@ -521,6 +521,7 @@ fun RecordTypeCard(
     type: RecordCategory,
     onClick: (() -> Unit)? = null,
     showArrow: Boolean = false,
+    title: String = if (type == RecordCategory.BLOOD_SUGAR) "혈당값" else type.title,
     modifier: Modifier = Modifier
 ) {
     val clickableModifier = if (onClick != null) {
@@ -549,7 +550,11 @@ fun RecordTypeCard(
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = type.title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(
+                    text = title,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
                 Text(text = recordCategoryDescription(type), color = Color.Gray, fontSize = 12.sp)
             }
             if (showArrow) {
@@ -599,6 +604,7 @@ fun RecordDetailScreen(
     var mealName by remember { mutableStateOf("") }
     var mealContent by remember { mutableStateOf("") }
     var bloodSugarValue by remember { mutableStateOf("") }
+    var useCalibration by remember(category) { mutableStateOf(false) }
     var insulinDose by remember { mutableStateOf("") }
     var insulinType by remember { mutableStateOf("초속효성") }
 
@@ -629,6 +635,7 @@ fun RecordDetailScreen(
 
         RecordTypeCard(
             type = category,
+            title = if (category == RecordCategory.BLOOD_SUGAR) "혈당값 입력" else category.title,
             modifier = Modifier.padding(bottom = 24.dp)
         )
 
@@ -654,7 +661,9 @@ fun RecordDetailScreen(
                 RecordCategory.BLOOD_SUGAR -> BloodSugarInputForm(
                     recordTimeText = recordTimeText,
                     value = bloodSugarValue,
-                    onValueChange = { bloodSugarValue = it }
+                    onValueChange = { bloodSugarValue = it },
+                    useCalibration = useCalibration,
+                    onUseCalibrationChange = { useCalibration = it }
                 )
                 RecordCategory.INSULIN -> InsulinInputForm(
                     recordTimeText = recordTimeText,
@@ -670,7 +679,14 @@ fun RecordDetailScreen(
         // 하단 저장 버튼
         Button(
             onClick = {
-                val eventTypeCode = recordCategoryToEventType(category)
+                val defaultEventTypeCode = recordCategoryToEventType(category)
+                val eventTypeCode = if (
+                    category == RecordCategory.BLOOD_SUGAR && useCalibration
+                ) {
+                    1406
+                } else {
+                    defaultEventTypeCode
+                }
                 val content = buildContent()
 
                 if (eventTypeCode == null || content.isBlank()) {
@@ -709,6 +725,7 @@ fun RecordDetailScreen(
 
                         if (
                             category == RecordCategory.BLOOD_SUGAR &&
+                            useCalibration &&
                             calibrationGlucose != null
                         ) {
                             try {
@@ -846,7 +863,9 @@ fun MealInputForm(
 fun BloodSugarInputForm(
     recordTimeText: String,
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    useCalibration: Boolean,
+    onUseCalibrationChange: (Boolean) -> Unit
 ) {
     OutlinedTextField(
         value = value, onValueChange = onValueChange,
@@ -854,6 +873,22 @@ fun BloodSugarInputForm(
         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
     )
     Text(recordTimeText, color = Color.Gray)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onUseCalibrationChange(!useCalibration) },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Checkbox(
+            checked = useCalibration,
+            onCheckedChange = onUseCalibrationChange,
+            colors = CheckboxDefaults.colors(
+                checkedColor = Color.LightGray,
+                checkmarkColor = Color.Black
+            )
+        )
+        Text("보정 사용", fontWeight = FontWeight.Medium)
+    }
 }
 
 @Composable
