@@ -121,7 +121,7 @@ val LineDashedOrange = Color(0xFFFFB74D)
 private val AnalysisGlucoseNormalColor = Color(0xFF65B66F)
 private val AnalysisGlucoseHighColor = Color(0xFFFFA12B)
 private val AnalysisGlucoseLowColor = Color(0xFF8FAEFF)
-private val AnalysisGlucoseTargetRangeColor = Color(0x2E9CCC65)
+private val AnalysisGlucoseTargetRangeColor = Color(0x2E9B9797)
 private val AnalysisEventTextColor = Color(0xFFC74B3C)
 private const val MissingGlucoseValue = -10.0
 private const val DailyBucketMinutes = 5L
@@ -1210,7 +1210,7 @@ private fun DailyGlucoseChart(
         autoScrollCondition = AutoScrollCondition.OnModelGrowth
     )
     val rangeProvider = remember {
-        CartesianLayerRangeProvider.fixed(minY = 0.0, maxY = 250.0)
+        CartesianLayerRangeProvider.fixed(minY = 50.0, maxY = 350.0)
     }
 
     LaunchedEffect(xValues, yValues, eventPoints) {
@@ -1285,9 +1285,7 @@ private fun DailyGlucoseChart(
     }
     val defaultMarker = rememberMarker(
         valueFormatter = markerValueFormatter,
-        indicatorColorProvider = { sourceColor ->
-            if (sourceColor == Color.Red) Color.Red else PrimaryOrange
-        }
+        indicatorColor = colorResource(R.color.text_secondary)
     )
     val filteredMarker = remember(defaultMarker) {
         object : CartesianMarker by defaultMarker {
@@ -1374,21 +1372,21 @@ private fun DailyGlucoseChart(
     )
     val normalPoint = LineCartesianLayer.point(
         rememberShapeComponent(
-            fill = fill(AnalysisGlucoseNormalColor),
+            fill = fill(Color.Black),
             shape = CorneredShape.Pill
         ),
         size = 4.dp
     )
     val highPoint = LineCartesianLayer.point(
         rememberShapeComponent(
-            fill = fill(AnalysisGlucoseHighColor),
+            fill = fill(Color.Black),
             shape = CorneredShape.Pill
         ),
         size = 4.dp
     )
     val lowPoint = LineCartesianLayer.point(
         rememberShapeComponent(
-            fill = fill(AnalysisGlucoseLowColor),
+            fill = fill(Color.Black),
             shape = CorneredShape.Pill
         ),
         size = 4.dp
@@ -1525,6 +1523,8 @@ private fun DailyGlucoseChart(
         modelProducer = modelProducer,
         modifier = modifier,
         scrollState = scrollState,
+        animationSpec = null,
+        animateIn = false,
         zoomState = rememberVicoZoomState(
             zoomEnabled = true,
             initialZoom = Zoom.Content

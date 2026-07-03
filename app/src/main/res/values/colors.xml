@@ -13,5 +13,6 @@
     <color name="text_secondary">#727070</color>
     <color name="background_grey">#EEEEEF</color>
     <color name="main">#FFA334</color>
+    <color name="main_grey">#888888</color>
 
 </resources>

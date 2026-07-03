@@ -157,7 +157,7 @@ import kotlin.random.Random
 private val GlucoseNormalPointColor = Color(0xFF65B66F)
 private val GlucoseHighPointColor = Color(0xFFFFA12B)
 private val GlucoseLowPointColor = Color(0xFF8FAEFF)
-private val GlucoseTargetRangeColor = Color(0x2E9CCC65)
+private val GlucoseTargetRangeColor = Color(0x2E9B9797)
 
 internal object DemoGlucoseConfig {
     val ENABLED = BuildConfig.DEMO_GLUCOSE_ENABLED
@@ -331,7 +331,7 @@ fun HomeScreen(
 //        displayedGlucose == 0 -> Color.Black
 //        displayedGlucose > 180 -> Color.Red
         displayedGlucose < 70 -> Color.Red
-        else -> GlucoseNormalPointColor
+        else -> Color.Black
     }
 
     var email = rememberSaveable { mutableStateOf("") }
@@ -1043,7 +1043,7 @@ fun HomeScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f) // 상단과 하단의 비율 조절 (여기는 1 비율)
-                            .background(colorResource(R.color.main)), // 상단 영역에만 메인 컬러 적용
+                            .background(colorResource(R.color.main_grey)), // 상단 영역에만 메인 컬러 적용
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -1296,7 +1296,7 @@ fun HomeScreen(
                     }
                     val defaultMarker = rememberMarker(
                         valueFormatter = markerValueFormatter,
-                        indicatorColor = Color(0xFFFCA937),
+                        indicatorColor = colorResource(R.color.text_secondary),
                         labelLineHeight = 16.sp,
                         labelTopMargin = 4.dp
                     )
@@ -1333,21 +1333,21 @@ fun HomeScreen(
 
                     val normalPoint = LineCartesianLayer.point(
                         rememberShapeComponent(
-                            fill = fill(GlucoseNormalPointColor),
+                            fill = fill(Color.Black),
                             shape = CorneredShape.Pill
                         ),
                         size = 4.dp
                     )
                     val highPoint = LineCartesianLayer.point(
                         rememberShapeComponent(
-                            fill = fill(GlucoseHighPointColor),
+                            fill = fill(Color.Black),
                             shape = CorneredShape.Pill
                         ),
                         size = 4.dp
                     )
                     val lowPoint = LineCartesianLayer.point(
                         rememberShapeComponent(
-                            fill = fill(GlucoseLowPointColor),
+                            fill = fill(Color.Black),
                             shape = CorneredShape.Pill
                         ),
                         size = 4.dp
@@ -1365,28 +1365,28 @@ fun HomeScreen(
                     )
                     val latestNormalPoint = LineCartesianLayer.point(
                         rememberShapeComponent(
-                            fill = fill(GlucoseNormalPointColor.copy(alpha = latestPointAlpha)),
+                            fill = fill(Color.Black.copy(alpha = latestPointAlpha)),
                             shape = CorneredShape.Pill
                         ),
                         size = 8.dp
                     )
                     val latestHighPoint = LineCartesianLayer.point(
                         rememberShapeComponent(
-                            fill = fill(GlucoseHighPointColor.copy(alpha = latestPointAlpha)),
+                            fill = fill(Color.Black.copy(alpha = latestPointAlpha)),
                             shape = CorneredShape.Pill
                         ),
                         size = 8.dp
                     )
                     val latestLowPoint = LineCartesianLayer.point(
                         rememberShapeComponent(
-                            fill = fill(GlucoseLowPointColor.copy(alpha = latestPointAlpha)),
+                            fill = fill(Color.Black.copy(alpha = latestPointAlpha)),
                             shape = CorneredShape.Pill
                         ),
                         size = 8.dp
                     )
                     val weoPoint = LineCartesianLayer.point(
                         rememberShapeComponent(
-                            fill = fill(GlucoseNormalPointColor),
+                            fill = fill(Color.Black),
                             shape = CorneredShape.Pill
                         ),
                         size = 4.dp
@@ -1394,7 +1394,7 @@ fun HomeScreen(
                     val latestWeoPoint = LineCartesianLayer.point(
                         rememberShapeComponent(
                             fill = fill(
-                                GlucoseNormalPointColor.copy(alpha = latestPointAlpha)
+                                Color.Black.copy(alpha = latestPointAlpha)
                             ),
                             shape = CorneredShape.Pill
                         ),
@@ -1637,7 +1637,7 @@ fun RadioButtonSingleSelection(
                     Box(
                         modifier = Modifier
                             .size(6.dp)
-                            .background(dotColor, CircleShape)
+                            .background(colorResource(R.color.main), CircleShape)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                 }
