@@ -32,6 +32,8 @@ import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -41,6 +43,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -104,6 +107,7 @@ import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 // 테마 컬러
@@ -389,28 +393,24 @@ private fun buildDetailAveragePeriods(
     }
 }
 
-private fun createDetailDemoAverages(
+private fun createDetailDemoGlucoseData(
     periods: List<GlucoseAveragePeriod>,
-    currentTimeMillis: Long
-): List<AverageGlucosePoint> {
+    currentTimeMillis: Long,
+    zoneId: ZoneId
+): List<UserGlucose> {
     if (periods.isEmpty()) return emptyList()
 
-    val sums = DoubleArray(periods.size)
-    val counts = IntArray(periods.size)
     val random = Random(20260627)
     val intervalMillis = DemoGlucoseConfig.ANALYSIS_INTERVAL_MINUTES * 60_000L
     val generationEnd = minOf(periods.last().endTimeMillis, currentTimeMillis + 1L)
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.getDefault())
+    val result = mutableListOf<UserGlucose>()
     var glucose = 115.0
     var targetGlucose = 115.0
     var pointIndex = 0L
-    var periodIndex = 0
     var time = periods.first().startTimeMillis
 
-    while (time < generationEnd && periodIndex < periods.size) {
-        while (periodIndex < periods.lastIndex && time >= periods[periodIndex].endTimeMillis) {
-            periodIndex++
-        }
-
+    while (time < generationEnd) {
         if (pointIndex % 12L == 0L) {
             targetGlucose = random.nextDouble(20.0, 225.0)
         }
@@ -419,23 +419,20 @@ private fun createDetailDemoAverages(
             random.nextDouble(-1.5, 1.5))
             .coerceIn(0.0, 240.0)
 
-        val period = periods[periodIndex]
-        if (time >= period.startTimeMillis && time < period.endTimeMillis) {
-            sums[periodIndex] += glucose
-            counts[periodIndex]++
-        }
+        result += UserGlucose(
+            userId = -1,
+            glucose = glucose,
+            weo1 = 0.0,
+            weo2 = 0.0,
+            createdAt = Instant.ofEpochMilli(time).atZone(zoneId).format(formatter),
+            createdAtLong = time
+        )
 
         pointIndex++
         time += intervalMillis
     }
 
-    return periods.mapIndexed { index, period ->
-        AverageGlucosePoint(
-            primaryLabel = period.primaryLabel,
-            secondaryLabel = period.secondaryLabel,
-            average = counts[index].takeIf { it > 0 }?.let { sums[index] / it }
-        )
-    }
+    return result
 }
 
 private fun aggregateRoomGlucose(
@@ -679,8 +676,8 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(8.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // 날짜 선택기 영역
         Row(
@@ -740,9 +737,9 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(0.6f)
+                .weight(0.5f)
         ) {
-            Box(modifier = Modifier.padding(4.dp).fillMaxSize()) {
+            Box(modifier = Modifier.padding(horizontal = 4.dp).fillMaxSize()) {
                 when {
                     isChartLoading -> CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
@@ -765,6 +762,13 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
                 }
             }
         }
+
+        TirCard(
+            glucoseValues = actualGlucoseValues,
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(0.22f)
+        )
 
         // 요약 정보 카드 (평균 / 최고, 최저)
 //        Row(
@@ -843,7 +847,7 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
             colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(0.1f),
+                .weight(0.07f),
             shape = RoundedCornerShape(25.dp)
         ) {
             Row(
@@ -861,17 +865,6 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
             }
         }
 
-//        Button(
-//            onClick = onNavigateToSelect,
-//            colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(16.dp)
-//                .height(50.dp),
-//            shape = RoundedCornerShape(25.dp)
-//        ) {
-//            Text("⊕ 기록하기", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
-//        }
     }
 }
 
@@ -884,7 +877,7 @@ fun DetailRecordContent() {
     val filters = listOf("일", "주", "월")
     val context = LocalContext.current
     val zoneId = remember { ZoneId.systemDefault() }
-    var averagePoints by remember { mutableStateOf<List<AverageGlucosePoint>>(emptyList()) }
+    var detailGlucoseValues by remember { mutableStateOf<List<Double>>(emptyList()) }
 
     LaunchedEffect(selectedFilter) {
         val now = System.currentTimeMillis()
@@ -901,13 +894,12 @@ fun DetailRecordContent() {
             locale = Locale.getDefault()
         )
 
-        averagePoints = withContext(Dispatchers.IO) {
+        detailGlucoseValues = withContext(Dispatchers.IO) {
             val userId = DataStoreManager.getUserId().first() ?: -1
-
-            if (DemoGlucoseConfig.ENABLED) {
-                createDetailDemoAverages(periods, now)
+            val glucoseData = if (DemoGlucoseConfig.ENABLED) {
+                createDetailDemoGlucoseData(periods, now, zoneId)
             } else {
-                val glucoseValues = AppDatabase.getInstance(context)
+                AppDatabase.getInstance(context)
                     ?.dataDao()
                     ?.getGlucoseListBetween(
                         userId = userId,
@@ -915,67 +907,255 @@ fun DetailRecordContent() {
                         endTime = minOf(periods.last().endTimeMillis, now + 1L)
                     )
                     .orEmpty()
-                aggregateRoomGlucose(periods, glucoseValues, now)
+            }
+            glucoseData.map(UserGlucose::glucose).filter { it >= 0.0 }
+        }
+    }
+
+    val coefficientOfVariation = remember(detailGlucoseValues) {
+        if (detailGlucoseValues.isEmpty()) {
+            null
+        } else {
+            val mean = detailGlucoseValues.average()
+            if (mean == 0.0) {
+                null
+            } else {
+                val variance = detailGlucoseValues
+                    .sumOf { value -> (value - mean) * (value - mean) } /
+                    detailGlucoseValues.size
+                sqrt(variance) / mean * 100.0
             }
         }
+    }
+    val cvPercentage = coefficientOfVariation?.roundToInt()
+    val cvAssessment = when {
+        cvPercentage == null -> "데이터 없음"
+        cvPercentage <= 25 -> "아주 좋음 (~25%)"
+        cvPercentage <= 36 -> "좋음 (26~36%)"
+        cvPercentage <= 50 -> "주의 (37~50%)"
+        else -> "위험 (51% 이상)"
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        Card(
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.End
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                // 상단 헤더 (평균혈당 타이틀 및 토글 버튼)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("평균혈당", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-
-                    // 커스텀 세그먼트 버튼 (일/주/월)
-                    Row(
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(0.45f)
+                    .border(1.dp, colorResource(R.color.background_grey), RoundedCornerShape(20.dp))
+                    .background(Color.LightGray, RoundedCornerShape(20.dp))
+            ) {
+                filters.forEach { filter ->
+                    val isSelected = selectedFilter == filter
+                    Box(
                         modifier = Modifier
-                            .border(1.dp, Color.LightGray, RoundedCornerShape(20.dp))
-                            .background(Color.White, RoundedCornerShape(20.dp))
+                            .weight(1f)
+                            .background(
+                                color = if (isSelected) Color.Gray else Color.Transparent,
+                                shape = RoundedCornerShape(20.dp)
+                            )
+                            .clickable { selectedFilter = filter }
+                            .padding(vertical = 6.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        filters.forEach { filter ->
-                            val isSelected = selectedFilter == filter
-                            Box(
-                                modifier = Modifier
-                                    .background(
-                                        color = if (isSelected) Color.Gray else Color.Transparent,
-                                        shape = RoundedCornerShape(20.dp)
-                                    )
-                                    .clickable { selectedFilter = filter }
-                                    .padding(horizontal = 16.dp, vertical = 6.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = filter,
-                                    color = if (isSelected) Color.White else TextDark,
-                                    fontSize = 14.sp
-                                )
-                            }
-                        }
+                        Text(
+                            text = filter,
+                            color = if (isSelected) Color.White else TextDark,
+                            fontSize = 14.sp
+                        )
                     }
                 }
+            }
+        }
 
-                Spacer(modifier = Modifier.height(32.dp))
+        TirCard(
+            glucoseValues = detailGlucoseValues,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp)
 
-                AverageGlucoseChart(averagePoints)
+        )
+
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier.fillMaxWidth()
+                .height(200.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "혈당 변동성",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = " (혈당 변동계수, CV)",
+                        fontSize = 17.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = cvPercentage?.let { "$it%" } ?: "--",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = cvAssessment,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = "혈당변동계수(CV)는 혈당이 얼마나 안정적으로 유지되는지 나타내는 " +
+                        "수치이며, 합병증 예방을 위해서는 36% 이하로 유지하는 것을 권장합니다.",
+                    color = TextGray,
+                    fontSize = 13.sp,
+                    lineHeight = 20.sp
+                )
             }
         }
     }
 }
 
 // --- 차트 UI 목업용 컴포저블 (Canvas 이용) ---
+
+@Composable
+private fun TirCard(
+    glucoseValues: List<Double>,
+    modifier: Modifier = Modifier
+) {
+    val percentages = remember(glucoseValues) {
+        if (glucoseValues.isEmpty()) {
+            List(5) { 0 }
+        } else {
+            val counts = listOf(
+                glucoseValues.count { it < 50.0 },
+                glucoseValues.count { it >= 50.0 && it < 70.0 },
+                glucoseValues.count { it >= 70.0 && it <= 180.0 },
+                glucoseValues.count { it > 180.0 && it <= 250.0 },
+                glucoseValues.count { it > 250.0 }
+            )
+            val rounded = counts
+                .map { (it * 100.0 / glucoseValues.size).roundToInt() }
+                .toMutableList()
+            val difference = 100 - rounded.sum()
+            if (difference != 0) {
+                val largestRangeIndex = counts.indices.maxBy { counts[it] }
+                rounded[largestRangeIndex] += difference
+            }
+            rounded
+        }
+    }
+    val ranges = listOf(
+        Color(0xFFD9D9D9) to Color.Black,
+        Color(0xFFFF3B3B) to Color.Black,
+        Color(0xFF34C759) to Color.White,
+        Color(0xFFFFC928) to Color.Black,
+        Color(0xFFFF8A24) to Color.Black
+    )
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(16.dp),
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 10.dp, vertical = 12.dp)
+        ) {
+            Text(
+                text = "목표 혈당 범위 내 시간",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .clip(RoundedCornerShape(16.dp))
+            ) {
+                if (glucoseValues.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize().background(Color(0xFFD9D9D9)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("데이터 없음", color = TextGray, fontSize = 11.sp)
+                    }
+                } else {
+                    ranges.forEachIndexed { index, (color, textColor) ->
+                        val percentage = percentages[index]
+                        if (percentage > 0) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(percentage.toFloat())
+                                    .fillMaxHeight()
+                                    .background(color)
+                                    .clipToBounds(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "$percentage%",
+                                    color = textColor,
+                                    fontSize = 10.sp,
+                                    maxLines = 1,
+                                    fontWeight = if (index == 2) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                if (glucoseValues.isNotEmpty()) {
+                    val boundary50 = percentages[0]
+                    val boundary70 = boundary50 + percentages[1]
+                    val boundary180 = boundary70 + percentages[2]
+                    val boundary250 = boundary180 + percentages[3]
+                    val show50 = maxWidth * (boundary70 - boundary50) / 100f >= 24.dp
+                    val show250 = maxWidth * (boundary250 - boundary180) / 100f >= 32.dp
+                    val labels = listOf(
+                        Triple("50", boundary50, show50),
+                        Triple("70", boundary70, true),
+                        Triple("180", boundary180, true),
+                        Triple("250", boundary250, show250)
+                    )
+
+                    labels.filter { it.third }.forEach { (label, boundary, _) ->
+                        val labelOffset = (maxWidth * boundary / 100f - 10.dp)
+                            .coerceIn(0.dp, maxWidth - 24.dp)
+                        Text(
+                            text = label,
+                            modifier = Modifier.offset(x = labelOffset),
+                            color = Color.Black,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
 
 @SuppressLint("RestrictedApi")
 @Composable

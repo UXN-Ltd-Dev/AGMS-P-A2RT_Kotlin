@@ -4,6 +4,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -43,6 +45,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -56,6 +59,7 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kr.co.uxn.agms_p_a2rt.R
 import kr.co.uxn.agms_p_a2rt.api.RetrofitClient.emptyRetrofit
@@ -74,6 +78,7 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
     val context = LocalContext.current
     val email = remember { mutableStateOf("") }
     val pwd = remember { mutableStateOf("") }
+    val rememberEmail = remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val isLoading by viewModel.isLoading.collectAsState()
@@ -96,6 +101,11 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
 
     LaunchedEffect(Unit) {
         viewModel.updateIsLoading(false)
+        val savedRememberEmail = DataStoreManager.getRememberLoginEmail().first()
+        rememberEmail.value = savedRememberEmail
+        if (savedRememberEmail) {
+            email.value = DataStoreManager.getSavedLoginEmail().first().orEmpty()
+        }
     }
 
     if (showDuplicateLoginDialog.value) {
@@ -146,6 +156,10 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                         DataStoreManager.saveUserId(loginResult.userId)
                                         DataStoreManager.deleteEmail()
                                         DataStoreManager.saveEmail(trimEmail)
+                                        DataStoreManager.saveLoginEmailPreference(
+                                            email = trimEmail,
+                                            rememberEmail = rememberEmail.value
+                                        )
 
                                         // mac 정리
                                         DataStoreManager.deleteDeviceMac()
@@ -422,6 +436,40 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
                             }
                         },
                     )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp, start = 5.dp)
+                            .clickable { rememberEmail.value = !rememberEmail.value },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = if (rememberEmail.value) Color.Black else Color.Gray,
+                                    shape = CircleShape
+                                )
+                                .background(Color.Transparent, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (rememberEmail.value) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .background(Color.Black, CircleShape)
+                                )
+                            }
+                        }
+                        Text(
+                            text = stringResource(R.string.login_save_email),
+                            modifier = Modifier.padding(start = 8.dp),
+                            color = Color.Black,
+                            fontSize = 14.sp
+                        )
+                    }
                 }
             }
             Spacer(modifier = Modifier.weight(0.4f))
@@ -471,6 +519,10 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                                 DataStoreManager.saveUserId(loginResult.userId)
                                                 DataStoreManager.deleteEmail()
                                                 DataStoreManager.saveEmail(trimEmail)
+                                                DataStoreManager.saveLoginEmailPreference(
+                                                    email = trimEmail,
+                                                    rememberEmail = rememberEmail.value
+                                                )
 
                                                 // mac 정리
                                                 DataStoreManager.deleteDeviceMac()
