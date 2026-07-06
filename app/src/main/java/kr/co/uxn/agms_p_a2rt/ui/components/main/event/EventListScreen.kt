@@ -873,22 +873,24 @@ fun BloodSugarInputForm(
         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
     )
     Text(recordTimeText, color = Color.Gray)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onUseCalibrationChange(!useCalibration) },
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Checkbox(
-            checked = useCalibration,
-            onCheckedChange = onUseCalibrationChange,
-            colors = CheckboxDefaults.colors(
-                checkedColor = Color.LightGray,
-                checkmarkColor = Color.Black
-            )
-        )
-        Text("보정 사용", fontWeight = FontWeight.Medium)
-    }
+
+    // 보정사용 체크박스
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .clickable { onUseCalibrationChange(!useCalibration) },
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        Checkbox(
+//            checked = useCalibration,
+//            onCheckedChange = onUseCalibrationChange,
+//            colors = CheckboxDefaults.colors(
+//                checkedColor = Color.LightGray,
+//                checkmarkColor = Color.Black
+//            )
+//        )
+//        Text("보정 사용", fontWeight = FontWeight.Medium)
+//    }
 }
 
 @Composable

@@ -77,6 +77,9 @@ fun SettingListScreen(
         composable("sensor_info") {
             SensorInfoScreen(navController, bleViewModel, onSensorEnded)
         }
+        composable("delete_account") {
+            DeleteAccountScreen(navController)
+        }
         composable("alarm_settings") { AlarmSettingsScreen(navController) }
         composable("app_info") { AppInfoScreen(navController) }
     }
@@ -470,7 +473,8 @@ fun UserInfoScreen(navController: NavHostController) {
             Text("기본정보", color = TextGray, fontSize = 14.sp, modifier = Modifier.padding(vertical = 12.dp))
             InfoRow("이름", name.value)
             InfoRow("이메일", email.value)
-            Text("비밀번호 변경하기", fontSize = 16.sp, modifier = Modifier.padding(vertical = 12.dp).clickable { })
+//             비밀번호 변경하기 비활성화
+//            Text("비밀번호 변경하기", fontSize = 16.sp, modifier = Modifier.padding(vertical = 12.dp).clickable { })
 
             Spacer(modifier = Modifier.height(24.dp))
 
