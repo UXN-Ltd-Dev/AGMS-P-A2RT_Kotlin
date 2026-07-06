@@ -14,10 +14,11 @@
     <string name="login_email_hint">이메일 주소를 입력해 주세요.</string>
     <string name="login_pwd">비밀번호</string>
     <string name="login_pwd_hint">비밀번호를 입력해 주세요.</string>
-    <string name="login_save_email">이메일 저장</string>
+    <string name="login_save_email">이메일 기억하기</string>
     <string name="login_sign_up">회원가입</string>
     <string name="start_with_email">이메일로 시작하기</string>
     <string name="login_find_pwd">비밀번호 찾기</string>
+    <string name="sign_up">회원가입</string>
     <string name="login_or">또는</string>
     <string name="guide_privacy_policy">개인정보처리방침 안내</string>
 
@@ -62,13 +63,15 @@
     <string name="label_agree_terms_privacy">개인정보 처리방침 및 이용약관에 동의합니다.</string>
 
     <!--  권한 화면 -->
-    <string name="setting_permissions_title">"Always RT앱에서 사용하는\n권한을 알려드려요."</string>
-    <string name="setting_permissions_sub_title">모든 권한을 허용하지 않아도 앱을 사용할 수 있으나 일부 기능이 제한될 수 있어요</string>
+    <string name="setting_permissions_title">"앱 접근 권한 안내"</string>
+    <string name="setting_permissions_sub_title">안전하고 원활한 서비스 제공을 위해 필요한 접근 권한을 안내해 드립니다.</string>
     <string name="notification_permission_title">알림</string>
     <string name="notification_permission_neccessary">[필수]</string>
     <string name="notification_permission_sub_title">알림 메세지 전송</string>
     <string name="nearby_permission_title">근처 기기</string>
     <string name="nearby_permission_sub_title">근처 기기 검색</string>
+    <string name="camera_permission_title">카메라</string>
+    <string name="camera_permission_sub_title">기기 등록을 위한 QR 코드 스캔에 사용됩니다.</string>
     <string name="location_permission_title">위치</string>
     <string name="location_permission_sub_title">BLE 연결 및 통신</string>
     <string name="battery_optimization_permission_title">배터리 사용량 최적화 중지</string>
@@ -87,9 +90,9 @@
     <string name="guide_description_6">"손가락으로 트랜스미터 주위에\n있는 점착패드 주변을 눌러 점착패드가\n피부에 잘 붙도록 합니다."</string>
 
     <!--  기기 등록 화면 -->
-    <string name="register_device_title">"블루투스 연결을 위해\n시리얼 번호를 입력해 주세요."</string>
-    <string name="register_device_sub_title">제품패키지 라벨의 시리얼 번호</string>
-    <string name="enter_serial_number_hint">시리얼 번호를 입력해 주세요.</string>
+    <string name="register_device_title">"블루투스 연결을 위해\n제품번호를 입력해 주세요."</string>
+    <string name="register_device_sub_title">패키지 라벨의 제품 번호</string>
+    <string name="enter_serial_number_hint">번호를 입력해 주세요.</string>
 
     <!--  스캔 화면(연결 중, 실패) -->
     <string name="scanning_title">기기를 검색중입니다.</string>
@@ -98,9 +101,10 @@
     <string name="scan_fail_sub_title">다시 연결하기 전 블루투스 신호와\n기기 번호를 확인해 주세요.</string>
 
     <!--  안정화 화면 -->
-    <string name="stabilizationing_title">남은 시간</string>
+    <string name="stabilization_title">남은 시간</string>
+    <string name="stabilization_content">센서 안정화 중입니다.</string>
     <string name="minute">분</string>
-    <string name="stabilizationing_sub_title">조금만 기다려 주세요.\n센서 안정화 중입니다.</string>
+    <string name="stabilization_sub_title">앱을 닫거나 다른 작업을 하셔도\n안정화는 계속 진행됩니다.\n완료되면 알림으로 알려드립니다.</string>
     <string name="stabilization_complete_title">센서 안정화가</string>
     <string name="stabilization_complete_sub_title">완료되었습니다.</string>
 
@@ -293,6 +297,7 @@
     <string name="permission_bluetooth_scan">BLE 사용을 위해 근처 기기 권한을 허용해 주세요.</string>
     <string name="permission_bluetooth_connect">BLE 권한을 허용해 주세요.</string>
     <string name="permission_post_notifications">알림 메시지 전송을 위해 권한을 허용해 주세요.</string>
+    <string name="permission_camera">기기 등록을 위한 QR 코드 스캔에 사용됩니다.</string>
 
     <!--  스낵바  -->
     <string name="snakbar_complete_update">새 버전 다운로드가 완료되었습니다.</string>

@@ -630,8 +630,22 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
             Row(
                 modifier = Modifier.fillMaxWidth()
                     .padding(bottom = 60.dp),
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
+
+                Text(
+                    text = stringResource(R.string.sign_up),
+                    fontSize = 16.sp,
+                    color = colorResource(id = R.color.text_secondary),
+                    modifier = Modifier.clickable {
+                        if (isNetworkAvailable(context)) {
+                            navController.navigate("SignUpAgreeScreen1/${1803}/${"uxn signup"}")
+                        } else {
+                            Toast.makeText(context, R.string.toast_network_error, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+
                 Text(
                     text = stringResource(R.string.login_find_pwd),
                     fontSize = 16.sp,

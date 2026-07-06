@@ -676,8 +676,8 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(8.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(22.dp)
     ) {
         // 날짜 선택기 영역
         Row(
@@ -723,11 +723,11 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
                     .clickable { showDatePicker = true },
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.calendar_icon),
-                    contentDescription = "Calendar"
-                )
-//                Icon(Icons.Default.DateRange, contentDescription = "Calendar")
+//                Image(
+//                    painter = painterResource(id = R.drawable.calendar_icon),
+//                    contentDescription = "Calendar"
+//                )
+                Icon(Icons.Default.DateRange, contentDescription = "Calendar")
             }
         }
 
@@ -762,80 +762,6 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
                 }
             }
         }
-
-        TirCard(
-            glucoseValues = actualGlucoseValues,
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(0.22f)
-        )
-
-        // 요약 정보 카드 (평균 / 최고, 최저)
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .weight(0.2f)
-//            ,
-//            horizontalArrangement = Arrangement.spacedBy(16.dp)
-//        ) {
-//            // 평균 카드
-//            Card(
-//                modifier = Modifier.weight(1f),
-//                colors = CardDefaults.cardColors(containerColor = Color.White),
-//                shape = RoundedCornerShape(16.dp)
-//            ) {
-//                Column(modifier = Modifier.padding(16.dp)) {
-//                    Text("평균", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-//                    Spacer(modifier = Modifier.height(8.dp))
-//                    Row(verticalAlignment = Alignment.Bottom) {
-//                        Text(
-//                            text = averageGlucose?.toString() ?: "--",
-//                            fontSize = 24.sp,
-//                            fontWeight = FontWeight.Bold,
-//                            color = AlertGreen
-//                        )
-//                        Text(" mg/dL", fontSize = 9.sp, modifier = Modifier.padding(bottom = 4.dp))
-//                    }
-//                }
-//            }
-//
-//            // 최고/최저 카드
-//            Card(
-//                modifier = Modifier.weight(1.5f),
-//                colors = CardDefaults.cardColors(containerColor = Color.White),
-//                shape = RoundedCornerShape(16.dp)
-//            ) {
-//                Row(
-//                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-//                    horizontalArrangement = Arrangement.SpaceBetween
-//                ) {
-//                    Column {
-//                        Text("최고", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-//                        Spacer(modifier = Modifier.height(8.dp))
-//                        Row(verticalAlignment = Alignment.Bottom) {
-//                            Text(
-//                                text = highestGlucose?.toString() ?: "--",
-//                                fontSize = 24.sp,
-//                                fontWeight = FontWeight.Bold
-//                            )
-//                            Text(" mg/dL", fontSize = 9.sp, modifier = Modifier.padding(bottom = 4.dp))
-//                        }
-//                    }
-//                    Column {
-//                        Text("최저", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-//                        Spacer(modifier = Modifier.height(8.dp))
-//                        Row(verticalAlignment = Alignment.Bottom) {
-//                            Text(
-//                                text = lowestGlucose?.toString() ?: "--",
-//                                fontSize = 24.sp,
-//                                fontWeight = FontWeight.Bold
-//                            )
-//                            Text(" mg/dL", fontSize = 9.sp, modifier = Modifier.padding(bottom = 4.dp))
-//                        }
-//                    }
-//                }
-//            }
-//        }
 
         // 하단 버튼 영역
         Button(
