@@ -172,8 +172,8 @@
     <string name="glucose_entry_time_notificaition">혈당값 입력 시간 알림</string>
     <string name="delete_account_title">계정을 삭제하시겠습니까?</string>
     <string name="delete_account_sub_title">계정을 삭제할 경우</string>
-    <string name="delete_account_content_1">동일한 이메일 주소를 사용하는 관련 Always\n앱 계정의 모든 데이터를 잃게 됩니다.</string>
-    <string name="delete_account_content_2">현재 사용하고 계신 Always 제품의 연결이 끊\n기게 됩니다.</string>
+    <string name="delete_account_content_1">동일한 이메일 주소를 사용하는 관련 Always\nRT 앱 계정의 모든 데이터를 잃게 됩니다.</string>
+    <string name="delete_account_content_2">현재 사용하고 계신 AlwaysRT제품의 연결이\n끊기게 됩니다.</string>
     <string name="delete_account_content_3">계정을 삭제하면 이 앱에서 로그아웃됩니다.\n세션이 만료되기까지 최대 1시간이 소요 될 수 있습니다.</string>
     <string name="delete_account_content_4">계정 삭제 후 다시 돌아오셔서 새로운 계정을 만들 수\n있습니다.</string>
     <string name="delete_account_alert_1">계정을 삭제하시겠습니까?</string>

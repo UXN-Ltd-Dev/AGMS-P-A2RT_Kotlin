@@ -78,7 +78,7 @@ fun SettingListScreen(
             SensorInfoScreen(navController, bleViewModel, onSensorEnded)
         }
         composable("delete_account") {
-            DeleteAccountScreen(navController)
+            DeleteAccountScreen(navController, bleViewModel)
         }
         composable("alarm_settings") { AlarmSettingsScreen(navController) }
         composable("app_info") { AppInfoScreen(navController) }
@@ -491,7 +491,7 @@ fun UserInfoScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(32.dp))
             Text("회원탈퇴", color = AlertRed, fontSize = 14.sp, modifier = Modifier.clickable {
-                showDeleteAccountDialog.value = true
+                navController.navigate("delete_account")
             })
             Spacer(modifier = Modifier.height(32.dp))
         }
