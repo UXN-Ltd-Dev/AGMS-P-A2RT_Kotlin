@@ -73,7 +73,10 @@ import java.util.Timer
 import java.util.TimerTask
 import java.time.Duration
 import java.time.LocalDate
+import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.roundToInt
 
 class AlwaysA2RTService() : Service() {
     companion object {
@@ -96,6 +99,9 @@ class AlwaysA2RTService() : Service() {
 
     private val localBinder = LocalBinder()
     var count = 1
+    private val guestMinuteTargets = listOf(60, 110, 200, 110)
+    private var guestMinuteTargetIndex = 1
+    private var guestPreviousGlucose = 60
 
     private var timerForNoti: Timer? = null
     private var timerTaskForNoti: TimerTask? = null
@@ -278,37 +284,55 @@ class AlwaysA2RTService() : Service() {
                             try {
                                 val glucoseDummyList = tokenRetrofit.getDummyGlucose(count)
                                 if (glucoseDummyList.isSuccessful) {
-                                    count++
                                     val glucoseListBody = glucoseDummyList.body()
                                     val latestResponse = glucoseListBody?.lastOrNull()
-                                    val lastGlucose = latestResponse?.glucose?.lastOrNull()
-                                    if (latestResponse != null && lastGlucose != null) {
+                                    val receivedGlucose = latestResponse?.glucose?.lastOrNull()
+                                    count++
+                                    if (latestResponse != null && receivedGlucose != null) {
                                         val userId = DataStoreManager.getUserId().first() ?: -1
                                         val formatter =
                                             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
+                                        val now = System.currentTimeMillis()
+                                        val targetGlucose =
+                                            guestMinuteTargets[guestMinuteTargetIndex]
+                                        val insertDataList = (0 until 6).map { offset ->
+                                            val progress = offset / 5.0
+                                            val easedProgress = (1.0 - cos(PI * progress)) / 2.0
+                                            val interpolatedGlucose = guestPreviousGlucose +
+                                                (targetGlucose - guestPreviousGlucose) * easedProgress
+                                            val glucose =
+                                                (interpolatedGlucose / 5.0).roundToInt() * 5
+                                            val time = now - (5 - offset) * 10_000L
+                                            val formattedTime = LocalDateTime.ofInstant(
+                                                Instant.ofEpochMilli(time),
+                                                ZoneId.of("Asia/Seoul")
+                                            ).format(formatter)
+
+                                            UserGlucose(
+                                                userId = userId,
+                                                glucose = glucose.toDouble(),
+                                                weo1 = 0.0,
+                                                weo2 = 0.0,
+                                                createdAt = formattedTime,
+                                                createdAtLong = time
+                                            )
+                                        }
+                                        guestPreviousGlucose = targetGlucose
+                                        guestMinuteTargetIndex =
+                                            (guestMinuteTargetIndex + 1) % guestMinuteTargets.size
+                                        val lastGlucose = insertDataList.last().glucose.toInt()
+
                                         Log.e("TEST", "glucoseListBody : ${glucoseListBody}")
                                         Log.e(
-                                            "TEST", "last : $lastGlucose")
-
-                                        val now = System.currentTimeMillis()
-//                                        val localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(now), ZoneId.of("Asia/Seoul"))
-                                        val localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(now), ZoneId.of("Asia/Seoul"))
-                                        val formattedTime = localDateTime.format(formatter)
-
-                                        val insertData = UserGlucose(
-                                            userId = userId,
-                                            glucose = lastGlucose.toDouble(),
-                                            weo1 = 0.0,
-                                            weo2 = 0.0,
-                                            createdAt = formattedTime,
-                                            createdAtLong = now
+                                            "TEST",
+                                            "received: $receivedGlucose, displayed: $lastGlucose"
                                         )
 
-                                        Log.e("TEST", "insertData : ${insertData}")
+                                        Log.e("TEST", "insertDataList : $insertDataList")
 
                                         // db에 저장
-                                        localDbRepository?.dataDao()?.insertGlucose(listOf(insertData))
+                                        localDbRepository?.dataDao()?.insertGlucose(insertDataList)
 
                                         // ui에 마지막 글루코즈 값 갱신
                                         BleBridge.updateGlucose(lastGlucose)
@@ -916,6 +940,7 @@ class AlwaysA2RTService() : Service() {
 
                 val deviceMac = DataStoreManager.getDeviceMac().first().orEmpty()
                 val userId = DataStoreManager.getUserId().first() ?: -1
+                val userDeviceId = DataStoreManager.getUserDeviceId().first() ?: -1
                 val deviceType = DataStoreManager.getDeviceType().first()
 
 //                if (deviceMac.isBlank()) {
@@ -953,6 +978,7 @@ class AlwaysA2RTService() : Service() {
                         baseContext,
                         deviceMac,
                         userId,
+                        userDeviceId,
                         applicationContext,
                         protocol
                     )

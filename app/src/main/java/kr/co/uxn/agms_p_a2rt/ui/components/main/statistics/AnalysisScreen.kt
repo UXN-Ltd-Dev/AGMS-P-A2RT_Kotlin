@@ -84,6 +84,7 @@ import com.patrykandpatrick.vico.core.common.shape.CorneredShape
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import kr.co.uxn.agms_p_a2rt.GuestList
 import kr.co.uxn.agms_p_a2rt.R
 import kr.co.uxn.agms_p_a2rt.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p_a2rt.api.token.DataStoreManager
@@ -124,7 +125,8 @@ private val AnalysisGlucoseLowColor = Color(0xFF8FAEFF)
 private val AnalysisGlucoseTargetRangeColor = Color(0x2E9B9797)
 private val AnalysisEventTextColor = Color(0xFFC74B3C)
 private const val MissingGlucoseValue = -10.0
-private const val DailyBucketMinutes = 5L
+private const val DailyBucketMinutes = 1L
+private val AnalysisGuestInitialZoom = Zoom.x(6.0) // 점과 점 사이 간격
 
 private data class AnalysisEvent(
     val timeMillis: Long,
@@ -533,6 +535,7 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
     var dailyGlucoseData by remember { mutableStateOf<List<UserGlucose>>(emptyList()) }
     var dailyEvents by remember { mutableStateOf<List<AnalysisEvent>>(emptyList()) }
     var isChartLoading by remember { mutableStateOf(true) }
+    var isGuestUser by remember { mutableStateOf(false) }
     var selectedDayStartMillis by remember { mutableLongStateOf(0L) }
     var selectedMarkerTimeMillis by remember(selectedDate) { mutableStateOf<Long?>(null) }
     val formattedDate = remember(selectedDate) {
@@ -575,8 +578,10 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
         val now = System.currentTimeMillis()
         val today = LocalDate.now(zoneId)
 
-        val (chartData, events) = withContext(Dispatchers.IO) {
+        val (chartData, events, guestUser) = withContext(Dispatchers.IO) {
             val userId = DataStoreManager.getUserId().first() ?: -1
+            val userEmail = DataStoreManager.getEmail().first().orEmpty()
+            val isGuest = GuestList.getGuestList().contains(userEmail)
             val source = if (DemoGlucoseConfig.ENABLED) {
                 createAnalysisDemoGlucoseData(
                     userId = userId,
@@ -591,7 +596,7 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
                         userId = userId,
                         startTime = dayStartMillis,
                         endTime = nextDayStartMillis
-                    )
+                )
                     .orEmpty()
             }
                 .filter { selectedDate != today || it.createdAtLong <= now }
@@ -631,12 +636,13 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
                 }
             }.getOrDefault(emptyList())
 
-            filledChartData to selectedDayEvents
+            Triple(filledChartData, selectedDayEvents, isGuest)
         }
 
         selectedDayStartMillis = dayStartMillis
         dailyGlucoseData = chartData
         dailyEvents = events
+        isGuestUser = guestUser
         isChartLoading = false
     }
 
@@ -757,6 +763,8 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
                         dayStartMillis = selectedDayStartMillis,
                         zoneId = ZoneId.systemDefault(),
                         onMarkerTimeSelected = { selectedMarkerTimeMillis = it },
+                        isGuestUser = isGuestUser,
+                        initialZoom = if (isGuestUser) AnalysisGuestInitialZoom else Zoom.Content,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -804,33 +812,42 @@ fun DetailRecordContent() {
     val context = LocalContext.current
     val zoneId = remember { ZoneId.systemDefault() }
     var detailGlucoseValues by remember { mutableStateOf<List<Double>>(emptyList()) }
-
-    LaunchedEffect(selectedFilter) {
-        val now = System.currentTimeMillis()
-        val today = LocalDate.now(zoneId)
-        val unit = when (selectedFilter) {
-            "주" -> DetailAverageUnit.WEEK
-            "월" -> DetailAverageUnit.MONTH
-            else -> DetailAverageUnit.DAY
-        }
-        val periods = buildDetailAveragePeriods(
-            unit = unit,
+    val today = LocalDate.now(zoneId)
+    val selectedUnit = when (selectedFilter) {
+        "주" -> DetailAverageUnit.WEEK
+        "월" -> DetailAverageUnit.MONTH
+        else -> DetailAverageUnit.DAY
+    }
+    val detailPeriods = remember(selectedUnit, today, zoneId) {
+        buildDetailAveragePeriods(
+            unit = selectedUnit,
             today = today,
             zoneId = zoneId,
             locale = Locale.getDefault()
         )
+    }
+    val detailDateRange = remember(detailPeriods, today, zoneId) {
+        val formatter = DateTimeFormatter.ofPattern("MM.dd", Locale.getDefault())
+        val startDate = Instant.ofEpochMilli(detailPeriods.first().startTimeMillis)
+            .atZone(zoneId)
+            .toLocalDate()
+        "${startDate.format(formatter)}~${today.format(formatter)}"
+    }
+
+    LaunchedEffect(detailPeriods) {
+        val now = System.currentTimeMillis()
 
         detailGlucoseValues = withContext(Dispatchers.IO) {
             val userId = DataStoreManager.getUserId().first() ?: -1
             val glucoseData = if (DemoGlucoseConfig.ENABLED) {
-                createDetailDemoGlucoseData(periods, now, zoneId)
+                createDetailDemoGlucoseData(detailPeriods, now, zoneId)
             } else {
                 AppDatabase.getInstance(context)
                     ?.dataDao()
                     ?.getGlucoseListBetween(
                         userId = userId,
-                        startTime = periods.first().startTimeMillis,
-                        endTime = minOf(periods.last().endTimeMillis, now + 1L)
+                        startTime = detailPeriods.first().startTimeMillis,
+                        endTime = minOf(detailPeriods.last().endTimeMillis, now + 1L)
                     )
                     .orEmpty()
             }
@@ -873,7 +890,8 @@ fun DetailRecordContent() {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
                 modifier = Modifier
@@ -902,13 +920,27 @@ fun DetailRecordContent() {
                     }
                 }
             }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.48f)
+                    .background(Color.White, RoundedCornerShape(20.dp))
+                    .padding(vertical = 6.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = detailDateRange,
+                    color = TextDark,
+                    fontSize = 14.sp
+                )
+            }
         }
 
         TirCard(
             glucoseValues = detailGlucoseValues,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(150.dp)
+                .height(210.dp)
 
         )
 
@@ -973,8 +1005,8 @@ private fun TirCard(
             List(5) { 0 }
         } else {
             val counts = listOf(
-                glucoseValues.count { it < 50.0 },
-                glucoseValues.count { it >= 50.0 && it < 70.0 },
+                glucoseValues.count { it < 54.0 },
+                glucoseValues.count { it >= 54.0 && it < 70.0 },
                 glucoseValues.count { it >= 70.0 && it <= 180.0 },
                 glucoseValues.count { it > 180.0 && it <= 250.0 },
                 glucoseValues.count { it > 250.0 }
@@ -990,12 +1022,12 @@ private fun TirCard(
             rounded
         }
     }
-    val ranges = listOf(
-        Color(0xFFD9D9D9) to Color.Black,
-        Color(0xFFFF3B3B) to Color.Black,
-        Color(0xFF34C759) to Color.White,
-        Color(0xFFFFC928) to Color.Black,
-        Color(0xFFFF8A24) to Color.Black
+    val rangeColors = listOf(
+        Color(0xFFD9D9D9),
+        Color(0xFFFF3B3B),
+        Color(0xFF34C759),
+        Color(0xFFFFC928),
+        Color(0xFFFF8A24)
     )
 
     Card(
@@ -1028,7 +1060,7 @@ private fun TirCard(
                         Text("데이터 없음", color = TextGray, fontSize = 11.sp)
                     }
                 } else {
-                    ranges.forEachIndexed { index, (color, textColor) ->
+                    rangeColors.forEachIndexed { index, color ->
                         val percentage = percentages[index]
                         if (percentage > 0) {
                             Box(
@@ -1039,13 +1071,15 @@ private fun TirCard(
                                     .clipToBounds(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = "$percentage%",
-                                    color = textColor,
-                                    fontSize = 10.sp,
-                                    maxLines = 1,
-                                    fontWeight = if (index == 2) FontWeight.Bold else FontWeight.Normal
-                                )
+                                if (index == 2) {
+                                    Text(
+                                        text = "$percentage%",
+                                        color = Color.White,
+                                        fontSize = 10.sp,
+                                        maxLines = 1,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         }
                     }
@@ -1061,7 +1095,7 @@ private fun TirCard(
                     val show50 = maxWidth * (boundary70 - boundary50) / 100f >= 24.dp
                     val show250 = maxWidth * (boundary250 - boundary180) / 100f >= 32.dp
                     val labels = listOf(
-                        Triple("50", boundary50, show50),
+                        Triple("54", boundary50, show50),
                         Triple("70", boundary70, true),
                         Triple("180", boundary180, true),
                         Triple("250", boundary250, show250)
@@ -1079,7 +1113,58 @@ private fun TirCard(
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(modifier = Modifier.fillMaxWidth()) {
+                TirLegendItem(
+                    color = rangeColors[4],
+                    label = "매우 높음(>250): ${percentages[4]}%",
+                    modifier = Modifier.weight(1f)
+                )
+                TirLegendItem(
+                    color = rangeColors[3],
+                    label = "높음(>180): ${percentages[3]}%",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(modifier = Modifier.fillMaxWidth()) {
+                TirLegendItem(
+                    color = rangeColors[1],
+                    label = "낮음(<70): ${percentages[1]}%",
+                    modifier = Modifier.weight(1f)
+                )
+                TirLegendItem(
+                    color = rangeColors[0],
+                    label = "매우 낮음(<54): ${percentages[0]}%",
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun TirLegendItem(
+    color: Color,
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(12.dp)
+                .background(color, RoundedCornerShape(50))
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = label,
+            color = TextDark,
+            fontSize = 11.sp,
+            maxLines = 1
+        )
     }
 }
 
@@ -1091,6 +1176,8 @@ private fun DailyGlucoseChart(
     dayStartMillis: Long,
     zoneId: ZoneId,
     onMarkerTimeSelected: (Long) -> Unit,
+    isGuestUser: Boolean,
+    initialZoom: Zoom = Zoom.Content,
     modifier: Modifier = Modifier
 ) {
     val modelProducer = remember { CartesianChartModelProducer() }
@@ -1129,11 +1216,29 @@ private fun DailyGlucoseChart(
     val firstX = xValues.first()
     val middleX = xValues[xValues.lastIndex / 2]
     val lastX = xValues.last()
+    val latestActualX = remember(data, xValues) {
+        data.indexOfLast { it.glucose != MissingGlucoseValue }
+            .takeIf { it >= 0 }
+            ?.let { xValues[it] }
+            ?: lastX
+    }
+    // 게스트 차트는 최초 진입 시에만 최신 데이터로 포커싱한다.
+    // 데이터가 추가될 때마다 이 값이 바뀌면 사용자의 가로 스크롤을 다시 덮어쓰게 된다.
+    val initialFocusX = remember(dayStartMillis, isGuestUser) { latestActualX }
+    // Scroll.Absolute.x는 호출할 때마다 새 객체를 만든다. 이를 바로 전달하면 재구성 시
+    // VicoScrollState가 초기화되어 드래그한 위치가 즉시 원래 위치로 돌아간다.
+    val initialScroll = remember(initialFocusX) {
+        Scroll.Absolute.x(initialFocusX, bias = 1f)
+    }
     val scrollState = rememberVicoScrollState(
         scrollEnabled = true,
-        initialScroll = Scroll.Absolute.End,
-        autoScroll = Scroll.Absolute.End,
-        autoScrollCondition = AutoScrollCondition.OnModelGrowth
+        initialScroll = initialScroll,
+        autoScroll = initialScroll,
+        autoScrollCondition = if (isGuestUser) {
+            AutoScrollCondition.Never
+        } else {
+            AutoScrollCondition.OnModelGrowth
+        }
     )
     val rangeProvider = remember {
         CartesianLayerRangeProvider.fixed(minY = 50.0, maxY = 350.0)
@@ -1301,21 +1406,21 @@ private fun DailyGlucoseChart(
             fill = fill(Color.Black),
             shape = CorneredShape.Pill
         ),
-        size = 4.dp
+        size = if (isGuestUser) 6.dp else 4.dp
     )
     val highPoint = LineCartesianLayer.point(
         rememberShapeComponent(
             fill = fill(Color.Black),
             shape = CorneredShape.Pill
         ),
-        size = 4.dp
+        size = if (isGuestUser) 6.dp else 4.dp
     )
     val lowPoint = LineCartesianLayer.point(
         rememberShapeComponent(
             fill = fill(Color.Black),
             shape = CorneredShape.Pill
         ),
-        size = 4.dp
+        size = if (isGuestUser) 6.dp else 4.dp
     )
     val pointProvider = remember(hiddenPoint, normalPoint, highPoint, lowPoint) {
         object : LineCartesianLayer.PointProvider {
@@ -1326,8 +1431,6 @@ private fun DailyGlucoseChart(
             ): LineCartesianLayer.Point {
                 return when {
                     entry.y == MissingGlucoseValue -> hiddenPoint
-//                    entry.y > 180.0 -> highPoint
-//                    entry.y < 80.0 -> lowPoint
                     else -> normalPoint
                 }
             }
@@ -1453,7 +1556,7 @@ private fun DailyGlucoseChart(
         animateIn = false,
         zoomState = rememberVicoZoomState(
             zoomEnabled = true,
-            initialZoom = Zoom.Content
+            initialZoom = initialZoom
         )
     )
 }

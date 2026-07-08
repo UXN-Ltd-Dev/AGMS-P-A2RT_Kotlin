@@ -90,7 +90,7 @@ class I10Device() : Protocol {
 
     val BASE_TIME: Long = 1767193200 // 26년 1월 1일 00시 00분 00초;
 
-    override fun runProtocol(db: AppDatabase?, data: ByteArray, userId: Int): ByteArray? {
+    override fun runProtocol(db: AppDatabase?, data: ByteArray, userId: Int, userDeviceId: Int): ByteArray? {
         val crc1 = java.lang.Byte.toUnsignedInt(data[INDEX_CRC_START])
         val crc2 = java.lang.Byte.toUnsignedInt(data[INDEX_CRC_END])
         Log.d(TEST, "crc1 : $crc1, crc2 : $crc2")
@@ -148,7 +148,7 @@ class I10Device() : Protocol {
                 }
                 CMD_IMPEDANCE -> {
                     Log.d(TEST, "IMPEDANCE START!")
-                    val success: Boolean = insertImpedance(db, data, userId)
+                    val success: Boolean = insertImpedance(db, data, userId, userDeviceId)
                     if (success) {
                         response = makeByteArray(STATUS_NO_ERROR, cmdId)
                         Log.e(TEST, "==============IMPEDANCE_NO_ERROR========================")
@@ -368,11 +368,8 @@ class I10Device() : Protocol {
         }
     }
 
-    private fun insertImpedance(db: AppDatabase?, data: ByteArray, userId: Int): Boolean {
+    private fun insertImpedance(db: AppDatabase?, data: ByteArray, userId: Int, userDeviceId: Int): Boolean {
         try {
-            val frequencyType = "10Khz"
-
-            val dataSize = ((data[INDEX_DATA_LENGTH].toInt() and 0xFF) shl 8) or (data[INDEX_RESERVED].toInt() and 0xFF)
 
             val unixFirst = data[INDEX_UNIX_FIRST]
             val unixSecond = data[INDEX_UNIX_SECOND]
@@ -406,40 +403,66 @@ class I10Device() : Protocol {
             Log.e("IMPEDANCE", "a2rt temperature : $vTemperature")
             val temperature = (vTemperature / 100.0)
 
-            val real = (((data[INDEX_REAL_FIRST].toLong() and 0xFFL) shl 24) or
-                            ((data[INDEX_REAL_SECOND].toLong() and 0xFFL) shl 16) or
-                            ((data[INDEX_REAL_THIRD].toLong() and 0xFFL) shl 8) or
-                            (data[INDEX_REAL_FOURTH].toLong() and 0xFFL)
-                    ).toInt().toLong()
 
-            val imaginary = (((data[INDEX_IMAGINARY_FIRST].toLong() and 0xFFL) shl 24) or
-                            ((data[INDEX_IMAGINARY_SECOND].toLong() and 0xFFL) shl 16) or
-                            ((data[INDEX_IMAGINARY_THIRD].toLong() and 0xFFL) shl 8) or
-                            (data[INDEX_IMAGINARY_FOURTH].toLong() and 0xFFL)
-                    ).toInt().toLong()
+            val dataCount = 3
+            val dataStep = 16
+            val frequencyTypes = arrayOf("1Hz", "10Hz", "25Hz")
+            val saveDataList = mutableListOf<A2RTData>()
 
-            val magnitude = (((data[INDEX_MAGNITUDE_FIRST].toLong() and 0xFFL) shl 24) or
-                            ((data[INDEX_IMAGINARY_SECOND].toLong() and 0xFFL) shl 16) or
-                            ((data[INDEX_IMAGINARY_THIRD].toLong() and 0xFFL) shl 8) or
-                            (data[INDEX_IMAGINARY_FOURTH].toLong() and 0xFFL)
-                    ).toInt().toLong()
+            for (i in 0 until dataCount) {
+                val offset = i * dataStep
+                val realFirst = INDEX_REAL_FIRST + offset
+                val realSecond = INDEX_REAL_SECOND + offset
+                val realThird = INDEX_REAL_THIRD + offset
+                val realFourth = INDEX_REAL_FOURTH + offset
 
-            val phase = (((data[INDEX_PHASE_FIRST].toLong() and 0xFFL) shl 24) or
-                            ((data[INDEX_PHASE_SECOND].toLong() and 0xFFL) shl 16) or
-                            ((data[INDEX_PHASE_THIRD].toLong() and 0xFFL) shl 8) or
-                            (data[INDEX_PHASE_FOURTH].toLong() and 0xFFL)
-                    ).toInt().toLong()
-            Log.e("IMPEDANCE", "real : $real | imaginary : $imaginary | magnitude : $magnitude | phase : $phase")
+                val imaginaryFirst = INDEX_IMAGINARY_FIRST + offset
+                val imaginarySecond = INDEX_IMAGINARY_SECOND + offset
+                val imaginaryThird = INDEX_IMAGINARY_THIRD + offset
+                val imaginaryFourth = INDEX_IMAGINARY_FOURTH + offset
+
+                val magnitudeFirst = INDEX_MAGNITUDE_FIRST + offset
+                val magnitudeSecond = INDEX_MAGNITUDE_SECOND + offset
+                val magnitudeThird = INDEX_MAGNITUDE_THIRD + offset
+                val magnitudeFourth = INDEX_MAGNITUDE_FOURTH + offset
+
+                val phaseFirst = INDEX_PHASE_FIRST + offset
+                val phaseSecond = INDEX_PHASE_SECOND + offset
+                val phaseThird = INDEX_PHASE_THIRD + offset
+                val phaseFourth = INDEX_PHASE_FOURTH + offset
+
+                val real = (((data[realFirst].toLong() and 0xFFL) shl 24) or
+                        ((data[realSecond].toLong() and 0xFFL) shl 16) or
+                        ((data[realThird].toLong() and 0xFFL) shl 8) or
+                        (data[realFourth].toLong() and 0xFFL)
+                        ).toInt().toLong()
+
+                val imaginary = (((data[imaginaryFirst].toLong() and 0xFFL) shl 24) or
+                        ((data[imaginarySecond].toLong() and 0xFFL) shl 16) or
+                        ((data[imaginaryThird].toLong() and 0xFFL) shl 8) or
+                        (data[imaginaryFourth].toLong() and 0xFFL)
+                        ).toInt().toLong()
+
+                val magnitude = (((data[magnitudeFirst].toLong() and 0xFFL) shl 24) or
+                        ((data[magnitudeSecond].toLong() and 0xFFL) shl 16) or
+                        ((data[magnitudeThird].toLong() and 0xFFL) shl 8) or
+                        (data[magnitudeFourth].toLong() and 0xFFL)
+                        ).toInt().toLong()
+
+                val phase = (((data[phaseFirst].toLong() and 0xFFL) shl 24) or
+                        ((data[phaseSecond].toLong() and 0xFFL) shl 16) or
+                        ((data[phaseThird].toLong() and 0xFFL) shl 8) or
+                        (data[phaseFourth].toLong() and 0xFFL)
+                        ).toInt().toLong()
+
+                Log.e("IMPEDANCE", "frequency : ${frequencyTypes[i]} | real : $real | imaginary : $imaginary | magnitude : $magnitude | phase : $phase")
+
+                saveDataList.add(A2RTData(userDeviceId, frequencyTypes[i], time, temperature, real, imaginary, magnitude, phase))
+            }
 
             CoroutineScope(Dispatchers.IO).launch {
-                val userDeviceId = DataStoreManager.getUserDeviceId().first()
-                if (userDeviceId != null) {
-                    val saveData = A2RTData(userDeviceId = userDeviceId, frequencyType = frequencyType, createdAt = time, temperature = temperature, real = real, imaginary = imaginary, magnitude = magnitude, phase = phase)
-                    db?.dataDao()?.insertA2RTData(saveData)
-                    Log.e("IMPEDANCE", "======== IMPEDANCE DB INSERT 성공 =========")
-                } else {
-                    Log.e("IMPEDANCE", "user_device_id가 없어 IMPEDANCE DB INSERT를 건너뜁니다.")
-                }
+                db?.dataDao()?.insertA2RTDataList(saveDataList)
+                Log.e("IMPEDANCE", "======== IMPEDANCE DB INSERT 성공 =========")
             }
             return true
         } catch (e: Exception) {

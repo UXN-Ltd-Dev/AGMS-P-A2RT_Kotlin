@@ -65,7 +65,7 @@ class F23UTCDevice() : Protocol {
     val STATUS_NO_ERROR = 0x00.toByte()
     val STATUS_TIME_ERROR = 0x12.toByte()
 
-    override fun runProtocol(db: AppDatabase?, data: ByteArray, userId: Int): ByteArray? {
+    override fun runProtocol(db: AppDatabase?, data: ByteArray, userId: Int, userDeviceId: Int): ByteArray? {
         val crc1 = java.lang.Byte.toUnsignedInt(data[INDEX_CRC_START])
         val crc2 = java.lang.Byte.toUnsignedInt(data[INDEX_CRC_END])
         Log.d(TEST, "crc1 : $crc1, crc2 : $crc2")

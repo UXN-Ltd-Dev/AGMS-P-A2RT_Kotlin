@@ -152,19 +152,21 @@ import kr.co.uxn.agms_p_a2rt.ble.BleBridge.showLowGlucoseDialog
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.ContentScale
 import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 import kotlin.random.Random
 
 private val GlucoseNormalPointColor = Color(0xFF65B66F)
 private val GlucoseHighPointColor = Color(0xFFFFA12B)
 private val GlucoseLowPointColor = Color(0xFF8FAEFF)
 private val GlucoseTargetRangeColor = Color(0x2E9B9797)
+private val HomeInitialZoom = Zoom.x(5.0)
 
 internal object DemoGlucoseConfig {
     val ENABLED = BuildConfig.DEMO_GLUCOSE_ENABLED
     const val HOME_HISTORY_HOURS = 24L
     const val HOME_INTERVAL_MINUTES = 5L
     const val ANALYSIS_HISTORY_DAYS = 10L
-    const val ANALYSIS_INTERVAL_MINUTES = 5L
+    const val ANALYSIS_INTERVAL_MINUTES = 1L
 }
 
 private fun createDemoGlucoseData(
@@ -397,14 +399,15 @@ fun HomeScreen(
             fullXRange: ClosedFloatingPointRange<Double>,
             maxLabelWidth: Float
         ): List<Double> {
-            if (x.isEmpty()) {
-                return listOf(
+            return if (x.isEmpty()) {
+                listOf(
                     visibleXRange.start,
                     (visibleXRange.start + visibleXRange.endInclusive) / 2.0,
                     visibleXRange.endInclusive
                 ).distinct()
+            } else {
+                getFixedAxisLabelValues()
             }
-            return getFixedAxisLabelValues()
         }
 
         // 그래프 좌측 마진
@@ -542,7 +545,7 @@ fun HomeScreen(
                 glucoseData.sortBy { it.createdAtLong }
                 totalEntryCount.value = glucoseData.size
 
-                if (glucoseData.isNotEmpty()) {
+                if (glucoseData.isNotEmpty() && !isGuest) {
                     val minuteFormatter =
                         SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
                     val intervalMinutes = if (isGuest) 1L else 5L
@@ -579,9 +582,16 @@ fun HomeScreen(
                 }
 
                 glucoseData.sortBy { it.createdAtLong }
+                if (isGuest && glucoseData.isNotEmpty()) {
+                    val rangeStartMinutes = (lastTime - baseTime) / 60_000.0
+                    nextX.add((rangeStartMinutes * 10_000).roundToLong() / 10_000.0)
+                    nextY.add(-10f)
+                }
                 glucoseData.forEach { data ->
+                    val rawTimeDiffMinutes =
+                        (data.createdAtLong - baseTime) / 60_000.0
                     val timeDiffMinutes =
-                        ((data.createdAtLong - baseTime) / 1000 / 60).toDouble()
+                        (rawTimeDiffMinutes * 10_000).roundToLong() / 10_000.0
                     nextX.add(timeDiffMinutes)
                     nextY.add(data.glucose.toFloat())
                 }
@@ -939,8 +949,7 @@ fun HomeScreen(
                                     showModeDialog.value = true
                                 }
                             )
-                        } else {
-                            detectTapGestures(
+                        } else { detectTapGestures(
                                 onLongPress = {
                                     // 롱클릭 시 실행할 코드
                                     Log.d("TEST", "I'm guest : ${email.value}")
@@ -1198,42 +1207,7 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(4.dp)
-                    .weight(1f)
-                    .pointerInput(Unit) {
-                        if (GuestList.getVipList().contains(email.value)) {
-                            detectTapGestures(
-                                onDoubleTap = {
-                                    val newMax =
-                                        if (selectedChartOption == context.getString(R.string.chart_option_glucose)) {
-                                            if (currentYMax == 250.0) 500.0 else 250.0
-                                        } else {
-                                            if (currentYMax == 250.0) {
-                                                50.0
-                                            } else if (currentYMax == 50.0) {
-                                                20.0
-                                            } else if (currentYMax == 20.0) {
-                                                5.0
-                                            } else {
-                                                50.0
-                                            }
-                                        }
-                                    Log.d("TEST", "email : ${email.value}")
-                                    Log.d("TEST", "더블탭! old: $currentYMax -> $newMax")
-                                    setYMax(newMax)
-                                    forceRecompose++
-                                }
-                            )
-
-                        } else {
-
-                            detectTapGestures(
-                                onDoubleTap = {
-                                    Log.d("TEST", "I'm guest : ${email.value}")
-                                }
-                            )
-
-                        }
-                    },
+                    .weight(1f),
                 color = Color.Transparent
             ) {
                 Column(
@@ -1330,7 +1304,6 @@ fun HomeScreen(
                             }
                         }
                     }
-
                     val normalPoint = LineCartesianLayer.point(
                         rememberShapeComponent(
                             fill = fill(Color.Black),
@@ -1553,9 +1526,11 @@ fun HomeScreen(
                                     .fillMaxWidth()
                                     .weight(1f),
                                 scrollState = chartScrollSpec,
+                                animationSpec = null,
+                                animateIn = false,
                                 zoomState = rememberVicoZoomState(
                                     zoomEnabled = true,
-                                    initialZoom = Zoom.Content
+                                    initialZoom = HomeInitialZoom
                                 )
                             )
                         }
