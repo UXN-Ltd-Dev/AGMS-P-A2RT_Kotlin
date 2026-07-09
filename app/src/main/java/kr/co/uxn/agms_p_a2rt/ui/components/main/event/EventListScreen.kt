@@ -1,5 +1,6 @@
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -8,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -18,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,12 +35,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kr.co.uxn.agms_p_a2rt.GuestList
+import kr.co.uxn.agms_p_a2rt.NetworkUtil.isNetworkAvailable
 import kr.co.uxn.agms_p_a2rt.R
 import kr.co.uxn.agms_p_a2rt.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestEventData
 import kr.co.uxn.agms_p_a2rt.api.token.DataStoreManager
 import kr.co.uxn.agms_p_a2rt.room.AppDatabase
 import kr.co.uxn.agms_p_a2rt.room.UserCalibration
+import kr.co.uxn.agms_p_a2rt.ui.components.isKorea
 import kr.co.uxn.agms_p_a2rt.ui.components.main.home.DemoGlucoseConfig
 import kr.co.uxn.agms_p_a2rt.ui.model.ItemData
 import kr.co.uxn.agms_p_a2rt.ui.viewmodel.EventScreenViewModel
@@ -56,12 +62,12 @@ val BackgroundGray = Color(0xFFF5F5F5)
 val RecordCardHeight = 72.dp
 
 // 1. 데이터 모델 및 Enum 정의
-enum class RecordCategory(val title: String) {
-    ALL("전체"),
-    MEAL("식사"),
-    EXERCISE("운동"),
-    INSULIN("인슐린"),
-    BLOOD_SUGAR("채혈")
+enum class RecordCategory(@StringRes val titleResId: Int) {
+    ALL(R.string.record_category_all),
+    MEAL(R.string.record_category_meal),
+    EXERCISE(R.string.record_category_exercise),
+    INSULIN(R.string.record_category_insulin),
+    BLOOD_SUGAR(R.string.record_category_blood_sugar)
 }
 
 data class RecordItem(
@@ -69,6 +75,16 @@ data class RecordItem(
     val title: String,
     val description: String,
     val time: String
+)
+
+private data class IntensityOption(
+    val value: String,
+    @StringRes val labelResId: Int
+)
+
+private data class InsulinTypeOption(
+    val value: String,
+    @StringRes val labelResId: Int
 )
 
 private fun recordCategoryIconRes(category: RecordCategory): Int {
@@ -149,7 +165,7 @@ private fun extractEventContentAfter(content: String, key: String): String {
         .trim()
 }
 
-private fun ItemData.toRecordItem(): RecordItem {
+private fun ItemData.toRecordItem(context: android.content.Context): RecordItem {
     val category = eventTypeToRecordCategory(eventType)
 
     if (category == RecordCategory.EXERCISE) {
@@ -159,7 +175,7 @@ private fun ItemData.toRecordItem(): RecordItem {
 
         return RecordItem(
             category = category,
-            title = exerciseType.ifBlank { category.title },
+            title = exerciseType.ifBlank { context.getString(category.titleResId) },
             description = listOf(exerciseTime, exerciseIntensity)
                 .filter { it.isNotBlank() }
                 .joinToString(" "),
@@ -173,7 +189,7 @@ private fun ItemData.toRecordItem(): RecordItem {
 
         return RecordItem(
             category = category,
-            title = mealName.ifBlank { category.title },
+            title = mealName.ifBlank { context.getString(category.titleResId) },
             description = mealContent,
             time = formatEventTime(time)
         )
@@ -182,7 +198,7 @@ private fun ItemData.toRecordItem(): RecordItem {
     if (category == RecordCategory.BLOOD_SUGAR) {
         return RecordItem(
             category = category,
-            title = "자가 채혈",
+            title = context.getString(R.string.record_self_blood_glucose),
             description = "${content.trim()} mg/dL",
             time = formatEventTime(time)
         )
@@ -194,7 +210,7 @@ private fun ItemData.toRecordItem(): RecordItem {
 
         return RecordItem(
             category = category,
-            title = "인슐린 투여",
+            title = context.getString(R.string.record_insulin_administration),
             description = listOf(insulinType, insulinDose, "단위")
                 .filter { it.isNotBlank() }
                 .joinToString(" "),
@@ -204,7 +220,7 @@ private fun ItemData.toRecordItem(): RecordItem {
 
     return RecordItem(
         category = category,
-        title = category.title,
+        title = context.getString(category.titleResId),
         description = content,
         time = formatEventTime(time)
     )
@@ -286,6 +302,7 @@ fun EventListScreen(
 // ==========================================
 @Composable
 fun RecordListScreen(onNavigateToSelect: () -> Unit, eventScreenViewModel: EventScreenViewModel) {
+    val context = LocalContext.current
     var selectedTab by remember { mutableStateOf(RecordCategory.ALL) }
 
     // 선택된 탭에 따라 리스트 필터링
@@ -295,7 +312,7 @@ fun RecordListScreen(onNavigateToSelect: () -> Unit, eventScreenViewModel: Event
 
     val recordList = eventList
         .sortedByDescending { parseEventInstant(it.time) ?: Instant.EPOCH }
-        .map { it.toRecordItem() }
+        .map { it.toRecordItem(context) }
 
     // 임시 데이터
     val dummyRecords = listOf(
@@ -386,7 +403,7 @@ fun RecordListScreen(onNavigateToSelect: () -> Unit, eventScreenViewModel: Event
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = category.title,
+                        text = stringResource(category.titleResId),
                         color = if (isSelected) Color.White else Color.Gray,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
@@ -396,24 +413,49 @@ fun RecordListScreen(onNavigateToSelect: () -> Unit, eventScreenViewModel: Event
             }
         }
 
-        // 리스트 영역
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
-        ) {
-            items(filteredRecords) { record ->
-                RecordItemCard(record)
+
+        if (!isNetworkAvailable(context)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f),
+                contentAlignment = Alignment.Center // 중앙 정렬
+            ) {
+                Text(
+                    text = stringResource(R.string.toast_network_error),
+                    fontSize = 16.sp,
+                    color = Color.Gray,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        } else if (eventList.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f),
+                contentAlignment = Alignment.Center // 중앙 정렬
+            ) {
+                Text(
+                    text = stringResource(R.string.recent_activity_sub_title),
+                    fontSize = 16.sp,
+                    color = Color.Gray,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(vertical = 16.dp)
+            ) {
+                items(filteredRecords) { record ->
+                    RecordItemCard(record)
+                }
             }
         }
-
         // 하단 기록하기 버튼
-
-
-
-
         Button(
             onClick = onNavigateToSelect,
             colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
@@ -434,7 +476,7 @@ fun RecordListScreen(onNavigateToSelect: () -> Unit, eventScreenViewModel: Event
                     contentDescription = ""
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("기록하기", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(stringResource(R.string.event_list_screen_record_btn), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
 
             }
         }
@@ -469,7 +511,7 @@ fun RecordItemCard(record: RecordItem) {
 //                Text(record.category.title.first().toString())
                 Image(
                     painter = painterResource(iconRes),
-                    contentDescription = record.category.title,
+                    contentDescription = stringResource(record.category.titleResId),
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -499,7 +541,7 @@ fun RecordTypeSelectScreen(onTypeSelected: (RecordCategory) -> Unit) {
     )
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("무엇을 기록할까요?", fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 16.dp))
+        Text(stringResource(R.string.record_type_select_screen_title), fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 16.dp))
 
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -521,9 +563,14 @@ fun RecordTypeCard(
     type: RecordCategory,
     onClick: (() -> Unit)? = null,
     showArrow: Boolean = false,
-    title: String = if (type == RecordCategory.BLOOD_SUGAR) "혈당값" else type.title,
+    title: String? = null,
     modifier: Modifier = Modifier
 ) {
+    val displayTitle = title ?: if (type == RecordCategory.BLOOD_SUGAR) {
+        stringResource(R.string.record_blood_glucose_value)
+    } else {
+        stringResource(type.titleResId)
+    }
     val clickableModifier = if (onClick != null) {
         Modifier.clickable { onClick() }
     } else {
@@ -545,17 +592,17 @@ fun RecordTypeCard(
         ) {
             Image(
                 painter = painterResource(recordCategoryIconRes(type)),
-                contentDescription = type.title,
+                contentDescription = stringResource(type.titleResId),
                 modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = title,
+                    text = displayTitle,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
-                Text(text = recordCategoryDescription(type), color = Color.Gray, fontSize = 12.sp)
+                Text(text = recordCategoryDescription(type, isKorea()), color = Color.Gray, fontSize = 12.sp)
             }
             if (showArrow) {
                 Icon(Icons.Default.KeyboardArrowRight, contentDescription = null, tint = Color.LightGray)
@@ -564,22 +611,28 @@ fun RecordTypeCard(
     }
 }
 
-private fun recordCategoryDescription(type: RecordCategory): String {
+private fun recordCategoryDescription(type: RecordCategory, isKorea: Boolean): String {
     return when (type) {
-        RecordCategory.EXERCISE -> "운동 종류와 시간을 기록합니다."
-        RecordCategory.MEAL -> "식사 내용을 기록합니다."
-        RecordCategory.BLOOD_SUGAR -> "자가 채혈 혈당 측정값을 기록합니다."
-        RecordCategory.INSULIN -> "인슐린 종류와 용량을 기록합니다."
+
+        RecordCategory.EXERCISE -> if (isKorea) "운동 종류와 시간을 기록합니다." else "Log exercise type and duration."
+        RecordCategory.MEAL -> if (isKorea) "식사 내용을 기록합니다." else "Log your meal details."
+        RecordCategory.BLOOD_SUGAR -> if (isKorea) "자가 채혈 혈당 측정값을 기록합니다." else "Log manual blood test readings."
+        RecordCategory.INSULIN -> if (isKorea) "인슐린 종류와 용량을 기록합니다." else "Log insulin type and dosage."
         else -> ""
     }
 }
 
-private fun formatRecordTime(millis: Long): String {
+private fun formatRecordTime(millis: Long, isKorea: Boolean): String {
     val deviceZoneId = TimeZone.getDefault().toZoneId()
+    val pattern = if (isKorea) {
+        "M월 d일 HH:mm"
+    } else {
+        "MMM d, HH:mm"
+    }
     val formattedTime = Instant.ofEpochMilli(millis)
         .atZone(deviceZoneId)
-        .format(DateTimeFormatter.ofPattern("MM월 dd일 HH:mm", Locale.getDefault()))
-    return "기록 시간: $formattedTime"
+        .format(DateTimeFormatter.ofPattern(pattern, Locale.getDefault()))
+    return if(isKorea) "기록 시간: $formattedTime" else "Log Time: $formattedTime"
 }
 
 // ==========================================
@@ -597,7 +650,8 @@ fun RecordDetailScreen(
     val recordTimeMillis = remember(initialRecordTimeMillis) {
         initialRecordTimeMillis ?: System.currentTimeMillis()
     }
-    val recordTimeText = remember(recordTimeMillis) { formatRecordTime(recordTimeMillis) }
+    val isKorea = isKorea()
+    val recordTimeText = remember(recordTimeMillis) { formatRecordTime(recordTimeMillis, isKorea) }
     var exerciseType by remember { mutableStateOf("") }
     var exerciseTime by remember { mutableStateOf("") }
     var exerciseIntensity by remember { mutableStateOf("보통") }
@@ -605,8 +659,17 @@ fun RecordDetailScreen(
     var mealContent by remember { mutableStateOf("") }
     var bloodSugarValue by remember { mutableStateOf("") }
     var useCalibration by remember(category) { mutableStateOf(false) }
+    var isVipUser by remember { mutableStateOf(false) }
     var insulinDose by remember { mutableStateOf("") }
     var insulinType by remember { mutableStateOf("초속효성") }
+
+    LaunchedEffect(Unit) {
+        val email = withContext(Dispatchers.IO) {
+            DataStoreManager.getEmail().first().orEmpty()
+        }
+        isVipUser = GuestList.getVipList().contains(email)
+        if (!isVipUser) useCalibration = false
+    }
 
     fun buildContent(): String {
         return when (category) {
@@ -635,7 +698,11 @@ fun RecordDetailScreen(
 
         RecordTypeCard(
             type = category,
-            title = if (category == RecordCategory.BLOOD_SUGAR) "혈당값 입력" else category.title,
+            title = if (category == RecordCategory.BLOOD_SUGAR) {
+                stringResource(R.string.record_blood_glucose_input)
+            } else {
+                stringResource(category.titleResId)
+            },
             modifier = Modifier.padding(bottom = 24.dp)
         )
 
@@ -663,7 +730,8 @@ fun RecordDetailScreen(
                     value = bloodSugarValue,
                     onValueChange = { bloodSugarValue = it },
                     useCalibration = useCalibration,
-                    onUseCalibrationChange = { useCalibration = it }
+                    onUseCalibrationChange = { useCalibration = it },
+                    showCalibrationOption = isVipUser
                 )
                 RecordCategory.INSULIN -> InsulinInputForm(
                     recordTimeText = recordTimeText,
@@ -681,7 +749,7 @@ fun RecordDetailScreen(
             onClick = {
                 val defaultEventTypeCode = recordCategoryToEventType(category)
                 val eventTypeCode = if (
-                    category == RecordCategory.BLOOD_SUGAR && useCalibration
+                    category == RecordCategory.BLOOD_SUGAR && isVipUser && useCalibration
                 ) {
                     1406
                 } else {
@@ -725,6 +793,7 @@ fun RecordDetailScreen(
 
                         if (
                             category == RecordCategory.BLOOD_SUGAR &&
+                            isVipUser &&
                             useCalibration &&
                             calibrationGlucose != null
                         ) {
@@ -781,7 +850,7 @@ fun RecordDetailScreen(
             modifier = Modifier.fillMaxWidth().height(50.dp),
             shape = RoundedCornerShape(25.dp)
         ) {
-            Text("저장", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(stringResource(R.string.record_detail_screen_save_btn), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
         }
     }
 }
@@ -815,23 +884,29 @@ fun ExerciseInputForm(
     intensity: String,
     onIntensityChange: (String) -> Unit
 ) {
+
+    val intensityOptions = listOf(
+        IntensityOption("가벼움", R.string.exercise_intensity_low),
+        IntensityOption("보통", R.string.exercise_intensity_medium),
+        IntensityOption("격렬함", R.string.exercise_intensity_high)
+    )
     OutlinedTextField(
         value = type, onValueChange = onTypeChange,
-        label = { Text("운동 종류 (예: 조깅, 수영)") },
+        label = { Text(stringResource(R.string.record_detail_exercise_description_1)) },
         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
     )
     OutlinedTextField(
         value = time, onValueChange = onTimeChange,
-        label = { Text("운동 시간 (분)") },
+        label = { Text(stringResource(R.string.record_detail_exercise_description_2)) },
         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
     )
-    Text("강도", fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
+    Text(stringResource(R.string.record_detail_exercise_description_sub_title), fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
-        listOf("가벼움", "보통", "격렬함").forEach { level ->
+        intensityOptions.forEach { option ->
             RecordFilterChip(
-                selected = intensity == level,
-                onClick = { onIntensityChange(level) },
-                label = level
+                selected = intensity == option.value,
+                onClick = { onIntensityChange(option.value) },
+                label = stringResource(option.labelResId)
             )
         }
     }
@@ -848,12 +923,12 @@ fun MealInputForm(
 ) {
     OutlinedTextField(
         value = mealName, onValueChange = onMealNameChange,
-        label = { Text("식사 이름 (예: 아침)") },
+        label = { Text(stringResource(R.string.record_detail_meal_description_1)) },
         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
     )
     OutlinedTextField(
         value = mealContent, onValueChange = onMealContentChange,
-        label = { Text("식사 내용 (예: 밥, 된장국)") },
+        label = { Text(stringResource(R.string.record_detail_meal_description_2)) },
         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
     )
     Text(recordTimeText, color = Color.Gray)
@@ -865,32 +940,34 @@ fun BloodSugarInputForm(
     value: String,
     onValueChange: (String) -> Unit,
     useCalibration: Boolean,
-    onUseCalibrationChange: (Boolean) -> Unit
+    onUseCalibrationChange: (Boolean) -> Unit,
+    showCalibrationOption: Boolean
 ) {
     OutlinedTextField(
         value = value, onValueChange = onValueChange,
-        label = { Text("혈당값 (mg/dL)") },
+        label = { Text(stringResource(R.string.record_detail_bg_label)) },
         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
     )
     Text(recordTimeText, color = Color.Gray)
 
-    // 보정사용 체크박스
-//    Row(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .clickable { onUseCalibrationChange(!useCalibration) },
-//        verticalAlignment = Alignment.CenterVertically
-//    ) {
-//        Checkbox(
-//            checked = useCalibration,
-//            onCheckedChange = onUseCalibrationChange,
-//            colors = CheckboxDefaults.colors(
-//                checkedColor = Color.LightGray,
-//                checkmarkColor = Color.Black
-//            )
-//        )
-//        Text("보정 사용", fontWeight = FontWeight.Medium)
-//    }
+    if (showCalibrationOption) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onUseCalibrationChange(!useCalibration) },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = useCalibration,
+                onCheckedChange = onUseCalibrationChange,
+                colors = CheckboxDefaults.colors(
+                    checkedColor = PrimaryOrange,
+                    checkmarkColor = Color.White
+                )
+            )
+            Text(stringResource(R.string.record_detail_use_calibration), fontWeight = FontWeight.Medium)
+        }
+    }
 }
 
 @Composable
@@ -901,24 +978,34 @@ fun InsulinInputForm(
     insulinType: String,
     onInsulinTypeChange: (String) -> Unit
 ) {
-    Text("인슐린 종류", fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
+    val firstRowOptions = listOf(
+        InsulinTypeOption("초속효성", R.string.insulin_type_rapid),
+        InsulinTypeOption("속효성", R.string.insulin_type_short),
+        InsulinTypeOption("지속형", R.string.insulin_type_long)
+    )
+    val secondRowOptions = listOf(
+        InsulinTypeOption("혼합형", R.string.insulin_type_premixed),
+        InsulinTypeOption("중간형", R.string.insulin_type_nph)
+    )
+
+    Text(stringResource(R.string.record_detail_insulin_type), fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
     // 2줄로 칩 배치 (가상의 그리드 느낌)
     Column(modifier = Modifier.padding(bottom = 16.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("초속효성", "속효성", "지속형").forEach { level ->
+            firstRowOptions.forEach { option ->
                 RecordFilterChip(
-                    selected = insulinType == level,
-                    onClick = { onInsulinTypeChange(level) },
-                    label = level
+                    selected = insulinType == option.value,
+                    onClick = { onInsulinTypeChange(option.value) },
+                    label = stringResource(option.labelResId)
                 )
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("혼합형", "중간형").forEach { level ->
+            secondRowOptions.forEach { option ->
                 RecordFilterChip(
-                    selected = insulinType == level,
-                    onClick = { onInsulinTypeChange(level) },
-                    label = level
+                    selected = insulinType == option.value,
+                    onClick = { onInsulinTypeChange(option.value) },
+                    label = stringResource(option.labelResId)
                 )
             }
         }
@@ -926,7 +1013,7 @@ fun InsulinInputForm(
 
     OutlinedTextField(
         value = dose, onValueChange = onDoseChange,
-        label = { Text("투여량 (Unit)") },
+        label = { Text(stringResource(R.string.record_detail_insulin)) },
         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
     )
     Text(recordTimeText, color = Color.Gray)

@@ -88,6 +88,7 @@ fun GuideScreen(
             // 사용 설명
             Text(
                 text = stringResource(R.string.guide_notice_title),
+                textAlign = TextAlign.Center,
                 fontSize = 33.sp,
                 color = colorResource(R.color.black)
             )

@@ -149,6 +149,7 @@ import kr.co.uxn.agms_p_a2rt.BuildConfig
 import kr.co.uxn.agms_p_a2rt.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p_a2rt.ble.BleBridge.showHighGlucoseDialog
 import kr.co.uxn.agms_p_a2rt.ble.BleBridge.showLowGlucoseDialog
+import kr.co.uxn.agms_p_a2rt.ui.components.isKorea
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.ContentScale
 import kotlin.math.roundToInt
@@ -337,6 +338,7 @@ fun HomeScreen(
     }
 
     var email = rememberSaveable { mutableStateOf("") }
+    val isGuestUser = GuestList.getGuestList().contains(email.value)
 
     // Vico Chart
     val modelProducer = remember { CartesianChartModelProducer() }
@@ -548,7 +550,7 @@ fun HomeScreen(
                 if (glucoseData.isNotEmpty() && !isGuest) {
                     val minuteFormatter =
                         SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-                    val intervalMinutes = if (isGuest) 1L else 5L
+                    val intervalMinutes = 5L
                     val latestMinute = glucoseData.last().createdAtLong / (60 * 1000L)
                     val latestBucket = latestMinute / intervalMinutes
                     val startBucket =
@@ -690,11 +692,12 @@ fun HomeScreen(
     }
 
     // 실제 타이머
-    DisposableEffect(lifecycleOwner) {
+    val isKoreanLanguage = isKorea()
+    DisposableEffect(lifecycleOwner, isKoreanLanguage) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 // onResume 시점에만 실행!
-                homeViewModel.startTimer()
+                homeViewModel.startTimer(isKoreanLanguage)
                 Log.d("TEST", "홈 화면에서 타이머 실행")
             }
         }
@@ -883,7 +886,7 @@ fun HomeScreen(
 
                     // 상단 텍스트
                     Text(
-                        text = "센서가 종료되었습니다.",
+                        text = stringResource(R.string.home_screen_sensor_expired),
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
                         color = Color.Black
@@ -898,6 +901,9 @@ fun HomeScreen(
                         modifier = Modifier
                             .size(50.dp) // 이미지 크기 조절
                             .clip(CircleShape)
+                            .clickable {
+                                navController.navigate("RegisterDeviceQRScreen")
+                            }
                     )
 
                     Spacer(modifier = Modifier.weight(1f))
@@ -915,7 +921,7 @@ fun HomeScreen(
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            text = "새로운 센서로 시작하기",
+                            text = stringResource(R.string.home_screen_start_new_sensor),
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
@@ -1056,7 +1062,7 @@ fun HomeScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "${day}일차",
+                            text = if (isKorea()) "${day}일차" else "Day $day",
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp // 이미지 비율에 맞게 폰트 크기 살짝 키움
@@ -1065,7 +1071,7 @@ fun HomeScreen(
 
                     // 하단 부분 (흰색 배경)
                     Column(
-                        modifier = Modifier
+                        modifier = Modifier 
                             .fillMaxWidth()
                             .weight(1.7f) // 하단 영역이 상단보다 조금 더 넓게 비율 설정
                             .padding(vertical = 10.dp), // 상하 여백
@@ -1074,7 +1080,7 @@ fun HomeScreen(
                     ) {
                         // 잔여 시간 타이틀
                         Text(
-                            text = "잔여 시간",
+                            text = stringResource(R.string.home_screen_left_time),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black
@@ -1530,7 +1536,11 @@ fun HomeScreen(
                                 animateIn = false,
                                 zoomState = rememberVicoZoomState(
                                     zoomEnabled = true,
-                                    initialZoom = HomeInitialZoom
+                                    initialZoom = if (isGuestUser) {
+                                        HomeInitialZoom
+                                    } else {
+                                        Zoom.Content
+                                    }
                                 )
                             )
                         }
@@ -1543,7 +1553,7 @@ fun HomeScreen(
                         ) {
                             Text(
                                 text = stringResource(R.string.chart_wait_a_moment),
-                                color = colorResource(R.color.main),
+                                color = Color.Black,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Medium
                             )

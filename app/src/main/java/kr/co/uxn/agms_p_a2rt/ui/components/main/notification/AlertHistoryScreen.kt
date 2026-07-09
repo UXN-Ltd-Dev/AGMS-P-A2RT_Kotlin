@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,6 +45,7 @@ import kr.co.uxn.agms_p_a2rt.api.token.DataStoreManager
 import kr.co.uxn.agms_p_a2rt.room.AppDatabase
 import kr.co.uxn.agms_p_a2rt.room.GlucoseAlert
 import kr.co.uxn.agms_p_a2rt.room.GlucoseAlertType
+import kr.co.uxn.agms_p_a2rt.ui.components.isKorea
 import kr.co.uxn.agms_p_a2rt.ui.components.main.home.DemoGlucoseConfig
 import java.time.Instant
 import java.time.ZoneId
@@ -96,7 +98,7 @@ fun AlertHistoryScreen(modifier: Modifier = Modifier) {
             .background(colorResource(R.color.background_grey))
     ) {
         Text(
-            text = "알림",
+            text = stringResource(R.string.alert_history_title),
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF241F1B),
@@ -109,9 +111,10 @@ fun AlertHistoryScreen(modifier: Modifier = Modifier) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "고혈당·저혈당 알림이 없습니다.",
-                    color = Color(0xFF8B8178),
-                    fontSize = 15.sp
+                    text = stringResource(R.string.alert_history_notification_is_empty),
+                    fontSize = 16.sp,
+                    color = Color.Gray,
+                    fontWeight = FontWeight.Medium
                 )
             }
         } else {
@@ -135,12 +138,21 @@ fun AlertHistoryScreen(modifier: Modifier = Modifier) {
 @Composable
 private fun GlucoseAlertCard(alert: GlucoseAlert, currentTime: Long) {
     val isHigh = alert.alertType == GlucoseAlertType.HIGH
+    val isKorean = isKorea()
     val accentColor = if (isHigh) HighAlertColor else LowAlertColor
     val backgroundColor = if (isHigh) HighAlertBackground else LowAlertBackground
-    val title = if (isHigh) {
-        "혈당 높음: ${alert.glucose} mg/dL"
+    val title = if (isKorean) {
+        if (isHigh) {
+            "혈당 높음: ${alert.glucose} mg/dL"
+        } else {
+            "혈당 낮음: ${alert.glucose} mg/dL"
+        }
     } else {
-        "혈당 낮음: ${alert.glucose} mg/dL"
+        if (isHigh) {
+            "High Glucose: ${alert.glucose} mg/dL"
+        } else {
+            "Low Glucose: ${alert.glucose} mg/dL"
+        }
     }
 
     Card(
@@ -182,7 +194,11 @@ private fun GlucoseAlertCard(alert: GlucoseAlert, currentTime: Long) {
                 )
                 Spacer(modifier = Modifier.height(5.dp))
                 Text(
-                    text = formatAlertTime(alert.createdAtLong, currentTime),
+                    text = formatAlertTime(
+                        createdAtLong = alert.createdAtLong,
+                        currentTime = currentTime,
+                        isKorean = isKorean
+                    ),
                     color = Color(0xFF958A80),
                     fontSize = 14.sp
                 )
@@ -191,17 +207,39 @@ private fun GlucoseAlertCard(alert: GlucoseAlert, currentTime: Long) {
     }
 }
 
-private fun formatAlertTime(createdAtLong: Long, currentTime: Long): String {
+private fun formatAlertTime(
+    createdAtLong: Long,
+    currentTime: Long,
+    isKorean: Boolean
+): String {
     val elapsedMillis = (currentTime - createdAtLong).coerceAtLeast(0L)
     val elapsedMinutes = elapsedMillis / 60_000L
 
-    return when {
-        elapsedMinutes == 0L -> "방금 전"
-        elapsedMinutes < 60L -> "${elapsedMinutes}분 전"
-        elapsedMinutes < 24L * 60L -> "${elapsedMinutes / 60L}시간 전"
-        else -> Instant.ofEpochMilli(createdAtLong)
-            .atZone(ZoneId.systemDefault())
-            .format(DateTimeFormatter.ofPattern("d일 HH:mm", Locale.getDefault()))
+    return if (isKorean) {
+        when {
+            elapsedMinutes == 0L -> "방금 전"
+            elapsedMinutes < 60L -> "${elapsedMinutes}분 전"
+            elapsedMinutes < 24L * 60L -> "${elapsedMinutes / 60L}시간 전"
+            else -> Instant.ofEpochMilli(createdAtLong)
+                .atZone(ZoneId.systemDefault())
+                .format(DateTimeFormatter.ofPattern("d일 HH:mm", Locale.KOREAN))
+        }
+    } else {
+        when {
+            elapsedMinutes == 0L -> "Just now"
+            elapsedMinutes < 60L -> {
+                val unit = if (elapsedMinutes == 1L) "minute" else "minutes"
+                "$elapsedMinutes $unit ago"
+            }
+            elapsedMinutes < 24L * 60L -> {
+                val hours = elapsedMinutes / 60L
+                val unit = if (hours == 1L) "hour" else "hours"
+                "$hours $unit ago"
+            }
+            else -> Instant.ofEpochMilli(createdAtLong)
+                .atZone(ZoneId.systemDefault())
+                .format(DateTimeFormatter.ofPattern("MMM d, HH:mm", Locale.ENGLISH))
+        }
     }
 }
 

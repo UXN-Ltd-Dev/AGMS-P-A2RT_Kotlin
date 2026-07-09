@@ -45,7 +45,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
@@ -91,6 +93,7 @@ import kr.co.uxn.agms_p_a2rt.api.token.DataStoreManager
 import kr.co.uxn.agms_p_a2rt.rememberMarker
 import kr.co.uxn.agms_p_a2rt.room.AppDatabase
 import kr.co.uxn.agms_p_a2rt.room.UserGlucose
+import kr.co.uxn.agms_p_a2rt.ui.components.isKorea
 import kr.co.uxn.agms_p_a2rt.ui.components.main.home.DemoGlucoseConfig
 import com.patrykandpatrick.vico.core.cartesian.CartesianDrawingContext
 import com.patrykandpatrick.vico.core.cartesian.CartesianMeasuringContext
@@ -125,7 +128,8 @@ private val AnalysisGlucoseLowColor = Color(0xFF8FAEFF)
 private val AnalysisGlucoseTargetRangeColor = Color(0x2E9B9797)
 private val AnalysisEventTextColor = Color(0xFFC74B3C)
 private const val MissingGlucoseValue = -10.0
-private const val DailyBucketMinutes = 1L
+private const val GuestDailyBucketMinutes = 1L
+private const val RegularDailyBucketMinutes = 5L
 private val AnalysisGuestInitialZoom = Zoom.x(6.0) // 점과 점 사이 간격
 
 private data class AnalysisEvent(
@@ -240,10 +244,11 @@ private fun fillDailyGlucoseBuckets(
     source: List<UserGlucose>,
     dayStartMillis: Long,
     fillEndMillis: Long,
-    zoneId: ZoneId
+    zoneId: ZoneId,
+    bucketMinutes: Long
 ): List<UserGlucose> {
     val minuteMillis = 60 * 1000L
-    val intervalMillis = DailyBucketMinutes * minuteMillis
+    val intervalMillis = bucketMinutes * minuteMillis
     val startBucket = (dayStartMillis + intervalMillis - 1) / intervalMillis
     val endMinuteMillis = fillEndMillis - (fillEndMillis % minuteMillis)
     val endBucket = endMinuteMillis / intervalMillis
@@ -467,7 +472,10 @@ fun AnalysisScreen(
     onBloodSugarRecordClick: (Long) -> Unit
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabs = listOf("일일기록", "상세")
+    val tabs = listOf(
+        stringResource(R.string.analysis_tab_daily_log),
+        stringResource(R.string.analysis_tab_details)
+    )
 
     Column(
         modifier = Modifier
@@ -614,7 +622,12 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
                     source = source,
                     dayStartMillis = dayStartMillis,
                     fillEndMillis = fillEndMillis,
-                    zoneId = zoneId
+                    zoneId = zoneId,
+                    bucketMinutes = if (isGuest) {
+                        GuestDailyBucketMinutes
+                    } else {
+                        RegularDailyBucketMinutes
+                    }
                 )
             }
 
@@ -665,12 +678,12 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
                     }
                     showDatePicker = false
                 }) {
-                    Text("확인", color = PrimaryOrange)
+                    Text(stringResource(R.string.confirm), color = PrimaryOrange)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                    Text("취소", color = Color.Gray)
+                    Text(stringResource(R.string.cancel), color = Color.Gray)
                 }
             }
         ) {
@@ -745,7 +758,9 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
                 .fillMaxWidth()
                 .weight(0.5f)
         ) {
-            Box(modifier = Modifier.padding(horizontal = 4.dp).fillMaxSize()) {
+            Box(modifier = Modifier
+                .padding(horizontal = 4.dp)
+                .fillMaxSize()) {
                 when {
                     isChartLoading -> CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
@@ -753,7 +768,7 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
                     )
                     dailyGlucoseData.isEmpty() -> Text(
                         modifier = Modifier.align(Alignment.Center),
-                        text = "해당 날짜에는 데이터가 없습니다.",
+                        text = stringResource(R.string.analysis_screen_no_data),
                         color = TextGray,
                         fontSize = 15.sp
                     )
@@ -764,6 +779,11 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
                         zoneId = ZoneId.systemDefault(),
                         onMarkerTimeSelected = { selectedMarkerTimeMillis = it },
                         isGuestUser = isGuestUser,
+                        bucketMinutes = if (isGuestUser) {
+                            GuestDailyBucketMinutes
+                        } else {
+                            RegularDailyBucketMinutes
+                        },
                         initialZoom = if (isGuestUser) AnalysisGuestInitialZoom else Zoom.Content,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -794,7 +814,7 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
                     contentDescription = ""
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("기록하기", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(stringResource(R.string.event_list_screen_record_btn), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
 
             }
         }
@@ -807,15 +827,19 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
 // ==========================================
 @Composable
 fun DetailRecordContent() {
-    var selectedFilter by remember { mutableStateOf("일") }
-    val filters = listOf("일", "주", "월")
+    val dayText = stringResource(R.string.details_category_day)
+    val weekText = stringResource(R.string.details_category_week)
+    val monthText = stringResource(R.string.details_category_month)
+
+    var selectedFilter by remember { mutableStateOf(dayText) }
+    val filters = listOf(stringResource(R.string.details_category_day), stringResource(R.string.details_category_week), stringResource(R.string.details_category_month))
     val context = LocalContext.current
     val zoneId = remember { ZoneId.systemDefault() }
     var detailGlucoseValues by remember { mutableStateOf<List<Double>>(emptyList()) }
     val today = LocalDate.now(zoneId)
     val selectedUnit = when (selectedFilter) {
-        "주" -> DetailAverageUnit.WEEK
-        "월" -> DetailAverageUnit.MONTH
+        weekText -> DetailAverageUnit.WEEK
+        monthText -> DetailAverageUnit.MONTH
         else -> DetailAverageUnit.DAY
     }
     val detailPeriods = remember(selectedUnit, today, zoneId) {
@@ -879,6 +903,14 @@ fun DetailRecordContent() {
         else -> "위험 (51% 이상)"
     }
 
+    val cvAssessmentEnglish = when {
+        cvPercentage == null -> "No Data"
+        cvPercentage <= 25 -> "Excellent (~25%)"
+        cvPercentage <= 36 -> "Good (26–36%)"
+        cvPercentage <= 50 -> "Caution (37–50%)"
+        else -> "High Risk (51% or higher)"
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -890,12 +922,12 @@ fun DetailRecordContent() {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth(0.45f)
+                    .weight(1f)
                     .border(1.dp, colorResource(R.color.background_grey), RoundedCornerShape(20.dp))
                     .background(Color.LightGray, RoundedCornerShape(20.dp))
             ) {
@@ -923,7 +955,7 @@ fun DetailRecordContent() {
 
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.48f)
+                    .weight(1f)
                     .background(Color.White, RoundedCornerShape(20.dp))
                     .padding(vertical = 6.dp),
                 contentAlignment = Alignment.Center
@@ -947,7 +979,8 @@ fun DetailRecordContent() {
         Card(
             colors = CardDefaults.cardColors(containerColor = Color.White),
             shape = RoundedCornerShape(20.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .height(200.dp)
         ) {
             Column(
@@ -959,12 +992,13 @@ fun DetailRecordContent() {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "혈당 변동성",
+                        text = stringResource(R.string.glucose_variability_title),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold
                     )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = " (혈당 변동계수, CV)",
+                        text = stringResource(R.string.glucose_variability_cv_label),
                         fontSize = 17.sp
                     )
                 }
@@ -976,14 +1010,14 @@ fun DetailRecordContent() {
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = cvAssessment,
+                    text = if (isKorea()) cvAssessment else cvAssessmentEnglish,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    text = "혈당변동계수(CV)는 혈당이 얼마나 안정적으로 유지되는지 나타내는 " +
-                        "수치이며, 합병증 예방을 위해서는 36% 이하로 유지하는 것을 권장합니다.",
+                    text = stringResource(R.string.glucose_variability_description),
+                    textAlign = TextAlign.Center,
                     color = TextGray,
                     fontSize = 13.sp,
                     lineHeight = 20.sp
@@ -1000,6 +1034,7 @@ private fun TirCard(
     glucoseValues: List<Double>,
     modifier: Modifier = Modifier
 ) {
+    val isKorean = isKorea()
     val percentages = remember(glucoseValues) {
         if (glucoseValues.isEmpty()) {
             List(5) { 0 }
@@ -1041,7 +1076,7 @@ private fun TirCard(
                 .padding(horizontal = 10.dp, vertical = 12.dp)
         ) {
             Text(
-                text = "목표 혈당 범위 내 시간",
+                text = stringResource(R.string.analysis_screen_time_in_range),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -1054,10 +1089,12 @@ private fun TirCard(
             ) {
                 if (glucoseValues.isEmpty()) {
                     Box(
-                        modifier = Modifier.fillMaxSize().background(Color(0xFFD9D9D9)),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(0xFFD9D9D9)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("데이터 없음", color = TextGray, fontSize = 11.sp)
+                        Text(stringResource(R.string.analysis_screen_no_data_simple), color = TextGray, fontSize = 11.sp)
                     }
                 } else {
                     rangeColors.forEachIndexed { index, color ->
@@ -1117,12 +1154,20 @@ private fun TirCard(
             Row(modifier = Modifier.fillMaxWidth()) {
                 TirLegendItem(
                     color = rangeColors[4],
-                    label = "매우 높음(>250): ${percentages[4]}%",
+                    label = if (isKorean) {
+                        "매우 높음(>250): ${percentages[4]}%"
+                    } else {
+                        "Very High (>250): ${percentages[4]}%"
+                    },
                     modifier = Modifier.weight(1f)
                 )
                 TirLegendItem(
                     color = rangeColors[3],
-                    label = "높음(>180): ${percentages[3]}%",
+                    label = if (isKorean) {
+                        "높음(>180): ${percentages[3]}%"
+                    } else {
+                        "High (>180): ${percentages[3]}%"
+                    },
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -1130,12 +1175,20 @@ private fun TirCard(
             Row(modifier = Modifier.fillMaxWidth()) {
                 TirLegendItem(
                     color = rangeColors[1],
-                    label = "낮음(<70): ${percentages[1]}%",
+                    label = if (isKorean) {
+                        "낮음(<70): ${percentages[1]}%"
+                    } else {
+                        "Low (<70): ${percentages[1]}%"
+                    },
                     modifier = Modifier.weight(1f)
                 )
                 TirLegendItem(
                     color = rangeColors[0],
-                    label = "매우 낮음(<54): ${percentages[0]}%",
+                    label = if (isKorean) {
+                        "매우 낮음(<54): ${percentages[0]}%"
+                    } else {
+                        "Very Low (<54): ${percentages[0]}%"
+                    },
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -1177,6 +1230,7 @@ private fun DailyGlucoseChart(
     zoneId: ZoneId,
     onMarkerTimeSelected: (Long) -> Unit,
     isGuestUser: Boolean,
+    bucketMinutes: Long,
     initialZoom: Zoom = Zoom.Content,
     modifier: Modifier = Modifier
 ) {
@@ -1196,7 +1250,7 @@ private fun DailyGlucoseChart(
         events.mapNotNull { event ->
             val eventMinute = (event.timeMillis - dayStartMillis) / 60_000.0
             val snappedX =
-                (eventMinute / DailyBucketMinutes).roundToInt() * DailyBucketMinutes.toDouble()
+                (eventMinute / bucketMinutes).roundToInt() * bucketMinutes.toDouble()
             if (snappedX < xValues.first() || snappedX > xValues.last()) {
                 return@mapNotNull null
             }
