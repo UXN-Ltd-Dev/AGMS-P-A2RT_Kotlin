@@ -1553,8 +1553,8 @@ fun HomeScreen(
                         ) {
                             Text(
                                 text = stringResource(R.string.chart_wait_a_moment),
-                                color = Color.Black,
-                                fontSize = 18.sp,
+                                color = colorResource(R.color.main_grey),
+                                fontSize = 17.sp,
                                 fontWeight = FontWeight.Medium
                             )
                         }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -350,7 +352,8 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
 
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize()
+            .background(colorResource(R.color.background_grey)),
         ) { paddingValues ->
         Surface(
             modifier = Modifier.fillMaxSize()
@@ -371,7 +374,8 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 30.dp)
-                        .padding(top = 20.dp),
+                        .padding(top = 20.dp, bottom = 20.dp)
+                        .verticalScroll(rememberScrollState()),
                 ) {
                     Text(
                         text = stringResource(R.string.delete_account_title),
@@ -457,7 +461,7 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                         fontWeight = FontWeight.Bold
                     )
 
-                    Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.height(30.dp))
 
 
                     Row(

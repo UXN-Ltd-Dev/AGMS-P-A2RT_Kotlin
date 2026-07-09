@@ -242,6 +242,10 @@
     <string name="toast_loading_data">데이터를 가져오는 중입니다..\n잠시만 기다려주세요..</string>
     <string name="toast_turn_on_bluetooth">블루투스를 켜주세요.</string>
     <string name="toast_check_serial_number">시리얼 넘버를 다시 확인해 주세요.</string>
+    <string name="toast_medical_device_regulatory_info_excuse">의료기기 허가정보는 추후 기입 예정입니다.</string>
+    <string name="toast_terms_of_service_excuse">서비스 이용약관은 추후 제공될 예정입니다.</string>
+    <string name="toast_privacy_policy_excuse">개인정보 처리방침은 추후 제공될 예정입니다.</string>
+    <string name="toast_enter_record">기록 내용을 입력해주세요.</string>
 
     <!--  노티 -->
     <string name="notification_sensor_ready">센서가 준비되었습니다.</string>
@@ -363,6 +367,45 @@
     <string name="insulin_type_long">지속형</string>
     <string name="insulin_type_premixed">혼합형</string>
     <string name="insulin_type_nph">중간형</string>
+
+    <string name="setting_menu_title_user_info">사용자 정보</string>
+    <string name="setting_menu_title_sensor_info">센서 정보</string>
+    <string name="setting_menu_title_alarm_settings">알림 설정</string>
+    <string name="setting_menu_title_app_info">앱 정보</string>
+
+    <string name="user_info_title">기본정보</string>
+    <string name="user_info_sub_title">부가정보</string>
+    <string name="user_info_name">이름</string>
+    <string name="user_info_email">이메일</string>
+    <string name="user_info_gender">성별</string>
+    <string name="user_info_age">연령</string>
+    <string name="user_info_height">신장</string>
+    <string name="user_info_weight">체중</string>
+    <string name="user_info_diabetes_type">당뇨 유형</string>
+    <string name="user_info_target_glucose_range">목표 혈당 범위</string>
+    <string name="user_info_description">일반적인 목표 혈당범위는 80~130 mg/dL이며, 식후 최대 혈당은 180 mg/dL미만입니다.</string>
+    <string name="user_info_delete_account">회원탈퇴</string>
+
+    <string name="sensor_info_start_time">센서 시작일</string>
+    <string name="sensor_info_left_time">남은 사용 기간</string>
+    <string name="sensor_info_serial_number">제품 번호</string>
+    <string name="sensor_info_sensor_end">센서종료</string>
+
+    <string name="alarm_setting_title">알림 설정</string>
+    <string name="alarm_setting_silent_mode">무음 모드</string>
+    <string name="alarm_setting_low_glucose">저혈당 알림</string>
+    <string name="alarm_setting_high_glucose">고혈당 알림</string>
+    <string name="alarm_setting_lost_signal">신호 소실</string>
+    <string name="alarm_setting_sensor_expired">센서 만료</string>
+    <string name="alarm_setting_sensor_stabilization">센서 안정화</string>
+
+    <string name="app_info_latest_version">현재 최신버전입니다.</string>
+    <string name="app_info_medical_device_regulatory_info">의료기기 허가정보</string>
+    <string name="app_info_terms_of_service">서비스 이용약관</string>
+    <string name="app_info_privacy_policy">개인정보 처리방침</string>
+
+
+
 
 
 

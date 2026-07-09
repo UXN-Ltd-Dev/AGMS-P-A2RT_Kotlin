@@ -288,7 +288,7 @@
     <string name="record_blood_glucose_value">Blood Glucose</string>
     <string name="record_blood_glucose_input">Blood Glucose</string>
     <string name="record_self_blood_glucose">Blood Glucose</string>
-    <string name="record_insulin_administration">Insulin Administration</string>
+    <string name="record_insulin_administration">Insulin</string>
     <string name="analysis_tab_daily_log">Daily Log</string>
     <string name="analysis_tab_details">Details</string>
     <string name="glucose_variability_title">Glucose Variability</string>
@@ -327,6 +327,41 @@
     <string name="insulin_type_long">Long</string>
     <string name="insulin_type_premixed">Premixed</string>
     <string name="insulin_type_nph">NPH</string>
+    <string name="setting_menu_title_user_info">User Info</string>
+    <string name="setting_menu_title_sensor_info">Sensor Info</string>
+    <string name="setting_menu_title_alarm_settings">Alert Settings</string>
+    <string name="setting_menu_title_app_info">App Info</string>
+    <string name="user_info_title">Account Info</string>
+    <string name="user_info_sub_title">Additional Info</string>
+    <string name="user_info_name">Name</string>
+    <string name="user_info_email">Email</string>
+    <string name="user_info_gender">Gender</string>
+    <string name="user_info_age">Age</string>
+    <string name="user_info_height">Height</string>
+    <string name="user_info_weight">Weight</string>
+    <string name="user_info_diabetes_type">Diabetes Info</string>
+    <string name="user_info_target_glucose_range">Target Glucose Range</string>
+    <string name="user_info_description">The standard target range is 80–130 mg/dL, and post-meal peak glucose should be under 180 mg/dL.</string>
+    <string name="user_info_delete_account">Delete Account</string>
+    <string name="sensor_info_start_time">Sensor Started</string>
+    <string name="sensor_info_left_time">Expires in</string>
+    <string name="sensor_info_serial_number">Product Number</string>
+    <string name="sensor_info_sensor_end">End Sensor</string>
+    <string name="alarm_setting_title">Alert Settings</string>
+    <string name="alarm_setting_silent_mode">Silent Mode</string>
+    <string name="alarm_setting_low_glucose">Low Glucose Alert</string>
+    <string name="alarm_setting_high_glucose">High Glucose Alert</string>
+    <string name="alarm_setting_lost_signal">Signal Loss</string>
+    <string name="alarm_setting_sensor_expired">Sensor Expiration</string>
+    <string name="alarm_setting_sensor_stabilization">Sensor Stabilization</string>
+    <string name="app_info_latest_version">Your app is up to date.</string>
+    <string name="app_info_medical_device_regulatory_info">Medical Device Regulatory Info</string>
+    <string name="app_info_terms_of_service">Terms of Service</string>
+    <string name="app_info_privacy_policy">Privacy Policy</string>
+    <string name="toast_medical_device_regulatory_info_excuse">Medical device regulatory information will be updated soon.</string>
+    <string name="toast_terms_of_service_excuse">Terms of Service will be available soon.</string>
+    <string name="toast_privacy_policy_excuse">Privacy Policy will be available soon.</string>
+    <string name="toast_enter_record">Please enter the record details.</string>
 
 
 </resources>

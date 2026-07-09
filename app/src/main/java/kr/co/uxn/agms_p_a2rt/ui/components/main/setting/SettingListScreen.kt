@@ -51,6 +51,7 @@ import kotlin.system.exitProcess
 import kr.co.uxn.agms_p_a2rt.R
 import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestDeleteOauthUserInfo
 import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestDeleteUserInfo
+import kr.co.uxn.agms_p_a2rt.ui.components.isKorea
 import kr.co.uxn.agms_p_a2rt.ui.viewmodel.BleViewModel
 
 // 테마 컬러
@@ -171,7 +172,7 @@ fun SettingsMainScreen(navController: NavHostController, bleViewModel: BleViewMo
         ) {
             Text(name.value, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(4.dp))
-            Text("계정: ${email.value}", fontSize = 14.sp, color = TextGray)
+            Text( if(isKorea()) { "계정: ${email.value}"} else {"Account: ${email.value}"} , fontSize = 14.sp, color = TextGray)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -190,18 +191,18 @@ fun SettingsMainScreen(navController: NavHostController, bleViewModel: BleViewMo
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column {
-                    SettingsMenuRow("사용자 정보") { navController.navigate("user_info") }
+                    SettingsMenuRow(stringResource(R.string.setting_menu_title_user_info)) { navController.navigate("user_info") }
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         color = BackgroundGray
                     )
-                    SettingsMenuRow("센서 정보") { navController.navigate("sensor_info") }
+                    SettingsMenuRow(stringResource(R.string.settings_sensor_info)) { navController.navigate("sensor_info") }
                 }
             }
 
             // 2. 단일 메뉴 카드들
-            SettingsSingleCard("알림 설정") { navController.navigate("alarm_settings") }
-            SettingsSingleCard("앱 정보") { navController.navigate("app_info") }
+            SettingsSingleCard(stringResource(R.string.setting_menu_title_alarm_settings)) { navController.navigate("alarm_settings") }
+            SettingsSingleCard(stringResource(R.string.setting_menu_title_app_info)) { navController.navigate("app_info") }
 
             // 3. 로그아웃
             Card(
@@ -214,7 +215,7 @@ fun SettingsMainScreen(navController: NavHostController, bleViewModel: BleViewMo
                     }
             ) {
                 Text(
-                    text = "로그아웃",
+                    text = stringResource(R.string.settings_log_out),
                     color = AlertRed,
                     fontSize = 16.sp,
                     modifier = Modifier.padding(16.dp)
@@ -295,6 +296,7 @@ fun UserInfoScreen(navController: NavHostController) {
     val targetGlucoseRange = remember { mutableStateOf("") }
     val showDeleteAccountDialog = remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val isKorea = isKorea()
 
     val localDbRepository by lazy { AppDatabase.getInstance(context) }
 
@@ -306,15 +308,41 @@ fun UserInfoScreen(navController: NavHostController) {
             if (userInfo != null) {
                 name.value = userInfo.name
                 email.value = userInfo.email
-                sex.value = userInfo.sex
                 age.value = userInfo.age.toString()
                 height.value = userInfo.height.toString()
                 weight.value = userInfo.weight.toString()
-                diabetesType.value = userInfo.diabetesType
-                targetGlucoseRange.value =
-                    "${userInfo.targetGlucoseMin} ~ ${userInfo.targetGlucoseMax} mg/dL"
+                targetGlucoseRange.value = "${userInfo.targetGlucoseMin} ~ ${userInfo.targetGlucoseMax} mg/dL"
+
+                if (isKorea) {
+                    sex.value = userInfo.sex
+                    diabetesType.value = userInfo.diabetesType
+                } else {
+                    if (userInfo.sex == "남성") {
+                        sex.value = "Male"
+                    } else if(userInfo.sex == "여성") {
+                        sex.value = "Female"
+                    } else {
+                        sex.value = "Prefer not to say"
+                    }
+                    if (userInfo.diabetesType == "정상") {
+                        diabetesType.value = "Normal"
+                    } else if(userInfo.diabetesType == "당뇨 전단계") {
+                        diabetesType.value = "Prediabetes"
+                    } else if(userInfo.diabetesType == "제1형 당뇨병") {
+                        diabetesType.value = "Type 1 Diabetes"
+                    } else if(userInfo.diabetesType == "제2형 당뇨병") {
+                        diabetesType.value = "Type 2 Diabetes"
+                    } else if(userInfo.diabetesType == "임신성 당뇨병") {
+                        diabetesType.value = "Gestational Diabetes"
+                    } else if(userInfo.diabetesType == "LADA") {
+                        diabetesType.value = "LADA"
+                    } else { // "모름"
+                        diabetesType.value = "Unknown"
+                    }
+                }
             }
-        } catch (e: Exception) {
+
+            } catch (e: Exception) {
             Log.e("TEST", "UserInfo 사용자 정보 로드 실패 : ${e.message}")
         }
     }
@@ -467,30 +495,30 @@ fun UserInfoScreen(navController: NavHostController) {
     }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        SubScreenHeader("사용자 정보", onBackClick = { navController.popBackStack() })
+        SubScreenHeader(stringResource(R.string.setting_menu_title_user_info), onBackClick = { navController.popBackStack() })
 
         Column(modifier = Modifier.padding(horizontal = 24.dp)) {
-            Text("기본정보", color = TextGray, fontSize = 14.sp, modifier = Modifier.padding(vertical = 12.dp))
-            InfoRow("이름", name.value)
-            InfoRow("이메일", email.value)
+            Text(stringResource(R.string.user_info_title), color = TextGray, fontSize = 14.sp, modifier = Modifier.padding(vertical = 12.dp))
+            InfoRow(stringResource(R.string.user_info_name), name.value)
+            InfoRow(stringResource(R.string.user_info_email), email.value)
 //             비밀번호 변경하기 비활성화
 //            Text("비밀번호 변경하기", fontSize = 16.sp, modifier = Modifier.padding(vertical = 12.dp).clickable { })
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text("부가정보", color = TextGray, fontSize = 14.sp, modifier = Modifier.padding(vertical = 12.dp))
-            InfoRow("성별", sex.value)
-            InfoRow("연령", age.value)
-            InfoRow("신장", height.value)
-            InfoRow("체중", weight.value)
-            InfoRow("당뇨 유형", diabetesType.value)
-            InfoRow("목표 혈당 범위", targetGlucoseRange.value)
+            Text(stringResource(R.string.user_info_sub_title), color = TextGray, fontSize = 14.sp, modifier = Modifier.padding(vertical = 12.dp))
+            InfoRow(stringResource(R.string.user_info_gender), sex.value)
+            InfoRow(stringResource(R.string.user_info_age), age.value)
+            InfoRow(stringResource(R.string.user_info_height), height.value)
+            InfoRow(stringResource(R.string.user_info_weight), weight.value)
+            InfoRow(stringResource(R.string.user_info_diabetes_type), diabetesType.value)
+            InfoRow(stringResource(R.string.user_info_target_glucose_range), targetGlucoseRange.value)
             
             Spacer(modifier = Modifier.height(16.dp))
-            Text("일반적인 목표 혈당범위는 80~130 mg/dL이며, 식후 최대 혈당은 180 mg/dL미만입니다.", fontSize = 12.sp, color = TextGray)
+            Text(stringResource(R.string.user_info_description), fontSize = 12.sp, color = TextGray)
 
             Spacer(modifier = Modifier.height(32.dp))
-            Text("회원탈퇴", color = AlertRed, fontSize = 14.sp, modifier = Modifier.clickable {
+            Text(stringResource(R.string.user_info_delete_account), color = AlertRed, fontSize = 14.sp, modifier = Modifier.clickable {
                 navController.navigate("delete_account")
             })
             Spacer(modifier = Modifier.height(32.dp))
@@ -518,12 +546,23 @@ fun SensorInfoScreen(
         AppDatabase.getInstance(context)
     }
 
+    val isKorea = isKorea()
+    val remainingTimeText = remember(remainingTime.value, isKorea) {
+        val days = remainingTime.value
+        if (isKorea) {
+            "${days}일"
+        } else {
+            "$days ${if (days == 1) "day" else "days"}"
+        }
+    }
+
 
 
     LaunchedEffect(Unit) {
         val startTimeMilli = DataStoreManager.getStartTime().first() ?: -1
         val endTimeMilli = DataStoreManager.getEndTime().first() ?: -1
-        val formatter = DateTimeFormatter.ofPattern("yyyy년 M월 d일", Locale.KOREAN)
+        val formatter = if (isKorea) DateTimeFormatter.ofPattern("yyyy년 M월 d일", Locale.KOREAN) else DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)
+
         val userId = DataStoreManager.getUserId().first() ?: -1
 
         val formattedDate = if (startTimeMilli != -1L) {
@@ -660,15 +699,15 @@ fun SensorInfoScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        SubScreenHeader("센서 정보", onBackClick = { navController.popBackStack() })
+        SubScreenHeader(stringResource(R.string.setting_menu_title_sensor_info), onBackClick = { navController.popBackStack() })
 
         Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)) {
-            InfoRow("센서 시작일", startTime.value)
-            InfoRow("남은 사용 기간", "${remainingTime.value}일")
-            InfoRow("시리얼 번호", serialNumber.value)
+            InfoRow(stringResource(R.string.sensor_info_start_time), startTime.value)
+            InfoRow(stringResource(R.string.sensor_info_left_time), remainingTimeText)
+            InfoRow(stringResource(R.string.sensor_info_serial_number), serialNumber.value)
             
             Spacer(modifier = Modifier.height(32.dp))
-            Text("센서종료", color = AlertRed, fontSize = 16.sp, modifier = Modifier.clickable {
+            Text(stringResource(R.string.sensor_info_sensor_end), color = AlertRed, fontSize = 16.sp, modifier = Modifier.clickable {
                 showSensorOffDialog.value = true
             })
         }
@@ -720,7 +759,6 @@ fun AlarmSettingsScreen(navController: NavHostController) {
             val verifiedDSSilentMode = DataStoreManager.getNotiSilentMode().first()
             val verifiedDSTargetLowGlucose = DataStoreManager.getTargetLowGlucose().first() ?: 70
             val verifiedDSTargetHighGlucose = DataStoreManager.getTargetHighGlucose().first() ?: 170
-            val verifiedDSDailyCalibrationTime = DataStoreManager.getDailyCalibrationTime().first() ?: "오전 11:00"
 
             // 로그 띄우기
             Log.e("NOTI", "After High : ${verifiedDSHigh}, Low : ${verifiedDSLow} " +
@@ -754,20 +792,20 @@ fun AlarmSettingsScreen(navController: NavHostController) {
 
     if (showSetLowGlucoseDialog.value) {
         TargetGlucoseDialog(
-            title = "저혈당 알림",
+            title = stringResource(R.string.alarm_setting_low_glucose),
             value = targetLowGlucose.value,
             onValueChange = { targetLowGlucose.value = it },
             onDismiss = { showSetLowGlucoseDialog.value = false },
             onConfirm = {
                 val target = targetLowGlucose.value
                 if (target.isBlank()) {
-                    Toast.makeText(context, "혈당값을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.toast_enter_glucose), Toast.LENGTH_SHORT).show()
                     return@TargetGlucoseDialog
                 }
 
                 val targetValue = target.toIntOrNull()
                 if (targetValue == null) {
-                    Toast.makeText(context, "숫자만 입력해주세요.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.toast_enter_only_number), Toast.LENGTH_SHORT).show()
                     return@TargetGlucoseDialog
                 }
 
@@ -781,20 +819,20 @@ fun AlarmSettingsScreen(navController: NavHostController) {
 
     if (showSetHighGlucoseDialog.value) {
         TargetGlucoseDialog(
-            title = "고혈당 알림",
+            title = stringResource(R.string.alarm_setting_high_glucose),
             value = targetHighGlucose.value,
             onValueChange = { targetHighGlucose.value = it },
             onDismiss = { showSetHighGlucoseDialog.value = false },
             onConfirm = {
                 val target = targetHighGlucose.value
                 if (target.isBlank()) {
-                    Toast.makeText(context, "혈당값을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.toast_enter_glucose), Toast.LENGTH_SHORT).show()
                     return@TargetGlucoseDialog
                 }
 
                 val targetValue = target.toIntOrNull()
                 if (targetValue == null) {
-                    Toast.makeText(context, "숫자만 입력해주세요.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.toast_enter_only_number), Toast.LENGTH_SHORT).show()
                     return@TargetGlucoseDialog
                 }
 
@@ -807,17 +845,17 @@ fun AlarmSettingsScreen(navController: NavHostController) {
     }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        SubScreenHeader("알림 설정", onBackClick = { navController.popBackStack() })
+        SubScreenHeader(stringResource(R.string.alarm_setting_title), onBackClick = { navController.popBackStack() })
 
         Column(modifier = Modifier.padding(horizontal = 24.dp)) {
-            AlarmSwitchRow("무음 모드", checkedForSilentMode.value) {
+            AlarmSwitchRow(stringResource(R.string.alarm_setting_silent_mode), checkedForSilentMode.value) {
                 checkedForSilentMode.value = it
                 coroutineScope.launch(Dispatchers.IO) {
                     DataStoreManager.setNotiSilentMode(it)
                 }
             }
             AlarmSwitchRow(
-                title = "저혈당 알림",
+                title = stringResource(R.string.alarm_setting_low_glucose),
                 checked = checkedForLowGlucose.value,
                 subValue = "${targetLowGlucose.value} mg/dL",
                 onRowClick = { showSetLowGlucoseDialog.value = true },
@@ -829,7 +867,7 @@ fun AlarmSettingsScreen(navController: NavHostController) {
                 }
             )
             AlarmSwitchRow(
-                title = "고혈당 알림",
+                title = stringResource(R.string.alarm_setting_high_glucose),
                 checked = checkedForHighGlucose.value,
                 subValue = "${targetHighGlucose.value} mg/dL",
                 onRowClick = { showSetHighGlucoseDialog.value = true },
@@ -840,19 +878,19 @@ fun AlarmSettingsScreen(navController: NavHostController) {
                     }
                 }
             )
-            AlarmSwitchRow("신호 소실", checkedForLostSignal.value) {
+            AlarmSwitchRow(stringResource(R.string.lost_signal), checkedForLostSignal.value) {
                 checkedForLostSignal.value = it
                 coroutineScope.launch(Dispatchers.IO) {
                     DataStoreManager.setNotiLostSignal(it)
                 }
             }
-            AlarmSwitchRow("센서 만료", checkedForExpiredSensor.value) {
+            AlarmSwitchRow(stringResource(R.string.sensor_expired), checkedForExpiredSensor.value) {
                 checkedForExpiredSensor.value = it
                 coroutineScope.launch(Dispatchers.IO) {
                     DataStoreManager.setNotiExpiredSensor(it)
                 }
             }
-            AlarmSwitchRow("센서 안정화", checkedForStabilization.value) {
+            AlarmSwitchRow(stringResource(R.string.alarm_setting_sensor_stabilization), checkedForStabilization.value) {
                 checkedForStabilization.value = it
                 coroutineScope.launch(Dispatchers.IO) {
                     DataStoreManager.setNotiStabilization(it)
@@ -983,7 +1021,7 @@ private fun TargetGlucoseDialog(
                 ) {
                     TextButton(onClick = onDismiss) {
                         Text(
-                            text = "취소",
+                            text = stringResource(R.string.cancel),
                             color = Color.Gray,
                             fontWeight = FontWeight.Medium,
                             fontSize = 16.sp
@@ -1001,7 +1039,7 @@ private fun TargetGlucoseDialog(
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            text = "확인",
+                            text = stringResource(R.string.confirm),
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
                         )
@@ -1023,7 +1061,7 @@ fun AppInfoScreen(navController: NavHostController) {
     val versionName = packageInfo.versionName
 
     Column(modifier = Modifier.fillMaxSize()) {
-        SubScreenHeader("앱 정보", onBackClick = { navController.popBackStack() })
+        SubScreenHeader(stringResource(R.string.setting_menu_title_app_info), onBackClick = { navController.popBackStack() })
 
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -1038,9 +1076,9 @@ fun AppInfoScreen(navController: NavHostController) {
             )
 //            Text("Always RT", fontSize = 28.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
-            Text("버전 $versionName", fontSize = 16.sp)
+            Text(if(isKorea()){"버전 $versionName"} else {"Version $versionName"}, fontSize = 16.sp)
             Spacer(modifier = Modifier.height(16.dp))
-            Text("현재 최신버전입니다.", fontSize = 12.sp, color = TextGray)
+            Text(stringResource(R.string.app_info_latest_version), fontSize = 12.sp, color = TextGray)
             
             Spacer(modifier = Modifier.height(40.dp))
             
@@ -1048,14 +1086,14 @@ fun AppInfoScreen(navController: NavHostController) {
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                Text("의료기기 허가정보", fontSize = 14.sp, modifier = Modifier.clickable {
-                    Toast.makeText(context, "의료기기 허가정보는 추후 기입 예정입니다.", Toast.LENGTH_SHORT).show()
+                Text(stringResource(R.string.app_info_medical_device_regulatory_info), fontSize = 14.sp, modifier = Modifier.clickable {
+                    Toast.makeText(context, context.getString(R.string.toast_medical_device_regulatory_info_excuse), Toast.LENGTH_SHORT).show()
                 })
-                Text("서비스 이용약관", fontSize = 14.sp, modifier = Modifier.clickable {
-                    Toast.makeText(context, "서비스 이용약관은 추후 제공될 예정입니다.", Toast.LENGTH_SHORT).show()
+                Text(stringResource(R.string.app_info_terms_of_service), fontSize = 14.sp, modifier = Modifier.clickable {
+                    Toast.makeText(context, context.getString(R.string.toast_terms_of_service_excuse), Toast.LENGTH_SHORT).show()
                 })
-                Text("개인정보 처리방침", fontSize = 14.sp, modifier = Modifier.clickable {
-                    Toast.makeText(context, "개인정보 처리방침은 추후 제공될 예정입니다.", Toast.LENGTH_SHORT).show()
+                Text(stringResource(R.string.app_info_privacy_policy), fontSize = 14.sp, modifier = Modifier.clickable {
+                    Toast.makeText(context, context.getString(R.string.toast_privacy_policy_excuse), Toast.LENGTH_SHORT).show()
                 })
             }
         }

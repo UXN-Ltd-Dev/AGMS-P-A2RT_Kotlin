@@ -96,6 +96,7 @@ class AlwaysA2RTService() : Service() {
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
     private var bleInitializationJob: Job? = null
     private var isDuplicatedJob: Job? = null
+    private var resourcesReleased = false
 
     private val localBinder = LocalBinder()
     var count = 1
@@ -134,6 +135,8 @@ class AlwaysA2RTService() : Service() {
     }
 
     private fun releaseResources() {
+        if (resourcesReleased) return
+        resourcesReleased = true
         isServiceRunning = false
 
         // 노티 종료, 타이머 종료
@@ -170,6 +173,7 @@ class AlwaysA2RTService() : Service() {
         super.onStartCommand(intent, flags, startId)
         if (intent?.action == "ACTION_STOP_SERVICE") {
             Log.d("SERVICE", "Received ACTION_STOP_SERVICE, stopping service.")
+            startForegroundForStopRequest()
             releaseResources()
             stopForeground(true) // 포그라운드만 종료
             stopSelf()
@@ -1039,6 +1043,35 @@ class AlwaysA2RTService() : Service() {
 
             Log.e("SERVICE", "이미 노티 매니저가 생성되었으므로 스킵")
         }
+    }
+
+    private fun startForegroundForStopRequest() {
+        createNotificationChannel()
+
+        val notificationIntent = Intent(baseContext, MainActivity::class.java).apply {
+            flags = FLAG_ACTIVITY_SINGLE_TOP or FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val stopPendingIntentFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            PendingIntent.FLAG_IMMUTABLE
+        } else {
+            PendingIntent.FLAG_UPDATE_CURRENT
+        }
+        val stopPendingIntent = PendingIntent.getActivity(
+            baseContext,
+            0,
+            notificationIntent,
+            stopPendingIntentFlags
+        )
+        val notification = NotificationCompat.Builder(baseContext, NOTI_CHANNEL_ID)
+            .setOngoing(false)
+            .setContentTitle(baseContext.getString(R.string.notification_agms_running))
+            .setContentText(baseContext.getString(R.string.notification_always_running))
+            .setSmallIcon(R.mipmap.ic_launcher_round)
+            .setContentIntent(stopPendingIntent)
+            .setSilent(true)
+            .build()
+
+        startForeground(NOTI_ID, notification, FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
     }
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)

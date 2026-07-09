@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
@@ -19,8 +22,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -165,13 +170,61 @@ private fun extractEventContentAfter(content: String, key: String): String {
         .trim()
 }
 
+private fun localizedExerciseIntensity(context: android.content.Context, value: String): String {
+    return when (value) {
+        "가벼움" -> context.getString(R.string.exercise_intensity_low)
+        "보통" -> context.getString(R.string.exercise_intensity_medium)
+        "격렬함" -> context.getString(R.string.exercise_intensity_high)
+        else -> value
+    }
+}
+
+private fun localizedInsulinType(context: android.content.Context, value: String): String {
+    return when (value) {
+        "초속효성" -> context.getString(R.string.insulin_type_rapid)
+        "속효성" -> context.getString(R.string.insulin_type_short)
+        "지속형" -> context.getString(R.string.insulin_type_long)
+        "혼합형" -> context.getString(R.string.insulin_type_premixed)
+        "중간형" -> context.getString(R.string.insulin_type_nph)
+        else -> value
+    }
+}
+
+private fun isKoreanLocale(context: android.content.Context): Boolean {
+    return context.resources.configuration.locales[0].language == "ko"
+}
+
+private fun formatInsulinDescription(
+    context: android.content.Context,
+    insulinType: String,
+    insulinDose: String
+): String {
+    val localizedType = localizedInsulinType(context, insulinType)
+    val dose = insulinDose.trim()
+
+    return if (isKoreanLocale(context)) {
+        listOf(localizedType, dose, "단위")
+            .filter { it.isNotBlank() }
+            .joinToString(" ")
+    } else {
+        when {
+            dose.isNotBlank() && localizedType.isNotBlank() -> "$dose units of $localizedType"
+            dose.isNotBlank() -> "$dose units"
+            else -> localizedType
+        }
+    }
+}
+
 private fun ItemData.toRecordItem(context: android.content.Context): RecordItem {
     val category = eventTypeToRecordCategory(eventType)
 
     if (category == RecordCategory.EXERCISE) {
         val exerciseType = extractEventContentBetween(content, "운동 종류", "운동 시간")
         val exerciseTime = extractEventContentBetween(content, "운동 시간", "강도")
-        val exerciseIntensity = extractEventContentAfter(content, "강도")
+        val exerciseIntensity = localizedExerciseIntensity(
+            context = context,
+            value = extractEventContentAfter(content, "강도")
+        )
 
         return RecordItem(
             category = category,
@@ -211,9 +264,11 @@ private fun ItemData.toRecordItem(context: android.content.Context): RecordItem 
         return RecordItem(
             category = category,
             title = context.getString(R.string.record_insulin_administration),
-            description = listOf(insulinType, insulinDose, "단위")
-                .filter { it.isNotBlank() }
-                .joinToString(" "),
+            description = formatInsulinDescription(
+                context = context,
+                insulinType = insulinType,
+                insulinDose = insulinDose
+            ),
             time = formatEventTime(time)
         )
     }
@@ -645,6 +700,7 @@ fun RecordDetailScreen(
     onBackClick: () -> Unit
 ) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
     val localDbRepository = remember(context) { AppDatabase.getInstance(context) }
     val recordTimeMillis = remember(initialRecordTimeMillis) {
@@ -684,6 +740,11 @@ fun RecordDetailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTapGestures {
+                    focusManager.clearFocus()
+                }
+            }
             .padding(16.dp)
     ) {
         Image(
@@ -758,7 +819,7 @@ fun RecordDetailScreen(
                 val content = buildContent()
 
                 if (eventTypeCode == null || content.isBlank()) {
-                    Toast.makeText(context, "기록 내용을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.toast_enter_record), Toast.LENGTH_SHORT).show()
                     return@Button
                 }
 
@@ -768,7 +829,31 @@ fun RecordDetailScreen(
                     null
                 }
                 if (category == RecordCategory.BLOOD_SUGAR && calibrationGlucose == null) {
-                    Toast.makeText(context, "올바른 혈당값을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.toast_req_glucose), Toast.LENGTH_SHORT).show()
+                    return@Button
+                }
+
+                val hasEmptyRequiredField = when (category) {
+                    RecordCategory.EXERCISE -> {
+                        exerciseType.isBlank() || exerciseTime.isBlank()
+                    }
+
+                    RecordCategory.MEAL -> {
+                        mealName.isBlank() || mealContent.isBlank()
+                    }
+
+                    RecordCategory.BLOOD_SUGAR -> {
+                        bloodSugarValue.isBlank()
+                    }
+
+                    RecordCategory.INSULIN -> {
+                        insulinDose.isBlank()
+                    }
+                    else -> false
+                }
+
+                if (hasEmptyRequiredField) {
+                    Toast.makeText(context, context.getString(R.string.toast_enter_record), Toast.LENGTH_SHORT).show()
                     return@Button
                 }
 
@@ -840,7 +925,7 @@ fun RecordDetailScreen(
                     } catch (e: Exception) {
                         Log.e("EVENT", "네트워크 또는 userId null 에러 : ${e.message}")
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(context, "네트워크 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.toast_network_error2), Toast.LENGTH_SHORT).show()
                             Log.e("EVENT", "이벤트 업로드 실패")
                         }
                     }
@@ -890,16 +975,37 @@ fun ExerciseInputForm(
         IntensityOption("보통", R.string.exercise_intensity_medium),
         IntensityOption("격렬함", R.string.exercise_intensity_high)
     )
-    OutlinedTextField(
-        value = type, onValueChange = onTypeChange,
-        label = { Text(stringResource(R.string.record_detail_exercise_description_1)) },
-        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+    val exerciseTextSelectionColors = TextSelectionColors(
+        handleColor = Color.Black,
+        backgroundColor = Color.Black.copy(alpha = 0.3f)
     )
-    OutlinedTextField(
-        value = time, onValueChange = onTimeChange,
-        label = { Text(stringResource(R.string.record_detail_exercise_description_2)) },
-        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
-    )
+
+    CompositionLocalProvider(LocalTextSelectionColors provides exerciseTextSelectionColors) {
+        OutlinedTextField(
+            value = type, onValueChange = onTypeChange,
+            label = { Text(stringResource(R.string.record_detail_exercise_description_1)) },
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.LightGray,
+                unfocusedBorderColor = Color.LightGray,
+                focusedLabelColor = Color.LightGray,
+                unfocusedLabelColor = Color.LightGray,
+                cursorColor = Color.Black
+            )
+        )
+        OutlinedTextField(
+            value = time, onValueChange = onTimeChange,
+            label = { Text(stringResource(R.string.record_detail_exercise_description_2)) },
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.LightGray,
+                unfocusedBorderColor = Color.LightGray,
+                focusedLabelColor = Color.LightGray,
+                unfocusedLabelColor = Color.LightGray,
+                cursorColor = Color.Black
+            )
+        )
+    }
     Text(stringResource(R.string.record_detail_exercise_description_sub_title), fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
         intensityOptions.forEach { option ->
@@ -921,16 +1027,38 @@ fun MealInputForm(
     mealContent: String,
     onMealContentChange: (String) -> Unit
 ) {
-    OutlinedTextField(
-        value = mealName, onValueChange = onMealNameChange,
-        label = { Text(stringResource(R.string.record_detail_meal_description_1)) },
-        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+
+    val mealTextSelectionColors = TextSelectionColors(
+        handleColor = Color.Black,
+        backgroundColor = Color.Black.copy(alpha = 0.3f)
     )
-    OutlinedTextField(
-        value = mealContent, onValueChange = onMealContentChange,
-        label = { Text(stringResource(R.string.record_detail_meal_description_2)) },
-        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
-    )
+
+    CompositionLocalProvider(LocalTextSelectionColors provides mealTextSelectionColors) {
+        OutlinedTextField(
+            value = mealName, onValueChange = onMealNameChange,
+            label = { Text(stringResource(R.string.record_detail_meal_description_1)) },
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.LightGray,
+                unfocusedBorderColor = Color.LightGray,
+                focusedLabelColor = Color.LightGray,
+                unfocusedLabelColor = Color.LightGray,
+                cursorColor = Color.Black
+            )
+        )
+        OutlinedTextField(
+            value = mealContent, onValueChange = onMealContentChange,
+            label = { Text(stringResource(R.string.record_detail_meal_description_2)) },
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.LightGray,
+                unfocusedBorderColor = Color.LightGray,
+                focusedLabelColor = Color.LightGray,
+                unfocusedLabelColor = Color.LightGray,
+                cursorColor = Color.Black
+            )
+        )
+    }
     Text(recordTimeText, color = Color.Gray)
 }
 
@@ -943,11 +1071,27 @@ fun BloodSugarInputForm(
     onUseCalibrationChange: (Boolean) -> Unit,
     showCalibrationOption: Boolean
 ) {
-    OutlinedTextField(
-        value = value, onValueChange = onValueChange,
-        label = { Text(stringResource(R.string.record_detail_bg_label)) },
-        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+
+    val bloodSugarTextSelectionColors = TextSelectionColors(
+        handleColor = Color.Black,
+        backgroundColor = Color.Black.copy(alpha = 0.3f)
     )
+
+    CompositionLocalProvider(LocalTextSelectionColors provides bloodSugarTextSelectionColors) {
+        OutlinedTextField(
+            value = value, onValueChange = onValueChange,
+            label = { Text(stringResource(R.string.record_detail_bg_label)) },
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.LightGray,
+                unfocusedBorderColor = Color.LightGray,
+                focusedLabelColor = Color.LightGray,
+                unfocusedLabelColor = Color.LightGray,
+                cursorColor = Color.Black
+            )
+        )
+    }
+
     Text(recordTimeText, color = Color.Gray)
 
     if (showCalibrationOption) {
@@ -1011,10 +1155,25 @@ fun InsulinInputForm(
         }
     }
 
-    OutlinedTextField(
-        value = dose, onValueChange = onDoseChange,
-        label = { Text(stringResource(R.string.record_detail_insulin)) },
-        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+    val insulinTextSelectionColors = TextSelectionColors(
+        handleColor = Color.Black,
+        backgroundColor = Color.Black.copy(alpha = 0.3f)
     )
+
+    CompositionLocalProvider(LocalTextSelectionColors provides insulinTextSelectionColors) {
+        OutlinedTextField(
+            value = dose, onValueChange = onDoseChange,
+            label = { Text(stringResource(R.string.record_detail_insulin)) },
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.LightGray,
+                unfocusedBorderColor = Color.LightGray,
+                focusedLabelColor = Color.LightGray,
+                unfocusedLabelColor = Color.LightGray,
+                cursorColor = Color.Black
+            )
+        )
+    }
+
     Text(recordTimeText, color = Color.Gray)
 }
