@@ -65,6 +65,7 @@ import kr.co.uxn.agms_p_a2rt.NetworkUtil.isNetworkAvailable
 import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseDuplicateLoginError
 import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseLoginError
 import kr.co.uxn.agms_p_a2rt.api.token.DataStoreManager
+import kr.co.uxn.agms_p_a2rt.ui.components.isKorea
 import kr.co.uxn.agms_p_a2rt.ui.components.main.AlwaysDialog
 
 @Composable
@@ -330,8 +331,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Image(
-//                    painter = painterResource(id = if (isKorean) R.drawable.google_login_high else R.drawable.btn_eng_start_google),
-                            painter = painterResource(id = R.drawable.google_login_high),
+                            painter = painterResource(id = if (isKorea()) R.drawable.google_login_high else R.drawable.btn_eng_start_google),
                             contentDescription = "구글 로그인 배경",
                             modifier = Modifier
                                 .size(width = 300.dp, height = 50.dp)
@@ -373,8 +373,7 @@ fun LoginScreen(viewModel: LoginViewModel, navController: NavController) {
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Image(
-//                    painter = painterResource(id = if (isKorean) R.drawable.kakao_icon_high else R.drawable.btn_eng_start_with_kakao),
-                            painter = painterResource(id = R.drawable.kakao_icon_high),
+                            painter = painterResource(id = if (isKorea()) R.drawable.kakao_icon_high else R.drawable.btn_eng_start_with_kakao),
                             contentDescription = "카카오 로그인 배경",
                             modifier = Modifier
                                 .size(width = 300.dp, height = 50.dp)

@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kr.co.uxn.agms_p_a2rt.R
+import kr.co.uxn.agms_p_a2rt.ui.components.isKorea
 
 @Composable
 fun GuideScreen(
@@ -117,8 +118,7 @@ fun GuideScreen(
                     .padding(bottom = 15.dp)
             ) {
                 Image(
-//                    painter = painterResource(id = if(isKorean) R.drawable.btn_next else R.drawable.btn_eng_continue),
-                    painter = painterResource(id = R.drawable.btn_next),
+                    painter = painterResource(id = if(isKorea()) R.drawable.btn_next else R.drawable.btn_eng_next),
                     contentDescription = "다음 버튼",
                     modifier = Modifier
                         .align(Alignment.Center)

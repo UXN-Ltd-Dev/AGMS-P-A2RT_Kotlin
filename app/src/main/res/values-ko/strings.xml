@@ -86,9 +86,9 @@
     <string name="guide_description_1">"알코올 스왑으로 부착 부위 피부를\n깨끗이 닦은 후 건조시킵니다."</string>
     <string name="guide_description_2">"보호 덮개를 손으로 단단히 잡고,\n본체를 시계반대 방향으로 돌려서\n보호 덮개와 분리합니다."</string>
     <string name="guide_description_3">"어플리케이터를 삽입하는 피부에\n수평하게 위치시킵니다."</string>
-    <string name="guide_description_4">"어플리케이터를 본체를\n피부에 대고 소리가 날때까지\n끝까지 누릅니다."</string>
-    <string name="guide_description_5">"어플리케이터를 들어올려\n몸에서 분리합니다"</string>
-    <string name="guide_description_6">"손가락으로 트랜스미터 주위에\n있는 점착패드 주변을 눌러 점착패드가\n피부에 잘 붙도록 합니다."</string>
+    <string name="guide_description_4">"어플리케이터 본체를\n피부에 대고 소리가 날때까지\n끝까지 누릅니다."</string>
+    <string name="guide_description_5">"어플리케이터를 들어올려\n몸에서 분리합니다.\n트랜스미터가 피부에\n잘 붙어 있는지 확인합니다."</string>
+    <string name="guide_description_6">"손가락으로 점착패드 주변을 눌러\n피부에 잘 붙도록 합니다."</string>
 
     <!--  기기 등록 화면 -->
     <string name="register_device_title">"블루투스 연결을 위해\n제품번호를 입력해 주세요."</string>
@@ -189,6 +189,44 @@
     <string name="enter_glucose_level_hint">혈당을 입력해 주세요.</string>
     <string name="enter_glucose_level_sub_title">정확한 데이터를 위해서\n최소 식후 2시간 후\n입력하는 것이 좋습니다..</string>
 
+    <!--  노티 -->
+    <string name="notification_sensor_ready">센서가 준비되었습니다.</string>
+    <string name="notification_bluetooth_off">블루투스가 꺼져있습니다</string>
+    <string name="notification_always_running">Always RT가 작동 중입니다.</string>
+    <string name="notification_agms_running">AGMS 실행 중</string>
+    <string name="notification_alert_high_glucose">고혈당 주의</string>
+    <string name="notification_alert_high_glucose_description">고혈당이 감지되었습니다. \n현재 혈당 : </string>
+    <string name="notification_alert_low_glucose">저혈당 주의</string>
+    <string name="notification_alert_low_glucose_description">저혈당이 감지되었습니다. \n현재 혈당 : </string>
+    <string name="notification_time_to_enter_daily_glucose">혈당 입력 시간입니다</string>
+    <string name="notification_time_to_enter_daily_glucose_description">오늘의 혈당을 입력해 주세요</string>
+    <string name="notification_end_measurement_check_app">측정이 종료되었습니다</string>
+    <string name="notification_end_measurement_check_app_description">앱을 확인해 주세요</string>
+    <string name="notification_disconnect_ble">센서와의 연결이 일시적으로 끊어졌어요</string>
+
+    <!--  BLE 권한 -->
+    <string name="permission_access_fine_location">BLE 연결을 위해 위치 권한을 허용해 주세요.</string>
+    <string name="permission_access_coarse_location">BLE 연결을 위해 거리 권한을 허용해 주세요.</string>
+    <string name="permission_bluetooth_scan">BLE 사용을 위해 근처 기기 권한을 허용해 주세요.</string>
+    <string name="permission_bluetooth_connect">BLE 권한을 허용해 주세요.</string>
+    <string name="permission_post_notifications">알림 메시지 전송을 위해 권한을 허용해 주세요.</string>
+    <string name="permission_camera">기기 등록을 위한 QR 코드 스캔에 사용됩니다.</string>
+
+    <!--  스낵바  -->
+    <string name="snakbar_complete_update">새 버전 다운로드가 완료되었습니다.</string>
+    <string name="toast_user_manual_in_development">사용 설명서는 현재 준비 중입니다.</string>
+
+    <!-- 알림 화면  -->
+    <string name="alert_history_title">알림</string>
+    <string name="alert_history_notification_is_empty">고혈당·저혈당 알림이 없습니다.</string>
+
+    <!-- BLE 상태 -->
+    <string name="ble_connection_state_disconnected">연결 해제</string>
+    <string name="ble_connection_state_connecting">연결중...</string>
+    <string name="ble_connection_state_connected">연결됨</string>
+
+
+
     <!--  토스트 -->
     <string name="toast_network_error">네트워크를 확인해 주세요.</string>
     <string name="toast_login_error">로그인할 수 없습니다.</string>
@@ -231,7 +269,7 @@
     <string name="toast_invalid_glucose_too_high">입력한 혈당이 비정상적으로 높습니다. 혈당계를 다시 사용해 측정해 주세요.</string>
     <string name="toast_invalid_glucose_too_low">입력한 혈당이 비정상적으로 낮습니다. 혈당계를 다시 사용해 측정해 주세요.</string>
     <string name="toast_req_glucose">혈당을 입력해 주세요.</string>
-    <string name="toast_empty_serial_number">시리얼 넘버를 입력해 주세요.</string>
+    <string name="toast_empty_serial_number">제품 번호를 입력해 주세요.</string>
     <string name="toast_empty_value_alert">빈 값이 있습니다.\n모든 정보를 입력해 주세요.</string>
     <string name="toast_req_time">시간을 입력해 주세요.</string>
     <string name="toast_enter_only_number">숫자만 입력해 주세요.</string>
@@ -246,21 +284,6 @@
     <string name="toast_terms_of_service_excuse">서비스 이용약관은 추후 제공될 예정입니다.</string>
     <string name="toast_privacy_policy_excuse">개인정보 처리방침은 추후 제공될 예정입니다.</string>
     <string name="toast_enter_record">기록 내용을 입력해주세요.</string>
-
-    <!--  노티 -->
-    <string name="notification_sensor_ready">센서가 준비되었습니다.</string>
-    <string name="notification_bluetooth_off">블루투스가 꺼져있습니다</string>
-    <string name="notification_always_running">Always RT가 작동 중입니다.</string>
-    <string name="notification_agms_running">AGMS 실행 중</string>
-    <string name="notification_alert_high_glucose">고혈당 주의</string>
-    <string name="notification_alert_high_glucose_description">고혈당이 감지되었습니다. \n현재 혈당 : </string>
-    <string name="notification_alert_low_glucose">저혈당 주의</string>
-    <string name="notification_alert_low_glucose_description">저혈당이 감지되었습니다. \n현재 혈당 : </string>
-    <string name="notification_time_to_enter_daily_glucose">혈당 입력 시간입니다</string>
-    <string name="notification_time_to_enter_daily_glucose_description">오늘의 혈당을 입력해 주세요</string>
-    <string name="notification_end_measurement_check_app">측정이 종료되었습니다</string>
-    <string name="notification_end_measurement_check_app_description">앱을 확인해 주세요</string>
-    <string name="notification_disconnect_ble">센서와의 연결이 일시적으로 끊어졌어요</string>
 
     <!--  다이얼로그 -->
     <string name="dialog_daily_enter_glucose_title">혈당 입력 시간입니다.</string>
@@ -296,26 +319,9 @@
     <string name="dialog_detect_other_login_title_in_login_screen">다른 기기에서 사용 중인 센서가 있어요!</string>
     <string name="dialog_detect_other_login_content_in_login_screen">로그인하면 기존 연결은 종료되고, 새로운 측정이 시작됩니다.</string>
 
-    <!--  BLE 권한 -->
-    <string name="permission_access_fine_location">BLE 연결을 위해 위치 권한을 허용해 주세요.</string>
-    <string name="permission_access_coarse_location">BLE 연결을 위해 거리 권한을 허용해 주세요.</string>
-    <string name="permission_bluetooth_scan">BLE 사용을 위해 근처 기기 권한을 허용해 주세요.</string>
-    <string name="permission_bluetooth_connect">BLE 권한을 허용해 주세요.</string>
-    <string name="permission_post_notifications">알림 메시지 전송을 위해 권한을 허용해 주세요.</string>
-    <string name="permission_camera">기기 등록을 위한 QR 코드 스캔에 사용됩니다.</string>
 
-    <!--  스낵바  -->
-    <string name="snakbar_complete_update">새 버전 다운로드가 완료되었습니다.</string>
-    <string name="toast_user_manual_in_development">사용 설명서는 현재 준비 중입니다.</string>
 
-    <!-- 알림 화면  -->
-    <string name="alert_history_title">알림</string>
-    <string name="alert_history_notification_is_empty">고혈당·저혈당 알림이 없습니다.</string>
 
-    <!-- BLE 상태 -->
-    <string name="ble_connection_state_disconnected">연결 해제</string>
-    <string name="ble_connection_state_connecting">연결중...</string>
-    <string name="ble_connection_state_connected">연결됨</string>
     <string name="record_category_all">전체</string>
     <string name="record_category_meal">식사</string>
     <string name="record_category_exercise">운동</string>
@@ -330,6 +336,7 @@
     <string name="glucose_variability_title">혈당 변동성</string>
     <string name="glucose_variability_cv_label">(혈당 변동계수, CV)</string>
     <string name="glucose_variability_description">혈당변동계수(CV)는 혈당이 얼마나 안정적으로 유지되는지 나타내는 수치이며, 합병증 예방을 위해서는 36% 이하로 유지하는 것을 권장합니다.</string>
+
 
     <string name="home_screen_left_time">잔여 시간</string>
     <string name="home_screen_sensor_expired">센서가 종료되었습니다.</string>
@@ -404,9 +411,11 @@
     <string name="app_info_terms_of_service">서비스 이용약관</string>
     <string name="app_info_privacy_policy">개인정보 처리방침</string>
 
-
-
-
-
+    <string name="register_device_qr_title">QR 코드를 스캔해\n기기를 연결해주세요.</string>
+    <string name="register_device_qr_sub_title">기기 측면 QR 스티커를 카메라 안에 맞춰 주세요.</string>
+    <string name="register_device_qr_scan_status_1">카메라 권한이 필요합니다.</string>
+    <string name="register_device_qr_scan_status_2">기기 확인 중...</string>
+    <string name="register_device_qr_scan_status_3">스캔 중...</string>
+    <string name="register_device_qr_plan_b">번호로 입력할게요.</string>
 
 </resources>

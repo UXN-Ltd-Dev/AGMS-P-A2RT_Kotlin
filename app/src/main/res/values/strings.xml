@@ -109,16 +109,16 @@
     <string name="guide_notice_title">Important\nPrecautions</string>
     <string name="guide_notice_description">1. This product is not a substitute for professional medical advice, diagnosis, or treatment, and must not be used for diagnosing diabetes. \n\n2. Do not use if you are under 19, pregnant, have a skin autoimmune disease, or are a critically ill patient. \n\n3. Always remove the sensor before undergoing an MRI, CT scan, X-ray, or diathermy treatment. \n\n4. Do not use if the expiration date has passed or the sterile packaging is damaged. Doing so may cause infection or inaccurate readings. \n\n5. If severe bleeding or bruising occurs at the sensor application site, discontinue use immediately, remove the sensor, and consult a doctor or healthcare professional.</string>
     <string name="guide_title">How to Use</string>
-    <string name="guide_description_1">"Clean the application site\nwith an alcohol swab\nand let it dry completely."</string>
-    <string name="guide_description_2">Hold the protective cap firmly\nand twist the main body\ncounter-clockwise\nto separate it from the cap.</string>
-    <string name="guide_description_3">Place the applicator\nhorizontally against the skin at \nthe application site.</string>
-    <string name="guide_description_4">Place your palm on top of the\napplicator and press down\nfirmly until you hear a click.</string>
-    <string name="guide_description_5">Lift the applicator away from\nyour body. Ensure the\ntransmitter is securely\nattached to your skin.</string>
-    <string name="guide_description_6">Press around the adhesive pad\nwith your fingers to ensure it is\nfirmly stuck to your skin.</string>
+    <string name="guide_description_1">"Clean the application site with \nan alcohol swab and let it to \ndry completely."</string>
+    <string name="guide_description_2">Firmly hold the protective cap\nand twist the main body\ncounterclockwise to separate it\nfrom the cap.</string>
+    <string name="guide_description_3">Place the applicator\nflat against the skin.</string>
+    <string name="guide_description_4">Press firmly against the skin \nuntil it clicks.</string>
+    <string name="guide_description_5">Lift the applicator away\nfrom your body.\nCheck that the transmitter is\nsecurely attached to your skin.</string>
+    <string name="guide_description_6">Press around the adhesive pad\nwith your fingers to ensure it\nsticks well.</string>
     <string name="guide_tip_1">Application site: Around 10cm to\nthe left or right of the navel.</string>
-    <string name="register_device_title">Please enter the\nSerial number to\nconnect Bluetooth.</string>
-    <string name="register_device_sub_title">Serial Number on the package label</string>
-    <string name="enter_serial_number_hint">Enter Serial Number.</string>
+    <string name="register_device_title">Enter the product \nnumber for Bluetooth \nconnection.</string>
+    <string name="register_device_sub_title">Product number on the \npackage label</string>
+    <string name="enter_serial_number_hint">Enter product number.</string>
     <string name="scan_fail_title">Bluetooth\nconnection failed.</string>
     <string name="scan_fail_sub_title">Please check your Bluetooth\nsignal and serial number\nbefore retrying.</string>
     <string name="scanning_title">Searching for device...</string>
@@ -134,7 +134,7 @@
     <string name="toast_invalid_glucose_too_high">Entered glucose is abnormally high. Please measure again using your meter.</string>
     <string name="toast_req_glucose">Please enter your glucose.</string>
     <string name="toast_invalid_glucose_too_low">Entered glucose is abnormally low. Please measure again using your meter.</string>
-    <string name="toast_empty_serial_number">Please enter serial number.</string>
+    <string name="toast_empty_serial_number">Please enter product number.</string>
     <string name="chart_option_weo1">WE1</string>
     <string name="chart_option_weo2">WE2</string>
     <string name="chart_option_glucose">GLUCOSE</string>
@@ -269,11 +269,12 @@
     <string name="first_glucose_skip">Skip</string>
     <string name="stabilization_title">Time remaining</string>
     <string name="stabilization_content">Stabilizing sesnor...</string>
-    <string name="stabilization_sub_title">Stabilization continues even if you close the app. You\'ll be notified when complete.</string>
+    <string name="stabilization_sub_title">Stabilization continues even if\nyou close the app. You\'ll be\nnotified when complete.</string>
     <string name="label_past">Reports</string>
     <string name="label_notification">Alerts</string>
     <string name="permission_camera">Required to scan QR codes for device registration.</string>
     <string name="toast_user_manual_in_development">The user manual is currently being prepared.</string>
+
     <string name="alert_history_notification_is_empty">There are no high or low glucose alerts.</string>
     <string name="alert_history_title">Alerts</string>
 
@@ -362,6 +363,12 @@
     <string name="toast_terms_of_service_excuse">Terms of Service will be available soon.</string>
     <string name="toast_privacy_policy_excuse">Privacy Policy will be available soon.</string>
     <string name="toast_enter_record">Please enter the record details.</string>
+    <string name="register_device_qr_title">Scan the QR code\nto connect device.</string>
+    <string name="register_device_qr_sub_title">Align the QR code within the frame.</string>
+    <string name="register_device_qr_scan_status_3">Scanning...</string>
+    <string name="register_device_qr_plan_b">Enter product number instead.</string>
+    <string name="register_device_qr_scan_status_2">Checking...</string>
+    <string name="register_device_qr_scan_status_1">Camera Permission is required.</string>
 
 
 </resources>

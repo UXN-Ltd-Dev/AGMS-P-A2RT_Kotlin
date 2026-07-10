@@ -99,7 +99,7 @@ class AlwaysA2RTService() : Service() {
     private var resourcesReleased = false
 
     private val localBinder = LocalBinder()
-    var count = 1
+    var count = 0
     private val guestMinuteTargets = listOf(60, 110, 200, 110)
     private var guestMinuteTargetIndex = 1
     private var guestPreviousGlucose = 60
@@ -278,250 +278,281 @@ class AlwaysA2RTService() : Service() {
 
                         val userId = DataStoreManager.getUserId().first() ?: -1
                         val userEmail = DataStoreManager.getEmail().first() ?: ""
+                        val isStabilizationCompleted = DataStoreManager.getStabilizationCompleted().first()
 
                         // Guest 유무 파악
                         // 1. 게스트인 경우
                         if (GuestList.getGuestList().contains(userEmail)) {
                             Log.d("Guest", "He is Guest")
                             Log.d("Guest", "userEmail : ${userEmail}")
+
                             // dummy api
-                            try {
-                                val glucoseDummyList = tokenRetrofit.getDummyGlucose(count)
-                                if (glucoseDummyList.isSuccessful) {
-                                    val glucoseListBody = glucoseDummyList.body()
-                                    val latestResponse = glucoseListBody?.lastOrNull()
-                                    val receivedGlucose = latestResponse?.glucose?.lastOrNull()
-                                    count++
-                                    if (latestResponse != null && receivedGlucose != null) {
-                                        val userId = DataStoreManager.getUserId().first() ?: -1
-                                        val formatter =
-                                            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+//                            if (!isStabilizationCompleted) {
+//                                Log.d("Guest", "안정화 완료 전이므로 게스트 더미 혈당 저장을 건너뜁니다.")
+//                            } else {
+                                try {
+                                    val glucoseDummyList = tokenRetrofit.getDummyGlucose(count)
+                                    if (glucoseDummyList.isSuccessful) {
+                                        val glucoseListBody = glucoseDummyList.body()
+                                        val latestResponse = glucoseListBody?.lastOrNull()
+                                        val receivedGlucose = latestResponse?.glucose?.lastOrNull()
+                                        count++
+                                        if (latestResponse != null && receivedGlucose != null) {
+                                            val userId = DataStoreManager.getUserId().first() ?: -1
+                                            val formatter =
+                                                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
-                                        val now = System.currentTimeMillis()
-                                        val targetGlucose =
-                                            guestMinuteTargets[guestMinuteTargetIndex]
-                                        val insertDataList = (0 until 6).map { offset ->
-                                            val progress = offset / 5.0
-                                            val easedProgress = (1.0 - cos(PI * progress)) / 2.0
-                                            val interpolatedGlucose = guestPreviousGlucose +
-                                                (targetGlucose - guestPreviousGlucose) * easedProgress
-                                            val glucose =
-                                                (interpolatedGlucose / 5.0).roundToInt() * 5
-                                            val time = now - (5 - offset) * 10_000L
-                                            val formattedTime = LocalDateTime.ofInstant(
-                                                Instant.ofEpochMilli(time),
-                                                ZoneId.of("Asia/Seoul")
-                                            ).format(formatter)
+                                            val now = System.currentTimeMillis()
+                                            val targetGlucose =
+                                                guestMinuteTargets[guestMinuteTargetIndex] // 60, 110, 200, 110
+                                            val insertDataList = (0 until 6).map { offset ->
+                                                val progress = offset / 5.0
+                                                val easedProgress = (1.0 - cos(PI * progress)) / 2.0
+                                                val interpolatedGlucose = guestPreviousGlucose +
+                                                        (targetGlucose - guestPreviousGlucose) * easedProgress
+                                                val glucose =
+                                                    (interpolatedGlucose / 5.0).roundToInt() * 5
+                                                val time = now - (5 - offset) * 10_000L
+                                                val formattedTime = LocalDateTime.ofInstant(
+                                                    Instant.ofEpochMilli(time),
+                                                    ZoneId.of("Asia/Seoul")
+                                                ).format(formatter)
 
-                                            UserGlucose(
-                                                userId = userId,
-                                                glucose = glucose.toDouble(),
-                                                weo1 = 0.0,
-                                                weo2 = 0.0,
-                                                createdAt = formattedTime,
-                                                createdAtLong = time
+                                                UserGlucose(
+                                                    userId = userId,
+                                                    glucose = glucose.toDouble(),
+                                                    weo1 = 0.0,
+                                                    weo2 = 0.0,
+                                                    createdAt = formattedTime,
+                                                    createdAtLong = time
+                                                )
+                                            }
+                                            guestPreviousGlucose = targetGlucose
+                                            guestMinuteTargetIndex =
+                                                (guestMinuteTargetIndex + 1) % guestMinuteTargets.size
+                                            val lastGlucose = insertDataList.last().glucose.toInt()
+
+                                            Log.e("TEST", "glucoseListBody : ${glucoseListBody}")
+                                            Log.e(
+                                                "TEST",
+                                                "received: $receivedGlucose, displayed: $lastGlucose"
                                             )
-                                        }
-                                        guestPreviousGlucose = targetGlucose
-                                        guestMinuteTargetIndex =
-                                            (guestMinuteTargetIndex + 1) % guestMinuteTargets.size
-                                        val lastGlucose = insertDataList.last().glucose.toInt()
 
-                                        Log.e("TEST", "glucoseListBody : ${glucoseListBody}")
-                                        Log.e(
-                                            "TEST",
-                                            "received: $receivedGlucose, displayed: $lastGlucose"
-                                        )
+                                            Log.e("TEST", "insertDataList : $insertDataList")
 
-                                        Log.e("TEST", "insertDataList : $insertDataList")
-
-                                        // db에 저장
-                                        localDbRepository?.dataDao()?.insertGlucose(insertDataList)
-
-                                        // ui에 마지막 글루코즈 값 갱신
-                                        BleBridge.updateGlucose(lastGlucose)
-
-                                        // 알람을 위한 target glucose 값 불러오기
-                                        val targetHigh = DataStoreManager.getTargetHighGlucose().first() ?: 170
-                                        val targetLow = DataStoreManager.getTargetLowGlucose().first() ?: 70
-
-                                        val highChecker = DataStoreManager.getNotiHighGlucose().first() ?: false
-                                        val lowChecker = DataStoreManager.getNotiLowGlucose().first() ?: false
-
-                                        // 고혈당, 저혈당 알람
-                                        if (highChecker) {
-                                            if (lastGlucose >= targetHigh) {
-                                                sendNotification(
-                                                    baseContext,
-                                                    baseContext.getString(R.string.notification_alert_high_glucose),
-                                                    baseContext.getString(R.string.notification_alert_high_glucose_description) + "${lastGlucose} mg/dL",
-                                                    96
-                                                )
-                                                localDbRepository?.dataDao()?.insertGlucoseAlert(
-                                                    GlucoseAlert(
-                                                        userId = userId,
-                                                        alertType = GlucoseAlertType.HIGH,
-                                                        glucose = lastGlucose,
-                                                        createdAtLong = System.currentTimeMillis()
-                                                    )
-                                                )
-                                                showHighGlucoseDialog(true)
-                                                Log.e("NOTI", "고혈당, lastGlucose: ${lastGlucose}, targetHigh: ${targetHigh}")
-                                            }
-                                        }
-
-                                        if (lowChecker) {
-                                            if (lastGlucose < targetLow) {
-                                                sendNotification(
-                                                    baseContext,
-                                                    baseContext.getString(R.string.notification_alert_low_glucose),
-                                                    baseContext.getString(R.string.notification_alert_low_glucose_description) + "${lastGlucose} mg/dL",
-                                                    95
-                                                )
-                                                localDbRepository?.dataDao()?.insertGlucoseAlert(
-                                                    GlucoseAlert(
-                                                        userId = userId,
-                                                        alertType = GlucoseAlertType.LOW,
-                                                        glucose = lastGlucose,
-                                                        createdAtLong = System.currentTimeMillis()
-                                                    )
-                                                )
-                                                showLowGlucoseDialog(true)
-                                                Log.e("NOTI", "저혈당, lastGlucose: ${lastGlucose}, targetLow: ${targetLow}")
-                                            }
-                                        }
+                                            if (count > 1) {
+                                                Log.d("TEST", "현재 count는 1이상 , count : $count")
+                                                // db에 저장
+                                                localDbRepository?.dataDao()
+                                                    ?.insertGlucose(insertDataList)
 
 
-                                        try {
-                                            val lastTime = tokenRetrofit.getLastTime(userId)
-                                            if (lastTime.isSuccessful) {
-                                                val lastTimeBody = lastTime.body()
-                                                if (lastTimeBody != null) {
-                                                    Log.e(
-                                                        "SERVICE",
-                                                        "서비스 코루틴에서 호출한 lastTime (isSuccessful) : ${lastTimeBody.toString()}"
-                                                    )
-                                                    if (lastTimeBody.isSuccess == false) {
-                                                        val userId2 = DataStoreManager.getUserId().first() ?: -1
-                                                        val localDBDataList = localDbRepository?.dataDao()
-                                                            ?.getListAfterLastTime(
-                                                                userId = userId2,
-                                                                lastTime = 0
-                                                            )
+                                                // ui에 마지막 글루코즈 값 갱신
+                                                BleBridge.updateGlucose(lastGlucose)
 
-                                                        Log.e("TEST", "DB 로부터 가져온 리스트 : ${localDBDataList}")
+                                                // 알람을 위한 target glucose 값 불러오기
+                                                val targetHigh =
+                                                    DataStoreManager.getTargetHighGlucose().first()
+                                                        ?: 170
+                                                val targetLow =
+                                                    DataStoreManager.getTargetLowGlucose().first()
+                                                        ?: 70
 
-                                                        val sendDataList = localDBDataList?.map {
-                                                            RequestDataCollectValue(
-                                                                userId = it.userId,
-                                                                createdAt = formatUtcDateTime(it.createdAtLong),
-                                                                weCurrent = it.weCurrent,
-                                                                aeCurrent = it.aeCurrent,
-                                                                temperature = it.temperature
-                                                            )
-                                                        }
+                                                val highChecker =
+                                                    DataStoreManager.getNotiHighGlucose().first()
+                                                        ?: false
+                                                val lowChecker =
+                                                    DataStoreManager.getNotiLowGlucose().first()
+                                                        ?: false
 
-                                                        val chunkedList = sendDataList?.chunked(5)
-                                                        chunkedList?.forEachIndexed { index, chunk ->
-                                                            val sendData = tokenRetrofit.sendData(chunk)
-                                                            if (sendData.isSuccessful) {
-                                                                val sendDataBody = sendData.body()
-                                                                if (sendDataBody != null) {
-                                                                    Log.d(
-                                                                        "TEST",
-                                                                        "SendDataBody : ${sendDataBody.toString()}"
-                                                                    )
-                                                                }
-                                                            } else {
-                                                                Log.d(
-                                                                    "TEST",
-                                                                    "SendData API통신 실패 : ${
-                                                                        sendData.errorBody()?.string()
-                                                                    }"
-                                                                )
-                                                            }
-                                                        }
-                                                    } else {
-                                                        Log.d("choco5732", "recentTime = ${lastTimeBody.recentTime}")
-                                                        Log.d("TEST", "2")
-
-                                                        val formatter =
-                                                            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                                                        val convertToLocalDateTime = LocalDateTime.parse(
-                                                            lastTimeBody.recentTime,
-                                                            formatter
+                                                // 고혈당, 저혈당 알람
+                                                if (highChecker) {
+                                                    if (lastGlucose >= targetHigh) {
+                                                        sendNotification(
+                                                            baseContext,
+                                                            baseContext.getString(R.string.notification_alert_high_glucose),
+                                                            baseContext.getString(R.string.notification_alert_high_glucose_description) + "${lastGlucose} mg/dL",
+                                                            96
                                                         )
-//                                                        val zoneId = ZoneId.of("Asia/Seoul") // 타임존 설정 (필수!)
-                                                        val zoneId = ZoneId.of("UTC") // 타임존 설정 (필수!)
-                                                        val parsedLongTime =
-                                                            convertToLocalDateTime.atZone(zoneId).toInstant()
-                                                                .toEpochMilli()
-
-                                                        val userId2 = DataStoreManager.getUserId().first() ?: -1
-
-                                                        val localDBDataList = localDbRepository?.dataDao()
-                                                            ?.getListAfterLastTime(
-                                                                userId = userId2,
-                                                                lastTime = parsedLongTime
-                                                            )
-
-                                                        Log.d("TEST", "DB로부터 가져온 리스트 : ${localDBDataList}")
-
-                                                        val sendDataList = localDBDataList?.map {
-                                                            RequestDataCollectValue(
-                                                                userId = it.userId,
-                                                                createdAt = formatUtcDateTime(it.createdAtLong),
-                                                                weCurrent = it.weCurrent,
-                                                                aeCurrent = it.aeCurrent,
-                                                                temperature = it.temperature
-                                                            )
-                                                        }
-
-                                                        val chunkedList = sendDataList?.chunked(5)
-                                                        chunkedList?.forEachIndexed { index, chunk ->
-                                                            val sendData = tokenRetrofit.sendData(chunk)
-                                                            if (sendData.isSuccessful) {
-                                                                val sendDataBody = sendData.body()
-                                                                if (sendDataBody != null) {
-                                                                    Log.d(
-                                                                        "TEST",
-                                                                        "SendDataBody : ${sendDataBody.toString()}"
-                                                                    )
-                                                                }
-                                                            } else {
-                                                                Log.d(
-                                                                    "TEST",
-                                                                    "SendData API통신 실패 : ${
-                                                                        sendData.errorBody()?.string()
-                                                                    }"
+                                                        localDbRepository?.dataDao()
+                                                            ?.insertGlucoseAlert(
+                                                                GlucoseAlert(
+                                                                    userId = userId,
+                                                                    alertType = GlucoseAlertType.HIGH,
+                                                                    glucose = lastGlucose,
+                                                                    createdAtLong = System.currentTimeMillis()
                                                                 )
-                                                            }
-                                                        }
+                                                            )
+                                                        showHighGlucoseDialog(true)
+                                                        Log.e(
+                                                            "NOTI",
+                                                            "고혈당, lastGlucose: ${lastGlucose}, targetHigh: ${targetHigh}"
+                                                        )
                                                     }
                                                 }
+
+                                                if (lowChecker) {
+                                                    if (lastGlucose < targetLow) {
+                                                        sendNotification(
+                                                            baseContext,
+                                                            baseContext.getString(R.string.notification_alert_low_glucose),
+                                                            baseContext.getString(R.string.notification_alert_low_glucose_description) + "${lastGlucose} mg/dL",
+                                                            95
+                                                        )
+                                                        localDbRepository?.dataDao()
+                                                            ?.insertGlucoseAlert(
+                                                                GlucoseAlert(
+                                                                    userId = userId,
+                                                                    alertType = GlucoseAlertType.LOW,
+                                                                    glucose = lastGlucose,
+                                                                    createdAtLong = System.currentTimeMillis()
+                                                                )
+                                                            )
+                                                        showLowGlucoseDialog(true)
+                                                        Log.e(
+                                                            "NOTI",
+                                                            "저혈당, lastGlucose: ${lastGlucose}, targetLow: ${targetLow}"
+                                                        )
+                                                    }
+                                                }
+
+
+                                                // 그래프를 위한 트리거
+                                                BleBridge.activateTrigger()
                                             } else {
-                                                Log.d(
-                                                    "TEST",
-                                                    "recent time API통신 실패 : ${lastTime.errorBody()?.string()}"
+                                                Log.d("TEST", "현재 count는 1이하라 db저장을 건너뜁니다 , count : $count")
+                                            }
+                                        }
+                                    } else {
+                                        Log.e(
+                                            "TEST",
+                                            "glucoseList API통신 실패 : ${
+                                                glucoseDummyList.errorBody()?.string()
+                                            }"
+                                        )
+                                    }
+
+                                } catch (e: Exception) {
+                                    Log.d("DUMMY", "Dummy API 에러 : ${e.message}")
+                                } // 요기까지
+//                            }
+
+                            try {
+                                val lastTime = tokenRetrofit.getLastTime(userId)
+                                if (lastTime.isSuccessful) {
+                                    val lastTimeBody = lastTime.body()
+                                    if (lastTimeBody != null) {
+                                        Log.e(
+                                            "SERVICE",
+                                            "서비스 코루틴에서 호출한 lastTime (isSuccessful) : ${lastTimeBody.toString()}"
+                                        )
+                                        if (lastTimeBody.isSuccess == false) {
+                                            val userId2 = DataStoreManager.getUserId().first() ?: -1
+                                            val localDBDataList = localDbRepository?.dataDao()
+                                                ?.getListAfterLastTime(
+                                                    userId = userId2,
+                                                    lastTime = 0
+                                                )
+
+                                            Log.e("TEST", "DB 로부터 가져온 리스트 : ${localDBDataList}")
+
+                                            val sendDataList = localDBDataList?.map {
+                                                RequestDataCollectValue(
+                                                    userId = it.userId,
+                                                    createdAt = formatUtcDateTime(it.createdAtLong),
+                                                    weCurrent = it.weCurrent,
+                                                    aeCurrent = it.aeCurrent,
+                                                    temperature = it.temperature
                                                 )
                                             }
-                                        } catch (e: Exception) {
-                                            Log.d("SERVICE", "서비스 내 API통신 에러 발생 : ${e.message}")
-                                        }
 
-                                        // 그래프를 위한 트리거
-                                        BleBridge.activateTrigger()
+                                            // 서버에 timeout 없이 보내기위해 5개로 쪼개서 전송
+                                            val chunkedList = sendDataList?.chunked(5)
+                                            chunkedList?.forEachIndexed { index, chunk ->
+                                                val sendData = tokenRetrofit.sendData(chunk)
+                                                if (sendData.isSuccessful) {
+                                                    val sendDataBody = sendData.body()
+                                                    if (sendDataBody != null) {
+                                                        Log.d(
+                                                            "TEST",
+                                                            "SendDataBody : ${sendDataBody.toString()}"
+                                                        )
+                                                    }
+                                                } else {
+                                                    Log.d(
+                                                        "TEST",
+                                                        "SendData API통신 실패 : ${
+                                                            sendData.errorBody()?.string()
+                                                        }"
+                                                    )
+                                                }
+                                            }
+                                        } else {
+                                            Log.d("choco5732", "recentTime = ${lastTimeBody.recentTime}")
+                                            Log.d("TEST", "2")
+
+                                            val formatter =
+                                                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                                            val convertToLocalDateTime = LocalDateTime.parse(
+                                                lastTimeBody.recentTime,
+                                                formatter
+                                            )
+//                                                        val zoneId = ZoneId.of("Asia/Seoul") // 타임존 설정 (필수!)
+                                            val zoneId = ZoneId.of("UTC") // 타임존 설정 (필수!)
+                                            val parsedLongTime =
+                                                convertToLocalDateTime.atZone(zoneId).toInstant()
+                                                    .toEpochMilli()
+
+                                            val userId2 = DataStoreManager.getUserId().first() ?: -1
+
+                                            val localDBDataList = localDbRepository?.dataDao()
+                                                ?.getListAfterLastTime(
+                                                    userId = userId2,
+                                                    lastTime = parsedLongTime
+                                                )
+
+                                            Log.d("TEST", "DB로부터 가져온 리스트 : ${localDBDataList}")
+
+                                            val sendDataList = localDBDataList?.map {
+                                                RequestDataCollectValue(
+                                                    userId = it.userId,
+                                                    createdAt = formatUtcDateTime(it.createdAtLong),
+                                                    weCurrent = it.weCurrent,
+                                                    aeCurrent = it.aeCurrent,
+                                                    temperature = it.temperature
+                                                )
+                                            }
+
+                                            val chunkedList = sendDataList?.chunked(5)
+                                            chunkedList?.forEachIndexed { index, chunk ->
+                                                val sendData = tokenRetrofit.sendData(chunk)
+                                                if (sendData.isSuccessful) {
+                                                    val sendDataBody = sendData.body()
+                                                    if (sendDataBody != null) {
+                                                        Log.d(
+                                                            "TEST",
+                                                            "SendDataBody : ${sendDataBody.toString()}"
+                                                        )
+                                                    }
+                                                } else {
+                                                    Log.d(
+                                                        "TEST",
+                                                        "SendData API통신 실패 : ${
+                                                            sendData.errorBody()?.string()
+                                                        }"
+                                                    )
+                                                }
+                                            }
+                                        }
                                     }
                                 } else {
-                                    Log.e(
+                                    Log.d(
                                         "TEST",
-                                        "glucoseList API통신 실패 : ${
-                                            glucoseDummyList.errorBody()?.string()
-                                        }"
+                                        "recent time API통신 실패 : ${lastTime.errorBody()?.string()}"
                                     )
                                 }
                             } catch (e: Exception) {
-                                Log.d("DUMMY", "Dummy API 에러 : ${e.message}")
+                                Log.d("SERVICE", "서비스 내 API통신 에러 발생 : ${e.message}")
                             }
 
 

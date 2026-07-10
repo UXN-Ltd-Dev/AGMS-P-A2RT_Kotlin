@@ -23,10 +23,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -37,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -71,6 +75,7 @@ import kr.co.uxn.agms_p_a2rt.NetworkUtil.isNetworkAvailable
 import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseDuplicateLoginError
 import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseLoginError
 import kr.co.uxn.agms_p_a2rt.api.token.DataStoreManager
+import kr.co.uxn.agms_p_a2rt.ui.components.isKorea
 import kr.co.uxn.agms_p_a2rt.ui.components.main.AlwaysDialog
 
 @Composable
@@ -136,8 +141,8 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                         )
                                     )
 
-                            val httpCode = login.code()
-                            Log.e("TEST", "http 코드 : $httpCode")
+                                val httpCode = login.code()
+                                Log.e("TEST", "http 코드 : $httpCode")
 
                                 if (login.isSuccessful && httpCode == 200) {
                                     val loginResult = login.body()
@@ -336,54 +341,63 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
                             .padding(start = 5.dp)
                     )
 
-                    // 이메일 주소
-                    BasicTextField(
-                        value = email.value,
-                        onValueChange = { email.value = it },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email,
-                            autoCorrect = false,
-                            imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(onDone = {
-                            keyboardController?.hide()
-                        }),
-                        textStyle = TextStyle(
-                            fontSize = 16.sp,
-                            letterSpacing = 1.sp,
-                            fontWeight = FontWeight.Medium,
-                            textDecoration = TextDecoration.None
-                        ),
-                        maxLines = 3,
-                        decorationBox = { innerTextField ->
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .wrapContentHeight()
-                                    .drawBehind {
-                                        val strokeWidth = 3.dp.toPx() // 선 두께 설정
-                                        val y = size.height - strokeWidth / 2 // 선을 하단에 위치
-                                        drawLine(
-                                            color = Color(0xFFEEEEEF),
-                                            start = Offset(0f, y),
-                                            end = Offset(size.width, y),
-                                            strokeWidth = strokeWidth
+
+                    val customSelectionColors = TextSelectionColors(
+                        handleColor = Color.Black,
+                        backgroundColor = Color.Black.copy(alpha = 0.3f)
+                    )
+                    CompositionLocalProvider(LocalTextSelectionColors provides customSelectionColors) {
+                        // 이메일 주소
+                        BasicTextField(
+                            value = email.value,
+                            onValueChange = { email.value = it },
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Email,
+                                autoCorrect = false,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(onDone = {
+                                keyboardController?.hide()
+                            }),
+                            textStyle = TextStyle(
+                                fontSize = 16.sp,
+                                letterSpacing = 1.sp,
+                                fontWeight = FontWeight.Medium,
+                                textDecoration = TextDecoration.None
+                            ),
+                            cursorBrush = SolidColor(Color.Black),
+                            maxLines = 3,
+                            decorationBox = { innerTextField ->
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .wrapContentHeight()
+                                        .drawBehind {
+                                            val strokeWidth = 3.dp.toPx() // 선 두께 설정
+                                            val y = size.height - strokeWidth / 2 // 선을 하단에 위치
+                                            drawLine(
+                                                color = Color(0xFFEEEEEF),
+                                                start = Offset(0f, y),
+                                                end = Offset(size.width, y),
+                                                strokeWidth = strokeWidth
+                                            )
+                                        }
+                                        .padding(start = 5.dp, end = 40.dp),
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    if (email.value.isEmpty()) {
+                                        Text(
+                                            text = stringResource(id = R.string.login_email_hint),
+                                            color = Color.Gray,
+                                            fontSize = 16.sp
                                         )
                                     }
-                                    .padding(start = 5.dp, end = 40.dp),
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                if (email.value.isEmpty()) {
-                                    Text(
-                                        text = stringResource(id = R.string.login_email_hint),
-                                        color = Color.Gray,
-                                        fontSize = 16.sp
-                                    )
+                                    innerTextField()
                                 }
-                                innerTextField()
-                            }
-                        },
-                    )
+                            },
+
+                        )
+                    }
                     Spacer(modifier = Modifier.size(40.dp))
                     Text(
                         text = stringResource(id = R.string.login_pwd),
@@ -392,50 +406,53 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
                         modifier = Modifier.align(Alignment.Start)
                             .padding(start = 5.dp)
                     )
-                    // 비밀 번호
-                    BasicTextField(
-                        value = pwd.value,
-                        onValueChange = { pwd.value = it },
-                        visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = {
-                            keyboardController?.hide()
-                        }),
-                        textStyle = TextStyle(
-                            fontSize = 16.sp,
-                            letterSpacing = 1.sp,
-                            fontWeight = FontWeight.Medium,
-                        ),
-                        decorationBox = { innerTextField ->
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(30.dp)
-                                    .drawBehind {
-                                        val strokeWidth = 3.dp.toPx() // 선 두께 설정
-                                        val y = size.height - strokeWidth / 2 // 선을 하단에 위치
-                                        drawLine(
-                                            color = Color(0xFFEEEEEF),
+                    CompositionLocalProvider(LocalTextSelectionColors provides customSelectionColors) {
+                        // 비밀 번호
+                        BasicTextField(
+                            value = pwd.value,
+                            onValueChange = { pwd.value = it },
+                            visualTransformation = PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = {
+                                keyboardController?.hide()
+                            }),
+                            textStyle = TextStyle(
+                                fontSize = 16.sp,
+                                letterSpacing = 1.sp,
+                                fontWeight = FontWeight.Medium,
+                            ),
+                            cursorBrush = SolidColor(Color.Black),
+                            decorationBox = { innerTextField ->
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(30.dp)
+                                        .drawBehind {
+                                            val strokeWidth = 3.dp.toPx() // 선 두께 설정
+                                            val y = size.height - strokeWidth / 2 // 선을 하단에 위치
+                                            drawLine(
+                                                color = Color(0xFFEEEEEF),
 //                                            color = Color.Gray,
-                                            start = Offset(0f, y),
-                                            end = Offset(size.width, y),
-                                            strokeWidth = strokeWidth
+                                                start = Offset(0f, y),
+                                                end = Offset(size.width, y),
+                                                strokeWidth = strokeWidth
+                                            )
+                                        }
+                                        .padding(start = 5.dp, end = 40.dp),
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    if (pwd.value.isEmpty()) {
+                                        Text(
+                                            text = stringResource(id = R.string.login_pwd_hint),
+                                            color = Color.Gray,
+                                            fontSize = 16.sp
                                         )
                                     }
-                                    .padding(start = 5.dp, end = 40.dp),
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                if (pwd.value.isEmpty()) {
-                                    Text(
-                                        text = stringResource(id = R.string.login_pwd_hint),
-                                        color = Color.Gray,
-                                        fontSize = 16.sp
-                                    )
+                                    innerTextField()
                                 }
-                                innerTextField()
-                            }
-                        },
-                    )
+                            },
+                        )
+                    }
 
                     Row(
                         modifier = Modifier
@@ -602,8 +619,7 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
                 contentAlignment = Alignment.CenterStart
             ) {
                 Image(
-//                    painter = painterResource(id = if(isKorean) R.drawable.email_login_high else R.drawable.btn_eng_start_with_email),
-                    painter = painterResource(id = R.drawable.btn_email_login),
+                    painter = painterResource(id = if (isKorea()) R.drawable.btn_email_login else R.drawable.btn_eng_email_login),
                     contentDescription = "메일 로그인 배경",
                     modifier = Modifier
                         .size(width = 300.dp, height = 50.dp)

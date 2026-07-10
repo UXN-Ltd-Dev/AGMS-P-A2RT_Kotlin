@@ -860,7 +860,17 @@ fun RecordDetailScreen(
                 coroutineScope.launch(Dispatchers.IO) {
                     try {
                         val userId = DataStoreManager.getUserId().first() ?: -1
-                        val recordInstant = Instant.ofEpochMilli(recordTimeMillis)
+                        val uploadRecordTimeMillis = if (initialRecordTimeMillis != null) {
+                            Instant.ofEpochMilli(recordTimeMillis)
+                                .atZone(ZoneId.systemDefault())
+                                .withSecond(59)
+                                .withNano(0)
+                                .toInstant()
+                                .toEpochMilli()
+                        } else {
+                            recordTimeMillis
+                        }
+                        val recordInstant = Instant.ofEpochMilli(uploadRecordTimeMillis)
                         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                         val createdAtUtc = recordInstant
                             .atZone(ZoneOffset.UTC)
@@ -873,7 +883,7 @@ fun RecordDetailScreen(
                             "TEST",
                             "이벤트 전송 전 userId : $userId eventCode : $eventTypeCode, " +
                                 "createdAt(UTC) : $createdAtUtc, createdAt(KST) : $createdAtKst, " +
-                                "createdAtLong : $recordTimeMillis content : $content"
+                                "createdAtLong : $uploadRecordTimeMillis, originalCreatedAtLong : $recordTimeMillis content : $content"
                         )
 
                         if (
@@ -888,7 +898,7 @@ fun RecordDetailScreen(
                                         userId = userId,
                                         glucoseValue = calibrationGlucose,
                                         createdAt = createdAtKst,
-                                        createdAtLong = recordTimeMillis
+                                        createdAtLong = uploadRecordTimeMillis
                                     )
                                 )
                                 Log.d("EVENT", "채혈 보정값 Room 저장 성공")

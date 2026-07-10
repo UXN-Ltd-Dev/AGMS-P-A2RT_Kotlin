@@ -27,7 +27,7 @@ android {
         applicationId = "kr.co.uxn.agms_p_a2rt"
         minSdk = 29
         targetSdk = 36
-        versionCode = 40
+        versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

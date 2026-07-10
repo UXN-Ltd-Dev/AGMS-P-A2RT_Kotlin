@@ -110,6 +110,7 @@ import java.time.temporal.WeekFields
 import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.floor
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -696,7 +697,8 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(22.dp)
+//        verticalArrangement = Arrangement.spacedBy(22.dp)
+        verticalArrangement = Arrangement.spacedBy(15.dp)
     ) {
         // 날짜 선택기 영역
         Row(
@@ -786,6 +788,7 @@ fun DailyRecordContent(onBloodSugarRecordClick: (Long) -> Unit) {
                         },
                         initialZoom = if (isGuestUser) AnalysisGuestInitialZoom else Zoom.Content,
                         modifier = Modifier.fillMaxSize()
+                            .padding(top = 10.dp)
                     )
                 }
             }
@@ -1250,7 +1253,7 @@ private fun DailyGlucoseChart(
         events.mapNotNull { event ->
             val eventMinute = (event.timeMillis - dayStartMillis) / 60_000.0
             val snappedX =
-                (eventMinute / bucketMinutes).roundToInt() * bucketMinutes.toDouble()
+                floor(eventMinute / bucketMinutes) * bucketMinutes.toDouble()
             if (snappedX < xValues.first() || snappedX > xValues.last()) {
                 return@mapNotNull null
             }

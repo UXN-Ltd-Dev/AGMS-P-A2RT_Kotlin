@@ -80,6 +80,7 @@ import kr.co.uxn.agms_p_a2rt.ble.BleUtils.STATUS_BLE_ENABLED
 import kr.co.uxn.agms_p_a2rt.ble.BleUtils.getBleStatus
 import androidx.compose.runtime.rememberCoroutineScope
 import android.widget.Toast
+import androidx.compose.ui.res.stringResource
 import java.util.concurrent.Executors
 
 private val ScannerOrange = Color(0xFFFF9F1A)
@@ -128,12 +129,11 @@ fun RegisterDeviceScreenQR(navController: NavController) {
                 .padding(horizontal = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-//            RegisterDeviceTopBar(onBackClick = navController::popBackStack)
 
             Spacer(modifier = Modifier.weight(40f))
             Text(
                 modifier = Modifier.fillMaxWidth(),
-                text = "QR 코드를 스캔해\n기기를 연결해주세요.",
+                text = stringResource(R.string.register_device_qr_title),
                 color = Color(0xFF111111),
                 fontSize = 25.sp,
                 fontWeight = FontWeight.Bold,
@@ -152,7 +152,7 @@ fun RegisterDeviceScreenQR(navController: NavController) {
 
             Text(
                 modifier = Modifier.fillMaxWidth(),
-                text = "기기 측면 QR 스티커를 카메라 안에 맞춰 주세요",
+                text = stringResource(R.string.register_device_qr_sub_title),
                 color = GuideGray,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
@@ -245,9 +245,9 @@ fun RegisterDeviceScreenQR(navController: NavController) {
                 )
                 Text(
                     text = when {
-                        !hasCameraPermission -> "카메라 권한이 필요합니다"
-                        isQrProcessing -> "기기 확인 중..."
-                        else -> "스캔 중..."
+                        !hasCameraPermission -> stringResource(R.string.register_device_qr_scan_status_1)
+                        isQrProcessing -> stringResource(R.string.register_device_qr_scan_status_2)
+                        else -> stringResource(R.string.register_device_qr_scan_status_3)
                     },
                     color = ScannerOrange,
                     fontSize = 16.sp,
@@ -261,7 +261,7 @@ fun RegisterDeviceScreenQR(navController: NavController) {
                 modifier = Modifier
                     .clickable { navController.navigate("RegisterDeviceScreen") }
                     .padding(horizontal = 16.dp, vertical = 14.dp),
-                text = "번호로 입력할게요",
+                text = stringResource(R.string.register_device_qr_plan_b),
                 color = GuideGray,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
