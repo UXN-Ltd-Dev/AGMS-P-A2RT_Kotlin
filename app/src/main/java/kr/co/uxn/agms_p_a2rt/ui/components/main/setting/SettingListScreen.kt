@@ -657,6 +657,7 @@ fun SensorInfoScreen(
                                      */
 
                                     // 새 센서 종료 로직: 로그인 정보와 토큰은 유지한다.
+                                    localDbRepository?.dataDao()?.deleteUserGlucoseAlertTable(userId)
                                     localDbRepository?.dataDao()?.deleteUserValueTable(userId)
                                     localDbRepository?.dataDao()?.deleteUserGlucoseTable(userId)
                                     localDbRepository?.dataDao()?.deleteUserCalibrationTable(userId)

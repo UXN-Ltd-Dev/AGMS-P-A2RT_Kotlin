@@ -42,6 +42,7 @@ import kr.co.uxn.agms_p_a2rt.BleConnectionState
 import kr.co.uxn.agms_p_a2rt.GuestList
 import kr.co.uxn.agms_p_a2rt.MainActivity
 import kr.co.uxn.agms_p_a2rt.PythonManager2
+import kr.co.uxn.agms_p_a2rt.PythonManager3
 import kr.co.uxn.agms_p_a2rt.R
 import kr.co.uxn.agms_p_a2rt.api.RetrofitClient.tokenRetrofit
 import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestA2RTData
@@ -826,7 +827,7 @@ class AlwaysA2RTService() : Service() {
                                 localDbRepository?.dataDao()?.getCalibrationList(userId).orEmpty()
 
 
-                            val pythonData = PythonManager2.instance.calculateGlucose(
+                            val pythonData = PythonManager3.instance.calculateGlucose(
                                 seperatedUserValueList!!,
                                 calibrationList
                             )
