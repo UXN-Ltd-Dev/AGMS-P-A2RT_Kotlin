@@ -810,6 +810,12 @@ fun AlarmSettingsScreen(navController: NavHostController) {
                     return@TargetGlucoseDialog
                 }
 
+                // 범위 설정(총괄 때 활성화)
+//                if (targetValue >= 60 && targetValue <= 150) {
+//                    Toast.makeText(context, context.getString(R.string.toast_enter_proper_low_glucose), Toast.LENGTH_SHORT).show()
+//                    return@TargetGlucoseDialog
+//                }
+
                 showSetLowGlucoseDialog.value = false
                 coroutineScope.launch(Dispatchers.IO) {
                     DataStoreManager.setTargetLowGlucose(targetValue)

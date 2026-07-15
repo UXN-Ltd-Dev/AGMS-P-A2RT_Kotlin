@@ -284,6 +284,8 @@
     <string name="toast_terms_of_service_excuse">서비스 이용약관은 추후 제공될 예정입니다.</string>
     <string name="toast_privacy_policy_excuse">개인정보 처리방침은 추후 제공될 예정입니다.</string>
     <string name="toast_enter_record">기록 내용을 입력해주세요.</string>
+    <string name="toast_enter_proper_low_glucose">60 ~ 150 사이로 입력해 주세요.</string>
+    <string name="toast_enter_proper_high_glucose">100 ~ 400 사이로 입력해 주세요.</string>
 
     <!--  다이얼로그 -->
     <string name="dialog_daily_enter_glucose_title">혈당 입력 시간입니다.</string>

@@ -54,6 +54,8 @@
     <string name="toast_pwd_reset_success">Your password has been reset.</string>
     <string name="toast_pwd_reset_fail">Password reset failed.</string>
     <string name="toast_agree_required">Please agree to the required terms.</string>
+    <string name="toast_enter_proper_low_glucose">Please enter a number between 60 and 150.</string>
+    <string name="toast_enter_proper_high_glucose">Please enter a number between 100 and 400.</string>
     <string name="sign_up_agree_guide">Please agree to the terms to get started.</string>
     <string name="sign_up_agree_all">Agree to All</string>
     <string name="term_item_age_check">[Required] I am 14 years of age or older.</string>
