@@ -1,0 +1,166 @@
+package kr.co.uxn.agms_p_a2rt.api
+
+import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestA2RTData
+import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestDataCollectValue
+import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestDataValue
+import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestDeleteOauthUserInfo
+import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestDeleteUserInfo
+import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestEmailCode
+import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestEventData
+import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestLinkDevice
+import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestSignInNormal
+import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestSignUpNormal
+import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestOAuthSignUpAndLogin
+import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestRefreshToken
+import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestSignUpOauthDetail
+import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestUpdateUser
+import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestUserInfo
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseA2RTData
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseA2RTLastTime
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseDataCollectValue
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseDataValue
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseDeleteOauthUserInfo
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseDeleteUserInfo
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseDeviceMac
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseDummyGlucose
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseEmailCode
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseEventData
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseGetEvent
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseGetGlucose
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseGetLastTime
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseLinkDevice
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseRefreshToken
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseSensorOff
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseSignInNormal
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseSignUpNormal
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseSignUpOauthAndLogin
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseSignUpOauthDetail
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseUpdateUser
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseUserData
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseUserInfo
+import kr.co.uxn.agms_p_a2rt.api.model.responseDTO.ResponseVerificationCode
+import retrofit2.http.Body
+import retrofit2.http.POST
+import retrofit2.Response
+import retrofit2.http.GET
+import retrofit2.http.Header
+import retrofit2.http.Query
+
+interface RemoteDataSource {
+    // API 연결 테스트
+    @GET("/api/test/hello")
+    suspend fun testRetrofit(): Response<String>
+
+    // UXN 회원 가입
+    @POST("/api/user/join")
+    suspend fun uxnSignUp(@Body signUpInfo: RequestSignUpNormal): Response<ResponseSignUpNormal>
+
+    // UXN 로그인
+    @POST("/api/login")
+    suspend fun uxnLogin(@Body signInInfo: RequestSignInNormal): Response<ResponseSignInNormal>
+
+    // Oauth 로그인 및 회원 가입
+    @POST("/api/oauth/mobile")
+    suspend fun oAuthSignUpAndLogin(@Body oAuthSignUpAndLogin: RequestOAuthSignUpAndLogin): Response<ResponseSignUpOauthAndLogin>
+
+    // Oauth 세부 정보 등록
+    @POST("/api/user/detail_oauth")
+    suspend fun oAuthSaveDetailInfo(
+        @Header("Authorization") preToken: String,
+        @Body oAuthDetailInfo: RequestSignUpOauthDetail
+    ): Response<ResponseSignUpOauthDetail>
+
+    // 혈당, 식사, 운동, 인슐린 전송
+    @POST("/api/event/add")
+    suspend fun uploadEvent(@Body eventData: RequestEventData): Response<ResponseEventData>
+
+    // 기기정보로 MAC 가져오기
+    @GET("/api/device/check")
+    suspend fun getDeviceMac(@Query("serial_number") serialNumber: String): Response<ResponseDeviceMac>
+
+    // 유저와 기기를 연동
+    @POST("/api/device/link")
+    suspend fun linkDevice(@Body linkDevice: RequestLinkDevice) : Response<ResponseLinkDevice>
+
+    // 마지막 시간 가져오기
+    @GET("/api/value/recent/time")
+    suspend fun getLastTime(@Query("user_id") userId: Int): Response<ResponseGetLastTime>
+
+    // 데이터 전송
+    // @POST("/api/value/save")
+//     suspend fun sendData(@Body data: List<RequestDataValue>): Response<ResponseDataValue>
+
+    // 데이터 전송 (온도 추가)
+    @POST("/api/value/collect")
+    suspend fun sendData(@Body data: List<RequestDataCollectValue>): Response<ResponseDataCollectValue>
+
+
+    // 이메일 인증하기(회원가입)
+    @GET("/api/email/join")
+    suspend fun requestVerificationCodeEmail(@Query("email") email: String): Response<ResponseVerificationCode>
+
+    // 이메일 인증하기(비밀번호 재설정)
+    @GET("/api/email/pwd/reset")
+    suspend fun requestVerificationCodeResetPwd(@Query("email") email: String): Response<ResponseVerificationCode>
+
+    // 이메일 인증번호 확인
+    @POST("/api/email/code/check")
+    suspend fun checkVerificationCode(@Body emailCode: RequestEmailCode): Response<ResponseEmailCode>
+
+    // 이벤트 가져오기
+    @GET("/api/event/list")
+    suspend fun getEventList(@Query("user_id") userId: Int): Response<List<ResponseGetEvent>>
+
+    // 혈당 가져오기
+    @GET("/api/glucose/convert")
+    suspend fun getGlucoseList(@Query("user_id") userId: Int): Response<List<ResponseGetGlucose>>
+
+    // 유저 정보 가져오기
+    @GET("/api/user/info")
+    suspend fun getUser(@Query("user_id") userId: Int) : Response<ResponseUserData>
+
+    // 유저 정보 업데이트
+    @POST("/api/user/update")
+    suspend fun updateUser(@Body userInfo: RequestUpdateUser) : Response<ResponseUpdateUser>
+
+    // 센서 종료
+    // isFinish가 false인 것 중 가장 최근 걸 불러온다
+    @GET("/api/device/end")
+    suspend fun doSensorOff(@Query("user_id") userId: Int) : Response<ResponseSensorOff>
+
+    // pwd 리셋
+    @POST("/api/user/update/password")
+    suspend fun resetPwd(@Body userInfo: RequestUserInfo): Response<ResponseUserInfo>
+
+    // 탈퇴 하기(일반)
+    @POST("/api/user/delete")
+    suspend fun deleteUser(@Body userInfo: RequestDeleteUserInfo): Response<ResponseDeleteUserInfo>
+
+    // 탈퇴 하기(oAuth)
+    @POST("/api/oauth/delete")
+    suspend fun deleteOauthUser(@Body userInfo: RequestDeleteOauthUserInfo): Response<ResponseDeleteOauthUserInfo>
+
+    // 혈당 더미 데이터 불러오기
+    @GET("/api/glucose/convert2")
+    suspend fun getDummyGlucose(@Query("count") count: Int): Response<List<ResponseDummyGlucose>>
+
+    // 액세스 토큰 갱신
+    @POST("/api/user/token")
+    suspend fun getNewAccessToken(
+        @Header("Authorization") refreshToken: String,
+        @Body userInfo: RequestRefreshToken
+    ): Response<ResponseRefreshToken>
+
+    @POST("/api/logout")
+    suspend fun logout() : Response<Void>
+
+    // A2RT 최신 데이터 조회
+    @GET("/api/data_collect/get_a2rt_recent_timestamp")
+    suspend fun getA2RTLastTime(@Query("user_device_id") userDeviceId: Int): Response<ResponseA2RTLastTime>
+
+    // A2RT 데이터 전송
+    @POST("/api/data_collect/insert_a2rt_data")
+    suspend fun sendA2RTData(@Body data: List<RequestA2RTData>): Response<ResponseA2RTData>
+
+
+}
