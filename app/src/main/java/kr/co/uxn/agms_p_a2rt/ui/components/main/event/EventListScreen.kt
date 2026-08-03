@@ -469,7 +469,7 @@ fun RecordListScreen(onNavigateToSelect: () -> Unit, eventScreenViewModel: Event
         }
 
 
-        if (!isNetworkAvailable(context)) {
+        if (!DemoGlucoseConfig.ENABLED && !isNetworkAvailable(context)) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -483,7 +483,7 @@ fun RecordListScreen(onNavigateToSelect: () -> Unit, eventScreenViewModel: Event
                     fontWeight = FontWeight.Medium
                 )
             }
-        } else if (eventList.isEmpty()) {
+        } else if (filteredRecords.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()

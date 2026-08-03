@@ -109,11 +109,13 @@ import java.time.temporal.TemporalAdjusters
 import java.time.temporal.WeekFields
 import java.util.Date
 import java.util.Locale
+import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.roundToInt
+import kotlin.math.sin
 import kotlin.math.sqrt
-import kotlin.random.Random
 
 // 테마 컬러
 val BackgroundGray = Color(0xFFEBEBEB)
@@ -132,6 +134,56 @@ private const val MissingGlucoseValue = -10.0
 private const val GuestDailyBucketMinutes = 1L
 private const val RegularDailyBucketMinutes = 5L
 private val AnalysisGuestInitialZoom = Zoom.x(6.0) // 점과 점 사이 간격
+
+private fun demoMealImpact(
+    minutesOfDay: Int,
+    mealStartMinutes: Int,
+    peakRise: Double,
+    riseMinutes: Int,
+    recoveryMinutes: Int
+): Double {
+    val elapsed = minutesOfDay - mealStartMinutes
+    if (elapsed < 0 || elapsed > recoveryMinutes) return 0.0
+
+    fun smoothStep(progress: Double): Double {
+        val t = progress.coerceIn(0.0, 1.0)
+        return t * t * (3.0 - 2.0 * t)
+    }
+
+    return if (elapsed <= riseMinutes) {
+        peakRise * smoothStep(elapsed.toDouble() / riseMinutes)
+    } else {
+        val recoveryProgress = (elapsed - riseMinutes).toDouble() / (recoveryMinutes - riseMinutes)
+        peakRise * (1.0 - smoothStep(recoveryProgress))
+    }
+}
+
+private fun demoMealPatternGlucose(timeMillis: Long, zoneId: ZoneId): Double {
+    val dateTime = Instant.ofEpochMilli(timeMillis).atZone(zoneId).toLocalDateTime()
+    val minutesOfDay = dateTime.hour * 60 + dateTime.minute
+    val dayVariation = ((dateTime.dayOfYear % 5) - 2) * 2.0
+    val isDawn = minutesOfDay < 5 * 60
+    val baseline = if (isDawn) 94.0 else 103.0
+    val dawnVariation = if (isDawn) {
+        sin(minutesOfDay / 90.0 * 2.0 * PI) * 1.4
+    } else {
+        0.0
+    }
+    val daytimeWave = if (isDawn) {
+        0.0
+    } else {
+        sin(minutesOfDay / 210.0 * 2.0 * PI) * 2.2 +
+            cos(minutesOfDay / 95.0 * 2.0 * PI) * 0.9
+    }
+    val mealRise =
+        demoMealImpact(minutesOfDay, 7 * 60 + 20, peakRise = 70.0, riseMinutes = 55, recoveryMinutes = 210) +
+            demoMealImpact(minutesOfDay, 12 * 60 + 15, peakRise = 82.0, riseMinutes = 60, recoveryMinutes = 230) +
+            demoMealImpact(minutesOfDay, 18 * 60 + 25, peakRise = 76.0, riseMinutes = 60, recoveryMinutes = 240) +
+            demoMealImpact(minutesOfDay, 15 * 60 + 30, peakRise = 22.0, riseMinutes = 35, recoveryMinutes = 120)
+
+    return (baseline + dayVariation + dawnVariation + daytimeWave + mealRise)
+        .coerceIn(88.0, 205.0)
+}
 
 private data class AnalysisEvent(
     val timeMillis: Long,
@@ -315,25 +367,14 @@ private fun createAnalysisDemoGlucoseData(
     val intervalMillis = DemoGlucoseConfig.ANALYSIS_INTERVAL_MINUTES * 60 * 1000L
     val historyEndMillis = currentTimeMillis - (currentTimeMillis % intervalMillis)
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.getDefault())
-    val random = Random(20260627)
     val result = mutableListOf<UserGlucose>()
-    var glucose = 115.0
-    var targetGlucose = 115.0
-    var pointIndex = 0L
     var time = historyStartMillis
 
     while (time <= historyEndMillis) {
-        if (pointIndex % 12L == 0L) {
-            targetGlucose = random.nextDouble(20.0, 225.0)
-        }
-        val smallVariation = random.nextDouble(-1.5, 1.5)
-        glucose = (glucose + (targetGlucose - glucose) * 0.1 + smallVariation)
-            .coerceIn(0.0, 240.0)
-
         if (time >= selectedStartMillis && time < selectedEndMillis) {
             result += UserGlucose(
                 userId = userId,
-                glucose = glucose,
+                glucose = demoMealPatternGlucose(time, zoneId),
                 weo1 = 0.0,
                 weo2 = 0.0,
                 createdAt = Instant.ofEpochMilli(time).atZone(zoneId).format(formatter),
@@ -341,7 +382,6 @@ private fun createAnalysisDemoGlucoseData(
             )
         }
 
-        pointIndex++
         time += intervalMillis
     }
     return result
@@ -408,35 +448,22 @@ private fun createDetailDemoGlucoseData(
 ): List<UserGlucose> {
     if (periods.isEmpty()) return emptyList()
 
-    val random = Random(20260627)
     val intervalMillis = DemoGlucoseConfig.ANALYSIS_INTERVAL_MINUTES * 60_000L
     val generationEnd = minOf(periods.last().endTimeMillis, currentTimeMillis + 1L)
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.getDefault())
     val result = mutableListOf<UserGlucose>()
-    var glucose = 115.0
-    var targetGlucose = 115.0
-    var pointIndex = 0L
     var time = periods.first().startTimeMillis
 
     while (time < generationEnd) {
-        if (pointIndex % 12L == 0L) {
-            targetGlucose = random.nextDouble(20.0, 225.0)
-        }
-        glucose = (glucose +
-            (targetGlucose - glucose) * 0.1 +
-            random.nextDouble(-1.5, 1.5))
-            .coerceIn(0.0, 240.0)
-
         result += UserGlucose(
             userId = -1,
-            glucose = glucose,
+            glucose = demoMealPatternGlucose(time, zoneId),
             weo1 = 0.0,
             weo2 = 0.0,
             createdAt = Instant.ofEpochMilli(time).atZone(zoneId).format(formatter),
             createdAtLong = time
         )
 
-        pointIndex++
         time += intervalMillis
     }
 

@@ -124,6 +124,7 @@ import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
@@ -152,9 +153,11 @@ import kr.co.uxn.agms_p_a2rt.ble.BleBridge.showLowGlucoseDialog
 import kr.co.uxn.agms_p_a2rt.ui.components.isKorea
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.ContentScale
+import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
-import kotlin.random.Random
+import kotlin.math.sin
 
 private val GlucoseNormalPointColor = Color(0xFF65B66F)
 private val GlucoseHighPointColor = Color(0xFFFFA12B)
@@ -170,6 +173,58 @@ internal object DemoGlucoseConfig {
     const val ANALYSIS_INTERVAL_MINUTES = 1L
 }
 
+private fun demoMealImpact(
+    minutesOfDay: Int,
+    mealStartMinutes: Int,
+    peakRise: Double,
+    riseMinutes: Int,
+    recoveryMinutes: Int
+): Double {
+    val elapsed = minutesOfDay - mealStartMinutes
+    if (elapsed < 0 || elapsed > recoveryMinutes) return 0.0
+
+    fun smoothStep(progress: Double): Double {
+        val t = progress.coerceIn(0.0, 1.0)
+        return t * t * (3.0 - 2.0 * t)
+    }
+
+    return if (elapsed <= riseMinutes) {
+        peakRise * smoothStep(elapsed.toDouble() / riseMinutes)
+    } else {
+        val recoveryProgress = (elapsed - riseMinutes).toDouble() / (recoveryMinutes - riseMinutes)
+        peakRise * (1.0 - smoothStep(recoveryProgress))
+    }
+}
+
+private fun demoMealPatternGlucose(timeMillis: Long): Double {
+    val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Seoul")).apply {
+        this.timeInMillis = timeMillis
+    }
+    val minutesOfDay = calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE)
+    val dayVariation = ((calendar.get(Calendar.DAY_OF_YEAR) % 5) - 2) * 2.0
+    val isDawn = minutesOfDay < 5 * 60
+    val baseline = if (isDawn) 94.0 else 103.0
+    val dawnVariation = if (isDawn) {
+        sin(minutesOfDay / 90.0 * 2.0 * PI) * 1.4
+    } else {
+        0.0
+    }
+    val daytimeWave = if (isDawn) {
+        0.0
+    } else {
+        sin(minutesOfDay / 210.0 * 2.0 * PI) * 2.2 +
+            cos(minutesOfDay / 95.0 * 2.0 * PI) * 0.9
+    }
+    val mealRise =
+        demoMealImpact(minutesOfDay, 7 * 60 + 20, peakRise = 70.0, riseMinutes = 55, recoveryMinutes = 210) +
+            demoMealImpact(minutesOfDay, 12 * 60 + 15, peakRise = 82.0, riseMinutes = 60, recoveryMinutes = 230) +
+            demoMealImpact(minutesOfDay, 18 * 60 + 25, peakRise = 76.0, riseMinutes = 60, recoveryMinutes = 240) +
+            demoMealImpact(minutesOfDay, 15 * 60 + 30, peakRise = 22.0, riseMinutes = 35, recoveryMinutes = 120)
+
+    return (baseline + dayVariation + dawnVariation + daytimeWave + mealRise)
+        .coerceIn(88.0, 205.0)
+}
+
 private fun createDemoGlucoseData(
     userId: Int,
     currentTimeMillis: Long = System.currentTimeMillis()
@@ -182,24 +237,14 @@ private fun createDemoGlucoseData(
     val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.KOREA).apply {
         timeZone = TimeZone.getTimeZone("Asia/Seoul")
     }
-    val random = Random(20260627)
-    var glucose = 115.0
-    var targetGlucose = 115.0
 
     return (0L..durationMinutes step intervalMinutes)
-        .mapIndexed { index, elapsedMinutes ->
-            if (index % 12 == 0) {
-                targetGlucose = random.nextDouble(20.0, 225.0)
-            }
-            glucose = (glucose +
-                (targetGlucose - glucose) * 0.1 +
-                random.nextDouble(-1.5, 1.5))
-                .coerceIn(0.0, 240.0)
+        .map { elapsedMinutes ->
             val time = startTime + elapsedMinutes * 60 * 1000L
 
             UserGlucose(
                 userId = userId,
-                glucose = glucose,
+                glucose = demoMealPatternGlucose(time),
                 weo1 = 0.0,
                 weo2 = 0.0,
                 createdAt = formatter.format(Date(time)),
