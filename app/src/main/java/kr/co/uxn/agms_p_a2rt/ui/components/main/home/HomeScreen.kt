@@ -1580,7 +1580,10 @@ fun HomeScreen(
                                 animationSpec = null,
                                 animateIn = false,
                                 zoomState = rememberVicoZoomState(
-                                    zoomEnabled = true,
+                                    // 사용자가 차트를 확대·축소하지 못하게 한다.
+                                    // initialZoom 은 남긴다. 그쪽은 처음 보여 줄 배율이라
+                                    // 끄면 게스트 화면의 점 간격이 달라진다.
+                                    zoomEnabled = false,
                                     initialZoom = if (isGuestUser) {
                                         HomeInitialZoom
                                     } else {

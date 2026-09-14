@@ -1639,7 +1639,9 @@ private fun DailyGlucoseChart(
         animationSpec = null,
         animateIn = false,
         zoomState = rememberVicoZoomState(
-            zoomEnabled = true,
+            // 사용자가 차트를 확대·축소하지 못하게 한다.
+            // initialZoom 은 처음 보여 줄 배율이라 그대로 둔다.
+            zoomEnabled = false,
             initialZoom = initialZoom
         )
     )
