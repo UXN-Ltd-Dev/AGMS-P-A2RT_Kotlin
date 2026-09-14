@@ -74,6 +74,9 @@ import androidx.core.content.ContextCompat
 import kr.co.uxn.agms_p_a2rt.util.MealPhotoStore
 import java.io.File
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.aspectRatio
 
 // 테마 컬러 설정 (이미지의 주황색 포인트 컬러)
 val PrimaryOrange = Color(0xFFFCA937)
@@ -394,7 +397,7 @@ fun EventListScreen(
 
 /** 상단 탭에서 고를 수 있는 화면. 기본은 기록 선택이다. */
 enum class RecordHomeTab(@StringRes val titleRes: Int) {
-    SELECT(R.string.record_type_select_screen_title),
+    SELECT(R.string.record_home_tab_select),
     LIST(R.string.record_home_tab_list)
 }
 
@@ -888,8 +891,13 @@ fun RecordDetailScreen(
             modifier = Modifier.padding(bottom = 24.dp)
         )
 
-        // 아이템 종류에 따라 다른 UI 출력
-        Column(modifier = Modifier.weight(1f)) {
+        // 아이템 종류에 따라 다른 UI 출력.
+        // 식사 사진을 원본 비율로 크게 보여 주면 화면을 넘길 수 있어 스크롤을 둔다.
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+        ) {
             when (category) {
                 RecordCategory.EXERCISE -> ExerciseInputForm(
                     recordTimeText = recordTimeText,
@@ -1300,13 +1308,15 @@ private fun MealPhotoField(
                 runCatching { BitmapFactory.decodeFile(photoFile.path)?.asImageBitmap() }.getOrNull()
             }
             if (bitmap != null) {
+                // 잘라내지 않고 원본 비율 그대로 보여 준다. 무엇을 먹었는지 확인하는 사진이라
+                // 가장자리가 잘리면 쓸모가 준다. 세로로 길어지면 화면이 스크롤된다.
                 Image(
                     bitmap = bitmap,
                     contentDescription = null,
-                    contentScale = ContentScale.Crop,
+                    contentScale = ContentScale.FillWidth,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(180.dp)
+                        .aspectRatio(bitmap.width.toFloat() / bitmap.height.toFloat())
                         .clip(RoundedCornerShape(12.dp))
                 )
             }
