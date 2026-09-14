@@ -335,7 +335,7 @@ fun ContentScreen(
         2 -> {
             EventListScreen(
                 modifier = Modifier.padding(paddingValues),
-                startDestination = eventStartCategory ?: "list",
+                startDestination = eventStartCategory ?: "home",
                 eventScreenViewModel = eventScreenViewModel,
                 initialRecordTimeMillis = eventRecordTimeMillis
             )

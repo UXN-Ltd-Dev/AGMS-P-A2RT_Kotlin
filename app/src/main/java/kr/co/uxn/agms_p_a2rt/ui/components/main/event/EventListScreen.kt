@@ -337,9 +337,15 @@ fun EventListScreen(
     eventScreenViewModel: EventScreenViewModel,
     initialRecordTimeMillis: Long? = null
 ) {
+    // 예전에는 "list"/"select" 가 각각 NavHost 의 라우트였다. 지금은 한 화면 안의 탭이라
+    // NavHost 에는 home 뿐이다. 다른 화면에서 옛 이름으로 넘어오는 경로가 남아 있어
+    // (분석 화면의 혈당 기록 버튼 등) 그 이름을 탭 선택으로 옮긴다.
+    // 옛 이름을 그대로 NavHost 에 넘기면 "is not a direct child of this NavGraph" 로 죽는다.
+    val initialTab = if (startDestination == "list") RecordHomeTab.LIST else RecordHomeTab.SELECT
+
     NavHost(
         navController = navController,
-        startDestination = startDestination,
+        startDestination = "home",
         modifier = modifier
             .fillMaxSize()
             .background(BackgroundGray)
@@ -347,6 +353,7 @@ fun EventListScreen(
         // 첫 번째 화면: 상단 탭으로 기록 선택과 전체 리스트를 오간다.
         composable("home") {
             RecordHomeScreen(
+                initialTab = initialTab,
                 eventScreenViewModel = eventScreenViewModel,
                 onTypeSelected = { category ->
                     navController.navigate(
@@ -386,7 +393,7 @@ fun EventListScreen(
 }
 
 /** 상단 탭에서 고를 수 있는 화면. 기본은 기록 선택이다. */
-private enum class RecordHomeTab(@StringRes val titleRes: Int) {
+enum class RecordHomeTab(@StringRes val titleRes: Int) {
     SELECT(R.string.record_type_select_screen_title),
     LIST(R.string.record_home_tab_list)
 }
@@ -399,10 +406,11 @@ private enum class RecordHomeTab(@StringRes val titleRes: Int) {
  */
 @Composable
 fun RecordHomeScreen(
+    initialTab: RecordHomeTab = RecordHomeTab.SELECT,
     eventScreenViewModel: EventScreenViewModel,
     onTypeSelected: (RecordCategory) -> Unit
 ) {
-    var selectedTab by rememberSaveable { mutableStateOf(RecordHomeTab.SELECT) }
+    var selectedTab by rememberSaveable { mutableStateOf(initialTab) }
 
     Column(
         modifier = Modifier
