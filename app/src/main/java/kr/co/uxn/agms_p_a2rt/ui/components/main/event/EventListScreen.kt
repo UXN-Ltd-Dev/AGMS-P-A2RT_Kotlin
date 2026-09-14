@@ -995,6 +995,208 @@ private fun formatRecordTime(millis: Long, isKorea: Boolean): String {
     return if(isKorea) "기록 시간: $formattedTime" else "Log Time: $formattedTime"
 }
 
+
+/**
+ * 기록 시각과 그것을 고치는 연필 버튼.
+ *
+ * 기본값은 지금 시각이다. 대개는 그대로 두면 되지만, 먹고 나서 한참 뒤에 적는 일이
+ * 흔해서 고칠 길을 열어 둔다. 화면 아래쪽에 조용히 놓여야 하는 줄이라 연필은 작게 둔다.
+ */
+@Composable
+private fun RecordTimeRow(text: String, onEditClick: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.clickable { onEditClick() }
+    ) {
+        Text(text, color = Color.Gray)
+        Spacer(modifier = Modifier.width(4.dp))
+        Icon(
+            imageVector = Icons.Default.Create,
+            contentDescription = stringResource(R.string.record_time_edit),
+            tint = PrimaryOrange,
+            modifier = Modifier.size(16.dp)
+        )
+    }
+}
+
+/**
+ * 기록 시각을 고르는 두 단계 대화상자. 날짜를 먼저 고르고 시간을 고른다.
+ *
+ * 한 화면에 달력과 시계를 같이 올리면 작은 기기에서 잘린다. 그래서 나눴다.
+ *
+ * 앞으로의 시각은 받지 않는다. 아직 하지 않은 식사가 혈당 그래프에 먼저 찍히면
+ * 나중에 그래프를 볼 때 앞뒤가 맞지 않는다.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RecordTimeEditDialog(
+    initialMillis: Long,
+    onDismiss: () -> Unit,
+    onConfirm: (Long) -> Unit
+) {
+    val context = LocalContext.current
+    val zone = remember { TimeZone.getDefault().toZoneId() }
+    val initial = remember(initialMillis) { Instant.ofEpochMilli(initialMillis).atZone(zone) }
+
+    var pickingTime by remember { mutableStateOf(false) }
+
+    // 달력은 UTC 자정 기준으로 값을 주고받는다. 기기 시간대로 그냥 넘기면 하루가 밀린다.
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = initial.toLocalDate()
+            .atStartOfDay(ZoneOffset.UTC)
+            .toInstant()
+            .toEpochMilli()
+    )
+    val timePickerState = rememberTimePickerState(
+        initialHour = initial.hour,
+        initialMinute = initial.minute,
+        is24Hour = true
+    )
+
+    val datePickerColors = DatePickerDefaults.colors(
+        containerColor = Color.White,
+        titleContentColor = Color.Black,
+        headlineContentColor = Color.Black,
+        weekdayContentColor = Color.Gray,
+        subheadContentColor = Color.Black,
+        navigationContentColor = Color.Black,
+        yearContentColor = Color.Black,
+        dayContentColor = Color.Black,
+        selectedDayContainerColor = PrimaryOrange,
+        selectedDayContentColor = Color.White,
+        todayContentColor = PrimaryOrange,
+        todayDateBorderColor = PrimaryOrange,
+        selectedYearContainerColor = PrimaryOrange,
+        selectedYearContentColor = Color.White
+    )
+    val timePickerColors = TimePickerDefaults.colors(
+        clockDialColor = Color(0xFFF3F3F3),
+        clockDialSelectedContentColor = Color.White,
+        clockDialUnselectedContentColor = Color.Black,
+        selectorColor = PrimaryOrange,
+        containerColor = Color.White,
+        periodSelectorSelectedContainerColor = PrimaryOrange,
+        periodSelectorSelectedContentColor = Color.White,
+        periodSelectorUnselectedContainerColor = Color.White,
+        timeSelectorSelectedContainerColor = Color(0xFFFDEBCB),
+        timeSelectorSelectedContentColor = Color.Black,
+        timeSelectorUnselectedContainerColor = Color(0xFFF3F3F3),
+        timeSelectorUnselectedContentColor = Color.Black
+    )
+
+    fun confirm() {
+        val dayMillis = datePickerState.selectedDateMillis ?: return
+        val picked = Instant.ofEpochMilli(dayMillis)
+            .atZone(ZoneOffset.UTC)
+            .toLocalDate()
+            .atTime(timePickerState.hour, timePickerState.minute)
+            .atZone(zone)
+            .toInstant()
+            .toEpochMilli()
+
+        if (picked > System.currentTimeMillis()) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.toast_record_time_future),
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+        onConfirm(picked)
+    }
+
+    if (!pickingTime) {
+        DatePickerDialog(
+            onDismissRequest = onDismiss,
+            colors = DatePickerDefaults.colors(containerColor = Color.White),
+            confirmButton = {
+                TextButton(onClick = { pickingTime = true }) {
+                    Text(
+                        stringResource(R.string.record_time_edit_next),
+                        color = PrimaryOrange,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.cancel), color = Color.Gray)
+                }
+            }
+        ) {
+            val headlineText = datePickerState.selectedDateMillis
+                ?.let { millis ->
+                    Instant.ofEpochMilli(millis)
+                        .atZone(ZoneOffset.UTC)
+                        .format(
+                            DateTimeFormatter.ofPattern(
+                                if (isKorea()) "yyyy년 M월 d일" else "MMM d, yyyy",
+                                Locale.getDefault()
+                            )
+                        )
+                }
+                .orEmpty()
+
+            DatePicker(
+                state = datePickerState,
+                title = {
+                    Text(
+                        stringResource(R.string.record_time_edit_date),
+                        modifier = Modifier.padding(start = 24.dp, top = 16.dp),
+                        color = Color.Gray,
+                        fontSize = 13.sp
+                    )
+                },
+                headline = {
+                    Text(
+                        headlineText,
+                        modifier = Modifier.padding(start = 24.dp, bottom = 12.dp),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                showModeToggle = false,
+                colors = datePickerColors
+            )
+        }
+        return
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(16.dp),
+        title = {
+            Text(
+                stringResource(R.string.record_time_edit_time),
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                TimePicker(state = timePickerState, colors = timePickerColors)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { confirm() }) {
+                Text(
+                    stringResource(R.string.confirm),
+                    color = PrimaryOrange,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { pickingTime = false }) {
+                Text(stringResource(R.string.cancel), color = Color.Gray)
+            }
+        }
+    )
+}
+
 // ==========================================
 // [세 번째 화면] 동적 입력 화면
 // ==========================================
@@ -1008,9 +1210,12 @@ fun RecordDetailScreen(
     val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
     val localDbRepository = remember(context) { AppDatabase.getInstance(context) }
-    val recordTimeMillis = remember(initialRecordTimeMillis) {
-        initialRecordTimeMillis ?: System.currentTimeMillis()
+    var recordTimeMillis by remember(initialRecordTimeMillis) {
+        mutableStateOf(initialRecordTimeMillis ?: System.currentTimeMillis())
     }
+    // 사용자가 직접 고른 시각인지. 홈 화면에서 들고 온 시각과 저장 규칙이 달라 구분한다.
+    var recordTimeEdited by remember(initialRecordTimeMillis) { mutableStateOf(false) }
+    var showTimeEditor by remember { mutableStateOf(false) }
     val isKorea = isKorea()
     val recordTimeText = remember(recordTimeMillis) { formatRecordTime(recordTimeMillis, isKorea) }
     var exerciseType by remember { mutableStateOf("") }
@@ -1087,6 +1292,7 @@ fun RecordDetailScreen(
             when (category) {
                 RecordCategory.EXERCISE -> ExerciseInputForm(
                     recordTimeText = recordTimeText,
+                    onEditTime = { showTimeEditor = true },
                     type = exerciseType,
                     onTypeChange = { exerciseType = it },
                     time = exerciseTime,
@@ -1096,6 +1302,7 @@ fun RecordDetailScreen(
                 )
                 RecordCategory.MEAL -> MealInputForm(
                     recordTimeText = recordTimeText,
+                    onEditTime = { showTimeEditor = true },
                     mealName = mealName,
                     onMealNameChange = { mealName = it },
                     mealContent = mealContent,
@@ -1105,6 +1312,7 @@ fun RecordDetailScreen(
                 )
                 RecordCategory.BLOOD_SUGAR -> BloodSugarInputForm(
                     recordTimeText = recordTimeText,
+                    onEditTime = { showTimeEditor = true },
                     value = bloodSugarValue,
                     onValueChange = { bloodSugarValue = it },
                     useCalibration = useCalibration,
@@ -1113,6 +1321,7 @@ fun RecordDetailScreen(
                 )
                 RecordCategory.INSULIN -> InsulinInputForm(
                     recordTimeText = recordTimeText,
+                    onEditTime = { showTimeEditor = true },
                     dose = insulinDose,
                     onDoseChange = { insulinDose = it },
                     insulinType = insulinType,
@@ -1120,6 +1329,18 @@ fun RecordDetailScreen(
                 )
                 else -> {}
             }
+        }
+
+        if (showTimeEditor) {
+            RecordTimeEditDialog(
+                initialMillis = recordTimeMillis,
+                onDismiss = { showTimeEditor = false },
+                onConfirm = { picked ->
+                    recordTimeMillis = picked
+                    recordTimeEdited = true
+                    showTimeEditor = false
+                }
+            )
         }
 
         // 하단 저장 버튼
@@ -1177,7 +1398,12 @@ fun RecordDetailScreen(
                 coroutineScope.launch(Dispatchers.IO) {
                     try {
                         val userId = DataStoreManager.getUserId().first() ?: -1
-                        val uploadRecordTimeMillis = if (initialRecordTimeMillis != null) {
+                        // 홈 화면 그래프에서 넘어온 시각은 그 분의 끝(:59)으로 맞춘다.
+                        // 같은 분의 혈당값보다 뒤에 놓여야 그래프에서 순서가 맞는다.
+                        // 사용자가 직접 고른 시각은 손대지 않는다.
+                        val uploadRecordTimeMillis = if (
+                            initialRecordTimeMillis != null && !recordTimeEdited
+                        ) {
                             Instant.ofEpochMilli(recordTimeMillis)
                                 .atZone(ZoneId.systemDefault())
                                 .withSecond(59)
@@ -1297,6 +1523,7 @@ fun RecordFilterChip(
 @Composable
 fun ExerciseInputForm(
     recordTimeText: String,
+    onEditTime: () -> Unit,
     type: String,
     onTypeChange: (String) -> Unit,
     time: String,
@@ -1351,12 +1578,13 @@ fun ExerciseInputForm(
             )
         }
     }
-    Text(recordTimeText, color = Color.Gray)
+    RecordTimeRow(text = recordTimeText, onEditClick = onEditTime)
 }
 
 @Composable
 fun MealInputForm(
     recordTimeText: String,
+    onEditTime: () -> Unit,
     mealName: String,
     onMealNameChange: (String) -> Unit,
     mealContent: String,
@@ -1399,7 +1627,7 @@ fun MealInputForm(
 
     MealPhotoField(photoFile = photoFile, onPhotoCaptured = onPhotoCaptured)
 
-    Text(recordTimeText, color = Color.Gray)
+    RecordTimeRow(text = recordTimeText, onEditClick = onEditTime)
 }
 
 /**
@@ -1524,6 +1752,7 @@ private fun MealPhotoField(
 @Composable
 fun BloodSugarInputForm(
     recordTimeText: String,
+    onEditTime: () -> Unit,
     value: String,
     onValueChange: (String) -> Unit,
     useCalibration: Boolean,
@@ -1551,7 +1780,7 @@ fun BloodSugarInputForm(
         )
     }
 
-    Text(recordTimeText, color = Color.Gray)
+    RecordTimeRow(text = recordTimeText, onEditClick = onEditTime)
 
     if (showCalibrationOption) {
         Row(
@@ -1576,6 +1805,7 @@ fun BloodSugarInputForm(
 @Composable
 fun InsulinInputForm(
     recordTimeText: String,
+    onEditTime: () -> Unit,
     dose: String,
     onDoseChange: (String) -> Unit,
     insulinType: String,
@@ -1634,5 +1864,5 @@ fun InsulinInputForm(
         )
     }
 
-    Text(recordTimeText, color = Color.Gray)
+    RecordTimeRow(text = recordTimeText, onEditClick = onEditTime)
 }

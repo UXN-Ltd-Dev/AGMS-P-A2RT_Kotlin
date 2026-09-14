@@ -384,6 +384,11 @@
     <string name="record_detail_view_close">Close</string>
     <string name="record_detail_view_time">Recorded at</string>
     <string name="record_detail_view_no_photo">No photo.</string>
+    <string name="record_time_edit">Edit Log Time</string>
+    <string name="record_time_edit_date">Select Date</string>
+    <string name="record_time_edit_time">Select Time</string>
+    <string name="record_time_edit_next">Next</string>
+    <string name="toast_record_time_future">You can only log a past time.</string>
     <string name="record_detail_view_meal_name">Meal Name</string>
     <string name="record_detail_view_meal_content">Meal Content</string>
     <string name="record_detail_view_exercise_type">Exercise Type</string>
