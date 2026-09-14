@@ -60,6 +60,20 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.TimeZone
 import kotlin.collections.map
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.draw.clip
+import android.Manifest
+import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.core.content.ContextCompat
+import kr.co.uxn.agms_p_a2rt.util.MealPhotoStore
+import java.io.File
+import androidx.compose.runtime.LaunchedEffect
 
 // 테마 컬러 설정 (이미지의 주황색 포인트 컬러)
 val PrimaryOrange = Color(0xFFFCA937)
@@ -79,7 +93,9 @@ data class RecordItem(
     val category: RecordCategory,
     val title: String,
     val description: String,
-    val time: String
+    val time: String,
+    /** 기록 시각. 식사 사진 파일을 찾는 열쇠라 화면 표시용 문자열과 별도로 들고 있다. */
+    val timeMillis: Long = 0L
 )
 
 private data class IntensityOption(
@@ -120,6 +136,24 @@ private fun recordCategoryToEventType(category: RecordCategory): Int? {
         RecordCategory.INSULIN -> 1404
         RecordCategory.ALL -> null
     }
+}
+
+/**
+ * 서버가 준 시각 문자열을 에폭 밀리초로 바꾼다.
+ *
+ * 식사 사진 파일명이 기록 시각이라 이 값으로 파일을 찾는다.
+ * [formatEventTime] 과 같은 규칙(UTC 해석)을 써야 저장할 때와 찾을 때가 어긋나지 않는다.
+ */
+private fun eventTimeMillis(createdAt: String): Long {
+    return runCatching {
+        LocalDateTime.parse(
+            createdAt,
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        )
+            .atZone(ZoneId.of("UTC"))
+            .toInstant()
+            .toEpochMilli()
+    }.getOrDefault(0L)
 }
 
 private fun formatEventTime(createdAt: String): String {
@@ -232,7 +266,8 @@ private fun ItemData.toRecordItem(context: android.content.Context): RecordItem 
             description = listOf(exerciseTime, exerciseIntensity)
                 .filter { it.isNotBlank() }
                 .joinToString(" "),
-            time = formatEventTime(time)
+            time = formatEventTime(time),
+            timeMillis = eventTimeMillis(time)
         )
     }
 
@@ -244,7 +279,8 @@ private fun ItemData.toRecordItem(context: android.content.Context): RecordItem 
             category = category,
             title = mealName.ifBlank { context.getString(category.titleResId) },
             description = mealContent,
-            time = formatEventTime(time)
+            time = formatEventTime(time),
+            timeMillis = eventTimeMillis(time)
         )
     }
 
@@ -253,7 +289,8 @@ private fun ItemData.toRecordItem(context: android.content.Context): RecordItem 
             category = category,
             title = context.getString(R.string.record_self_blood_glucose),
             description = "${content.trim()} mg/dL",
-            time = formatEventTime(time)
+            time = formatEventTime(time),
+            timeMillis = eventTimeMillis(time)
         )
     }
 
@@ -269,7 +306,8 @@ private fun ItemData.toRecordItem(context: android.content.Context): RecordItem 
                 insulinType = insulinType,
                 insulinDose = insulinDose
             ),
-            time = formatEventTime(time)
+            time = formatEventTime(time),
+            timeMillis = eventTimeMillis(time)
         )
     }
 
@@ -277,7 +315,8 @@ private fun ItemData.toRecordItem(context: android.content.Context): RecordItem 
         category = category,
         title = context.getString(category.titleResId),
         description = content,
-        time = formatEventTime(time)
+        time = formatEventTime(time),
+        timeMillis = eventTimeMillis(time)
     )
 }
 
@@ -294,7 +333,7 @@ val dummyRecords = listOf(
 fun EventListScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    startDestination: String = "list",
+    startDestination: String = "home",
     eventScreenViewModel: EventScreenViewModel,
     initialRecordTimeMillis: Long? = null
 ) {
@@ -305,16 +344,10 @@ fun EventListScreen(
             .fillMaxSize()
             .background(BackgroundGray)
     ) {
-        // 첫 번째 화면: 기록 리스트 화면
-        composable("list") {
-            RecordListScreen(
-                onNavigateToSelect = { navController.navigate("select") },
-                eventScreenViewModel = eventScreenViewModel
-            )
-        }
-        // 두 번째 화면: 기록 종류 선택 화면
-        composable("select") {
-            RecordTypeSelectScreen(
+        // 첫 번째 화면: 상단 탭으로 기록 선택과 전체 리스트를 오간다.
+        composable("home") {
+            RecordHomeScreen(
+                eventScreenViewModel = eventScreenViewModel,
                 onTypeSelected = { category ->
                     navController.navigate(
                         "detail/${category.name}/${initialRecordTimeMillis ?: -1L}"
@@ -322,7 +355,7 @@ fun EventListScreen(
                 }
             )
         }
-        // 세 번째 화면: 상세 입력 화면
+        // 두 번째 화면: 상세 입력 화면
         composable("detail/{categoryName}/{recordTimeMillis}") { backStackEntry ->
             val categoryName = backStackEntry.arguments?.getString("categoryName") ?: ""
             val category = RecordCategory.valueOf(categoryName)
@@ -334,12 +367,12 @@ fun EventListScreen(
                 category = category,
                 initialRecordTimeMillis = recordTimeMillis,
                 onBackClick = {
-                    val returnedToList = navController.popBackStack(
-                        route = "list",
+                    val returnedToHome = navController.popBackStack(
+                        route = "home",
                         inclusive = false
                     )
-                    if (!returnedToList) {
-                        navController.navigate("list") {
+                    if (!returnedToHome) {
+                        navController.navigate("home") {
                             popUpTo(navController.graph.startDestinationId) {
                                 inclusive = true
                             }
@@ -352,11 +385,87 @@ fun EventListScreen(
     }
 }
 
+/** 상단 탭에서 고를 수 있는 화면. 기본은 기록 선택이다. */
+private enum class RecordHomeTab(@StringRes val titleRes: Int) {
+    SELECT(R.string.record_type_select_screen_title),
+    LIST(R.string.record_home_tab_list)
+}
+
+/**
+ * 기록 탭의 첫 화면.
+ *
+ * 예전에는 리스트가 먼저 나오고 하단 버튼으로 기록 선택으로 넘어갔다. 기록하러 들어오는
+ * 경우가 대부분이라 선택 화면을 기본으로 두고, 지난 기록은 탭으로 넘겨 본다.
+ */
+@Composable
+fun RecordHomeScreen(
+    eventScreenViewModel: EventScreenViewModel,
+    onTypeSelected: (RecordCategory) -> Unit
+) {
+    var selectedTab by rememberSaveable { mutableStateOf(RecordHomeTab.SELECT) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundGray)
+    ) {
+        RecordHomeTabBar(
+            selected = selectedTab,
+            onSelect = { selectedTab = it }
+        )
+        when (selectedTab) {
+            RecordHomeTab.SELECT -> RecordTypeSelectScreen(onTypeSelected = onTypeSelected)
+            RecordHomeTab.LIST -> RecordListScreen(eventScreenViewModel = eventScreenViewModel)
+        }
+    }
+}
+
+/**
+ * 상단 탭 막대.
+ *
+ * 고른 탭만 흰 알약으로 떠오르게 한다. 화면의 다른 카드들이 흰 배경에 둥근 모서리라
+ * 같은 결로 맞췄다.
+ */
+@Composable
+private fun RecordHomeTabBar(
+    selected: RecordHomeTab,
+    onSelect: (RecordHomeTab) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFFEDEDED))
+            .padding(4.dp)
+    ) {
+        RecordHomeTab.entries.forEach { tab ->
+            val isSelected = tab == selected
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(9.dp))
+                    .background(if (isSelected) Color.White else Color.Transparent)
+                    .clickable { onSelect(tab) }
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(tab.titleRes),
+                    fontSize = 15.sp,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isSelected) Color.Black else Color.Gray
+                )
+            }
+        }
+    }
+}
+
 // ==========================================
 // [첫 번째 화면] 리스트 및 탭 필터링
 // ==========================================
 @Composable
-fun RecordListScreen(onNavigateToSelect: () -> Unit, eventScreenViewModel: EventScreenViewModel) {
+fun RecordListScreen(eventScreenViewModel: EventScreenViewModel) {
     val context = LocalContext.current
     var selectedTab by remember { mutableStateOf(RecordCategory.ALL) }
 
@@ -510,36 +619,18 @@ fun RecordListScreen(onNavigateToSelect: () -> Unit, eventScreenViewModel: Event
                 }
             }
         }
-        // 하단 기록하기 버튼
-        Button(
-            onClick = onNavigateToSelect,
-            colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .height(50.dp),
-            shape = RoundedCornerShape(25.dp)
-        ) {
-//            Text("⊕ 기록하기", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.add),
-                    contentDescription = ""
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(stringResource(R.string.event_list_screen_record_btn), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
-
-            }
-        }
     }
 }
 
 @Composable
 fun RecordItemCard(record: RecordItem) {
+    val context = LocalContext.current
+    // 식사 기록에만 사진이 붙는다. 파일이 없으면 아무것도 그리지 않는다.
+    val photo = remember(record.timeMillis) {
+        if (record.category == RecordCategory.MEAL) {
+            MealPhotoStore.photoOf(context, record.timeMillis)
+        } else null
+    }
     val iconRes = recordCategoryIconRes(record.category)
 
     Card(
@@ -574,6 +665,23 @@ fun RecordItemCard(record: RecordItem) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = record.title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 Text(text = record.description, color = Color.Gray, fontSize = 12.sp)
+            }
+            // 사진이 있으면 시각 앞에 작게 보여 준다. 카드 높이는 그대로 둔다.
+            photo?.let { file ->
+                val thumbnail = remember(file.path) {
+                    runCatching { BitmapFactory.decodeFile(file.path)?.asImageBitmap() }.getOrNull()
+                }
+                if (thumbnail != null) {
+                    Image(
+                        bitmap = thumbnail,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                }
             }
             Text(text = record.time, fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.width(8.dp))
@@ -713,6 +821,11 @@ fun RecordDetailScreen(
     var exerciseIntensity by remember { mutableStateOf("보통") }
     var mealName by remember { mutableStateOf("") }
     var mealContent by remember { mutableStateOf("") }
+    // 촬영된 임시 파일. 저장을 눌러야 기록 시각 이름으로 옮긴다.
+    var mealPhoto by remember { mutableStateOf<File?>(null) }
+
+    // 앞서 찍고 저장하지 않은 사진이 남아 있을 수 있다. 화면에 들어올 때 치운다.
+    LaunchedEffect(Unit) { MealPhotoStore.clearTemp(context) }
     var bloodSugarValue by remember { mutableStateOf("") }
     var useCalibration by remember(category) { mutableStateOf(false) }
     var isVipUser by remember { mutableStateOf(false) }
@@ -784,7 +897,9 @@ fun RecordDetailScreen(
                     mealName = mealName,
                     onMealNameChange = { mealName = it },
                     mealContent = mealContent,
-                    onMealContentChange = { mealContent = it }
+                    onMealContentChange = { mealContent = it },
+                    photoFile = mealPhoto,
+                    onPhotoCaptured = { mealPhoto = it }
                 )
                 RecordCategory.BLOOD_SUGAR -> BloodSugarInputForm(
                     recordTimeText = recordTimeText,
@@ -870,6 +985,14 @@ fun RecordDetailScreen(
                         } else {
                             recordTimeMillis
                         }
+                        // 사진은 서버로 보내지 않는다. 기기 안에 기록 시각 이름으로 남긴다.
+                        // 서버 전송이 실패해도 사진은 남도록 전송보다 먼저 옮긴다.
+                        if (category == RecordCategory.MEAL) {
+                            mealPhoto?.let { temp ->
+                                MealPhotoStore.commit(context, temp, uploadRecordTimeMillis)
+                            }
+                        }
+
                         val recordInstant = Instant.ofEpochMilli(uploadRecordTimeMillis)
                         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                         val createdAtUtc = recordInstant
@@ -1035,7 +1158,9 @@ fun MealInputForm(
     mealName: String,
     onMealNameChange: (String) -> Unit,
     mealContent: String,
-    onMealContentChange: (String) -> Unit
+    onMealContentChange: (String) -> Unit,
+    photoFile: File?,
+    onPhotoCaptured: (File?) -> Unit
 ) {
 
     val mealTextSelectionColors = TextSelectionColors(
@@ -1069,7 +1194,127 @@ fun MealInputForm(
             )
         )
     }
+
+    MealPhotoField(photoFile = photoFile, onPhotoCaptured = onPhotoCaptured)
+
     Text(recordTimeText, color = Color.Gray)
+}
+
+/**
+ * 식사 사진 촬영 영역.
+ *
+ * 찍기 전에는 점선 상자를, 찍은 뒤에는 사진과 다시 촬영·삭제 버튼을 보여 준다.
+ * 사진은 기기 안에만 남는다. 서버 기록 API 에는 사진을 담을 자리가 없다.
+ */
+@Composable
+private fun MealPhotoField(
+    photoFile: File?,
+    onPhotoCaptured: (File?) -> Unit
+) {
+    val context = LocalContext.current
+    // 촬영 시점에는 최종 기록 시각을 알 수 없어 임시 파일에 먼저 담는다.
+    val tempFile = remember { MealPhotoStore.tempFile(context) }
+    val tempUri = remember(tempFile) { MealPhotoStore.uriFor(context, tempFile) }
+
+    // 같은 파일에 덮어써도 화면이 바뀌도록 버전을 하나 올려 준다.
+    var version by remember { mutableStateOf(0) }
+
+    val takePicture = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && tempFile.exists() && tempFile.length() > 0) {
+            version++
+            onPhotoCaptured(tempFile)
+        } else {
+            Toast.makeText(
+                context,
+                context.getString(R.string.record_detail_meal_photo_failed),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    val requestCamera = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            takePicture.launch(tempUri)
+        } else {
+            Toast.makeText(
+                context,
+                context.getString(R.string.record_detail_meal_photo_permission),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    fun capture() {
+        val granted = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+        if (granted) takePicture.launch(tempUri) else requestCamera.launch(Manifest.permission.CAMERA)
+    }
+
+    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+        Text(
+            text = stringResource(R.string.record_detail_meal_photo),
+            fontSize = 14.sp,
+            color = Color.Gray,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        if (photoFile == null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFFF5F5F5))
+                    .clickable { capture() },
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Image(
+                        painter = painterResource(id = R.drawable.add),
+                        contentDescription = null,
+                        colorFilter = ColorFilter.tint(Color.Gray)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.record_detail_meal_photo),
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                }
+            }
+        } else {
+            val bitmap = remember(photoFile.path, version) {
+                runCatching { BitmapFactory.decodeFile(photoFile.path)?.asImageBitmap() }.getOrNull()
+            }
+            if (bitmap != null) {
+                Image(
+                    bitmap = bitmap,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                )
+            }
+            Row(modifier = Modifier.padding(top = 8.dp)) {
+                TextButton(onClick = { capture() }) {
+                    Text(stringResource(R.string.record_detail_meal_photo_retake), color = PrimaryOrange)
+                }
+                TextButton(onClick = {
+                    MealPhotoStore.clearTemp(context)
+                    onPhotoCaptured(null)
+                }) {
+                    Text(stringResource(R.string.record_detail_meal_photo_remove), color = Color.Gray)
+                }
+            }
+        }
+    }
 }
 
 @Composable

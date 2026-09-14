@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!--
+        식사 기록 사진을 담는 곳.
+        카메라 앱에 넘길 URI 를 만들려면 FileProvider 로 공개해야 한다.
+        앱 내부 저장소라 다른 앱이 임의로 읽을 수는 없다.
+    -->
+    <files-path name="meal_photos" path="meal_photos/" />
+</paths>

@@ -114,6 +114,17 @@
                 <action android:name="android.intent.action.ACTION_MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+    
+        <!-- 식사 기록 사진을 카메라 앱에 넘기기 위한 파일 공유 통로. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>
