@@ -1087,12 +1087,15 @@ private fun TirCard(
             rounded
         }
     }
+    // 목표 범위 구간별 색. 인덱스가 곧 구간이다.
+    // 매우 낮음은 국제 합의(ADA/ATTD)를 따라 짙은 빨강으로 둔다. 가장 위험한 구간인데
+    // 회색이면 위험도와 색의 강도가 거꾸로 읽힌다.
     val rangeColors = listOf(
-        Color(0xFFD9D9D9),
-        Color(0xFFFF3B3B),
-        Color(0xFF34C759),
-        Color(0xFFFFC928),
-        Color(0xFFFF8A24)
+        Color(0xFF8E1B1B),  // < 54      매우 낮음
+        Color(0xFFFF3B3B),  // 54 ~ 70   낮음
+        Color(0xFF34C759),  // 70 ~ 180  목표 범위
+        Color(0xFFFFC928),  // 180 ~ 250 높음
+        Color(0xFFFF8A24)   // > 250     매우 높음
     )
 
     Card(
