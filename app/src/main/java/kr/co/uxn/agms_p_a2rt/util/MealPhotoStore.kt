@@ -39,17 +39,34 @@ object MealPhotoStore {
     private fun dir(context: Context): File =
         File(context.filesDir, DIR).apply { if (!exists()) mkdirs() }
 
-    /** 기록 시각 하나에 사진 하나. 같은 시각에 다시 찍으면 덮어쓴다. */
+    /**
+     * 기록 시각 하나에 사진 하나. 같은 시각에 다시 찍으면 덮어쓴다.
+     *
+     * 초 단위로 잘라서 이름을 짓는다. 서버로 보내는 기록 시각이 "yyyy-MM-dd HH:mm:ss" 라
+     * 되읽을 때 밀리초가 사라진다. 저장할 때 밀리초를 남겨 두면 이름이 어긋나 사진을 못 찾는다.
+     */
     fun fileFor(context: Context, recordTimeMillis: Long): File =
-        File(dir(context), "meal_$recordTimeMillis.jpg")
+        File(dir(context), "meal_${recordTimeMillis / 1000}.jpg")
 
     /** 카메라 앱에 넘길 URI. FileProvider 를 거쳐야 다른 앱이 쓸 수 있다. */
     fun uriFor(context: Context, file: File): Uri =
         FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
 
     /** 저장된 사진. 없으면 null 이라 호출부가 분기하기 쉽다. */
-    fun photoOf(context: Context, recordTimeMillis: Long): File? =
-        fileFor(context, recordTimeMillis).takeIf { it.exists() && it.length() > 0 }
+    fun photoOf(context: Context, recordTimeMillis: Long): File? {
+        fileFor(context, recordTimeMillis)
+            .takeIf { it.exists() && it.length() > 0 }
+            ?.let { return it }
+
+        // 초 단위로 자르기 전에 저장한 사진은 이름에 밀리초가 붙어 있다. 같은 초에 찍힌
+        // 파일이면 그것으로 본다. 이 규칙이 없으면 예전 사진이 영영 안 보인다.
+        val second = recordTimeMillis / 1000
+        return dir(context).listFiles()
+            ?.firstOrNull { file ->
+                val stamp = file.name.removePrefix("meal_").removeSuffix(".jpg").toLongOrNull()
+                stamp != null && stamp / 1000 == second && file.length() > 0
+            }
+    }
 
     /**
      * 임시로 찍어 둔 사진을 기록 시각 이름으로 옮긴다.

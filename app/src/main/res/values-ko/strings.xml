@@ -421,10 +421,20 @@
     <string name="register_device_qr_plan_b">번호로 입력할게요.</string>
 
     <string name="record_home_tab_select">기록하기</string>
-    <string name="record_home_tab_list">기록 목록</string>
+    <string name="record_home_tab_list">전체 목록</string>
     <string name="record_detail_meal_photo">사진 첨부</string>
     <string name="record_detail_meal_photo_retake">다시 촬영</string>
     <string name="record_detail_meal_photo_remove">사진 삭제</string>
     <string name="record_detail_meal_photo_failed">사진을 저장하지 못했습니다.</string>
     <string name="record_detail_meal_photo_permission">사진 촬영을 위해 카메라 권한을 허용해 주세요.</string>
+    <string name="record_detail_view_title">기록 상세</string>
+    <string name="record_detail_view_close">닫기</string>
+    <string name="record_detail_view_time">기록 시각</string>
+    <string name="record_detail_view_no_photo">사진이 없습니다.</string>
+    <string name="record_detail_view_meal_name">식사 이름</string>
+    <string name="record_detail_view_meal_content">식사 내용</string>
+    <string name="record_detail_view_exercise_type">운동 종류</string>
+    <string name="record_detail_view_exercise_time">운동 시간</string>
+    <string name="record_detail_view_photo">사진</string>
+    <string name="record_detail_view_bg_value">혈당값</string>
 </resources>

@@ -374,10 +374,20 @@
 
 
     <string name="record_home_tab_select">Add Record</string>
-    <string name="record_home_tab_list">Records</string>
+    <string name="record_home_tab_list">All Records</string>
     <string name="record_detail_meal_photo">Add Photo</string>
     <string name="record_detail_meal_photo_retake">Retake</string>
     <string name="record_detail_meal_photo_remove">Remove Photo</string>
     <string name="record_detail_meal_photo_failed">Could not save the photo.</string>
     <string name="record_detail_meal_photo_permission">Please allow camera permission to take a photo.</string>
+    <string name="record_detail_view_title">Record Details</string>
+    <string name="record_detail_view_close">Close</string>
+    <string name="record_detail_view_time">Recorded at</string>
+    <string name="record_detail_view_no_photo">No photo.</string>
+    <string name="record_detail_view_meal_name">Meal Name</string>
+    <string name="record_detail_view_meal_content">Meal Content</string>
+    <string name="record_detail_view_exercise_type">Exercise Type</string>
+    <string name="record_detail_view_exercise_time">Duration</string>
+    <string name="record_detail_view_photo">Photo</string>
+    <string name="record_detail_view_bg_value">Blood Glucose</string>
 </resources>

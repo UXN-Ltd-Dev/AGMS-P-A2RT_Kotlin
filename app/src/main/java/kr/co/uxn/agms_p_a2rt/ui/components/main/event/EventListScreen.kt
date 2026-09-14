@@ -77,6 +77,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.ui.text.style.TextOverflow
 
 // 테마 컬러 설정 (이미지의 주황색 포인트 컬러)
 val PrimaryOrange = Color(0xFFFCA937)
@@ -98,7 +99,9 @@ data class RecordItem(
     val description: String,
     val time: String,
     /** 기록 시각. 식사 사진 파일을 찾는 열쇠라 화면 표시용 문자열과 별도로 들고 있다. */
-    val timeMillis: Long = 0L
+    val timeMillis: Long = 0L,
+    /** 서버가 준 원본 내용. 상세 화면에서 항목별로 풀어 쓴다. */
+    val rawContent: String = ""
 )
 
 private data class IntensityOption(
@@ -270,7 +273,8 @@ private fun ItemData.toRecordItem(context: android.content.Context): RecordItem 
                 .filter { it.isNotBlank() }
                 .joinToString(" "),
             time = formatEventTime(time),
-            timeMillis = eventTimeMillis(time)
+            timeMillis = eventTimeMillis(time),
+            rawContent = content
         )
     }
 
@@ -283,7 +287,8 @@ private fun ItemData.toRecordItem(context: android.content.Context): RecordItem 
             title = mealName.ifBlank { context.getString(category.titleResId) },
             description = mealContent,
             time = formatEventTime(time),
-            timeMillis = eventTimeMillis(time)
+            timeMillis = eventTimeMillis(time),
+            rawContent = content
         )
     }
 
@@ -293,7 +298,8 @@ private fun ItemData.toRecordItem(context: android.content.Context): RecordItem 
             title = context.getString(R.string.record_self_blood_glucose),
             description = "${content.trim()} mg/dL",
             time = formatEventTime(time),
-            timeMillis = eventTimeMillis(time)
+            timeMillis = eventTimeMillis(time),
+            rawContent = content
         )
     }
 
@@ -310,7 +316,8 @@ private fun ItemData.toRecordItem(context: android.content.Context): RecordItem 
                 insulinDose = insulinDose
             ),
             time = formatEventTime(time),
-            timeMillis = eventTimeMillis(time)
+            timeMillis = eventTimeMillis(time),
+            rawContent = content
         )
     }
 
@@ -319,7 +326,8 @@ private fun ItemData.toRecordItem(context: android.content.Context): RecordItem 
         title = context.getString(category.titleResId),
         description = content,
         time = formatEventTime(time),
-        timeMillis = eventTimeMillis(time)
+        timeMillis = eventTimeMillis(time),
+        rawContent = content
     )
 }
 
@@ -480,6 +488,9 @@ fun RecordListScreen(eventScreenViewModel: EventScreenViewModel) {
     val context = LocalContext.current
     var selectedTab by remember { mutableStateOf(RecordCategory.ALL) }
 
+    // 목록에서 고른 기록. null 이면 상세 화면을 닫아 둔 상태다.
+    var selectedRecord by remember { mutableStateOf<RecordItem?>(null) }
+
     // 선택된 탭에 따라 리스트 필터링
     val lifecycleOwner = LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()
@@ -626,28 +637,26 @@ fun RecordListScreen(eventScreenViewModel: EventScreenViewModel) {
                 contentPadding = PaddingValues(vertical = 16.dp)
             ) {
                 items(filteredRecords) { record ->
-                    RecordItemCard(record)
+                    RecordItemCard(record, onClick = { selectedRecord = record })
                 }
             }
         }
     }
+
+    selectedRecord?.let { record ->
+        RecordDetailSheet(record = record, onDismiss = { selectedRecord = null })
+    }
 }
 
 @Composable
-fun RecordItemCard(record: RecordItem) {
-    val context = LocalContext.current
-    // 식사 기록에만 사진이 붙는다. 파일이 없으면 아무것도 그리지 않는다.
-    val photo = remember(record.timeMillis) {
-        if (record.category == RecordCategory.MEAL) {
-            MealPhotoStore.photoOf(context, record.timeMillis)
-        } else null
-    }
+fun RecordItemCard(record: RecordItem, onClick: () -> Unit = {}) {
     val iconRes = recordCategoryIconRes(record.category)
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(RecordCardHeight),
+            .height(RecordCardHeight)
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = Color.White),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -673,30 +682,37 @@ fun RecordItemCard(record: RecordItem) {
                 )
             }
             Spacer(modifier = Modifier.width(16.dp))
+            // 기록에서 눈으로 찾는 것은 제목이 아니라 값이다. 혈당 수치, 식사 내용,
+            // 인슐린 용량이 그것이다. 제목을 작게 두고 값을 크게 올린다.
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = record.title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text(text = record.description, color = Color.Gray, fontSize = 12.sp)
-            }
-            // 사진이 있으면 시각 앞에 작게 보여 준다. 카드 높이는 그대로 둔다.
-            photo?.let { file ->
-                val thumbnail = remember(file.path) {
-                    runCatching { BitmapFactory.decodeFile(file.path)?.asImageBitmap() }.getOrNull()
-                }
-                if (thumbnail != null) {
-                    Image(
-                        bitmap = thumbnail,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                Text(
+                    text = record.title,
+                    color = Color(0xFF7A7A7A),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (record.description.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = record.description,
+                        color = Color(0xFF222222),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.width(10.dp))
                 }
             }
             Text(text = record.time, fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.width(8.dp))
-            Icon(Icons.Default.Create, contentDescription = "Edit", tint = Color.LightGray, modifier = Modifier.size(16.dp))
+            Icon(
+                Icons.Default.KeyboardArrowRight,
+                contentDescription = null,
+                tint = Color.LightGray,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
@@ -704,6 +720,176 @@ fun RecordItemCard(record: RecordItem) {
 // ==========================================
 // [두 번째 화면] 기록 종류 선택
 // ==========================================
+
+/**
+ * 목록에서 고른 기록 하나를 자세히 본다.
+ *
+ * 목록은 한 줄에 요약만 담아 놓쳐 버리는 값이 있다. 식사의 이름과 내용, 사진,
+ * 운동의 시간과 강도 같은 것이다. 여기서 입력할 때 넣은 값을 그대로 되짚는다.
+ *
+ * 읽기 전용이다. 고치는 기능은 아직 없다.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RecordDetailSheet(
+    record: RecordItem,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val photo = remember(record.timeMillis) {
+        if (record.category == RecordCategory.MEAL) {
+            MealPhotoStore.photoOf(context, record.timeMillis)
+        } else null
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        dragHandle = { BottomSheetDefaults.DragHandle() }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(start = 20.dp, end = 20.dp, bottom = 32.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(recordCategoryIconRes(record.category)),
+                    contentDescription = null,
+                    modifier = Modifier.size(30.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = stringResource(record.category.titleResId),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            RecordDetailRow(stringResource(R.string.record_detail_view_time), record.time)
+            RecordDetailFields(record)
+
+            if (record.category == RecordCategory.MEAL) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = stringResource(R.string.record_detail_view_photo),
+                    color = Color.Gray,
+                    fontSize = 12.sp
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                if (photo != null) {
+                    val bitmap = remember(photo.path) {
+                        runCatching { BitmapFactory.decodeFile(photo.path)?.asImageBitmap() }.getOrNull()
+                    }
+                    if (bitmap != null) {
+                        // 목록에서는 작게 보이던 사진을 여기서는 원본 비율로 크게 보여 준다.
+                        Image(
+                            bitmap = bitmap,
+                            contentDescription = null,
+                            contentScale = ContentScale.FillWidth,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(bitmap.width.toFloat() / bitmap.height.toFloat())
+                                .clip(RoundedCornerShape(12.dp))
+                        )
+                    }
+                } else {
+                    Text(
+                        text = stringResource(R.string.record_detail_view_no_photo),
+                        color = Color.Gray,
+                        fontSize = 13.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+                shape = RoundedCornerShape(25.dp),
+                modifier = Modifier.fillMaxWidth().height(50.dp)
+            ) {
+                Text(
+                    stringResource(R.string.record_detail_view_close),
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 기록 종류마다 입력했던 항목을 풀어 쓴다.
+ *
+ * 목록의 요약 문자열을 그대로 쓰지 않고 원본에서 다시 뽑는다. 요약은 한 줄에 넣으려고
+ * 붙여 놓은 것이라 어느 값이 무엇인지 알 수 없다.
+ */
+@Composable
+private fun RecordDetailFields(record: RecordItem) {
+    val context = LocalContext.current
+    val content = record.rawContent
+
+    when (record.category) {
+        RecordCategory.MEAL -> {
+            RecordDetailRow(
+                stringResource(R.string.record_detail_view_meal_name),
+                extractEventContentBetween(content, "식사 이름", "식사 내용")
+            )
+            RecordDetailRow(
+                stringResource(R.string.record_detail_view_meal_content),
+                extractEventContentAfter(content, "식사 내용")
+            )
+        }
+        RecordCategory.EXERCISE -> {
+            RecordDetailRow(
+                stringResource(R.string.record_detail_view_exercise_type),
+                extractEventContentBetween(content, "운동 종류", "운동 시간")
+            )
+            RecordDetailRow(
+                stringResource(R.string.record_detail_view_exercise_time),
+                extractEventContentBetween(content, "운동 시간", "강도")
+            )
+            RecordDetailRow(
+                stringResource(R.string.record_detail_exercise_description_sub_title),
+                localizedExerciseIntensity(context, extractEventContentAfter(content, "강도"))
+            )
+        }
+        RecordCategory.BLOOD_SUGAR -> {
+            RecordDetailRow(
+                stringResource(R.string.record_detail_view_bg_value),
+                record.description
+            )
+        }
+        RecordCategory.INSULIN -> {
+            RecordDetailRow(
+                stringResource(R.string.record_detail_insulin_type),
+                localizedInsulinType(context, extractEventContentBetween(content, "인슐린 종류", "투여량"))
+            )
+            RecordDetailRow(
+                stringResource(R.string.record_detail_insulin),
+                extractEventContentAfter(content, "투여량")
+            )
+        }
+        else -> {
+            RecordDetailRow(stringResource(record.category.titleResId), content)
+        }
+    }
+}
+
+@Composable
+private fun RecordDetailRow(label: String, value: String) {
+    if (value.isBlank()) return
+    Column(modifier = Modifier.padding(bottom = 14.dp)) {
+        Text(text = label, color = Color.Gray, fontSize = 12.sp)
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(text = value, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+    }
+}
+
 @Composable
 fun RecordTypeSelectScreen(onTypeSelected: (RecordCategory) -> Unit) {
     // '전체'를 제외한 항목들
