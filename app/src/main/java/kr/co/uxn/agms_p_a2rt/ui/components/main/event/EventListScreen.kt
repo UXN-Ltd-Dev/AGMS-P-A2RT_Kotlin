@@ -1057,11 +1057,16 @@ private fun RecordTimeEditDialog(
             .toInstant()
             .toEpochMilli()
     )
+    // 24시간 다이얼은 13~24 가 안쪽 원에 붙어 있어 손가락으로 집기 어렵다.
+    // 12시간제로 두면 바깥 원 12 칸만 쓰고 오전/오후는 단추로 고른다.
     val timePickerState = rememberTimePickerState(
         initialHour = initial.hour,
         initialMinute = initial.minute,
-        is24Hour = true
+        is24Hour = false
     )
+
+    // 다이얼로 어림잡기 어려운 분을 넣을 때를 위해 숫자로 적는 길도 둔다.
+    var typingTime by remember { mutableStateOf(false) }
 
     val datePickerColors = DatePickerDefaults.colors(
         containerColor = Color.White,
@@ -1177,17 +1182,38 @@ private fun RecordTimeEditDialog(
         containerColor = Color.White,
         shape = RoundedCornerShape(16.dp),
         title = {
-            Text(
-                stringResource(R.string.record_time_edit_time),
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    stringResource(R.string.record_time_edit_time),
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                // 아이콘을 쓰면 라이브러리를 늘려야 해서 글자로 둔다. 확인·취소와 같은 모양이다.
+                TextButton(onClick = { typingTime = !typingTime }) {
+                    Text(
+                        stringResource(
+                            if (typingTime) R.string.record_time_edit_dial_mode
+                            else R.string.record_time_edit_input_mode
+                        ),
+                        color = PrimaryOrange,
+                        fontSize = 13.sp
+                    )
+                }
+            }
         },
         text = {
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                TimePicker(state = timePickerState, colors = timePickerColors)
+                if (typingTime) {
+                    TimeInput(state = timePickerState, colors = timePickerColors)
+                } else {
+                    TimePicker(state = timePickerState, colors = timePickerColors)
+                }
             }
         },
         confirmButton = {
