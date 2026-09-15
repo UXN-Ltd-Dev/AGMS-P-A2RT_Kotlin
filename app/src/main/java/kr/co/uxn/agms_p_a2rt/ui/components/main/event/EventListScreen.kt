@@ -742,16 +742,24 @@ private fun RecordDetailSheet(
         } else null
     }
 
+    // 중간 단계를 건너뛰고 한 번에 끝까지 펼친다. 반쯤 열리면 사진이 있는 식사 기록에서
+    // 닫기 단추가 화면 밖에 남아, 값을 보려고 열었다가 한 번 더 끌어올려야 한다.
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        sheetState = sheetState,
         containerColor = Color.White,
         dragHandle = { BottomSheetDefaults.DragHandle() }
     ) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                // 내용만 스크롤한다. 닫기는 이 바깥에 두어 사진이 길어도 화면에 남는다.
+                .weight(1f, fill = false)
                 .verticalScroll(rememberScrollState())
-                .padding(start = 20.dp, end = 20.dp, bottom = 32.dp)
+                .padding(start = 20.dp, end = 20.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Image(
@@ -805,20 +813,24 @@ private fun RecordDetailSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-            Button(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
-                shape = RoundedCornerShape(25.dp),
-                modifier = Modifier.fillMaxWidth().height(50.dp)
-            ) {
-                Text(
-                    stringResource(R.string.record_detail_view_close),
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            }
         }
+
+        Button(
+            onClick = onDismiss,
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+            shape = RoundedCornerShape(25.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 32.dp)
+                .height(50.dp)
+        ) {
+            Text(
+                stringResource(R.string.record_detail_view_close),
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
     }
 }
 
@@ -1493,7 +1505,8 @@ fun RecordDetailScreen(
                 }
             },
             colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
-            modifier = Modifier.fillMaxWidth().height(50.dp),
+            // 기록 시각 줄과 저장 버튼이 붙어 있으면 저장을 누르려다 연필을 건드린다.
+            modifier = Modifier.fillMaxWidth().padding(top = 20.dp).height(50.dp),
             shape = RoundedCornerShape(25.dp)
         ) {
             Text(stringResource(R.string.record_detail_screen_save_btn), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
