@@ -1099,6 +1099,22 @@ private fun RecordTimeEditDialog(
         timeSelectorUnselectedContentColor = Color.Black
     )
 
+    // 아직 오지 않은 날을 고르면 시간을 고르러 가 봐야 확정할 수 없다. 한 단계 앞에서 막는다.
+    fun goToTimeStep() {
+        val dayMillis = datePickerState.selectedDateMillis ?: return
+        val pickedDate = Instant.ofEpochMilli(dayMillis).atZone(ZoneOffset.UTC).toLocalDate()
+
+        if (pickedDate.isAfter(LocalDate.now(zone))) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.toast_record_time_future),
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+        pickingTime = true
+    }
+
     fun confirm() {
         val dayMillis = datePickerState.selectedDateMillis ?: return
         val picked = Instant.ofEpochMilli(dayMillis)
@@ -1125,7 +1141,7 @@ private fun RecordTimeEditDialog(
             onDismissRequest = onDismiss,
             colors = DatePickerDefaults.colors(containerColor = Color.White),
             confirmButton = {
-                TextButton(onClick = { pickingTime = true }) {
+                TextButton(onClick = { goToTimeStep() }) {
                     Text(
                         stringResource(R.string.record_time_edit_next),
                         color = PrimaryOrange,
