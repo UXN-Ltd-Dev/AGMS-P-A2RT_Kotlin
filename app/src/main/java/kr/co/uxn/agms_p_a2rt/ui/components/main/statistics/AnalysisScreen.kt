@@ -129,30 +129,10 @@ private val AnalysisGlucoseNormalColor = Color(0xFF65B66F)
 private val AnalysisGlucoseHighColor = Color(0xFFFFA12B)
 private val AnalysisGlucoseLowColor = Color(0xFF8FAEFF)
 
-/**
- * 목표 혈당 범위. 차트에 띠로 그리는 구간과 같은 값이어야 한다.
- *
- * 띠는 여기 있고 말풍선 색은 저기 있게 두면, 한쪽만 고쳤을 때 띠 안에 있는 값이
- * 빨갛게 나오는 일이 생긴다. 그래서 한 곳에 둔다.
- */
+/** 목표 혈당 범위. 차트에 띠로 그리는 구간이다. */
 private const val TARGET_RANGE_LOW = 80.0
 private const val TARGET_RANGE_HIGH = 180.0
 
-/** 말풍선의 혈당값 색. 목표 범위를 벗어난 값에만 입힌다. */
-private val MarkerGlucoseHighColor = Color(0xFFE53935)
-private val MarkerGlucoseLowColor = Color(0xFF1E6FE0)
-
-/**
- * 말풍선에 쓸 혈당값 글자색.
- *
- * 범위 안이면 null 이다. 기본 글자색을 그대로 두어야 "색이 보이면 벗어난 것" 이라는
- * 규칙이 선다. 범위 안에도 색을 입히면 색 자체가 뜻을 잃는다.
- */
-private fun markerGlucoseColor(value: Double): Color? = when {
-    value > TARGET_RANGE_HIGH -> MarkerGlucoseHighColor
-    value < TARGET_RANGE_LOW -> MarkerGlucoseLowColor
-    else -> null
-}
 private val AnalysisGlucoseTargetRangeColor = Color(0x2E9B9797)
 private val AnalysisEventTextColor = Color(0xFFC74B3C)
 private const val MissingGlucoseValue = -10.0
@@ -1425,16 +1405,6 @@ private fun DailyGlucoseChart(
             valueEnd,
             Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
         )
-        // 목표 범위를 벗어난 값에만 색을 입힌다. 범위 안이면 기본 글자색 그대로 둔다.
-        // 색이 보이면 그것만으로 "벗어났다" 는 뜻이 되어, 숫자를 읽기 전에 안다.
-        markerGlucoseColor(point.entry.y)?.let { color ->
-            markerText.setSpan(
-                ForegroundColorSpan(color.toArgb()),
-                valueStart,
-                valueEnd,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-        }
         eventTitle?.let { title ->
             val titleStart = markerText.length - title.length
             markerText.setSpan(

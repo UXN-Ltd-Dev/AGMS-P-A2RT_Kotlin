@@ -1273,8 +1273,9 @@ fun HomeScreen(
                             .atZone(ZoneId.systemDefault())
                             .format(DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault()))
                     }
+                    // 말풍선 안에서 값만 키운다. 분석 화면 말풍선과 같은 크기로 맞춘다.
                     val emphasizedMarkerValueSizePx = with(LocalDensity.current) {
-                        14.sp.toPx().roundToInt()
+                        16.sp.toPx().roundToInt()
                     }
                     val markerValueFormatter = DefaultCartesianMarker.ValueFormatter { _, targets ->
                         val point = targets
