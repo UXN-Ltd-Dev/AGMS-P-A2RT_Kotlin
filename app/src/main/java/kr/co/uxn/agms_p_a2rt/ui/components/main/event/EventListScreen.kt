@@ -53,6 +53,7 @@ import kr.co.uxn.agms_p_a2rt.ui.components.main.home.DemoGlucoseConfig
 import kr.co.uxn.agms_p_a2rt.ui.model.ItemData
 import kr.co.uxn.agms_p_a2rt.ui.viewmodel.EventScreenViewModel
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -172,17 +173,6 @@ private fun formatEventTime(createdAt: String): String {
             .withZoneSameInstant(ZoneId.systemDefault())
             .format(DateTimeFormatter.ofPattern("MM.dd HH:mm"))
     }.getOrDefault(createdAt)
-}
-
-private fun parseEventInstant(createdAt: String): Instant? {
-    return runCatching {
-        LocalDateTime.parse(
-            createdAt,
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-        )
-            .atZone(ZoneId.of("UTC"))
-            .toInstant()
-    }.getOrNull()
 }
 
 private fun extractEventContentValue(content: String, key: String): String {
@@ -496,30 +486,35 @@ fun RecordListScreen(eventScreenViewModel: EventScreenViewModel) {
     val coroutineScope = rememberCoroutineScope()
     val eventList by eventScreenViewModel.eventItemList.collectAsState()
 
-    val recordList = eventList
-        .sortedByDescending { parseEventInstant(it.time) ?: Instant.EPOCH }
-        .map { it.toRecordItem(context) }
+    val recordList = eventList.map { it.toRecordItem(context) }
 
-    // 임시 데이터
-    val dummyRecords = listOf(
-        RecordItem(RecordCategory.EXERCISE, "조깅", "30분 가볍게", "07:00"),
-        RecordItem(RecordCategory.MEAL, "아침 식사", "밥, 국, 반찬 3가지", "08:00"),
-        RecordItem(RecordCategory.BLOOD_SUGAR, "식후 혈당", "115 mg/dL", "09:00"),
-        RecordItem(RecordCategory.INSULIN, "인슐린 투여", "속효성 4단위", "18:00")
-    )
+    // 임시 데이터. 시각을 넣어 두지 않으면 정렬할 때 맨 아래로 몰린다.
+    val dummyRecords = remember {
+        fun todayAt(hour: Int): Long = LocalDate.now()
+            .atTime(hour, 0)
+            .atZone(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+
+        listOf(
+            RecordItem(RecordCategory.EXERCISE, "조깅", "30분 가볍게", "07:00", todayAt(7)),
+            RecordItem(RecordCategory.MEAL, "아침 식사", "밥, 국, 반찬 3가지", "08:00", todayAt(8)),
+            RecordItem(RecordCategory.BLOOD_SUGAR, "식후 혈당", "115 mg/dL", "09:00", todayAt(9)),
+            RecordItem(RecordCategory.INSULIN, "인슐린 투여", "속효성 4단위", "18:00", todayAt(18))
+        )
+    }
     val recordsWithDemo = if (DemoGlucoseConfig.ENABLED) {
         recordList + dummyRecords
     } else {
         recordList
     }
 
-    val filteredRecords = if (selectedTab == RecordCategory.ALL) {
-//        recordList
-        recordsWithDemo
-    } else {
-//        recordList.filter { it.category == selectedTab }
-        recordsWithDemo.filter { it.category == selectedTab }
-    }
+    // 정렬은 화면에 내보내는 목록에서 한 번만 한다. 위 단계에서 정렬해 두면
+    // 뒤에 무엇이든 덧붙이는 순간 순서가 깨지고, 어느 탭을 눌러도 그대로 남는다.
+    // 시각을 읽지 못한 기록은 timeMillis 가 0 이라 맨 아래로 간다.
+    val filteredRecords = recordsWithDemo
+        .filter { selectedTab == RecordCategory.ALL || it.category == selectedTab }
+        .sortedByDescending { it.timeMillis }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
