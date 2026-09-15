@@ -484,7 +484,9 @@ fun UserInfoScreen(navController: NavHostController) {
         Column(modifier = Modifier.padding(horizontal = 24.dp)) {
             Text(stringResource(R.string.user_info_title), color = TextGray, fontSize = 14.sp, modifier = Modifier.padding(vertical = 12.dp))
             EditableInfoRow(stringResource(R.string.user_info_name), name.value) { editing.value = UserInfoField.NAME }
-            EditableInfoRow(stringResource(R.string.user_info_email), email.value) { editing.value = UserInfoField.EMAIL }
+            // 이메일은 계정을 가리키는 값이라 이 화면에서 바꾸지 않는다. 연필 없는
+            // InfoRow 를 써서 눌러도 아무 일이 없게 두고, 보낼 때는 받은 값을 그대로 담는다.
+            InfoRow(stringResource(R.string.user_info_email), email.value)
 //             비밀번호 변경하기 비활성화
 //            Text("비밀번호 변경하기", fontSize = 16.sp, modifier = Modifier.padding(vertical = 12.dp).clickable { })
 
@@ -607,7 +609,6 @@ fun UserInfoScreen(navController: NavHostController) {
     UserInfoEditDialogs(
         editing = editing,
         name = name,
-        email = email,
         age = age,
         height = height,
         weight = weight,
@@ -1274,7 +1275,7 @@ private fun diabetesServerValue(code: Int): String = when (code) {
     else -> "모름"
 }
 
-enum class UserInfoField { NAME, EMAIL, SEX, AGE, HEIGHT, WEIGHT, DIABETES, TARGET_RANGE }
+enum class UserInfoField { NAME, SEX, AGE, HEIGHT, WEIGHT, DIABETES, TARGET_RANGE }
 
 /** 값 오른쪽에 연필을 두어 눌러서 고칠 수 있는 줄임을 알린다. */
 @Composable
@@ -1311,7 +1312,6 @@ fun EditableInfoRow(label: String, value: String, onClick: () -> Unit) {
 fun UserInfoEditDialogs(
     editing: MutableState<UserInfoField?>,
     name: MutableState<String>,
-    email: MutableState<String>,
     age: MutableState<String>,
     height: MutableState<String>,
     weight: MutableState<String>,
@@ -1330,13 +1330,6 @@ fun UserInfoEditDialogs(
             numeric = false,
             onDismiss = close
         ) { name.value = it; close() }
-
-        UserInfoField.EMAIL -> SingleValueEditDialog(
-            title = stringResource(R.string.user_info_email),
-            initial = email.value,
-            numeric = false,
-            onDismiss = close
-        ) { email.value = it; close() }
 
         UserInfoField.AGE -> SingleValueEditDialog(
             title = stringResource(R.string.user_info_age),

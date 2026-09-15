@@ -348,8 +348,6 @@
     <string name="user_info_description">The standard target range is 80–130 mg/dL, and post-meal peak glucose should be under 180 mg/dL.</string>
     <string name="user_info_delete_account">Delete Account</string>
     <string name="user_info_edit">Save Changes</string>
-    <string name="user_info_edit_hint_name">Name</string>
-    <string name="user_info_edit_hint_email">Email</string>
     <string name="user_info_edit_target_low">Low</string>
     <string name="user_info_edit_target_high">High</string>
     <string name="toast_user_info_updated">Your information has been updated.</string>
