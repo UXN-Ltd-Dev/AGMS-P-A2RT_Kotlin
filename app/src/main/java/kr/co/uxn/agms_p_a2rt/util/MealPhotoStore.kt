@@ -159,6 +159,22 @@ object MealPhotoStore {
         Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }.getOrElse { bitmap }
 
+    /**
+     * 앨범에서 고른 사진을 촬영본과 같은 임시 파일에 담는다.
+     *
+     * 여기서는 바이트만 옮긴다. 크기를 줄이고 회전을 바로잡는 일은 [commit] 이 어차피
+     * 다시 하므로, 두 경로가 같은 자리에서 만나게 두는 편이 갈래가 적다.
+     */
+    fun copyInto(context: Context, source: Uri, target: File): Boolean = runCatching {
+        val copied = context.contentResolver.openInputStream(source)?.use { input ->
+            target.outputStream().use { output -> input.copyTo(output) }
+        }
+        copied != null && target.length() > 0
+    }.getOrElse {
+        Log.w(TAG, "앨범 사진 복사 실패", it)
+        false
+    }
+
     /** 촬영용 임시 파일. 저장하지 않고 화면을 나가면 그대로 남으므로 [clearTemp] 로 지운다. */
     fun tempFile(context: Context): File = File(dir(context), "temp_capture.jpg")
 

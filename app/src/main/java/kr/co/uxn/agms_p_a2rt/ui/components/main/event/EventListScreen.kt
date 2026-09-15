@@ -17,6 +17,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.window.Dialog
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,6 +69,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
@@ -1686,11 +1689,50 @@ private fun MealPhotoField(
         }
     }
 
+    // 앨범은 사진 선택기가 고른 한 장만 넘겨 주는 구조라 저장소 권한을 묻지 않아도 된다.
+    // 안드로이드 13 미만에서는 androidx 가 대신할 화면을 띄운다.
+    val pickPhoto = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+
+        if (MealPhotoStore.copyInto(context, uri, tempFile)) {
+            version++
+            onPhotoCaptured(tempFile)
+        } else {
+            Toast.makeText(
+                context,
+                context.getString(R.string.record_detail_meal_photo_failed),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    // 어디서 가져올지 먼저 묻는다. 시스템 선택기에 카메라와 갤러리를 섞어 넣는 방법도
+    // 있지만 기기마다 목록이 달라져, 앱에서 두 갈래만 내보이는 편이 한결같다.
+    var showSourceChooser by remember { mutableStateOf(false) }
+
     fun capture() {
         val granted = ContextCompat.checkSelfPermission(
             context, Manifest.permission.CAMERA
         ) == PackageManager.PERMISSION_GRANTED
         if (granted) takePicture.launch(tempUri) else requestCamera.launch(Manifest.permission.CAMERA)
+    }
+
+    if (showSourceChooser) {
+        MealPhotoSourceDialog(
+            onDismiss = { showSourceChooser = false },
+            onCamera = {
+                showSourceChooser = false
+                capture()
+            },
+            onGallery = {
+                showSourceChooser = false
+                pickPhoto.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            }
+        )
     }
 
     Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
@@ -1708,7 +1750,7 @@ private fun MealPhotoField(
                     .height(150.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color(0xFFF5F5F5))
-                    .clickable { capture() },
+                    .clickable { showSourceChooser = true },
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -1743,7 +1785,7 @@ private fun MealPhotoField(
                 )
             }
             Row(modifier = Modifier.padding(top = 8.dp)) {
-                TextButton(onClick = { capture() }) {
+                TextButton(onClick = { showSourceChooser = true }) {
                     Text(stringResource(R.string.record_detail_meal_photo_retake), color = PrimaryOrange)
                 }
                 TextButton(onClick = {
@@ -1873,4 +1915,75 @@ fun InsulinInputForm(
     }
 
     RecordTimeRow(text = recordTimeText, onEditClick = onEditTime)
+}
+
+
+/**
+ * 사진을 어디서 가져올지 고르는 대화상자.
+ *
+ * 앱 안에서 두 갈래만 내보인다. 시스템 선택기에 카메라 앱을 끼워 넣는 방법도 있지만,
+ * 제조사와 설치된 앱에 따라 목록이 제각각이라 같은 앱을 쓰는 사람마다 다른 화면을 본다.
+ */
+@Composable
+private fun MealPhotoSourceDialog(
+    onDismiss: () -> Unit,
+    onCamera: () -> Unit,
+    onGallery: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .background(Color.White, RoundedCornerShape(20.dp))
+                .padding(24.dp)
+        ) {
+            Column {
+                Text(
+                    text = stringResource(R.string.record_detail_meal_photo),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Button(
+                    onClick = onCamera,
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+                    shape = RoundedCornerShape(25.dp),
+                    modifier = Modifier.fillMaxWidth().height(50.dp)
+                ) {
+                    Text(
+                        stringResource(R.string.record_detail_meal_photo_camera),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedButton(
+                    onClick = onGallery,
+                    shape = RoundedCornerShape(25.dp),
+                    border = BorderStroke(1.dp, PrimaryOrange),
+                    modifier = Modifier.fillMaxWidth().height(50.dp)
+                ) {
+                    Text(
+                        stringResource(R.string.record_detail_meal_photo_gallery),
+                        color = PrimaryOrange,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.cancel), color = Color.Gray)
+                }
+            }
+        }
+    }
 }

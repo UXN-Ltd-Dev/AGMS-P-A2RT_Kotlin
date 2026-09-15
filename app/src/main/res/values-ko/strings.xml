@@ -432,7 +432,9 @@
     <string name="record_home_tab_select">기록하기</string>
     <string name="record_home_tab_list">전체 목록</string>
     <string name="record_detail_meal_photo">사진 첨부</string>
-    <string name="record_detail_meal_photo_retake">다시 촬영</string>
+    <string name="record_detail_meal_photo_retake">사진 변경</string>
+    <string name="record_detail_meal_photo_camera">사진 찍기</string>
+    <string name="record_detail_meal_photo_gallery">앨범에서 선택</string>
     <string name="record_detail_meal_photo_remove">사진 삭제</string>
     <string name="record_detail_meal_photo_failed">사진을 저장하지 못했습니다.</string>
     <string name="record_detail_meal_photo_permission">사진 촬영을 위해 카메라 권한을 허용해 주세요.</string>

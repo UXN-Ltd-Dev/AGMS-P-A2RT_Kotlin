@@ -385,7 +385,9 @@
     <string name="record_home_tab_select">Add Record</string>
     <string name="record_home_tab_list">All Records</string>
     <string name="record_detail_meal_photo">Add Photo</string>
-    <string name="record_detail_meal_photo_retake">Retake</string>
+    <string name="record_detail_meal_photo_retake">Change Photo</string>
+    <string name="record_detail_meal_photo_camera">Take Photo</string>
+    <string name="record_detail_meal_photo_gallery">Choose from Album</string>
     <string name="record_detail_meal_photo_remove">Remove Photo</string>
     <string name="record_detail_meal_photo_failed">Could not save the photo.</string>
     <string name="record_detail_meal_photo_permission">Please allow camera permission to take a photo.</string>
