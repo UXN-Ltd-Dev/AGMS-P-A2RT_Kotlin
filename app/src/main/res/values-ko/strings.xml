@@ -347,6 +347,7 @@
     <string name="analysis_screen_no_data">해당 날짜에는 데이터가 없습니다.</string>
     <string name="analysis_screen_no_data_simple">데이터 없음</string>
     <string name="analysis_screen_time_in_range">목표 혈당 범위 내 시간</string>
+    <string name="analysis_screen_time_in_range_tir_label">(TIR)</string>
 
     <string name="details_category_day">일</string>
     <string name="details_category_week">주</string>

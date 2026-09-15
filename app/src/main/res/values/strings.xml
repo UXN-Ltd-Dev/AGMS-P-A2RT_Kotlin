@@ -305,6 +305,7 @@
     <string name="event_list_screen_record_btn">Add Log</string>
     <string name="analysis_screen_no_data">No data available for the selected date.</string>
     <string name="analysis_screen_time_in_range">Time in Range</string>
+    <string name="analysis_screen_time_in_range_tir_label">(TIR)</string>
     <string name="analysis_screen_no_data_simple">No data</string>
     <string name="details_category_day">Day</string>
     <string name="details_category_week">Week</string>

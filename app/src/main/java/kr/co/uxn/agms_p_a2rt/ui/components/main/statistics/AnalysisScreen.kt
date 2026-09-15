@@ -1133,11 +1133,20 @@ private fun TirCard(
                 .fillMaxSize()
                 .padding(horizontal = 10.dp, vertical = 12.dp)
         ) {
-            Text(
-                text = stringResource(R.string.analysis_screen_time_in_range),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
+            // 아래 혈당 변동성 카드와 같은 모양으로 맞춘다. 제목만 굵게 두고
+            // 약어는 굵기 없이 붙여, 두 카드의 제목 줄이 따로 놀지 않게 한다.
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = stringResource(R.string.analysis_screen_time_in_range),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = stringResource(R.string.analysis_screen_time_in_range_tir_label),
+                    fontSize = 16.sp
+                )
+            }
             Spacer(modifier = Modifier.weight(1f))
             Row(
                 modifier = Modifier
