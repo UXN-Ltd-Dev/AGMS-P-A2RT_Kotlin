@@ -1325,7 +1325,7 @@ fun HomeScreen(
                     val defaultMarker = rememberMarker(
                         valueFormatter = markerValueFormatter,
                         indicatorColor = colorResource(R.color.text_secondary),
-                        labelTopMargin = 4.dp
+                        labelTopMargin = 12.dp
                     )
                     val filteredMarker = remember(defaultMarker) {
                         object : CartesianMarker by defaultMarker {
