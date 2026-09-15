@@ -1320,10 +1320,11 @@ fun HomeScreen(
                         )
                         markerText
                     }
+                    // 줄 높이를 글자 크기와 같은 16sp 로 묶어 두면 글자 윗부분이 줄 상자를
+                    // 넘어 잘린다. 분석 화면 말풍선처럼 자연 높이에 맡긴다.
                     val defaultMarker = rememberMarker(
                         valueFormatter = markerValueFormatter,
                         indicatorColor = colorResource(R.color.text_secondary),
-                        labelLineHeight = 16.sp,
                         labelTopMargin = 4.dp
                     )
                     val filteredMarker = remember(defaultMarker) {
