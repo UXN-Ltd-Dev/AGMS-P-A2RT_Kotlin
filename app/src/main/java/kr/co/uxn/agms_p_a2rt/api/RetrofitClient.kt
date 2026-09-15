@@ -10,7 +10,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 
 object RetrofitClient {
-    private const val BASE_URL_SERVER = "https://agmscare.kr"
+    private const val BASE_URL_SERVER = "https://agmscare.kr:8080"
     private const val BASE_URL_SERVER2 = BuildConfig.base_url
 
     private val okHttpClient by lazy {

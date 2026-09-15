@@ -180,7 +180,7 @@
     <string name="dialog_sensor_off_title">End Sensor Session</string>
     <string name="dialog_sensor_off_content">Are you sure you want to end your sensor session?</string>
     <string name="settings_profile">Profile</string>
-    <string name="settings_sensor_info">Sensor Info</string>
+    <string name="settings_sensor_info">Sensor</string>
     <string name="settings_version_info">Version Info</string>
     <string name="settings_notifications">Notifications</string>
     <string name="settings_terms_of_service">Terms of Service</string>
@@ -332,7 +332,7 @@
     <string name="insulin_type_premixed">Premixed</string>
     <string name="insulin_type_nph">NPH</string>
     <string name="setting_menu_title_user_info">User Info</string>
-    <string name="setting_menu_title_sensor_info">Sensor Info</string>
+    <string name="setting_menu_title_sensor_info">Sensor</string>
     <string name="setting_menu_title_alarm_settings">Alert Settings</string>
     <string name="setting_menu_title_app_info">App Info</string>
     <string name="user_info_title">Account Info</string>

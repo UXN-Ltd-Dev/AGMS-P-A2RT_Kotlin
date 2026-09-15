@@ -145,7 +145,7 @@
     <string name="recent_activity_title">최근 활동</string>
     <string name="recent_activity_sub_title">가볍게, 오늘 하루를 남겨보세요</string>
     <string name="settings_profile">내 정보</string>
-    <string name="settings_sensor_info">센서 정보</string>
+    <string name="settings_sensor_info">센서</string>
     <string name="settings_version_info">버전 정보</string>
     <string name="settings_notifications">알림 설정</string>
     <string name="settings_terms_of_service">이용 약관</string>
@@ -379,7 +379,7 @@
     <string name="insulin_type_nph">중간형</string>
 
     <string name="setting_menu_title_user_info">사용자 정보</string>
-    <string name="setting_menu_title_sensor_info">센서 정보</string>
+    <string name="setting_menu_title_sensor_info">센서</string>
     <string name="setting_menu_title_alarm_settings">알림 설정</string>
     <string name="setting_menu_title_app_info">앱 정보</string>
 

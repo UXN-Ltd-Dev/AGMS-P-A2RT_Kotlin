@@ -10,7 +10,7 @@ import com.google.gson.annotations.SerializedName
  * 서로 달라 보이더라도 한쪽으로 통일하면 안 된다.
  */
 data class RequestUpdateUser(
-    @SerializedName("userId")
+    @SerializedName("user_id")
     val userId: Int,
 
     @SerializedName("email")
@@ -33,12 +33,12 @@ data class RequestUpdateUser(
     val weight: Int,
 
     /** 1701 제1형 … 1707 모름. 회원가입 때 보내는 값과 같다. */
-    @SerializedName("diabetesType")
+    @SerializedName("diabetes_type")
     val diabetesType: Int,
 
-    @SerializedName("targetGlucoseLow")
+    @SerializedName("target_glucose_low")
     val targetGlucoseMin: Int,
 
-    @SerializedName("targetGlucoseHigh")
+    @SerializedName("target_glucose_high")
     val targetGlucoseMax: Int
 )

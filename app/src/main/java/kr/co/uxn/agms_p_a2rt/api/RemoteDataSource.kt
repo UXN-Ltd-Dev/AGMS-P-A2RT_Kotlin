@@ -87,7 +87,7 @@ interface RemoteDataSource {
     suspend fun getLastTime(@Query("user_id") userId: Int): Response<ResponseGetLastTime>
 
     // 데이터 전송
-    // @POST("/api/value/save")
+//     @POST("/api/value/save")
 //     suspend fun sendData(@Body data: List<RequestDataValue>): Response<ResponseDataValue>
 
     // 데이터 전송 (온도 추가)
