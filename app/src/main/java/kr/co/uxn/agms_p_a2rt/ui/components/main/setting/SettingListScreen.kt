@@ -3,6 +3,7 @@ package kr.co.uxn.agms_p_a2rt.ui.components.main.setting
 import android.os.Process
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -51,6 +52,8 @@ import kotlin.system.exitProcess
 import kr.co.uxn.agms_p_a2rt.R
 import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestDeleteOauthUserInfo
 import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestDeleteUserInfo
+import kr.co.uxn.agms_p_a2rt.api.token.CachedUserInfo
+import kr.co.uxn.agms_p_a2rt.api.model.requestDTO.RequestUpdateUser
 import kr.co.uxn.agms_p_a2rt.ui.components.isKorea
 import kr.co.uxn.agms_p_a2rt.ui.viewmodel.BleViewModel
 
@@ -288,15 +291,21 @@ fun UserInfoScreen(navController: NavHostController) {
     val coroutineScope = rememberCoroutineScope()
     val name = remember { mutableStateOf("") }
     val email = remember { mutableStateOf("") }
-    val sex = remember { mutableStateOf("") }
     val age = remember { mutableStateOf("") }
     val height = remember { mutableStateOf("") }
     val weight = remember { mutableStateOf("") }
-    val diabetesType = remember { mutableStateOf("") }
-    val targetGlucoseRange = remember { mutableStateOf("") }
+    // 성별과 당뇨 유형은 서버 코드로 들고 있는다. 화면에 내걸 때만 문자열로 바꾸면
+    // 언어 설정에 따라 저절로 갈리고, 보낼 때 되돌릴 일도 없다.
+    val sexCode = remember { mutableStateOf(SEX_NONE) }
+    val diabetesCode = remember { mutableStateOf(DIABETES_UNKNOWN) }
+    val targetLow = remember { mutableStateOf("") }
+    val targetHigh = remember { mutableStateOf("") }
+    val userId = remember { mutableStateOf(-1) }
+
     val showDeleteAccountDialog = remember { mutableStateOf(false) }
+    val editing = remember { mutableStateOf<UserInfoField?>(null) }
+    val isSubmitting = remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val isKorea = isKorea()
 
     val localDbRepository by lazy { AppDatabase.getInstance(context) }
 
@@ -306,43 +315,18 @@ fun UserInfoScreen(navController: NavHostController) {
                 UserInfoCache.getUserInfo()
             }
             if (userInfo != null) {
+                userId.value = userInfo.userId
                 name.value = userInfo.name
                 email.value = userInfo.email
                 age.value = userInfo.age.toString()
                 height.value = userInfo.height.toString()
                 weight.value = userInfo.weight.toString()
-                targetGlucoseRange.value = "${userInfo.targetGlucoseMin} ~ ${userInfo.targetGlucoseMax} mg/dL"
-
-                if (isKorea) {
-                    sex.value = userInfo.sex
-                    diabetesType.value = userInfo.diabetesType
-                } else {
-                    if (userInfo.sex == "남성") {
-                        sex.value = "Male"
-                    } else if(userInfo.sex == "여성") {
-                        sex.value = "Female"
-                    } else {
-                        sex.value = "Prefer not to say"
-                    }
-                    if (userInfo.diabetesType == "정상") {
-                        diabetesType.value = "Normal"
-                    } else if(userInfo.diabetesType == "당뇨 전단계") {
-                        diabetesType.value = "Prediabetes"
-                    } else if(userInfo.diabetesType == "제1형 당뇨병") {
-                        diabetesType.value = "Type 1 Diabetes"
-                    } else if(userInfo.diabetesType == "제2형 당뇨병") {
-                        diabetesType.value = "Type 2 Diabetes"
-                    } else if(userInfo.diabetesType == "임신성 당뇨병") {
-                        diabetesType.value = "Gestational Diabetes"
-                    } else if(userInfo.diabetesType == "LADA") {
-                        diabetesType.value = "LADA"
-                    } else { // "모름"
-                        diabetesType.value = "Unknown"
-                    }
-                }
+                sexCode.value = sexCodeOf(userInfo.sex)
+                diabetesCode.value = diabetesCodeOf(userInfo.diabetesType)
+                targetLow.value = userInfo.targetGlucoseMin.toString()
+                targetHigh.value = userInfo.targetGlucoseMax.toString()
             }
-
-            } catch (e: Exception) {
+        } catch (e: Exception) {
             Log.e("TEST", "UserInfo 사용자 정보 로드 실패 : ${e.message}")
         }
     }
@@ -499,21 +483,24 @@ fun UserInfoScreen(navController: NavHostController) {
 
         Column(modifier = Modifier.padding(horizontal = 24.dp)) {
             Text(stringResource(R.string.user_info_title), color = TextGray, fontSize = 14.sp, modifier = Modifier.padding(vertical = 12.dp))
-            InfoRow(stringResource(R.string.user_info_name), name.value)
-            InfoRow(stringResource(R.string.user_info_email), email.value)
+            EditableInfoRow(stringResource(R.string.user_info_name), name.value) { editing.value = UserInfoField.NAME }
+            EditableInfoRow(stringResource(R.string.user_info_email), email.value) { editing.value = UserInfoField.EMAIL }
 //             비밀번호 변경하기 비활성화
 //            Text("비밀번호 변경하기", fontSize = 16.sp, modifier = Modifier.padding(vertical = 12.dp).clickable { })
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(stringResource(R.string.user_info_sub_title), color = TextGray, fontSize = 14.sp, modifier = Modifier.padding(vertical = 12.dp))
-            InfoRow(stringResource(R.string.user_info_gender), sex.value)
-            InfoRow(stringResource(R.string.user_info_age), age.value)
-            InfoRow(stringResource(R.string.user_info_height), height.value)
-            InfoRow(stringResource(R.string.user_info_weight), weight.value)
-            InfoRow(stringResource(R.string.user_info_diabetes_type), diabetesType.value)
-            InfoRow(stringResource(R.string.user_info_target_glucose_range), targetGlucoseRange.value)
-            
+            EditableInfoRow(stringResource(R.string.user_info_gender), stringResource(sexLabelRes(sexCode.value))) { editing.value = UserInfoField.SEX }
+            EditableInfoRow(stringResource(R.string.user_info_age), age.value) { editing.value = UserInfoField.AGE }
+            EditableInfoRow(stringResource(R.string.user_info_height), height.value) { editing.value = UserInfoField.HEIGHT }
+            EditableInfoRow(stringResource(R.string.user_info_weight), weight.value) { editing.value = UserInfoField.WEIGHT }
+            EditableInfoRow(stringResource(R.string.user_info_diabetes_type), stringResource(diabetesLabelRes(diabetesCode.value))) { editing.value = UserInfoField.DIABETES }
+            EditableInfoRow(
+                stringResource(R.string.user_info_target_glucose_range),
+                "${targetLow.value} ~ ${targetHigh.value} mg/dL"
+            ) { editing.value = UserInfoField.TARGET_RANGE }
+
             Spacer(modifier = Modifier.height(16.dp))
             Text(stringResource(R.string.user_info_description), fontSize = 12.sp, color = TextGray)
 
@@ -521,9 +508,114 @@ fun UserInfoScreen(navController: NavHostController) {
             Text(stringResource(R.string.user_info_delete_account), color = AlertRed, fontSize = 14.sp, modifier = Modifier.clickable {
                 navController.navigate("delete_account")
             })
+
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(
+                onClick = {
+                    val trimmedName = name.value.trim()
+                    val trimmedEmail = email.value.trim()
+                    val ageInt = age.value.trim().toIntOrNull()
+                    val heightInt = height.value.trim().toIntOrNull()
+                    val weightInt = weight.value.trim().toIntOrNull()
+                    val lowInt = targetLow.value.trim().toIntOrNull()
+                    val highInt = targetHigh.value.trim().toIntOrNull()
+
+                    // 빈 칸이나 뒤집힌 범위를 그대로 보내면 서버에 잘못된 값이 남는다.
+                    val valid = trimmedName.isNotEmpty() && trimmedEmail.isNotEmpty() &&
+                        ageInt != null && heightInt != null && weightInt != null &&
+                        lowInt != null && highInt != null && lowInt < highInt
+
+                    if (!valid) {
+                        Toast.makeText(context, R.string.toast_user_info_invalid, Toast.LENGTH_SHORT).show()
+                    } else {
+                        isSubmitting.value = true
+                        coroutineScope.launch {
+                            try {
+                                val id = if (userId.value != -1) {
+                                    userId.value
+                                } else {
+                                    DataStoreManager.getUserId().first() ?: -1
+                                }
+
+                                val response = withContext(Dispatchers.IO) {
+                                    tokenRetrofit.updateUser(
+                                        RequestUpdateUser(
+                                            userId = id,
+                                            email = trimmedEmail,
+                                            name = trimmedName,
+                                            sex = sexCode.value,
+                                            age = ageInt!!,
+                                            height = heightInt!!,
+                                            weight = weightInt!!,
+                                            diabetesType = diabetesCode.value,
+                                            targetGlucoseMin = lowInt!!,
+                                            targetGlucoseMax = highInt!!
+                                        )
+                                    )
+                                }
+
+                                val body = response.body()
+                                if (response.isSuccessful && body?.isSuccess == true) {
+                                    // 캐시를 함께 고치지 않으면 UserInfoCache 가 예전 값을 계속 내준다.
+                                    withContext(Dispatchers.IO) {
+                                        DataStoreManager.saveCachedUserInfo(
+                                            CachedUserInfo(
+                                                userId = id,
+                                                email = trimmedEmail,
+                                                name = trimmedName,
+                                                sex = sexServerValue(sexCode.value),
+                                                age = ageInt,
+                                                height = heightInt,
+                                                weight = weightInt,
+                                                diabetesType = diabetesServerValue(diabetesCode.value),
+                                                targetGlucoseMin = lowInt,
+                                                targetGlucoseMax = highInt
+                                            )
+                                        )
+                                    }
+                                    Toast.makeText(context, R.string.toast_user_info_updated, Toast.LENGTH_SHORT).show()
+                                    navController.popBackStack()
+                                } else {
+                                    Log.e("TEST", "사용자 정보 수정 실패 : ${response.code()} ${response.errorBody()?.string()}")
+                                    Toast.makeText(context, R.string.toast_user_info_update_failed, Toast.LENGTH_SHORT).show()
+                                }
+                            } catch (e: Exception) {
+                                Log.e("TEST", "사용자 정보 수정 네트워크 에러 : ${e.message}")
+                                Toast.makeText(context, R.string.toast_user_info_update_failed, Toast.LENGTH_SHORT).show()
+                            } finally {
+                                isSubmitting.value = false
+                            }
+                        }
+                    }
+                },
+                enabled = !isSubmitting.value,
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+                shape = RoundedCornerShape(25.dp),
+                modifier = Modifier.fillMaxWidth().height(50.dp)
+            ) {
+                Text(
+                    stringResource(R.string.user_info_edit),
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
+
+    UserInfoEditDialogs(
+        editing = editing,
+        name = name,
+        email = email,
+        age = age,
+        height = height,
+        weight = weight,
+        sexCode = sexCode,
+        diabetesCode = diabetesCode,
+        targetLow = targetLow,
+        targetHigh = targetHigh
+    )
 }
 
 // ==========================================
@@ -1103,6 +1195,337 @@ fun AppInfoScreen(navController: NavHostController) {
                     Toast.makeText(context, context.getString(R.string.toast_privacy_policy_excuse), Toast.LENGTH_SHORT).show()
                 })
             }
+        }
+    }
+}
+
+
+// ==========================================
+// 사용자 정보 수정
+// ==========================================
+
+// 성별과 당뇨 유형은 서버가 코드로 받고 문자열로 돌려준다. 회원가입에서 쓰는 값과
+// 같아야 하므로 SignUpInfoScreen3 의 숫자를 그대로 가져왔다. 한쪽만 고치면 안 된다.
+private const val SEX_MALE = 1601
+private const val SEX_FEMALE = 1602
+private const val SEX_NONE = 1603
+
+private const val DIABETES_TYPE_1 = 1701
+private const val DIABETES_TYPE_2 = 1702
+private const val DIABETES_GESTATIONAL = 1703
+private const val DIABETES_PRE = 1704
+private const val DIABETES_LADA = 1705
+private const val DIABETES_NORMAL = 1706
+private const val DIABETES_UNKNOWN = 1707
+
+private val SEX_CHOICES = listOf(
+    SEX_MALE to R.string.item_gender_male,
+    SEX_FEMALE to R.string.item_gender_female,
+    SEX_NONE to R.string.item_gender_none
+)
+
+private val DIABETES_CHOICES = listOf(
+    DIABETES_NORMAL to R.string.item_diabetes_type_normal,
+    DIABETES_PRE to R.string.item_diabetes_type_prediabetes,
+    DIABETES_TYPE_1 to R.string.item_diabetes_type_1,
+    DIABETES_TYPE_2 to R.string.item_diabetes_type_2,
+    DIABETES_GESTATIONAL to R.string.item_diabetes_type_gestational,
+    DIABETES_LADA to R.string.item_diabetes_type_lada,
+    DIABETES_UNKNOWN to R.string.item_diabetes_type_unknown
+)
+
+private fun sexLabelRes(code: Int): Int =
+    SEX_CHOICES.firstOrNull { it.first == code }?.second ?: R.string.item_gender_none
+
+private fun diabetesLabelRes(code: Int): Int =
+    DIABETES_CHOICES.firstOrNull { it.first == code }?.second ?: R.string.item_diabetes_type_unknown
+
+// 아래 네 함수가 다루는 한글은 화면에 쓰는 말이 아니라 서버가 주고받는 값이다.
+// 그래서 strings.xml 로 빼지 않고 여기에 그대로 적는다. 번역하면 매칭이 깨진다.
+private fun sexCodeOf(raw: String): Int = when (raw) {
+    "남성" -> SEX_MALE
+    "여성" -> SEX_FEMALE
+    else -> SEX_NONE
+}
+
+private fun sexServerValue(code: Int): String = when (code) {
+    SEX_MALE -> "남성"
+    SEX_FEMALE -> "여성"
+    else -> "선택 안함"
+}
+
+private fun diabetesCodeOf(raw: String): Int = when (raw) {
+    "제1형 당뇨병" -> DIABETES_TYPE_1
+    "제2형 당뇨병" -> DIABETES_TYPE_2
+    "임신성 당뇨병" -> DIABETES_GESTATIONAL
+    "당뇨 전단계" -> DIABETES_PRE
+    "LADA" -> DIABETES_LADA
+    "정상" -> DIABETES_NORMAL
+    else -> DIABETES_UNKNOWN
+}
+
+private fun diabetesServerValue(code: Int): String = when (code) {
+    DIABETES_TYPE_1 -> "제1형 당뇨병"
+    DIABETES_TYPE_2 -> "제2형 당뇨병"
+    DIABETES_GESTATIONAL -> "임신성 당뇨병"
+    DIABETES_PRE -> "당뇨 전단계"
+    DIABETES_LADA -> "LADA"
+    DIABETES_NORMAL -> "정상"
+    else -> "모름"
+}
+
+enum class UserInfoField { NAME, EMAIL, SEX, AGE, HEIGHT, WEIGHT, DIABETES, TARGET_RANGE }
+
+/** 값 오른쪽에 연필을 두어 눌러서 고칠 수 있는 줄임을 알린다. */
+@Composable
+fun EditableInfoRow(label: String, value: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, fontSize = 16.sp)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(value, fontSize = 16.sp, color = TextGray)
+            Spacer(modifier = Modifier.width(6.dp))
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = null,
+                tint = PrimaryOrange,
+                modifier = Modifier.size(14.dp)
+            )
+        }
+    }
+}
+
+/**
+ * 어느 줄을 눌렀느냐에 따라 맞는 대화상자를 연다.
+ *
+ * 고른 값은 화면 상태에만 담아 둔다. 서버로는 "수정하기" 를 눌렀을 때 한 번에 보낸다.
+ * 줄마다 따로 보내면 중간에 끊겼을 때 절반만 바뀐 상태가 남는다.
+ */
+@Composable
+fun UserInfoEditDialogs(
+    editing: MutableState<UserInfoField?>,
+    name: MutableState<String>,
+    email: MutableState<String>,
+    age: MutableState<String>,
+    height: MutableState<String>,
+    weight: MutableState<String>,
+    sexCode: MutableState<Int>,
+    diabetesCode: MutableState<Int>,
+    targetLow: MutableState<String>,
+    targetHigh: MutableState<String>
+) {
+    val field = editing.value ?: return
+    val close = { editing.value = null }
+
+    when (field) {
+        UserInfoField.NAME -> SingleValueEditDialog(
+            title = stringResource(R.string.user_info_name),
+            initial = name.value,
+            numeric = false,
+            onDismiss = close
+        ) { name.value = it; close() }
+
+        UserInfoField.EMAIL -> SingleValueEditDialog(
+            title = stringResource(R.string.user_info_email),
+            initial = email.value,
+            numeric = false,
+            onDismiss = close
+        ) { email.value = it; close() }
+
+        UserInfoField.AGE -> SingleValueEditDialog(
+            title = stringResource(R.string.user_info_age),
+            initial = age.value,
+            numeric = true,
+            onDismiss = close
+        ) { age.value = it; close() }
+
+        UserInfoField.HEIGHT -> SingleValueEditDialog(
+            title = stringResource(R.string.user_info_height),
+            initial = height.value,
+            numeric = true,
+            onDismiss = close
+        ) { height.value = it; close() }
+
+        UserInfoField.WEIGHT -> SingleValueEditDialog(
+            title = stringResource(R.string.user_info_weight),
+            initial = weight.value,
+            numeric = true,
+            onDismiss = close
+        ) { weight.value = it; close() }
+
+        UserInfoField.SEX -> ChoiceEditDialog(
+            title = stringResource(R.string.user_info_gender),
+            choices = SEX_CHOICES,
+            selected = sexCode.value,
+            onDismiss = close
+        ) { sexCode.value = it; close() }
+
+        UserInfoField.DIABETES -> ChoiceEditDialog(
+            title = stringResource(R.string.user_info_diabetes_type),
+            choices = DIABETES_CHOICES,
+            selected = diabetesCode.value,
+            onDismiss = close
+        ) { diabetesCode.value = it; close() }
+
+        UserInfoField.TARGET_RANGE -> TargetRangeEditDialog(
+            initialLow = targetLow.value,
+            initialHigh = targetHigh.value,
+            onDismiss = close
+        ) { low, high ->
+            targetLow.value = low
+            targetHigh.value = high
+            close()
+        }
+    }
+}
+
+@Composable
+private fun EditDialogFrame(
+    title: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .background(Color.White, RoundedCornerShape(20.dp))
+                .padding(24.dp)
+        ) {
+            Column {
+                Text(text = title, fontSize = 20.sp, fontWeight = FontWeight.Medium)
+                Spacer(modifier = Modifier.height(16.dp))
+                content()
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.weight(1f),
+                        border = BorderStroke(1.dp, Color(0xFFD8D8D8))
+                    ) {
+                        Text(stringResource(R.string.cancel), color = TextGray, fontWeight = FontWeight.Medium)
+                    }
+                    Button(
+                        onClick = onConfirm,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(stringResource(R.string.confirm), color = Color.White, fontWeight = FontWeight.Medium)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun editFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = PrimaryOrange,
+    unfocusedBorderColor = Color.LightGray,
+    cursorColor = PrimaryOrange
+)
+
+@Composable
+private fun SingleValueEditDialog(
+    title: String,
+    initial: String,
+    numeric: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    val text = remember(initial) { mutableStateOf(initial) }
+    EditDialogFrame(title = title, onDismiss = onDismiss, onConfirm = { onConfirm(text.value) }) {
+        OutlinedTextField(
+            value = text.value,
+            onValueChange = { text.value = it },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = if (numeric) KeyboardType.Number else KeyboardType.Text
+            ),
+            colors = editFieldColors(),
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+private fun ChoiceEditDialog(
+    title: String,
+    choices: List<Pair<Int, Int>>,
+    selected: Int,
+    onDismiss: () -> Unit,
+    onConfirm: (Int) -> Unit
+) {
+    val picked = remember(selected) { mutableStateOf(selected) }
+    EditDialogFrame(title = title, onDismiss = onDismiss, onConfirm = { onConfirm(picked.value) }) {
+        Column {
+            choices.forEach { (code, labelRes) ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { picked.value = code }
+                        .padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = picked.value == code,
+                        onClick = { picked.value = code },
+                        colors = RadioButtonDefaults.colors(selectedColor = PrimaryOrange)
+                    )
+                    Text(stringResource(labelRes), fontSize = 16.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TargetRangeEditDialog(
+    initialLow: String,
+    initialHigh: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String, String) -> Unit
+) {
+    val low = remember(initialLow) { mutableStateOf(initialLow) }
+    val high = remember(initialHigh) { mutableStateOf(initialHigh) }
+    EditDialogFrame(
+        title = stringResource(R.string.user_info_target_glucose_range),
+        onDismiss = onDismiss,
+        onConfirm = { onConfirm(low.value, high.value) }
+    ) {
+        Column {
+            Text(stringResource(R.string.user_info_edit_target_low), fontSize = 14.sp, color = TextGray)
+            OutlinedTextField(
+                value = low.value,
+                onValueChange = { low.value = it },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                colors = editFieldColors(),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(stringResource(R.string.user_info_edit_target_high), fontSize = 14.sp, color = TextGray)
+            OutlinedTextField(
+                value = high.value,
+                onValueChange = { high.value = it },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                colors = editFieldColors(),
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
