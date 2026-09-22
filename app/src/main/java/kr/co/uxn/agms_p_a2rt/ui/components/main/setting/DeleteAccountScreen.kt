@@ -169,6 +169,7 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                                     DataStoreManager.deleteDeviceMac()
                                     DataStoreManager.deleteStartTime()
                                     DataStoreManager.deleteEndTime()
+                                    DataStoreManager.deleteStabilizationEndTime()
                                     DataStoreManager.deleteDailyCalibrationTime()
                                     DataStoreManager.deleteDailyCalibrationLastTime()
                                     DataStoreManager.setLandScapeMode(false)
@@ -274,6 +275,7 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                                             DataStoreManager.deleteDeviceMac()
                                             DataStoreManager.deleteStartTime()
                                             DataStoreManager.deleteEndTime()
+                                            DataStoreManager.deleteStabilizationEndTime()
                                             withContext(Dispatchers.Main) {
                                                 // 1. 서비스 종료
 //                                                bleViewModel.emit("STOP_SERVICE")
@@ -322,6 +324,7 @@ fun DeleteAccountScreen(navController: NavController, bleViewModel: BleViewModel
                                             DataStoreManager.deleteDeviceMac()
                                             DataStoreManager.deleteStartTime()
                                             DataStoreManager.deleteEndTime()
+                                            DataStoreManager.deleteStabilizationEndTime()
                                             withContext(Dispatchers.Main) {
                                                 // 1. 서비스 종료
 //                                                bleViewModel.emit("STOP_SERVICE")

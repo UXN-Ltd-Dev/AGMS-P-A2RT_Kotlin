@@ -45,6 +45,16 @@ object DataStoreManager {
     private val START_TIME = longPreferencesKey("start_time")
     private val MEASUREMENT_TIME = longPreferencesKey("measurement_time")
     private val END_TIME = longPreferencesKey("end_time")
+
+    /**
+     * 안정화가 끝나는 시각(epoch millis).
+     *
+     * 남은 시간이 아니라 **끝나는 시각**을 담는다. 남은 시간만 메모리에 들고 있으면
+     * 앱을 껐다 켤 때마다 안정화가 처음부터 다시 시작된다. 끝나는 시각을 담아 두면
+     * 언제 다시 켜도 남은 시간이 이어진다. 포그라운드 서비스도 이 값을 보고
+     * 안정화가 끝나는 순간을 기다린다.
+     */
+    private val STABILIZATION_END_TIME = longPreferencesKey("stabilization_end_time")
     private val DEVICE_MAC = stringPreferencesKey("device_mac")
     private val DEVICE_TYPE = intPreferencesKey("device_type")
     private val IS_MAIN = booleanPreferencesKey("is_main")
@@ -216,6 +226,12 @@ object DataStoreManager {
     fun getSerialNumber(): Flow<String?> {
         return dataStore.data.map { prefs ->
             prefs[SERIAL_NUMBER]
+        }
+    }
+
+    fun getStabilizationEndTime(): Flow<Long?> {
+        return dataStore.data.map { prefs ->
+            prefs[STABILIZATION_END_TIME]
         }
     }
 
@@ -499,6 +515,18 @@ object DataStoreManager {
     suspend fun deleteDailyCalibrationLastTime() {
         notiStore.edit { prefs ->
             prefs.remove(DAILY_LAST_CALIBRATION_TIME)
+        }
+    }
+
+    suspend fun saveStabilizationEndTime(endTime: Long) {
+        dataStore.edit { prefs ->
+            prefs[STABILIZATION_END_TIME] = endTime
+        }
+    }
+
+    suspend fun deleteStabilizationEndTime() {
+        dataStore.edit { prefs ->
+            prefs.remove(STABILIZATION_END_TIME)
         }
     }
 

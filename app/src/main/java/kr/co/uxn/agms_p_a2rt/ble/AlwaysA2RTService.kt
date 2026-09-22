@@ -81,6 +81,16 @@ import kotlin.math.roundToInt
 
 class AlwaysA2RTService() : Service() {
     companion object {
+        /**
+         * 안정화 종료를 다시 확인하는 최대 간격.
+         *
+         * 남은 시간이 이보다 짧으면 그만큼만 자므로 정확도는 영향받지 않는다.
+         * 기기 시각이 바뀌었을 때 따라잡으려고 둔 상한이다.
+         */
+        private const val STABILIZATION_CHECK_INTERVAL_MS = 60_000L
+
+
+
         private const val DEVICE_TYPE_F23UTC = 1105
         private const val DEVICE_TYPE_I10 = 1106
         var isServiceRunning = false
@@ -127,6 +137,104 @@ class AlwaysA2RTService() : Service() {
         super.onCreate()
         Log.d("SERVICE", "Service onCreate() call!")
 //        bleManager = BleManager.getInstance(baseContext)
+    }
+
+    /**
+     * 안정화가 끝나면 알린다.
+     *
+     * 알람매니저를 쓰지 않는다. 정확한 알람(USE_EXACT_ALARM)은 구글이 알람시계와
+     * 캘린더 앱에만 허용해서, 혈당 측정 앱이 쓰면 심사에서 걸린다.
+     *
+     * 그럴 필요도 없다. 안정화 동안에는 이 서비스가 센서에서 값을 받느라 반드시
+     * 떠 있다. 포그라운드 서비스라 도즈 모드에도 얼지 않으므로, 코루틴이 그냥
+     * 기다리면 제 시각에 깨어난다.
+     *
+     * 1분 주기 측정 루프와는 **별개 코루틴**이다. 그 루프에 얹으면 한 바퀴 돌 때
+     * 마다 검사하게 되어 최대 1분 늦는다. 안정화를 1분으로 두고 시험하면 2분에
+     * 울리는 셈이라 티가 난다.
+     *
+     * 남은 시간이 길어도 1분마다 다시 계산한다. delay 는 경과 시간 기준이라
+     * 사용자가 기기 시각을 바꾸면 어긋나는데, 다시 계산하면 따라잡는다.
+     * 마지막 한 바퀴는 언제나 정확한 잔여 시간을 잡으므로 정확도는 그대로다.
+     */
+    private var stabilizationWatchJob: Job? = null
+
+    private fun watchStabilizationEnd() {
+        // 이미 돌고 있으면 그대로 둔다.
+        //
+        // onStartCommand 는 서비스가 떠 있어도 매번 불린다. 여기서 그냥 새로 걸면
+        // 같은 감시가 여러 개 쌓여 알림이 중복으로 뜬다.
+        if (stabilizationWatchJob?.isActive == true) return
+
+        stabilizationWatchJob = serviceScope.launch {
+            // 반드시 통째로 감싼다.
+            //
+            // 이 스코프는 SupervisorJob 이라 한 코루틴이 죽어도 형제가 같이 죽지는
+            // 않지만, 잡히지 않은 예외는 그대로 기본 처리기로 올라가 앱을 죽인다.
+            // 안정화 알림 하나 때문에 측정과 전송이 멈춰서는 안 된다.
+            try {
+                while (isActive) {
+                    // 값이 없으면 안정화 중이 아니다. 그대로 끝낸다.
+                    //
+                    // 안정화 화면이 **서비스를 띄우기 전에** 종료 시각을 담으므로,
+                    // 여기서 읽을 때는 이미 들어 있다. 없다는 것은 안정화가 아니라
+                    // 측정이 진행 중이라는 뜻이고(끝나면 지운다), 그때는 기다릴
+                    // 이유가 없다.
+                    val stabilizationEndTime =
+                        DataStoreManager.getStabilizationEndTime().first() ?: return@launch
+
+                    val remain = stabilizationEndTime - System.currentTimeMillis()
+                    if (remain <= 0L) {
+                        notifyStabilizationDone()
+                        return@launch
+                    }
+
+                    delay(remain.coerceAtMost(STABILIZATION_CHECK_INTERVAL_MS))
+                }
+            } catch (e: CancellationException) {
+                throw e          // 서비스가 내려가는 정상 경로다. 삼키면 안 된다.
+            } catch (e: Exception) {
+                Log.e("SERVICE", "안정화 감시가 멈췄다. 측정과 전송에는 영향 없다.", e)
+            }
+        }
+    }
+
+    /**
+     * 안정화 완료 알림.
+     *
+     * 한 번 알린 뒤에는 종료 시각을 지운다. 서비스가 다시 떠도 또 알리지 않게
+     * 하려는 것이다. 안정화 화면도 이 값이 없으면 새로 시작하므로, 측정이 이미
+     * 시작된 뒤에는 이 값이 남아 있을 이유가 없다.
+     */
+    private suspend fun notifyStabilizationDone() {
+        Log.i("SERVICE", "안정화가 끝났다. 알림을 띄운다.")
+
+        DataStoreManager.deleteRoute()
+        DataStoreManager.saveRoute("StabilizationCompleteScreen")
+
+        val isNotiStabilization = DataStoreManager.getNotiStabilization().first() ?: true
+        DataStoreManager.deleteStabilizationEndTime()
+
+        if (!isNotiStabilization) return
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ActivityCompat.checkSelfPermission(
+                baseContext,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.d("SERVICE", "알림 권한이 없어 안정화 완료를 알리지 못한다.")
+            return
+        }
+
+        AppNotificationManager.notify(
+            context = baseContext,
+            channel = AlertChannel.STABILIZATION,
+            title = baseContext.getString(R.string.notification_sensor_ready),
+            message = "",
+            notificationId = 90,
+            autoCancel = true
+        )
     }
 
     override fun onDestroy() {
@@ -182,6 +290,15 @@ class AlwaysA2RTService() : Service() {
         } else {
             Log.d("SERVICE", "Service onStartCommand() call!")
             Log.d("SERVICE", "Service onStartCommand() localDbRepository  : ${localDbRepository}!")
+
+            // onCreate 가 아니라 여기서 건다.
+            //
+            // onCreate 는 서비스가 **새로 만들어질 때만** 돈다. 메인 화면에서 곧바로
+            // 기기 등록으로 가는 길이 있어(HomeScreen 의 기기 추가 단추), 서비스가
+            // 살아 있는 채로 다음 안정화에 들어갈 수 있다. 그때 onCreate 는 안 돌고
+            // onStartCommand 만 도므로, 거기 걸어 두면 감시가 다시 걸리지 않아
+            // 알림이 오지 않는다.
+            watchStabilizationEnd()
 
             // Bluetooth OFF 노티
             Log.e(TAG, "======BLE OFF======")

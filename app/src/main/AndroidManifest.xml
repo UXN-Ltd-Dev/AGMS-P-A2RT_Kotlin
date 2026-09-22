@@ -17,6 +17,9 @@
 <!--        android:maxSdkVersion="30" />-->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+<!--    정확한 알람은 쓰지 않는다. USE_EXACT_ALARM 은 구글이 알람시계와 캘린더 앱에만
+        허용해서 혈당 측정 앱이 선언하면 심사에서 걸린다. 안정화 완료 알림은
+        포그라운드 서비스의 코루틴이 띄운다(AlwaysA2RTService.watchStabilizationEnd). -->
 <!--    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />-->
 <!--    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />-->
 

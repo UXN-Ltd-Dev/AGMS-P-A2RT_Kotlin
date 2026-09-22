@@ -125,6 +125,7 @@ fun SettingsMainScreen(navController: NavHostController, bleViewModel: BleViewMo
                     DataStoreManager.deleteRefreshToken()
                     DataStoreManager.deleteUserId()
                     DataStoreManager.deleteDeviceMac()
+                    DataStoreManager.deleteStabilizationEndTime()
 //                    DataStoreManager.deleteStartTime()
 //                    DataStoreManager.deleteEndTime()
                     DataStoreManager.deleteTargetLowGlucose()
@@ -385,6 +386,7 @@ fun UserInfoScreen(navController: NavHostController) {
                                             DataStoreManager.deleteDeviceMac()
                                             DataStoreManager.deleteStartTime()
                                             DataStoreManager.deleteEndTime()
+                                            DataStoreManager.deleteStabilizationEndTime()
                                             withContext(Dispatchers.Main) {
                                                 // 1. 서비스 종료
 //                                                bleViewModel.emit("STOP_SERVICE")
@@ -448,6 +450,7 @@ fun UserInfoScreen(navController: NavHostController) {
                                             DataStoreManager.deleteDeviceMac()
                                             DataStoreManager.deleteStartTime()
                                             DataStoreManager.deleteEndTime()
+                                            DataStoreManager.deleteStabilizationEndTime()
                                             withContext(Dispatchers.Main) {
                                                 // 1. 서비스 종료
 //                                                bleViewModel.emit("STOP_SERVICE")
@@ -734,6 +737,7 @@ fun SensorInfoScreen(
                                     DataStoreManager.setNotiLowGlucose(false)
                                     DataStoreManager.deleteStartTime()
                                     DataStoreManager.deleteEndTime()
+                                    DataStoreManager.deleteStabilizationEndTime()
                                     DataStoreManager.deleteDailyCalibrationTime()
                                     DataStoreManager.deleteDailyCalibrationLastTime()
                                     DataStoreManager.setLandScapeMode(false)
@@ -762,6 +766,7 @@ fun SensorInfoScreen(
                                     DataStoreManager.deleteStartTime()
                                     DataStoreManager.deleteMeasurementTime()
                                     DataStoreManager.deleteEndTime()
+                                    DataStoreManager.deleteStabilizationEndTime()
                                     DataStoreManager.deleteDailyCalibrationTime()
                                     DataStoreManager.deleteDailyCalibrationLastTime()
                                     DataStoreManager.setNotiHighGlucose(false)

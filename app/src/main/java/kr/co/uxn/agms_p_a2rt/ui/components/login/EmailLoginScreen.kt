@@ -159,6 +159,7 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                         // userId 저장
                                         DataStoreManager.deleteUserId()
                                         DataStoreManager.saveUserId(loginResult.userId)
+                                        DataStoreManager.deleteStabilizationEndTime()
                                         DataStoreManager.deleteEmail()
                                         DataStoreManager.saveEmail(trimEmail)
                                         DataStoreManager.saveLoginEmailPreference(
@@ -534,6 +535,7 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                                 // userId 저장
                                                 DataStoreManager.deleteUserId()
                                                 DataStoreManager.saveUserId(loginResult.userId)
+                                                DataStoreManager.deleteStabilizationEndTime()
                                                 DataStoreManager.deleteEmail()
                                                 DataStoreManager.saveEmail(trimEmail)
                                                 DataStoreManager.saveLoginEmailPreference(

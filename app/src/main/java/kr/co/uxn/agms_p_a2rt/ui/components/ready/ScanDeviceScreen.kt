@@ -156,6 +156,7 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
         // BleViewModel은 화면 이동 후에도 유지되므로 새 검색마다 상태를 초기화한다.
         bleViewModel.updateIsFindDevice(false)
         DataStoreManager.deleteActivateFirst()
+        DataStoreManager.deleteStabilizationEndTime()
         DataStoreManager.setFirstActivateDB(false)
         if (mac == "999999") {
             navController.navigate("StabilizationScreen/$mac")

@@ -145,7 +145,7 @@ fun RegisterDeviceScreenQR(navController: NavController) {
 
             Image(
                 modifier = Modifier.size(200.dp),
-                painter = painterResource(R.drawable.qr_screen),
+                painter = painterResource(R.drawable.qr_screen_new),
                 contentDescription = "QR 코드가 부착된 제품",
                 contentScale = ContentScale.Fit
             )

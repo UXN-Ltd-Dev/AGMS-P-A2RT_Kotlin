@@ -250,6 +250,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                                 DataStoreManager.saveRefreshToken(refreshToken)
                                 DataStoreManager.saveUserId(userId)
                                 DataStoreManager.saveEmail(email)
+                                DataStoreManager.deleteStabilizationEndTime()
                                 // mac 정리
                                 DataStoreManager.deleteDeviceMac()
                                 // 토큰 저장 테스트
@@ -316,6 +317,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                                 DataStoreManager.saveRefreshToken(refreshToken)
                                 DataStoreManager.saveUserId(userId)
                                 DataStoreManager.saveEmail(email)
+                                DataStoreManager.deleteStabilizationEndTime()
 
                                 // mac 정리
                                 DataStoreManager.deleteDeviceMac()

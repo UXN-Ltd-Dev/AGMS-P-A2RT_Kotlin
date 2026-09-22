@@ -1,11 +1,7 @@
 package kr.co.uxn.agms_p_a2rt.ui.components.ready
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
-import android.os.CountDownTimer
 import android.util.Log
-import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -49,11 +45,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p_a2rt.R
 import kr.co.uxn.agms_p_a2rt.api.token.DataStoreManager
-import kr.co.uxn.agms_p_a2rt.notification.AlertChannel
-import kr.co.uxn.agms_p_a2rt.notification.AppNotificationManager
 import kr.co.uxn.agms_p_a2rt.room.AppDatabase
 import kr.co.uxn.agms_p_a2rt.ui.viewmodel.BleViewModel
 
@@ -102,6 +97,25 @@ fun StabilizationScreen(navController: NavController, mac: String, bleViewModel:
         val route = DataStoreManager.getRoute().first()
         Log.e("TEST", "안정화 화면에서 Route : ${route}")
 
+        // 끝나는 시각을 **서비스를 띄우기 전에** 담는다.
+        //
+        // 순서가 중요하다. 서비스는 onCreate 에서 이 값을 읽어 그때까지 기다렸다
+        // 알림을 띄우는데, 서비스를 먼저 띄우면 읽는 시점에 값이 아직 없어 그대로
+        // 끝나 버린다. 잠시 뒤 값이 담겨도 보는 사람이 없어 알림이 영영 안 간다.
+        //
+        // 값을 담아 두는 이유는 따로 있다. 예전에는 CountDownTimer 가 남은 시간을
+        // 메모리에만 들고 있어서 앱을 껐다 켜면 안정화가 처음부터 다시 시작됐다.
+        // 한 시간짜리 과정에서 이건 꽤 치명적이다.
+        val savedEndTime = DataStoreManager.getStabilizationEndTime().first()
+        val now = System.currentTimeMillis()
+        val stabilizationEndTime = if (savedEndTime == null || savedEndTime <= 0L) {
+            val newEndTime = now + totalTime
+            DataStoreManager.saveStabilizationEndTime(newEndTime)
+            newEndTime
+        } else {
+            savedEndTime
+        }
+
         if (!firstActivate) {
 
             Log.d("TEST", "firstActivate 2 : ${firstActivate}")
@@ -123,49 +137,30 @@ fun StabilizationScreen(navController: NavController, mac: String, bleViewModel:
         }
 
 
-        val countDownTimer = object : CountDownTimer(remainingTime.value, 1000 * 60 * 1) {
-            override fun onTick(millisUntilFinished: Long) {
-                remainingTime.value = millisUntilFinished
-            }
 
-            override fun onFinish() {
-                // 타이머가 끝나면 다음 화면으로 이동
-                if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+        // 알림은 이 화면이 아니라 포그라운드 서비스가 띄운다. 화면을 닫아도
+        // 가야 하는데, 안정화 동안에는 서비스가 센서 때문에 어차피 떠 있다.
+        // 알람매니저는 쓰지 않는다. 정확한 알람 권한은 구글이 알람시계와 캘린더
+        // 앱에만 허용해서, 혈당 측정 앱이 선언하면 심사에서 걸린다.
 
-                    navController.navigate("StabilizationCompleteScreen") {
-                        popUpTo(0) { inclusive = true } // 백스택 전체 제거
-                        launchSingleTop = true
-                    }
-                } else {
-                    Log.d("NAVIGATION", "Navigation skipped - lifecycle not ready")
-                }
-
-                coroutine.launch(Dispatchers.IO) {
-                    isNotiStabilization = DataStoreManager.getNotiStabilization().first() ?: true
-                    Log.d("TEST", "안정화 화면에서 isNotiStabilization : ${isNotiStabilization}")
-
-                    delay(500)
-
-                    withContext(Dispatchers.Main) {
-                        if (ActivityCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.POST_NOTIFICATIONS
-                            ) == PackageManager.PERMISSION_GRANTED
-                        ) {
-
-                            if (isNotiStabilization) {
-                                sendNotification(context, context.getString(R.string.notification_sensor_ready), "", 90)
-                            }
-                        }
-                    }
-                }
+        while (isActive) {
+            val remain = stabilizationEndTime - System.currentTimeMillis()
+            if (remain <= 0L) {
+                remainingTime.value = 0L
+                DataStoreManager.deleteRoute()
+                DataStoreManager.saveRoute("StabilizationCompleteScreen")
                 navController.navigate("StabilizationCompleteScreen") {
                     popUpTo(0) { inclusive = true } // 백스택 전체 제거
                     launchSingleTop = true
                 }
+                break
             }
+
+            remainingTime.value = remain
+            // 1초마다 센다. 예전에는 1분 간격이라 화면 숫자가 1분에 한 번만 바뀌어,
+            // 들어와서 한참을 봐도 멈춰 있는 것처럼 보였다.
+            delay(1000)
         }
-        countDownTimer.start()
     }
 
     LaunchedEffect(Unit) {
@@ -263,7 +258,10 @@ fun StabilizationScreen(navController: NavController, mac: String, bleViewModel:
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
-                val minutes = (remainingTime.value / 1000) / 60 + 1
+                // 올림이다. 예전 식((남은초/60) + 1)은 정확히 1분 남았을 때 2분으로
+                // 보였다. 60000ms -> 60/60 + 1 = 2. 안정화를 1분으로 두고 시험하면
+                // 시작하자마자 2분이라고 나온다.
+                val minutes = (remainingTime.value + 59_999L) / 60_000L
                 if (minutes > 0) {
                     Text(
 //                    modifier = Modifier.fillMaxWidth(),
@@ -318,16 +316,4 @@ fun StabilizationScreen(navController: NavController, mac: String, bleViewModel:
             Spacer(modifier = Modifier.weight(0.2f))
         }
     }
-}
-
-@RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
-suspend fun sendNotification(context: Context, title: String, message: String, notificationId: Int) {
-    AppNotificationManager.notify(
-        context = context,
-        channel = AlertChannel.STABILIZATION,
-        title = title,
-        message = message,
-        notificationId = notificationId,
-        autoCancel = true
-    )
 }
