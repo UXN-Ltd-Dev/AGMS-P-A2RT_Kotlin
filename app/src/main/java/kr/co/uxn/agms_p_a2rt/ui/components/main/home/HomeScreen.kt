@@ -629,9 +629,24 @@ fun HomeScreen(
                 }
 
                 glucoseData.sortBy { it.createdAtLong }
+
+                // 게스트만 1분에 한 점으로 간추린다. 까닭은 keepOnePointPerMinute 에 적었다.
+                // 빈 구간은 채우지 않는다 — 일반 계정과 달리 게스트는 그러지 않던 동작이다.
                 if (isGuest && glucoseData.isNotEmpty()) {
-                    val rangeStartMinutes = (lastTime - baseTime) / 60_000.0
-                    nextX.add((rangeStartMinutes * 10_000).roundToLong() / 10_000.0)
+                    val oneMinuteEach = keepOnePointPerMinute(glucoseData)
+                    glucoseData.clear()
+                    glucoseData.addAll(oneMinuteEach)
+                }
+
+                if (isGuest && glucoseData.isNotEmpty()) {
+                    // x 축 왼쪽 끝을 고정하는 자리표. 값은 투명하게 숨겨진다.
+                    //
+                    // **분 경계로 맞춘다.** lastTime 은 분 경계가 아니라서 그대로 쓰면 이
+                    // 점과 첫 실제 점 사이 간격만 어긋나고, Vico 가 x 간격의 최대공약수를
+                    // 구하다 "x values are too precise" 로 터진다
+                    // (keepOnePointPerMinute 설명 참고).
+                    val rangeStartMinutes = Math.floorDiv(lastTime - baseTime, 60_000L).toDouble()
+                    nextX.add(rangeStartMinutes)
                     nextY.add(-10f)
                 }
                 glucoseData.forEach { data ->

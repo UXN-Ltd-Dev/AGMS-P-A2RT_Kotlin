@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.uxn.agms_p_a2rt.BleConnectionState
+import kr.co.uxn.agms_p_a2rt.GuestList
 import kr.co.uxn.agms_p_a2rt.R
 import kr.co.uxn.agms_p_a2rt.api.token.DataStoreManager
 import kr.co.uxn.agms_p_a2rt.notification.AlertChannel
@@ -67,7 +68,6 @@ class BleManager(
         const val serviceUuidF23 = "e093f3b5-00a3-a9e5-9eca-80016e0edc24"
 
         var mGatt: BluetoothGatt? = null
-        var mDevice: BluetoothDevice? = null
 
         fun getInstance(
             context: Context,
@@ -117,19 +117,7 @@ class BleManager(
                 Log.e("gatt", "gatt connected!")
                 mGatt = gatt
 
-                removeDeviceBond()
-
-
-                // 본딩 작업 필요에따라 주석처리할 것.
-//                val mDevice = gatt?.device?.bondState
-//                if (mDevice == BluetoothDevice.BOND_NONE) {
-//                    val result =  gatt?.device?.createBond()
-//                    Log.i("BOND", "Bonding started: $result")
-//                } else if (gatt?.device?.bondState == BluetoothDevice.BOND_BONDING) {
-//                    Log.i("BOND", "Bonding... ")
-//                } else if (gatt?.device?.bondState == BluetoothDevice.BOND_BONDED) {
-//                    Log.i("BOND", "Bonding Success!")
-//                }
+                applyBondPolicy(gatt?.device)
 
 
                 // BleBridge에 상태 연결 완료 전송
@@ -675,27 +663,48 @@ class BleManager(
 //        return 0
 //    }
 
-    fun removeDeviceBond(): Boolean {
-        if (mDevice == null) {
-            Log.e("BOND", "removeDeviceBond: BluetoothDevice is null. Cannot remove bond.")
-            return false
+    /**
+     * 로그인한 계정에 따라 본딩 여부를 정한다.
+     *
+     * 게스트 계정(GuestList)으로 로그인했을 때만 본딩하지 않는다. 그 밖에는 본딩한다.
+     * 로그인 전이라 이메일이 없으면 게스트가 아닌 것으로 보고 본딩한다 - BleManager 는
+     * 로그인 뒤에 도는 것이 정상이라 이 경우는 드물다.
+     *
+     * 이미 있는 본딩은 지우지 않는다. 지우려면 공개 API 가 없어 리플렉션으로
+     * removeBond 를 불러야 하는데, 연결된 상태에서 부르면 링크가 끊기고 사용자에게는
+     * 영문 모를 "신호 소실" 알림이 뜬다. 그래서 만들지 않는 것까지만 한다.
+     * 일반 계정으로 쓰다 게스트로 바꾸면 이전 본딩이 남는데, 그건 설정에서 지운다.
+     *
+     * 이메일은 DataStore 에서 읽어야 해 코루틴으로 넘긴다. 본딩은 원래 비동기로
+     * 진행되고 결과는 시스템 브로드캐스트로 오므로, 여기서 기다릴 것이 없다.
+     */
+    private fun applyBondPolicy(device: BluetoothDevice?) {
+        if (device == null) {
+            Log.e("BOND", "본딩 판정 불가 - device 가 null")
+            return
         }
 
-        return try {
-            // "removeBond" 메서드를 리플렉션을 통해 가져오기
-            val method: Method = mDevice!!::class.java.getMethod("removeBond")
-            // 메서드 호출하여 본딩 삭제 시도
-            val result = method.invoke(mDevice) as Boolean
+        reconnectScope.launch {
+            val email = DataStoreManager.getEmail().first()
+            val isGuest = email != null && GuestList.getGuestList().contains(email)
 
-            if (result) {
-                Log.d("BOND", "Bond removal initiated for device: ${mDevice?.address}")
-            } else {
-                Log.e("BOND", "Failed to initiate bond removal for device: ${mDevice?.address}")
+            if (isGuest) {
+                Log.d("BOND", "게스트 계정($email) - 본딩하지 않는다")
+                return@launch
             }
-            result
-        } catch (e: Exception) {
-            Log.e("BOND", "Exception while trying to remove bond", e)
-            false
+
+            when (device.bondState) {
+                BluetoothDevice.BOND_BONDED ->
+                    Log.d("BOND", "이미 본딩되어 있다 - 그대로 둔다")
+
+                BluetoothDevice.BOND_BONDING ->
+                    Log.d("BOND", "본딩이 진행 중이다")
+
+                else -> {
+                    val started = device.createBond()
+                    Log.d("BOND", "본딩 시작 (계정 ${email ?: "없음"}) : $started")
+                }
+            }
         }
     }
 

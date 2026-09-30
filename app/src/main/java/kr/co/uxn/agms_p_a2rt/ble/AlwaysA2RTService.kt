@@ -74,10 +74,7 @@ import java.util.Timer
 import java.util.TimerTask
 import java.time.Duration
 import java.time.LocalDate
-import kotlin.math.PI
 import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.roundToInt
 
 class AlwaysA2RTService() : Service() {
     companion object {
@@ -113,7 +110,6 @@ class AlwaysA2RTService() : Service() {
     var count = 0
     private val guestMinuteTargets = listOf(60, 110, 200, 110)
     private var guestMinuteTargetIndex = 1
-    private var guestPreviousGlucose = 60
 
     private var timerForNoti: Timer? = null
     private var timerTaskForNoti: TimerTask? = null
@@ -421,31 +417,29 @@ class AlwaysA2RTService() : Service() {
                                                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
                                             val now = System.currentTimeMillis()
+                                            // 1 분에 한 점. 목표값을 그대로 찍는다
+                                            // (60 → 110 → 200 → 110 순환).
+                                            //
+                                            // 전에는 이 한 분을 10 초 6 칸으로 쪼개고 코사인
+                                            // 이징으로 이어 붙였다. 화면이 1 분에 한 점만
+                                            // 그리게 된 지금은 그 중간 값들이 쓰이지 않으므로
+                                            // 뺐다 — 안 쓰는 값을 DB 에 6 배로 쌓을 이유가 없다.
                                             val targetGlucose =
-                                                guestMinuteTargets[guestMinuteTargetIndex] // 60, 110, 200, 110
-                                            val insertDataList = (0 until 6).map { offset ->
-                                                val progress = offset / 5.0
-                                                val easedProgress = (1.0 - cos(PI * progress)) / 2.0
-                                                val interpolatedGlucose = guestPreviousGlucose +
-                                                        (targetGlucose - guestPreviousGlucose) * easedProgress
-                                                val glucose =
-                                                    (interpolatedGlucose / 5.0).roundToInt() * 5
-                                                val time = now - (5 - offset) * 10_000L
-                                                val formattedTime = LocalDateTime.ofInstant(
-                                                    Instant.ofEpochMilli(time),
-                                                    ZoneId.of("Asia/Seoul")
-                                                ).format(formatter)
-
+                                                guestMinuteTargets[guestMinuteTargetIndex]
+                                            val formattedTime = LocalDateTime.ofInstant(
+                                                Instant.ofEpochMilli(now),
+                                                ZoneId.of("Asia/Seoul")
+                                            ).format(formatter)
+                                            val insertDataList = listOf(
                                                 UserGlucose(
                                                     userId = userId,
-                                                    glucose = glucose.toDouble(),
+                                                    glucose = targetGlucose.toDouble(),
                                                     weo1 = 0.0,
                                                     weo2 = 0.0,
                                                     createdAt = formattedTime,
-                                                    createdAtLong = time
+                                                    createdAtLong = now
                                                 )
-                                            }
-                                            guestPreviousGlucose = targetGlucose
+                                            )
                                             guestMinuteTargetIndex =
                                                 (guestMinuteTargetIndex + 1) % guestMinuteTargets.size
                                             val lastGlucose = insertDataList.last().glucose.toInt()
