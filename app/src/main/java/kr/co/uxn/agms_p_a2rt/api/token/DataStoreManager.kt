@@ -257,7 +257,8 @@ object DataStoreManager {
     suspend fun saveEmail(email: String) {
         dataStore.edit { prefs ->
             prefs[EMAIL] = email
-            Log.d("TEST", "email saved!  : $email")
+            // 민감정보 로그 - 주석 처리 (CWE-200)
+//            Log.d("TEST", "email saved!  : $email")
         }
     }
 

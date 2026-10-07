@@ -300,6 +300,24 @@ class AlwaysA2RTService() : Service() {
             // 알림이 오지 않는다.
             watchStabilizationEnd()
 
+            // **이미 돌고 있으면 여기서 멈춘다.**
+            //
+            // 워커가 15 분마다 startForegroundService() 를 부르므로 onStartCommand 가
+            // 그만큼 다시 불린다. 그대로 흘려보내면 아래에서 노티 타이머(Timer)가
+            // 새로 하나씩 생기고, 블루투스 리시버도 다시 등록되고, 측정 루프가 다시
+            // 선다. 15 분마다 쌓이는 누수다.
+            //
+            // 그냥 빠져나가지 않고 **연결을 한 번 챙기고** 나간다. 워커의 주기가 곧
+            // 재연결 점검 주기가 된다 - 끊김 콜백이 오지 않는 경우를 여기서 잡는다.
+            if (isDuplicatedJob?.isActive == true) {
+                Log.d("SERVICE", "이미 측정 루프가 돌고 있다. 연결만 챙기고 나간다.")
+                if (::bleManager.isInitialized) {
+                    bleManager.resumeConnections()
+                    bleManager.ensureConnected()
+                }
+                return START_STICKY
+            }
+
             // Bluetooth OFF 노티
             Log.e(TAG, "======BLE OFF======")
             if (getBleStatus(baseContext) != STATUS_BLE_ENABLED) {
@@ -394,6 +412,12 @@ class AlwaysA2RTService() : Service() {
 
                         wl.acquire(1000 * 75) // 75초
 
+                        // 루프가 도는 김에 연결도 챙긴다. 끊김 콜백이 오지 않는 경우와
+                        // 붙어 있는데 데이터만 없는 경우를 ensureConnected() 가 잡는다.
+                        if (::bleManager.isInitialized) {
+                            bleManager.ensureConnected()
+                        }
+
                         val userId = DataStoreManager.getUserId().first() ?: -1
                         val userEmail = DataStoreManager.getEmail().first() ?: ""
                         val isStabilizationCompleted = DataStoreManager.getStabilizationCompleted().first()
@@ -402,7 +426,8 @@ class AlwaysA2RTService() : Service() {
                         // 1. 게스트인 경우
                         if (GuestList.getGuestList().contains(userEmail)) {
                             Log.d("Guest", "He is Guest")
-                            Log.d("Guest", "userEmail : ${userEmail}")
+                            // 민감정보 로그 - 주석 처리 (CWE-200)
+//                            Log.d("Guest", "userEmail : ${userEmail}")
 
                             // dummy api
 //                            if (!isStabilizationCompleted) {
@@ -677,7 +702,8 @@ class AlwaysA2RTService() : Service() {
                         } else {
                             // 게스트 아닌 경우
                             Log.d("Guest", "He is not Guest")
-                            Log.d("Guest", "userEmail : ${userEmail}")
+                            // 민감정보 로그 - 주석 처리 (CWE-200)
+//                            Log.d("Guest", "userEmail : ${userEmail}")
 
                             try {
                                 val lastTime = tokenRetrofit.getLastTime(userId)
@@ -1137,31 +1163,11 @@ class AlwaysA2RTService() : Service() {
                     )
                     registerBluetoothStateBroadcastReceiver(deviceMac)
 
-                    val bluetoothManager =
-                        baseContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-                    val bluetoothAdapter = bluetoothManager.adapter
-                    val bluetoothDevice =
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            Log.e(TEST, "======BLE Remote 연결 안드로이드 13 이상 시작========")
-                            bluetoothAdapter.getRemoteLeDevice(
-                                deviceMac,
-                                BluetoothDevice.ADDRESS_TYPE_PUBLIC
-                            )
-                        } else {
-                            Log.e(TEST, "======BLE Remote 연결 안드로이드 10~12 시작========")
-                            bluetoothAdapter.getRemoteDevice(deviceMac)
-                        }
-
-                    BleManager.mGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        bluetoothDevice.connectGatt(
-                            baseContext,
-                            false,
-                            bleManager,
-                            BluetoothDevice.TRANSPORT_LE
-                        )
-                    } else {
-                        bluetoothDevice.connectGatt(baseContext, false, bleManager)
-                    }
+                    // 연결은 BleManager 가 상태를 보고 한 번만 만든다. 서비스가 직접
+                    // connectGatt() 를 부르면 그 GATT 를 BleManager 가 모르게 되어
+                    // 재연결 가드와 워치독이 모두 헛돈다.
+                    bleManager.resumeConnections()
+                    bleManager.ensureConnected()
 
                     initializationReady.complete(Unit)
                 }
@@ -1293,35 +1299,12 @@ class AlwaysA2RTService() : Service() {
             // 4
             BluetoothAdapter.STATE_ON -> {
                 Log.e(TAG, "======BLE ON!!======")
-//                mGatt?.disconnect()
-//                mGatt?.close()
-//                refreshDeviceCache(mGatt)
-//                mGatt = null
-                // 블루투스 연결
-                val bluetoothManager =
-                    baseContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-                val bluetoothAdapter = bluetoothManager.adapter
-                val bluetoothDevice = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    Log.e(TEST, "======BLE Remote 연결 안드로이드 13 이상 시작========")
-                    bluetoothAdapter.getRemoteLeDevice(mac, BluetoothDevice.ADDRESS_TYPE_PUBLIC)
-                } else {
-                    Log.e(TEST, "======BLE Remote 연결 안드로이드 10~12 시작========")
-                    bluetoothAdapter.getRemoteDevice(mac)
-                }
 
-
-//        if (bleManager.mGatt == null) {
-                CoroutineScope(Dispatchers.Main).launch {
-                    BleManager.mGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        bluetoothDevice.connectGatt(
-                            baseContext,
-                            false,
-                            bleManager,
-                            BluetoothDevice.TRANSPORT_LE
-                        )
-                    } else {
-                        bluetoothDevice.connectGatt(baseContext, false, bleManager)
-                    }
+                // 어댑터가 내려가 있는 동안 GATT 는 모두 사라졌다. 다시 붙이는 일은
+                // BleManager 에 맡긴다 - 남은 껍데기를 닫는 것까지 그쪽이 안다.
+                if (::bleManager.isInitialized) {
+                    bleManager.resumeConnections()
+                    bleManager.ensureConnected()
                 }
 
                 // 기존 블루투스 On 노티 제거

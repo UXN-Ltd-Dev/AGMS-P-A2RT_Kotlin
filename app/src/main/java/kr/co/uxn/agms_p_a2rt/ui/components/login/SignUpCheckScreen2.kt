@@ -762,7 +762,8 @@ fun SignUpCheckScreen2(navController: NavController, type: Int, oAuthEmail: Stri
                                                 // 인증 성공시
                                                 // 이메일 공백 처리
                                                 val trimEmail = email.value.trim()
-                                                Log.d("TEST", "originalEmail : ${email.value}\ntrimEmail : $trimEmail")
+                                                // 민감정보 로그 - 주석 처리 (CWE-200)
+//                                                Log.d("TEST", "originalEmail : ${email.value}\ntrimEmail : $trimEmail")
                                                 navController.navigate("SignUpInfoScreen3/${trimEmail}/${pwd1.value}/${type}")
                                             }
                                         }

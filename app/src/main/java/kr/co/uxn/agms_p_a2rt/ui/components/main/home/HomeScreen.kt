@@ -532,7 +532,8 @@ fun HomeScreen(
         } catch (e: Exception) {
             Log.e("TEST", "이메일 조회 실패 : ${e.message}", e)
         }
-        Log.d("TEST", "email.value = ${email.value}")
+        // 민감정보 로그 - 주석 처리 (CWE-200)
+//        Log.d("TEST", "email.value = ${email.value}")
     }
 
     LaunchedEffect(Unit) {
@@ -996,14 +997,16 @@ fun HomeScreen(
                         if (GuestList.getVipList().contains(email.value)) {
                             detectTapGestures(
                                 onLongPress = {
-                                    Log.d("TEST", "email : ${email.value}")
+                                    // 민감정보 로그 - 주석 처리 (CWE-200)
+//                                    Log.d("TEST", "email : ${email.value}")
                                     showModeDialog.value = true
                                 }
                             )
                         } else { detectTapGestures(
                                 onLongPress = {
                                     // 롱클릭 시 실행할 코드
-                                    Log.d("TEST", "I'm guest : ${email.value}")
+                                    // 민감정보 로그 - 주석 처리 (CWE-200)
+//                                    Log.d("TEST", "I'm guest : ${email.value}")
                                 }
                             )
                         }

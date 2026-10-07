@@ -127,10 +127,11 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                 // 로그인
                                 // 이메일 공백 처리
                                 val trimEmail = email.value.trim()
-                                Log.d(
-                                    "TEST",
-                                    "originalEmail : ${email.value}\ntrimEmail : $trimEmail"
-                                )
+                                // 민감정보 로그 - 주석 처리 (CWE-200)
+//                                Log.d(
+//                                    "TEST",
+//                                    "originalEmail : ${email.value}\ntrimEmail : $trimEmail"
+//                                )
 
                                 val login =
                                     emptyRetrofit.uxnLogin(
@@ -504,10 +505,11 @@ fun EmailLoginScreen(viewModel: LoginViewModel, navController: NavController) {
                                         // 로그인
                                         // 이메일 공백 처리
                                         val trimEmail = email.value.trim()
-                                        Log.d(
-                                            "TEST",
-                                            "originalEmail : ${email.value}\ntrimEmail : $trimEmail"
-                                        )
+                                        // 민감정보 로그 - 주석 처리 (CWE-200)
+//                                        Log.d(
+//                                            "TEST",
+//                                            "originalEmail : ${email.value}\ntrimEmail : $trimEmail"
+//                                        )
 
                                         val login =
                                             emptyRetrofit.uxnLogin(

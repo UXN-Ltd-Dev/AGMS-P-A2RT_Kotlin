@@ -1,10 +1,9 @@
 package kr.co.uxn.agms_p_a2rt
 
 import android.app.Application
+import android.content.pm.PackageManager
 import android.util.Log
-import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.chaquo.python.Python
@@ -39,76 +38,68 @@ class AlwaysA2RTApplication : Application() {
 
         // db에 더미 저장
 
-//        Toast.makeText(this, "무결성 검증 통과!", Toast.LENGTH_SHORT).show()
+        // 무결성 검사 - 확인만 하고 집행하지 않는다
+        checkAppSignature()
 
-        val VALID_SIGNATURE_HASH = "9E9233211A9157E699D49D8C0E7A4289B180A1B3DC4B9EE7AC3C96A6AA86FAB1"
-
-
-//        fun checkAppSignature() {
-//            try {
-//                val packageInfo = packageManager.getPackageInfo(
-//                    packageName,
-//                    PackageManager.GET_SIGNATURES
-//                )
-//
-//                for (signature: Signature in packageInfo.signatures) {
-//                    Log.d("TEST", "서명정보 : ${signature.toCharsString()}")
-//
-//                    try {
-//                        val md = MessageDigest.getInstance("SHA-256")
-//                        md.update(signature.toByteArray())
-//                        val currentHash = toHex(md.digest())
-//
-//                        if (currentHash.equals(VALID_SIGNATURE_HASH, ignoreCase = true)) {
-//                            Log.e("TEST", "무결성 검증 통과!")
-////                    Toast.makeText(this, "무결성 검증 통과!", Toast.LENGTH_SHORT).show()
-//                        } else {
-//                            Log.e("TEST", "무결성 검증 실패")
-//                            Toast.makeText(
-//                                this,
-//                                "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.",
-//                                Toast.LENGTH_SHORT
-//                            ).show()
-//                        }
-//                    } catch (e: NoSuchAlgorithmException) {
-//                        Log.e("TEST", "무결성 검증 실패: ${e.message}")
-//                        Toast.makeText(
-//                            this,
-//                            "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.",
-//                            Toast.LENGTH_SHORT
-//                        ).show()
-//                        throw RuntimeException(e)
-//                    }
-//                }
-//            } catch (e: PackageManager.NameNotFoundException) {
-//                Log.e("TEST", "무결성 검증 실패: ${e.message}")
-//                Toast.makeText(
-//                    this,
-//                    "앱 실행에 문제가 감지되었습니다. 안전한 사용을 위해 앱을 다시 설치해 주세요.",
-//                    Toast.LENGTH_SHORT
-//                ).show()
-//                throw RuntimeException(e)
-//            }
-//        }
+        // 서비스 워치독 등록 - 15 분마다 서비스가 살아 있는지 보고, 죽었으면 되살린다.
+        // AGMS-P 의 scheduleServiceWork() 와 같은 자리다.
+        uploadWorkRequest()
 
     }
-    fun uploadWorkRequest() {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
 
-        // 워커 작동 주기 설정하는 곳!
-        val sendServerRequest = PeriodicWorkRequestBuilder<SendDataWorker>(15, TimeUnit.MINUTES)
-            .setConstraints(constraints)
-            .build()
+    private fun checkAppSignature() {
+        val VALID_SIGNATURE_HASH =
+            "5FB974AD26663D6CECA631E88F6CBA7243192828FE1062E4DB25F4E803EC164E"
+
+        val expected = hexToBytes(VALID_SIGNATURE_HASH)
+        if (expected == null) {
+            // 지문이 아니라 상수가 깨진 경우다. 서명을 의심할 일이 아니다.
+            Log.e(TEST, "무결성 검증 건너뜀 - 지문 상수가 16진수 64자가 아니다")
+            return
+        }
+
+        val matched = packageManager.hasSigningCertificate(
+            packageName,
+            expected,
+            PackageManager.CERT_INPUT_SHA256
+        )
+
+        if (matched) {
+            Log.d(TEST, "무결성 검증 통과")
+        } else {
+            Log.w(TEST, "무결성 검증 불일치 - 서명 지문이 다르다")
+        }
+    }
+
+    private fun hexToBytes(hex: String): ByteArray? {
+        if (hex.length != 64) return null
+        return try {
+            ByteArray(32) { i -> hex.substring(i * 2, i * 2 + 2).toInt(16).toByte() }
+        } catch (e: NumberFormatException) {
+            null
+        }
+    }
+
+    /**
+     * 서비스 워치독을 등록한다. 15 분은 WorkManager 가 허용하는 가장 짧은 주기다.
+     *
+     * **제약을 걸지 않는다.** 전에는 네트워크 연결을 요구했는데, 서비스를 되살리는
+     * 데 망은 필요 없고 걸어 두면 망이 없을 때 - 되살릴 필요가 더 큰 때 - 돌지 않는다.
+     *
+     * 정책은 KEEP 이다. 앱이 뜰 때마다 불리는데 REPLACE 로 두면 그때마다 주기가
+     * 처음부터 다시 세어져, 자주 껐다 켜는 사용자에게는 영영 돌지 않는다.
+     */
+    fun uploadWorkRequest() {
+        val serviceWorkerRequest =
+            PeriodicWorkRequestBuilder<SendDataWorker>(15, TimeUnit.MINUTES).build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "sendServer",
             ExistingPeriodicWorkPolicy.KEEP,
-            sendServerRequest
+            serviceWorkerRequest
         )
 
-        Log.e(TEST, "===========WORK 등록===============")
+        Log.e(TEST, "===========SERVICE WATCHDOG 등록===============")
     }
 
 }

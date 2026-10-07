@@ -818,10 +818,11 @@ fun SignUpInfoScreen3(
                                             val result =
                                                 preRetrofit.oAuthSaveDetailInfo(preToken = "Bearer $preToken", requestSignUpOauthDetail)
                                             withContext(Dispatchers.Main) {
-                                                Log.d(
-                                                    "TEST",
-                                                    "oAuthSaveDetailInfo preToken : ${preToken}"
-                                                )
+                                                // 민감정보 로그 - 주석 처리 (CWE-200)
+//                                                Log.d(
+//                                                    "TEST",
+//                                                    "oAuthSaveDetailInfo preToken : ${preToken}"
+//                                                )
                                             }
                                             if (result.isSuccessful) {
                                                 val resultBody = result.body()

@@ -66,6 +66,31 @@ class F23UTCDevice() : Protocol {
     val STATUS_TIME_ERROR = 0x12.toByte()
 
     override fun runProtocol(db: AppDatabase?, data: ByteArray, userId: Int, userDeviceId: Int): ByteArray? {
+
+        // ── 들어온 패킷의 길이를 먼저 본다 ──────────────────────────────
+        //
+        // 아래부터 data[2]·data[3]·data[6]·data[7] 처럼 고정 자리를 바로 읽는다.
+        // BLE 알림은 길이를 보장하지 않으므로 짧은 것이 오면 그 자리에서 터진다.
+        if (data.size < BASE_REQUEST_LENGTH) {
+            Log.w(TEST, "패킷이 너무 짧다: ${data.size}")
+            return null
+        }
+
+        // 머리에 적힌 길이를 그대로 믿지 않는다. 실제로 그만큼 들어왔는지 대조한다.
+        //
+        // **이 한 번의 대조가 아래 모든 고정 인덱스 접근을 덮는다.** 측정 표본을 도는
+        // 반복 횟수가 이 선언 길이에서 나오기 때문이다 - 선언이 실제보다 크면
+        // 반복문이 배열 밖을 읽는다. 마지막으로 읽는 자리가 (선언길이 + 7)이고
+        // 배열의 마지막 유효 자리도 (8 + 선언길이 - 1) = (선언길이 + 7)이라 정확히 맞는다.
+        val declaredLength = (data[INDEX_DATA_LENGTH].toUByte().toInt() shl 8) or
+                data[INDEX_RESERVED].toUByte().toInt()
+        if (data.size < BASE_REQUEST_LENGTH + declaredLength) {
+            Log.w(
+                TEST,
+                "머리가 말한 길이(${BASE_REQUEST_LENGTH + declaredLength})보다 실제가 짧다: ${data.size}"
+            )
+            return null
+        }
         val crc1 = java.lang.Byte.toUnsignedInt(data[INDEX_CRC_START])
         val crc2 = java.lang.Byte.toUnsignedInt(data[INDEX_CRC_END])
         Log.d(TEST, "crc1 : $crc1, crc2 : $crc2")

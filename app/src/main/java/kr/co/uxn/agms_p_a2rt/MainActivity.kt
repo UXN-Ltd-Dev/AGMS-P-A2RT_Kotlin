@@ -83,8 +83,6 @@ import kr.co.uxn.agms_p_a2rt.ui.viewmodel.LoginNavigationEvent
 import kr.co.uxn.agms_p_a2rt.ui.viewmodel.LoginViewModel
 import kr.co.uxn.agms_p_a2rt.ui.viewmodel.PermissionViewModel
 import java.net.URLDecoder
-import java.security.MessageDigest
-import java.security.NoSuchAlgorithmException
 import kotlin.system.exitProcess
 
 class MainActivity : ComponentActivity() {
@@ -179,48 +177,54 @@ class MainActivity : ComponentActivity() {
         }
 
         // 무결성 검사
+        //
+        // VALID_SIGNATURE_HASH 는 Google Play 앱 서명 키의 SHA-256 인증서 지문이다.
+        //
+        // 비밀값이 아니다. Play Console > 설정 > 앱 서명 에 평문으로 공개되며,
+        // 배포된 APK 의 META-INF 안에 인증서가 동봉되므로 누구나 추출할 수 있다.
+        // 이 키의 개인키는 Google 이 보관하며 우리에게 사본이 없다.
+        // (우리가 지켜야 하는 비밀은 업로드 키 .jks 와 그 비밀번호다.)
+        //
+        // 용도: 재패키징 탐지를 위한 자기 서명 대조. 외부로 전송하지 않는다.
+        // 갱신: Play Console 에서 앱 서명 키를 교체(key upgrade)한 경우에만
+        //      새 지문으로 바꾼다. 평소에는 바뀌지 않는다.
+        //      업로드 키 재설정·버전 배포는 이 값을 바꾸지 않는다.
+        //
+        // **직접 해시해서 비교하지 않는다.** 전에는 getPackageInfo(GET_SIGNATURES) 로
+        // 인증서를 꺼내 SHA-256 을 떠서 문자열로 맞대 봤는데, 그 API 는 API 28 에서
+        // 폐기됐고 서명 키를 교체하면 회전 **이전**의 인증서를 돌려준다. 그 상태로
+        // Play Console 의 새 지문을 넣으면 절차대로 갱신했는데 검증이 깨진다.
+        // hasSigningCertificate() 는 회전 이력까지 Android 가 대신 따져 준다.
         lifecycleScope.launch(Dispatchers.IO) {
             val VALID_SIGNATURE_HASH =
-//                "9E9233211A9157E699D49D8C0E7A4289B180A1B3DC4B9EE7AC3C96A6AA86FAB1" // 서명 키
                 "5FB974AD26663D6CECA631E88F6CBA7243192828FE1062E4DB25F4E803EC164E" // 서명 키
-            try {
-                val packageInfo = this@MainActivity.packageManager.getPackageInfo(
-                    this@MainActivity.packageName,
-                    PackageManager.GET_SIGNATURES
-                )
 
-                for (signature in packageInfo.signatures!!) {
-                    Log.d("TEST", "서명 정보 : " + signature.toCharsString())
-                    var md: MessageDigest? = null
-                    try {
-                        md = MessageDigest.getInstance("SHA-256")
-                        md.update(signature.toByteArray())
-                        val currentHash: String = toHex(md.digest())
+            val expected = hexToBytes(VALID_SIGNATURE_HASH)
+            if (expected == null) {
+                // 지문이 아니라 상수가 깨진 경우다. 서명을 의심할 일이 아니다.
+                Log.e("TEST", "무결성 검증 건너뜀 - 지문 상수가 16진수 64자가 아니다")
+                return@launch
+            }
 
-                        if (currentHash.equals(VALID_SIGNATURE_HASH, ignoreCase = true)) {
-                            Log.e("TEST", "무결성 검증 통과!")
-                            withContext(Dispatchers.Main) {
-//                                Toast.makeText(this@MainActivity, R.string.toast_integrity_check_pass, Toast.LENGTH_SHORT).show();
-                            }
-                        } else {
-                            withContext(Dispatchers.Main) {
-//                                Toast.makeText(this@MainActivity, R.string.toast_integrity_check_fail, Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    } catch (e: NoSuchAlgorithmException) {
-                        withContext(Dispatchers.Main) {
-//                            Toast.makeText(this@MainActivity, R.string.toast_integrity_check_fail, Toast.LENGTH_SHORT).show()
-                        }
-                        Log.e("TEST", "무결성 검증 실패: " + e.message)
-                        throw RuntimeException(e)
-                    }
+            val matched = this@MainActivity.packageManager.hasSigningCertificate(
+                this@MainActivity.packageName,
+                expected,
+                PackageManager.CERT_INPUT_SHA256
+            )
+
+            if (matched) {
+                Log.d("TEST", "무결성 검증 통과")
+                withContext(Dispatchers.Main) {
+//                    Toast.makeText(this@MainActivity, R.string.toast_integrity_check_pass, Toast.LENGTH_SHORT).show();
                 }
-            } catch (e: PackageManager.NameNotFoundException) {
-                Log.e("TEST", "무결성 검증 실패: " + e.message)
+            } else {
+                // **아직 집행하지 않는다.** 로그만 남긴다.
+                // 디버그 빌드는 debug.keystore 로 서명되므로 늘 여기로 온다 -
+                // 개발 중에 이 줄이 보이는 것은 정상이다.
+                Log.w("TEST", "무결성 검증 불일치 - 서명 지문이 다르다")
                 withContext(Dispatchers.Main) {
 //                    Toast.makeText(this@MainActivity, R.string.toast_integrity_check_fail, Toast.LENGTH_SHORT).show()
                 }
-                throw RuntimeException(e)
             }
         }
     }
@@ -262,9 +266,20 @@ class MainActivity : ComponentActivity() {
 //        appUpdateManager.unregisterListener(installStateUpdatedListener)
 //    }
 
-    private fun toHex(bytes: ByteArray): String {
-        // "%02X" : %X(대문자 16진수), 02(2자리로, 비면 0으로 채움)
-        return bytes.joinToString("") { "%02X".format(it) }
+    /**
+     * 16진수 문자열을 바이트 배열로. SHA-256 지문이 아니면 null 이다.
+     *
+     * 길이를 먼저 보는 까닭이 있다. 상수를 갱신하다 한 글자를 빠뜨리면 그냥 "불일치"
+     * 로만 보여서, 서명이 틀린 것인지 상수가 깨진 것인지 구분할 수 없다. 둘을 갈라
+     * 놓아야 갱신 절차가 제 구실을 한다.
+     */
+    private fun hexToBytes(hex: String): ByteArray? {
+        if (hex.length != 64) return null
+        return try {
+            ByteArray(32) { i -> hex.substring(i * 2, i * 2 + 2).toInt(16).toByte() }
+        } catch (e: NumberFormatException) {
+            null
+        }
     }
 
     fun popupSnackbarForCompleteUpdate(appUpdateManager: AppUpdateManager) {
@@ -392,7 +407,8 @@ class MainActivity : ComponentActivity() {
                         navController.navigate("SignUpAgreeScreen1/${event.type}/${event.oAuthEmail}")
                         Log.e("TAG", "event로 받은 userId: ${event.userId}")
                         Log.e("TAG", "event로 받은 type: ${event.type}")
-                        Log.e("TAG", "event로 받은 oAuthEmail: ${event.oAuthEmail}")
+                        // 민감정보 로그 - 주석 처리 (CWE-200)
+//                        Log.e("TAG", "event로 받은 oAuthEmail: ${event.oAuthEmail}")
                         loginViewModel.updateUserId(event.userId)
                         loginViewModel.clearNavigationEvent()
                     }

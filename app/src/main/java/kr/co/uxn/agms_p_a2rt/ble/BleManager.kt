@@ -6,6 +6,8 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattDescriptor
+import android.bluetooth.BluetoothStatusCodes
 import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
@@ -15,6 +17,7 @@ import android.os.Build
 import android.os.Build.VERSION_CODES.TIRAMISU
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -22,6 +25,7 @@ import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationManagerCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -67,8 +71,6 @@ class BleManager(
         const val characteristicUuidWriteF23 = "e093f3b5-00a3-a9e5-9eca-80036e0edc24"
         const val serviceUuidF23 = "e093f3b5-00a3-a9e5-9eca-80016e0edc24"
 
-        var mGatt: BluetoothGatt? = null
-
         fun getInstance(
             context: Context,
             mac: String,
@@ -85,6 +87,31 @@ class BleManager(
         }
 
         const val TEST = "TEST"
+
+        /** GATT 작업 한 건을 몇 번까지 다시 시도할지. */
+        private const val MAX_GATT_OPERATION_ATTEMPTS = 3
+
+        /** 재시도 사이에 두는 틈. 곧바로 다시 걸면 스택이 같은 이유로 또 거절한다. */
+        private const val GATT_OPERATION_RETRY_DELAY_MS = 200L
+
+        /**
+         * 연결은 유지되는 것처럼 보이는데 이 시간 동안 패킷이 하나도 없으면
+         * 죽은 연결로 보고 강제로 끊었다가 다시 붙는다.
+         *
+         * 스택이 끊김을 인지한 경우는 isDeviceActuallyConnected() 가 잡아내지만,
+         * 스택은 연결됐다고 하는데 센서만 조용한 경우는 그것으로 잡히지 않는다.
+         * 측정 간격이 1분이므로 10분이면 정상 상황에서 오작동할 여지가 없다.
+         */
+        private const val DATA_STALL_TIMEOUT_MS = 10 * 60 * 1000L
+
+        /** 연결 시도가 이 시간 안에 끝나지 않으면 그 GATT 를 버리고 다시 건다. */
+        private const val CONNECT_TIMEOUT_MS = 30_000L
+
+        /** 끊긴 뒤 다시 걸기까지 두는 틈. */
+        private const val RECONNECT_DELAY_MS = 3_000L
+
+        private val CLIENT_CHARACTERISTIC_CONFIG_UUID: UUID =
+            UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
     }
 
 
@@ -95,9 +122,65 @@ class BleManager(
     lateinit var bufferWeo2: String
 
 
+    /**
+     * 연결을 유지할 생각인가. stopConnections() 로 내리고 resumeConnections() 로 올린다.
+     *
+     * 바깥에서 직접 쓰지 못하게 막아 둔다. 이 값만 바꾸고 GATT 는 그대로 두면
+     * 둘이 어긋나기 때문이다.
+     */
+    @Volatile
     var isReconnect = true
-    private val reconnectJob = SupervisorJob()
-    private val reconnectScope = CoroutineScope(Dispatchers.IO + reconnectJob)
+        private set
+
+    private enum class GattConnectionState {
+        DISCONNECTED,
+        CONNECTING,
+        CONNECTED,
+        DISCONNECTING
+    }
+
+    /** 큐에 넣는 GATT 작업. 안드로이드 GATT 는 한 번에 하나만 받는다. */
+    private sealed class GattOperation(open val label: String) {
+        data class DescriptorWrite(
+            val descriptor: BluetoothGattDescriptor,
+            val value: ByteArray,
+            override val label: String
+        ) : GattOperation(label)
+
+        data class CharacteristicWrite(
+            val characteristic: BluetoothGattCharacteristic,
+            val value: ByteArray,
+            override val label: String
+        ) : GattOperation(label)
+    }
+
+    /**
+     * GATT 상태를 한 자물쇠 아래 둔다.
+     *
+     * 연결·해제·교체가 콜백 스레드와 서비스 스레드에서 동시에 들어온다. 전에는
+     * companion 의 mGatt 를 서비스가 바깥에서 대입하기도 해서, 끊김 콜백이 두 번 오면
+     * connectGatt() 가 두 번 불리고 GATT 객체가 누수됐다.
+     */
+    private val gattLock = Any()
+
+    @Volatile
+    private var gattConnectionState = GattConnectionState.DISCONNECTED
+    private var currentGatt: BluetoothGatt? = null
+
+    private val bleScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private var reconnectJob: Job? = null
+    private var connectTimeoutJob: Job? = null
+    private val gattOperationQueue =
+        GattOperationQueue<GattOperation>(MAX_GATT_OPERATION_ATTEMPTS)
+
+    /**
+     * 마지막으로 센서 패킷을 받은 시각. SystemClock.elapsedRealtime() 기준이라
+     * 사용자가 기기 시계를 바꿔도 흔들리지 않는다.
+     *
+     * 0 이면 아직 연결된 적이 없다는 뜻이라 워치독이 동작하지 않는다.
+     */
+    @Volatile
+    private var lastPacketAt: Long = 0L
 
 //    lateinit var bluetoothDevice: BluetoothDevice
 //    lateinit var bluetoothManager: BluetoothManager
@@ -107,15 +190,324 @@ class BleManager(
     val disconnectHandler = Handler(Looper.getMainLooper())
     val reconnectHandler = Handler(Looper.getMainLooper())
 
+    fun resumeConnections() {
+        synchronized(gattLock) {
+            isReconnect = true
+        }
+    }
 
+    /**
+     * 블루투스 스택에 이 MAC 이 실제로 연결되어 있는지 직접 물어본다.
+     *
+     * gattConnectionState 는 onConnectionStateChange 콜백으로만 갱신되므로
+     * 실제 상태와 어긋날 수 있다. 이 함수는 그 기억을 검증하는 용도다.
+     *
+     * 조회에 실패하면 true 를 돌려 판단을 보류한다. false 로 처리하면
+     * 멀쩡히 붙어 있는 연결을 끊어 버릴 수 있어 보수적으로 둔다.
+     */
+    private fun isDeviceActuallyConnected(bluetoothManager: BluetoothManager): Boolean {
+        return runCatching {
+            bluetoothManager
+                .getConnectedDevices(BluetoothProfile.GATT)
+                .any { it.address.equals(mac, ignoreCase = true) }
+        }.getOrElse { error ->
+            Log.w(TEST, "실제 연결 상태 조회 실패. 판단을 보류한다.", error)
+            true
+        }
+    }
+
+    /**
+     * 연결은 살아 있는 것으로 보이는데 오래도록 패킷이 없는 상태인지 본다.
+     *
+     * isDeviceActuallyConnected() 는 "스택도 끊긴 걸 아는" 경우를 잡는다.
+     * 이 함수는 "스택은 연결됐다고 하는데 센서만 조용한" 경우를 잡는다. 층이 다르다.
+     */
+    private fun isDataStalled(): Boolean {
+        val last = lastPacketAt
+        if (last == 0L) return false // 아직 연결된 적이 없다. 판단할 근거가 없다.
+        return SystemClock.elapsedRealtime() - last >= DATA_STALL_TIMEOUT_MS
+    }
+
+    /**
+     * 연결을 거는 **유일한 입구**.
+     *
+     * 서비스·블루투스 켜짐·재연결 예약이 모두 이 문을 지난다. 전에는 세 군데가 각자
+     * connectGatt() 를 불러서, 이미 붙어 있는데 또 거는 일을 막을 방법이 없었다.
+     *
+     * 주기적으로 불리므로 워치독도 여기서 함께 돈다. 별도 타이머가 필요 없다.
+     */
+    @SuppressLint("MissingPermission")
+    fun ensureConnected() {
+        if (!isReconnect) {
+            Log.d(TEST, "BLE connection is disabled. Skip connectGatt().")
+            return
+        }
+
+        val stalledGatt = synchronized(gattLock) {
+            if (gattConnectionState == GattConnectionState.CONNECTED && isDataStalled()) {
+                currentGatt
+            } else {
+                null
+            }
+        }
+        if (stalledGatt != null) {
+            val idleMinutes = (SystemClock.elapsedRealtime() - lastPacketAt) / 60_000
+            Log.w(TEST, "연결은 유지되는데 ${idleMinutes}분째 패킷이 없다. 강제로 끊고 재연결한다.")
+            restartGattAfterOperationFailure(stalledGatt, "데이터 수신 끊김 (${idleMinutes}분)")
+            return
+        }
+
+        val bluetoothManager =
+            context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        val bluetoothAdapter = bluetoothManager.adapter
+        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
+            // 어댑터가 내려가면 OS 레벨에서 GATT 링크가 모두 사라지므로 currentGatt 는
+            // 껍데기다. 그대로 두면 상태가 CONNECTED 로 굳어 재연결 가드에 계속 걸린다.
+            synchronized(gattLock) {
+                // 락을 잡은 뒤 다시 확인한다. 그 사이 블루투스가 켜지고 다른 스레드가
+                // 새 GATT 를 만들었을 수 있는데, 그것까지 닫으면 방금 살아난 연결을 죽인다.
+                if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
+                    runCatching { currentGatt?.close() }
+                    currentGatt = null
+                    gattConnectionState = GattConnectionState.DISCONNECTED
+                }
+            }
+            Log.d(TEST, "Bluetooth is disabled. Skip connectGatt().")
+            return
+        }
+
+        var createdGatt: BluetoothGatt? = null
+        try {
+            val bluetoothDevice = if (Build.VERSION.SDK_INT >= TIRAMISU) {
+                bluetoothAdapter.getRemoteLeDevice(mac, BluetoothDevice.ADDRESS_TYPE_PUBLIC)
+            } else {
+                bluetoothAdapter.getRemoteDevice(mac)
+            }
+
+            synchronized(gattLock) {
+                // 위의 빠른 검사는 참고일 뿐이다. stopConnections() 와 같은 락 안에서
+                // 다시 확인해야, 멈추라는 지시 뒤에 새 연결이 걸리는 일을 막을 수 있다.
+                if (!isReconnect) {
+                    Log.d(TEST, "BLE connection was disabled while preparing GATT.")
+                    return
+                }
+
+                // gattConnectionState 는 앱이 기억하는 값일 뿐 실제 연결 상태가 아니다.
+                // 센서가 조용히 사라지면(배터리 방전, 범위 밖, 착용 이탈) 안드로이드가
+                // STATE_DISCONNECTED 를 주지 않는 경우가 있는데, 이 값을 되돌리는 코드가
+                // 그 콜백 안에만 있다. 그러면 상태가 CONNECTED 로 굳어 스스로 복구할 수
+                // 없게 된다. 그래서 가드에 걸리기 전에 스택에 직접 물어본다.
+                if (gattConnectionState == GattConnectionState.CONNECTED &&
+                    !isDeviceActuallyConnected(bluetoothManager)
+                ) {
+                    Log.w(TEST, "상태는 CONNECTED 인데 스택에는 연결이 없다. 초기화하고 재연결한다.")
+                    runCatching { currentGatt?.close() }
+                    currentGatt = null
+                    gattConnectionState = GattConnectionState.DISCONNECTED
+                    clearGattOperationQueue("끊긴 CONNECTED 상태 정리")
+                }
+
+                if (gattConnectionState == GattConnectionState.CONNECTING ||
+                    gattConnectionState == GattConnectionState.CONNECTED
+                ) {
+                    Log.d(TEST, "GATT is already $gattConnectionState. Skip duplicate connection.")
+                    return
+                }
+
+                runCatching { currentGatt?.close() }
+                connectTimeoutJob?.cancel()
+                connectTimeoutJob = null
+                currentGatt = null
+                clearGattOperationQueue("새 GATT 연결 시작")
+                gattConnectionState = GattConnectionState.CONNECTING
+
+                createdGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    bluetoothDevice.connectGatt(context, false, this, BluetoothDevice.TRANSPORT_LE)
+                } else {
+                    bluetoothDevice.connectGatt(context, false, this)
+                }
+                currentGatt = createdGatt
+            }
+
+            BleBridge.updateState(BleConnectionState.CONNECTING)
+
+            val started = createdGatt
+            if (started == null) {
+                synchronized(gattLock) {
+                    if (currentGatt == null &&
+                        gattConnectionState == GattConnectionState.CONNECTING
+                    ) {
+                        gattConnectionState = GattConnectionState.DISCONNECTED
+                    }
+                }
+                scheduleReconnect()
+            } else {
+                scheduleConnectionTimeout(started)
+            }
+        } catch (e: Exception) {
+            val attemptedGatt = createdGatt
+            val failedGatt = synchronized(gattLock) {
+                when {
+                    attemptedGatt != null && currentGatt === attemptedGatt -> {
+                        currentGatt = null
+                        gattConnectionState = GattConnectionState.DISCONNECTED
+                        attemptedGatt
+                    }
+
+                    attemptedGatt == null &&
+                        currentGatt == null &&
+                        gattConnectionState == GattConnectionState.CONNECTING -> {
+                        gattConnectionState = GattConnectionState.DISCONNECTED
+                        null
+                    }
+
+                    else -> null
+                }
+            }
+            runCatching { failedGatt?.close() }
+            Log.e(TEST, "connectGatt() failed: ${e.message}", e)
+            scheduleReconnect()
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun stopConnections() {
+        val gattToClose: BluetoothGatt?
+        synchronized(gattLock) {
+            // 멈춤 정책과 GATT 비우기를 한 묶음으로 publish 한다.
+            isReconnect = false
+            reconnectJob?.cancel()
+            reconnectJob = null
+            connectTimeoutJob?.cancel()
+            connectTimeoutJob = null
+            gattConnectionState = GattConnectionState.DISCONNECTING
+            gattToClose = currentGatt
+            currentGatt = null
+        }
+        clearGattOperationQueue("BLE 연결 중지")
+
+        runCatching { gattToClose?.disconnect() }
+        runCatching { gattToClose?.close() }
+
+        synchronized(gattLock) {
+            // 락 밖에서 닫는 사이 resumeConnections() 가 새 연결을 만들었다면 덮지 않는다.
+            if (!isReconnect && currentGatt == null) {
+                gattConnectionState = GattConnectionState.DISCONNECTED
+            }
+        }
+    }
+
+    /** 이 콜백이 지금 쓰는 GATT 에서 온 것인가. 낡은 객체의 콜백을 걸러낸다. */
+    private fun isCurrentGatt(gatt: BluetoothGatt?): Boolean {
+        return gatt != null && synchronized(gattLock) { currentGatt === gatt }
+    }
+
+    private fun scheduleReconnect() {
+        synchronized(gattLock) {
+            // 이미 예약돼 있으면 두 번 걸지 않는다. 끊김 콜백이 연달아 오는 일이 있다.
+            if (!isReconnect || reconnectJob?.isActive == true) return
+
+            reconnectJob = bleScope.launch {
+                delay(RECONNECT_DELAY_MS)
+
+                val shouldReconnect = synchronized(gattLock) {
+                    reconnectJob = null
+                    isReconnect
+                }
+                if (!shouldReconnect) return@launch
+
+                withContext(Dispatchers.Main) {
+                    BleBridge.updateState(BleConnectionState.CONNECTING)
+                }
+                ensureConnected()
+            }
+        }
+    }
+
+    /**
+     * 연결 시도에 제한 시간을 건다.
+     *
+     * connectGatt() 는 결과를 콜백으로만 알린다. 그 콜백이 영영 오지 않으면 상태가
+     * CONNECTING 에 머물러 다음 시도가 가드에 막힌다 - 스스로 못 빠져나온다.
+     */
+    @SuppressLint("MissingPermission")
+    private fun scheduleConnectionTimeout(gatt: BluetoothGatt) {
+        synchronized(gattLock) {
+            if (currentGatt !== gatt ||
+                gattConnectionState != GattConnectionState.CONNECTING
+            ) {
+                return
+            }
+
+            connectTimeoutJob?.cancel()
+            connectTimeoutJob = bleScope.launch {
+                delay(CONNECT_TIMEOUT_MS)
+
+                val shouldReconnect = synchronized(gattLock) {
+                    if (currentGatt === gatt &&
+                        gattConnectionState == GattConnectionState.CONNECTING
+                    ) {
+                        currentGatt = null
+                        gattConnectionState = GattConnectionState.DISCONNECTED
+                        connectTimeoutJob = null
+                        isReconnect
+                    } else {
+                        connectTimeoutJob = null
+                        false
+                    }
+                }
+
+                if (shouldReconnect) {
+                    Log.w(TEST, "GATT connection timed out. Reconnecting.")
+                    runCatching { gatt.close() }
+                    scheduleReconnect()
+                }
+            }
+        }
+    }
+
+
+    @SuppressLint("MissingPermission")
     override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
         super.onConnectionStateChange(gatt, status, newState)
 
+        // 낡은 GATT 의 콜백은 여기서 끊는다. 닫히지 않은 채 남으면 그 객체가 계속
+        // 콜백을 던져 현재 연결 상태를 덮어쓴다.
+        if (!isCurrentGatt(gatt)) {
+            Log.w(TEST, "Ignore callback from stale GATT: ${gatt?.device?.address}")
+            runCatching { gatt?.close() }
+            return
+        }
+
+        Log.d("GATT", "status=$status, newState=$newState, device=${gatt?.device?.address}")
         Log.e(TEST, "onConnectionStateChange 진입")
         when (newState) {
             BluetoothProfile.STATE_CONNECTED -> {
                 Log.e("gatt", "gatt connected!")
-                mGatt = gatt
+
+                val connectionAccepted = synchronized(gattLock) {
+                    if (!isReconnect || currentGatt !== gatt) {
+                        false
+                    } else {
+                        gattConnectionState = GattConnectionState.CONNECTED
+                        reconnectJob?.cancel()
+                        reconnectJob = null
+                        connectTimeoutJob?.cancel()
+                        connectTimeoutJob = null
+                        true
+                    }
+                }
+
+                if (!connectionAccepted) {
+                    Log.w(TEST, "Ignore connected callback after BLE connections were stopped.")
+                    runCatching { gatt?.disconnect() }
+                    runCatching { gatt?.close() }
+                    return
+                }
+
+                // 워치독 기준점을 연결 시점으로 잡는다. 이 시각 이후 10분 동안 패킷이
+                // 하나도 없으면 죽은 연결로 본다.
+                lastPacketAt = SystemClock.elapsedRealtime()
 
                 applyBondPolicy(gatt?.device)
 
@@ -134,9 +526,31 @@ class BleManager(
             BluetoothProfile.STATE_DISCONNECTED -> {
                 Log.e("gatt", "gatt disconnected!!!")
 
-                if (!isReconnect) {
-                    gatt?.close()
-                    mGatt = null
+                var disconnectionAccepted = false
+                val shouldReconnect = synchronized(gattLock) {
+                    if (currentGatt !== gatt) {
+                        false
+                    } else {
+                        disconnectionAccepted = true
+                        currentGatt = null
+                        gattConnectionState = GattConnectionState.DISCONNECTED
+                        connectTimeoutJob?.cancel()
+                        connectTimeoutJob = null
+                        isReconnect
+                    }
+                }
+
+                if (!disconnectionAccepted) {
+                    Log.w(TEST, "Ignore disconnected callback from a GATT that is no longer active.")
+                    runCatching { gatt?.close() }
+                    return
+                }
+
+                clearGattOperationQueue("GATT 연결 해제")
+                refreshDeviceCache(gatt)
+                runCatching { gatt?.close() }
+
+                if (!shouldReconnect) {
                     BleBridge.updateState(BleConnectionState.DISCONNECTED)
                     return
                 }
@@ -163,28 +577,9 @@ class BleManager(
 
                 Log.d(TEST, "disconnect 콜백 내부 : ${gatt?.device?.name}")
 
-                // 기존 핸들러 코드
-//                reconnectHandler.postDelayed({
-//                    Log.d(TEST, "Disconnect 핸들러 내부")
-//                    // BleBridege에 Connecting 상태 전송
-//                    BleBridge.updateState(BleConnectionState.CONNECTING)
-//                    reconnect(gatt, mac)
-//                }, 3000) // 일반 모드일 때, 재연결 3초 뒤에 실행
-
-
-                reconnectScope.launch {
-                    delay(3000L)
-                    if (!isReconnect) return@launch
-                    Log.d(TEST, "Disconnect 코루틴 내부")
-
-                    // BleBridge에 Connecting 상태 전송 (메인 스레드에서 실행해야 하는 경우 아래처럼 처리)
-                    withContext(Dispatchers.Main) {
-                        BleBridge.updateState(BleConnectionState.CONNECTING)
-                    }
-
-                    reconnect(gatt, mac) // 이 함수는 IO-safe해야 함
-                }
-
+                // 재연결은 예약으로만 건다. 여기서 직접 connectGatt() 를 부르면
+                // 끊김 콜백이 두 번 올 때 연결이 두 번 생긴다.
+                scheduleReconnect()
             }
 
 
@@ -207,6 +602,10 @@ class BleManager(
     @SuppressLint("MissingPermission")
     override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
         super.onServicesDiscovered(gatt, status)
+        if (!isCurrentGatt(gatt)) {
+            Log.w(TEST, "Ignore services from stale GATT")
+            return
+        }
         if (status == BluetoothGatt.GATT_SUCCESS) {
             Log.d(TEST, "가트 연결이 되었고, onServicesDiscovered에 진입!")
             // ==== 서비스 조회 ====
@@ -240,7 +639,48 @@ class BleManager(
 
 
             val readCharacteristic = service.getCharacteristic(characteristicUUID)
-            gatt.setCharacteristicNotification(readCharacteristic, true)
+            if (!found || readCharacteristic == null) {
+                restartGattAfterOperationFailure(gatt, "필수 service/notify characteristic 없음")
+                return
+            }
+
+            val notificationValue = when {
+                readCharacteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0 ->
+                    BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+
+                readCharacteristic.properties and BluetoothGattCharacteristic.PROPERTY_INDICATE != 0 ->
+                    BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
+
+                else -> {
+                    restartGattAfterOperationFailure(
+                        gatt,
+                        "read characteristic가 notify/indicate를 지원하지 않음"
+                    )
+                    return
+                }
+            }
+
+            if (!gatt.setCharacteristicNotification(readCharacteristic, true)) {
+                restartGattAfterOperationFailure(gatt, "로컬 notification 활성화 실패")
+                return
+            }
+
+            // **CCCD 를 써야 센서가 실제로 보내기 시작한다.** 전에는 로컬 플래그만
+            // 켜고 디스크립터를 쓰지 않아, 기기에 따라 데이터가 오지 않을 수 있었다.
+            val cccd = readCharacteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID)
+            if (cccd == null) {
+                restartGattAfterOperationFailure(gatt, "CCCD descriptor 없음")
+                return
+            }
+
+            enqueueGattOperation(
+                gatt,
+                GattOperation.DescriptorWrite(
+                    descriptor = cccd,
+                    value = notificationValue,
+                    label = "CCCD_ENABLE"
+                )
+            )
 
             CoroutineScope(Dispatchers.Main).launch {
                 Toast.makeText(
@@ -251,7 +691,8 @@ class BleManager(
             }
 
         } else {
-            Log.d(TEST, "가트 진입 실패!")
+            Log.e(TEST, "서비스 탐색 실패 status=$status")
+            gatt?.let { restartGattAfterOperationFailure(it, "서비스 탐색 실패 status=$status") }
         }
     }
 
@@ -263,11 +704,24 @@ class BleManager(
     ) {
         super.onCharacteristicChanged(gatt, characteristic)
 
-        val data = characteristic!!.value
+        if (!isCurrentGatt(gatt)) {
+            Log.w(TEST, "Ignore data from stale GATT")
+            return
+        }
+        val callbackGatt = gatt ?: return
+
+        // 워치독 기준점. 센서가 살아 있다는 유일한 증거다.
+        lastPacketAt = SystemClock.elapsedRealtime()
+
+        val data = characteristic?.value
+        if (data == null || data.isEmpty()) {
+            Log.w(TEST, "빈 패킷이 왔다. 버린다.")
+            return
+        }
 
         val response = protocol.runProtocol(AppDatabase.getInstance(applicationContext), data, userId, userDeviceId)
         if (response != null) {
-            writeAgms(gatt!!, response)
+            enqueueAck(callbackGatt, response)
         } else {
             Log.e(TEST, " response is null")
         }
@@ -383,58 +837,244 @@ class BleManager(
         gatt?.discoverServices()
     }
 
-    @SuppressLint("MissingPermission")
-    private fun reconnect(gatt: BluetoothGatt?, address: String) {
-        if (!isReconnect) return
-        Log.d("TEST",  "======BLE reconnect() 진입 ======")
+    /**
+     * 센서가 보낸 패킷에 대한 ACK 를 큐에 넣는다.
+     *
+     * 곧바로 writeCharacteristic() 을 부르지 않는다. 패킷은 몰아서 오는데 GATT 는
+     * 한 번에 한 작업만 받으므로, 직접 부르면 둘째 것부터 조용히 거절당한다.
+     */
+    private fun enqueueAck(gatt: BluetoothGatt, value: ByteArray) {
+        val writeCharacteristic = gatt
+            .getService(UUID.fromString(protocol.serviceUUID))
+            ?.getCharacteristic(UUID.fromString(protocol.writeUUID))
 
-//        mGatt?.disconnect()
-//        mGatt?.close()
-        gatt?.close()
-        refreshDeviceCache(gatt)
-//        mGatt = null
-
-//        gatt?.close()
-
-
-        // 스캔 방식
-//        mGatt = gatt?.device?.connectGatt(context, false, this)
-//        gatt?.device?.connectGatt(context, false, this)
-        // 논스캔 방식
-        val bluetoothManager =
-            context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        val bluetoothAdpater = bluetoothManager.adapter
-        val bluetoothDevice = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Log.e(TEST, "======BLE Remote 연결 안드로이드 13 이상 시작========")
-            bluetoothAdpater.getRemoteLeDevice(address, BluetoothDevice.ADDRESS_TYPE_PUBLIC)
-        } else {
-            Log.e(TEST, "======BLE Remote 연결 안드로이드 10~12 시작========")
-            bluetoothAdpater.getRemoteDevice(address)
+        if (writeCharacteristic == null) {
+            restartGattAfterOperationFailure(gatt, "ACK write characteristic 없음")
+            return
         }
 
-        mGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            bluetoothDevice.connectGatt(context, false, this, BluetoothDevice.TRANSPORT_LE)
-        } else {
-            bluetoothDevice.connectGatt(context, false, this)
+        val command = value.getOrNull(2)?.toUByte()?.toString() ?: "unknown"
+        val status = value.getOrNull(3)?.toUByte()?.toString() ?: "unknown"
+        enqueueGattOperation(
+            gatt,
+            GattOperation.CharacteristicWrite(
+                characteristic = writeCharacteristic,
+                value = value.copyOf(),
+                label = "ACK cmd=$command status=$status"
+            )
+        )
+    }
+
+    // ── GATT 작업 큐 ────────────────────────────────────────────────────
+    //
+    // 안드로이드 GATT 는 한 번에 한 작업만 받는다. 앞 작업이 끝나기 전에 또 걸면
+    // 조용히 거절당하고, 거절당한 줄도 모른 채 응답만 기다리게 된다. 그래서 한 줄로
+    // 세워 하나씩 보내고, 실패하면 세 번까지 다시 시도한다.
+
+    @SuppressLint("MissingPermission")
+    private fun enqueueGattOperation(gatt: BluetoothGatt, operation: GattOperation) {
+        reconnectHandler.post {
+            if (!isCurrentGatt(gatt)) return@post
+
+            val queueSize = gattOperationQueue.enqueue(operation)
+            Log.d("GATT_QUEUE", "ENQUEUE label=${operation.label} queueSize=$queueSize")
+            executeNextGattOperation(gatt)
         }
     }
 
+    @SuppressLint("MissingPermission")
+    private fun executeNextGattOperation(gatt: BluetoothGatt) {
+        if (!isCurrentGatt(gatt)) return
+
+        val attempt = gattOperationQueue.nextAttempt() ?: return
+        val operation = attempt.operation
+        Log.d(
+            "GATT_QUEUE",
+            "START label=${operation.label} attempt=${attempt.number} queueSize=${gattOperationQueue.size()}"
+        )
+
+        val started = when (operation) {
+            is GattOperation.DescriptorWrite -> startDescriptorWrite(gatt, operation)
+            is GattOperation.CharacteristicWrite -> startCharacteristicWrite(gatt, operation)
+        }
+
+        if (!started) {
+            handleGattOperationFailure(gatt, operation, "write 시작 거절")
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun startDescriptorWrite(
+        gatt: BluetoothGatt,
+        operation: GattOperation.DescriptorWrite
+    ): Boolean {
+        return if (Build.VERSION.SDK_INT >= TIRAMISU) {
+            val result = gatt.writeDescriptor(operation.descriptor, operation.value)
+            Log.d("GATT_QUEUE", "START_RESULT label=${operation.label} result=$result")
+            result == BluetoothStatusCodes.SUCCESS
+        } else {
+            @Suppress("DEPRECATION")
+            operation.descriptor.value = operation.value
+            @Suppress("DEPRECATION")
+            val result = gatt.writeDescriptor(operation.descriptor)
+            Log.d("GATT_QUEUE", "START_RESULT label=${operation.label} result=$result")
+            result
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun startCharacteristicWrite(
+        gatt: BluetoothGatt,
+        operation: GattOperation.CharacteristicWrite
+    ): Boolean {
+        return if (Build.VERSION.SDK_INT >= TIRAMISU) {
+            val result = gatt.writeCharacteristic(
+                operation.characteristic,
+                operation.value,
+                BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+            )
+            Log.d("GATT_QUEUE", "START_RESULT label=${operation.label} result=$result")
+            result == BluetoothStatusCodes.SUCCESS
+        } else {
+            @Suppress("DEPRECATION")
+            operation.characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+            @Suppress("DEPRECATION")
+            operation.characteristic.value = operation.value
+            @Suppress("DEPRECATION")
+            val result = gatt.writeCharacteristic(operation.characteristic)
+            Log.d("GATT_QUEUE", "START_RESULT label=${operation.label} result=$result")
+            result
+        }
+    }
+
+    private fun finishGattOperation(
+        gatt: BluetoothGatt,
+        operation: GattOperation,
+        status: Int
+    ) {
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+            gattOperationQueue.completeSuccess()
+            Log.i(
+                "GATT_QUEUE",
+                "COMPLETE label=${operation.label} status=$status remaining=${gattOperationQueue.size()}"
+            )
+            executeNextGattOperation(gatt)
+        } else {
+            handleGattOperationFailure(gatt, operation, "완료 콜백 실패 status=$status")
+        }
+    }
+
+    private fun handleGattOperationFailure(
+        gatt: BluetoothGatt,
+        operation: GattOperation,
+        reason: String
+    ) {
+        when (gattOperationQueue.completeFailure()) {
+            GattOperationQueue.FailureAction.RETRY -> {
+                Log.w("GATT_QUEUE", "RETRY label=${operation.label} reason=$reason")
+                reconnectHandler.postDelayed(
+                    { executeNextGattOperation(gatt) },
+                    GATT_OPERATION_RETRY_DELAY_MS
+                )
+            }
+
+            GattOperationQueue.FailureAction.EXHAUSTED -> {
+                Log.e("GATT_QUEUE", "EXHAUSTED label=${operation.label} reason=$reason")
+                restartGattAfterOperationFailure(gatt, "$reason (${operation.label})")
+            }
+        }
+    }
+
+    private fun clearGattOperationQueue(reason: String) {
+        gattOperationQueue.clear()
+        Log.d("GATT_QUEUE", "CLEAR reason=$reason")
+    }
+
+    /**
+     * GATT 가 더 쓸 수 없는 상태라 판단되면 끊고 처음부터 다시 붙는다.
+     *
+     * 작업이 재시도를 다 쓴 경우, 필수 특성이 없는 경우, 데이터가 끊긴 경우가 모두
+     * 이리로 온다. 복구 경로를 하나로 모아 두어야 어디서 왔든 같은 상태로 정리된다.
+     */
+    @SuppressLint("MissingPermission")
+    private fun restartGattAfterOperationFailure(gatt: BluetoothGatt, reason: String) {
+        Log.e("GATT_QUEUE", "RECONNECT reason=$reason")
+        val shouldReconnect = synchronized(gattLock) {
+            if (currentGatt !== gatt) {
+                false
+            } else {
+                currentGatt = null
+                gattConnectionState = GattConnectionState.DISCONNECTED
+                connectTimeoutJob?.cancel()
+                connectTimeoutJob = null
+                isReconnect
+            }
+        }
+        clearGattOperationQueue(reason)
+
+        runCatching { gatt.disconnect() }
+        runCatching { gatt.close() }
+        BleBridge.updateState(BleConnectionState.DISCONNECTED)
+        if (shouldReconnect) scheduleReconnect()
+    }
+
+    override fun onDescriptorWrite(
+        gatt: BluetoothGatt?,
+        descriptor: BluetoothGattDescriptor?,
+        status: Int
+    ) {
+        super.onDescriptorWrite(gatt, descriptor, status)
+        val callbackGatt = gatt ?: return
+        if (!isCurrentGatt(callbackGatt)) return
+
+        reconnectHandler.post {
+            val operation = gattOperationQueue.inFlightOperation()
+            if (operation !is GattOperation.DescriptorWrite ||
+                operation.descriptor.uuid != descriptor?.uuid
+            ) {
+                Log.w(TEST, "예상하지 않은 descriptor write callback uuid=${descriptor?.uuid}")
+                return@post
+            }
+            finishGattOperation(callbackGatt, operation, status)
+        }
+    }
+
+    override fun onCharacteristicWrite(
+        gatt: BluetoothGatt?,
+        characteristic: BluetoothGattCharacteristic?,
+        status: Int
+    ) {
+        super.onCharacteristicWrite(gatt, characteristic, status)
+        val callbackGatt = gatt ?: return
+        if (!isCurrentGatt(callbackGatt)) return
+
+        reconnectHandler.post {
+            val operation = gattOperationQueue.inFlightOperation()
+            if (operation !is GattOperation.CharacteristicWrite ||
+                operation.characteristic.uuid != characteristic?.uuid
+            ) {
+                Log.w(TEST, "예상하지 않은 characteristic write callback uuid=${characteristic?.uuid}")
+                return@post
+            }
+            finishGattOperation(callbackGatt, operation, status)
+        }
+    }
+
+    /**
+     * 서비스가 내려갈 때 모두 정리한다.
+     *
+     * GATT 는 stopConnections() 가 닫는다. 여기서 또 닫으면 같은 객체를 두 번 닫게
+     * 되고, 그 사이 다른 스레드가 만든 연결을 지울 위험도 있다.
+     */
     fun shutdown() {
-        isReconnect = false
-        reconnectJob.cancel()
+        stopConnections()
+
         reconnectHandler.removeCallbacksAndMessages(null)
         disconnectHandler.removeCallbacksAndMessages(null)
         timerTaskForConnected?.cancel()
         timerTaskForConnected = null
         timerWhenConnected?.cancel()
         timerWhenConnected = null
-
-        val gatt = mGatt
-        mGatt = null
-        runCatching { gatt?.disconnect() }
-            .onFailure { Log.e(TEST, "BLE disconnect 실패: ${it.message}") }
-        runCatching { gatt?.close() }
-            .onFailure { Log.e(TEST, "BLE close 실패: ${it.message}") }
 
         BleBridge.updateState(BleConnectionState.DISCONNECTED)
         INSTANCE = null
@@ -684,12 +1324,13 @@ class BleManager(
             return
         }
 
-        reconnectScope.launch {
+        bleScope.launch {
             val email = DataStoreManager.getEmail().first()
             val isGuest = email != null && GuestList.getGuestList().contains(email)
 
             if (isGuest) {
-                Log.d("BOND", "게스트 계정($email) - 본딩하지 않는다")
+                // 계정(이메일)은 찍지 않는다 - 판정 결과만 남긴다 (CWE-200)
+                Log.d("BOND", "게스트 계정 - 본딩하지 않는다")
                 return@launch
             }
 
@@ -702,7 +1343,8 @@ class BleManager(
 
                 else -> {
                     val started = device.createBond()
-                    Log.d("BOND", "본딩 시작 (계정 ${email ?: "없음"}) : $started")
+                    // 계정(이메일)은 찍지 않는다 - createBond() 결과만 남긴다 (CWE-200)
+                    Log.d("BOND", "본딩 시작 : $started")
                 }
             }
         }

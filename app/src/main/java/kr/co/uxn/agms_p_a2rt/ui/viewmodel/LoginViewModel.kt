@@ -158,7 +158,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                         val name = googleIdTokenCredential.displayName
                         val pictureUri = googleIdTokenCredential.profilePictureUri
 
-                        Log.e(TAG, "idToken : $idToken\nphone : $phoneNumber\nemail : $email\nname : $name\npictureUri : $pictureUri")
+                        // 민감정보 로그 - 주석 처리 (CWE-200)
+//                        Log.e(TAG, "idToken : $idToken\nphone : $phoneNumber\nemail : $email\nname : $name\npictureUri : $pictureUri")
                         // 회원 여부 체크
                         isMemberCheckAndLogin(idToken, 1801, isForced)
 
@@ -217,10 +218,12 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                                 val refreshToken = responseBody.refreshToken
 
                                 val oAuthEmail = responseBody.email
-                                Log.d("TEST", "responseBody.email: $oAuthEmail")
+                                // 민감정보 로그 - 주석 처리 (CWE-200)
+//                                Log.d("TEST", "responseBody.email: $oAuthEmail")
 
                                 val preToken = responseBody.preToken
-                                Log.d("TEST", "responseBody.preToken: $preToken")
+                                // 민감정보 로그 - 주석 처리 (CWE-200)
+//                                Log.d("TEST", "responseBody.preToken: $preToken")
 
                                 val userId = responseBody.userId
                                 // 토큰 저장
@@ -274,7 +277,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                             Log.d("TEST", "카카오 409일때 응답받은 DTD : ${errorResponse.toString()}")
                             val email = errorResponse.email
                             val message = errorResponse.message
-                            Log.d("TEST", "responseBody.email: $email")
+                            // 민감정보 로그 - 주석 처리 (CWE-200)
+//                            Log.d("TEST", "responseBody.email: $email")
                             Log.d("TEST", "responseBody.message: $message")
 
                             // 뷰모델에 email 저장

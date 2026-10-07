@@ -697,8 +697,9 @@ fun PassWordResetScreen(navController: NavController) {
                                                             pwd = pwd1.value
                                                         )
                                                     )
-                                                    Log.d("TEST", "email  = ${email.value}, pwd = ${pwd1.value})"
-                                                    )
+                                                    // 민감정보 로그 - 주석 처리 (CWE-200)
+//                                                    Log.d("TEST", "email  = ${email.value}, pwd = ${pwd1.value})"
+//                                                    )
                                                     val resetPwdBody = resetPwd.body()
                                                     if (resetPwd.isSuccessful) {
                                                         Log.d("TEST", "resetPwdBody = ${resetPwdBody}"
