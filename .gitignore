@@ -15,3 +15,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Claude Code 작업 디렉터리 (에이전트 worktree·설정)
+.claude/
