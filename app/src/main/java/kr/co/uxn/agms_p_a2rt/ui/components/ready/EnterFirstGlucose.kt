@@ -223,7 +223,7 @@ fun EnterFirstGlucose(navController: NavController) {
 
                                         val upload = tokenRetrofit.uploadEvent(
                                             RequestEventData(
-                                                userId = userId!!,
+                                                userId = userId,
                                                 createdAt = createdAtUtc,
                                                 eventTypeCode = 1403,
                                                 content = glucoseDataFromUser.value

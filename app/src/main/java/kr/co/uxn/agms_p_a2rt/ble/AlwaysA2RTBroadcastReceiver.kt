@@ -20,7 +20,7 @@ class AlwaysA2RTBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context != null && intent != null && intent.action != null) {
             if (shouldStartService(intent)) {
-                Log.d("BROADCASTRECEIVER", "인텐트는 : ${intent.action!!}")
+                Log.d("BROADCASTRECEIVER", "인텐트는 : ${intent.action}")
 
                 if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
                     val pendingResult: PendingResult = goAsync()

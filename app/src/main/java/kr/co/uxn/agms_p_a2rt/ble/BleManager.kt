@@ -602,19 +602,28 @@ class BleManager(
     @SuppressLint("MissingPermission")
     override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
         super.onServicesDiscovered(gatt, status)
-        if (!isCurrentGatt(gatt)) {
+        // gatt 를 여기서 직접 본다. isCurrentGatt 도 null 이면 false 라 판정은
+        // 같지만, 그 사실이 컴파일러에 전달되지 않아 아래에서 !! 가 필요해졌다.
+        if (gatt == null || !isCurrentGatt(gatt)) {
             Log.w(TEST, "Ignore services from stale GATT")
             return
         }
         if (status == BluetoothGatt.GATT_SUCCESS) {
             Log.d(TEST, "가트 연결이 되었고, onServicesDiscovered에 진입!")
             // ==== 서비스 조회 ====
-            val services = gatt?.services
-            lateinit var service: BluetoothGattService
-            services?.forEach { service ->
-                Log.d(TEST, "Service UUID: ${service.uuid}")
-                val characteristics = service.characteristics
-                characteristics.forEach { characteristic ->
+            val services = gatt.services
+            // gatt.services 는 자바에서 온 플랫폼 타입이라 Kotlin 이 null 검사를
+            // 넣어 주지 않는다. 바로 순회하면 null 일 때 그 자리에서 터지는데,
+            // 여기는 시스템이 부르는 콜백이라 감싸는 try/catch 가 없다.
+            // 빈 목록도 함께 걸러 둔다. 그래야 아래 'UUID 미발견'과 사유가 갈린다.
+            if (services.isNullOrEmpty()) {
+                restartGattAfterOperationFailure(gatt, "서비스 목록이 비었음")
+                return
+            }
+
+            services.forEach { discovered ->
+                Log.d(TEST, "Service UUID: ${discovered.uuid}")
+                discovered.characteristics.forEach { characteristic ->
                     Log.d(TEST, "Characteristic UUID: ${characteristic.uuid}")
                 }
             }
@@ -622,25 +631,24 @@ class BleManager(
 //            val characteristicUUID = UUID.fromString(characteristicUuidReadF23)
             val characteristicUUID = UUID.fromString(protocol.readUUID)
 
-            // 원하는 서비스로 지정
-            var found = false
-            var i = 0
-            while (i < services!!.size && !found) {
-                val currentService = services[i]
-                if (currentService.uuid.toString()
-//                        .equals(serviceUuidF23, ignoreCase = true)
-                        .equals(protocol.serviceUUID, ignoreCase = true)
-                ) {
-                    service = currentService
-                    found = true
-                }
-                i++
+            // 원하는 서비스를 찾는다. **찾기 전에는 쓰지 않는다.**
+            //
+            // 전에는 lateinit var service 를 두고 while 로 훑은 뒤, 못 찾았어도
+            // service.getCharacteristic() 을 먼저 부르고 그 다음에 !found 를 봤다.
+            // 순서가 거꾸로여서 UUID 를 못 찾거나 목록이 비면 그 자리에서
+            // UninitializedPropertyAccessException 이 났다. 여기는 시스템이 부르는
+            // 콜백이라 감싸는 try/catch 가 없어 그대로 프로세스가 죽는다.
+            val service = services.firstOrNull {
+                it.uuid.toString().equals(protocol.serviceUUID, ignoreCase = true)
+            }
+            if (service == null) {
+                restartGattAfterOperationFailure(gatt, "필수 service 없음")
+                return
             }
 
-
             val readCharacteristic = service.getCharacteristic(characteristicUUID)
-            if (!found || readCharacteristic == null) {
-                restartGattAfterOperationFailure(gatt, "필수 service/notify characteristic 없음")
+            if (readCharacteristic == null) {
+                restartGattAfterOperationFailure(gatt, "notify characteristic 없음")
                 return
             }
 
@@ -692,7 +700,7 @@ class BleManager(
 
         } else {
             Log.e(TEST, "서비스 탐색 실패 status=$status")
-            gatt?.let { restartGattAfterOperationFailure(it, "서비스 탐색 실패 status=$status") }
+            restartGattAfterOperationFailure(gatt, "서비스 탐색 실패 status=$status")
         }
     }
 
@@ -1381,10 +1389,12 @@ class BleManager(
 
     @Throws(NoSuchMethodException::class)
     private fun refreshMethod(): Method {
-        if (sRefreshMethod == null) {
-            sRefreshMethod = BluetoothGatt::class.java.getMethod("refresh")
+        // 캐시가 있으면 그것을, 없으면 만들어 담고 그 값을 돌려준다.
+        // null 검사 후 !! 로 다시 꺼내면, 그 사이에 비워졌을 가능성을 컴파일러가
+        // 못 지우기 때문에 !! 가 필요해진다. 한 식으로 묶으면 그 틈이 없다.
+        return sRefreshMethod ?: BluetoothGatt::class.java.getMethod("refresh").also {
+            sRefreshMethod = it
         }
-        return sRefreshMethod!!
     }
 
     fun refreshDeviceCache(gatt: BluetoothGatt?) {
@@ -1429,49 +1439,6 @@ class BleManager(
         temp = temp and 0xFFFF
 
         return temp
-    }
-
-    fun writeAgms(gatt: BluetoothGatt, value: ByteArray) {
-        Log.d(TEST, "writeAgms 실행됨!")
-        val services: List<BluetoothGattService> = gatt.services
-        lateinit var service: BluetoothGattService
-        var found = false
-        var i = 0
-        while (i < services!!.size && !found) {
-            val currentService = services[i]
-            if (currentService.uuid.toString()
-//                    .equals(serviceUuidF23, ignoreCase = true)
-                    .equals(protocol.serviceUUID, ignoreCase = true)
-            ) {
-                service = currentService
-                found = true
-            }
-            i++
-        }
-        Log.d(TEST, "in writeAgms - service : ${service.uuid.toString()}")
-
-//        val characteristicUuid = UUID.fromString(characteristicUuidWriteF23)
-        val characteristicUuid = UUID.fromString(protocol.writeUUID)
-        val writeCharacteristic = service.getCharacteristic(characteristicUuid)
-        Log.d(
-            TEST,
-            "in writeAgms - writeCharacteristic : ${writeCharacteristic.uuid.toString()}"
-        )
-
-        if (Build.VERSION.SDK_INT >= TIRAMISU) {
-            gatt.writeCharacteristic(
-                writeCharacteristic,
-                value,
-                BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-            )
-
-            //            gatt.writeCharacteristic(writeCharacteristic, value, BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE)
-            Log.d(TEST, "티라미수 이상 버전 write")
-        } else {
-            writeCharacteristic.setValue(value)
-            gatt.writeCharacteristic(writeCharacteristic)
-            Log.d(TEST, "기존 버전 write")
-        }
     }
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)

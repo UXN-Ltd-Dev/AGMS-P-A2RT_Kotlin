@@ -526,11 +526,13 @@ fun UserInfoScreen(navController: NavHostController) {
                     val highInt = targetHigh.value.trim().toIntOrNull()
 
                     // 빈 칸이나 뒤집힌 범위를 그대로 보내면 서버에 잘못된 값이 남는다.
-                    val valid = trimmedName.isNotEmpty() && trimmedEmail.isNotEmpty() &&
-                        ageInt != null && heightInt != null && weightInt != null &&
-                        lowInt != null && highInt != null && lowInt < highInt
-
-                    if (!valid) {
+                    //
+                    // 조건을 Boolean 변수에 담지 않고 if 에 바로 쓴다. 변수에 담으면
+                    // 스마트 캐스트가 그 자리에서 끊겨, 아래에서 ageInt!! 처럼 !! 를
+                    // 붙여야 한다. 부정 형태로 적으면 else 분기에서 Int 로 좁혀진다.
+                    if (trimmedName.isEmpty() || trimmedEmail.isEmpty() ||
+                        ageInt == null || heightInt == null || weightInt == null ||
+                        lowInt == null || highInt == null || lowInt >= highInt) {
                         Toast.makeText(context, R.string.toast_user_info_invalid, Toast.LENGTH_SHORT).show()
                     } else {
                         isSubmitting.value = true
@@ -549,12 +551,12 @@ fun UserInfoScreen(navController: NavHostController) {
                                             email = trimmedEmail,
                                             name = trimmedName,
                                             sex = sexCode.value,
-                                            age = ageInt!!,
-                                            height = heightInt!!,
-                                            weight = weightInt!!,
+                                            age = ageInt,
+                                            height = heightInt,
+                                            weight = weightInt,
                                             diabetesType = diabetesCode.value,
-                                            targetGlucoseMin = lowInt!!,
-                                            targetGlucoseMax = highInt!!
+                                            targetGlucoseMin = lowInt,
+                                            targetGlucoseMax = highInt
                                         )
                                     )
                                 }

@@ -951,8 +951,9 @@ class AlwaysA2RTService() : Service() {
                             val userValueList =
                                 localDbRepository?.dataDao()?.getListAfterLastTime(userId, 0)
 
-                            // 빈 리스트 생성
-                            var seperatedUserValueList: List<UserValue>? = emptyList()
+                            // 빈 리스트로 시작한다. 아래 재대입도 non-null 이므로
+                            // 타입에 ? 를 두지 않는다. 그래야 넘길 때 !! 가 필요 없다.
+                            var seperatedUserValueList: List<UserValue> = emptyList()
 
                             // 첫 번째 순으로 짤라서 담기
                             if (!userValueList.isNullOrEmpty()) {
@@ -971,7 +972,7 @@ class AlwaysA2RTService() : Service() {
 
 
                             val pythonData = PythonManager3.instance.calculateGlucose(
-                                seperatedUserValueList!!,
+                                seperatedUserValueList,
                                 calibrationList
                             )
 
@@ -1343,10 +1344,12 @@ class AlwaysA2RTService() : Service() {
 
     @Throws(NoSuchMethodException::class)
     private fun refreshMethod(): Method {
-        if (sRefreshMethod == null) {
-            sRefreshMethod = BluetoothGatt::class.java.getMethod("refresh")
+        // 캐시가 있으면 그것을, 없으면 만들어 담고 그 값을 돌려준다.
+        // null 검사 후 !! 로 다시 꺼내면, 그 사이에 비워졌을 가능성을 컴파일러가
+        // 못 지우기 때문에 !! 가 필요해진다. 한 식으로 묶으면 그 틈이 없다.
+        return sRefreshMethod ?: BluetoothGatt::class.java.getMethod("refresh").also {
+            sRefreshMethod = it
         }
-        return sRefreshMethod!!
     }
 
 

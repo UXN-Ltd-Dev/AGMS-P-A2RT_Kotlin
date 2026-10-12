@@ -63,8 +63,11 @@ class TokenAuthenticator : Authenticator {
                         userInfo = RequestRefreshToken(userId, currentRefreshToken)
                     )
 
-                    if (tokenResponse.isSuccessful && tokenResponse.body() != null) {
-                        val newAccessToken = tokenResponse.body()!!.accessToken
+                    // body() 를 두 번 부르지 않고 한 번만 받아 둔다. 그러면 null 검사가
+                    // 그대로 이어져 !! 가 필요 없다.
+                    val body = tokenResponse.body()
+                    if (tokenResponse.isSuccessful && body != null) {
+                        val newAccessToken = body.accessToken
 
                         // 새 토큰 저장
                         DataStoreManager.deleteAccessToken()
