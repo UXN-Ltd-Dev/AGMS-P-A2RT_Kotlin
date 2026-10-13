@@ -474,12 +474,14 @@ class BleManager(
         // 낡은 GATT 의 콜백은 여기서 끊는다. 닫히지 않은 채 남으면 그 객체가 계속
         // 콜백을 던져 현재 연결 상태를 덮어쓴다.
         if (!isCurrentGatt(gatt)) {
-            Log.w(TEST, "Ignore callback from stale GATT: ${gatt?.device?.address}")
+            // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+            // Log.w(TEST, "Ignore callback from stale GATT: ${gatt?.device?.address}")
             runCatching { gatt?.close() }
             return
         }
 
-        Log.d("GATT", "status=$status, newState=$newState, device=${gatt?.device?.address}")
+        // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+        // Log.d("GATT", "status=$status, newState=$newState, device=${gatt?.device?.address}")
         Log.e(TEST, "onConnectionStateChange 진입")
         when (newState) {
             BluetoothProfile.STATE_CONNECTED -> {

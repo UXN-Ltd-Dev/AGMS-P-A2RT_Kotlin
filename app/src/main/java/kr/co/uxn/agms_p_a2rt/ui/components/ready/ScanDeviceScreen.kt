@@ -84,7 +84,8 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
 
             val deviceInfo = result?.device
             val rssi = result?.rssi
-            Log.d("SCAN", "mac : ${deviceInfo?.address}, id : ${deviceInfo?.name}, rssi : ${rssi}")
+            // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+            // Log.d("SCAN", "mac : ${deviceInfo?.address}, id : ${deviceInfo?.name}, rssi : ${rssi}")
             bleViewModel.updateIsFindDevice(true)
             bluetoothAdapter.bluetoothLeScanner?.stopScan(this)
             DataStoreManager.getUserId()
@@ -92,7 +93,8 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
                 DataStoreManager.deleteDeviceMac()
                 DataStoreManager.saveDeviceMac(mac)
                 val verifiedDeviceMac = DataStoreManager.getDeviceMac().first()
-                Log.d("TEST", "스캔화면에서 저장한 datastore 맥 주소 : ${verifiedDeviceMac}")
+                // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+                // Log.d("TEST", "스캔화면에서 저장한 datastore 맥 주소 : ${verifiedDeviceMac}")
 
 
                 val userId = DataStoreManager.getUserId().first() ?: -1
@@ -100,7 +102,8 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
                 // 서버에 유저와 디바이스 링크
                 try {
                     val detectorList = localDbRepository?.dataDao()?.getListAfterLastTime(userId, 0)
-                    Log.d("TEST", "스캔화면에서 저장한 datastore 맥 주소 : ${verifiedDeviceMac}")
+                    // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+                    // Log.d("TEST", "스캔화면에서 저장한 datastore 맥 주소 : ${verifiedDeviceMac}")
                     if (detectorList.isNullOrEmpty()) {
                         Log.d("ScanDeviceScreen, 링크 결정", "detectorList is null or empty!")
                         val linkDevice = tokenRetrofit.linkDevice(RequestLinkDevice(userId = userId, serialNumber = serialNumber))
@@ -162,7 +165,8 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
             navController.navigate("StabilizationScreen/$mac")
         } else {
             var mScanFilter = mutableListOf<ScanFilter>()
-            Log.e("TAG", "스캔에 쓰일 Mac : $mac")
+            // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+            // Log.e("TAG", "스캔에 쓰일 Mac : $mac")
 
             val scanFilter = ScanFilter
                 .Builder()
@@ -183,7 +187,8 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
             }
 
             try {
-                Log.d("SCAN", "BLE 스캔 시작: $mac")
+                // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+                // Log.d("SCAN", "BLE 스캔 시작: $mac")
                 scanner.startScan(mScanFilter, scanSettings, scanCallback)
                 delay(20_000L)
 
@@ -193,7 +198,8 @@ fun ScanDeviceScreen(navController: NavController, bleViewModel: BleViewModel, m
                 }
             } finally {
                 scanner.stopScan(scanCallback)
-                Log.d("SCAN", "BLE 스캔 종료: $mac")
+                // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+                // Log.d("SCAN", "BLE 스캔 종료: $mac")
             }
         }
     }

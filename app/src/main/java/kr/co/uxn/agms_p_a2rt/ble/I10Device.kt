@@ -356,9 +356,12 @@ class I10Device() : Protocol {
                 val weCurrent: Double = convertToCurrentDataDouble(data[nWHigh], data[nWMiddle], data[nWLow])
                 val aeCurrent: Double = convertToCurrentDataDouble(data[nAHigh], data[nAMiddle], data[nALow])
 
-                Log.e(TEST, "TEMP " + i + ": " + temperature)
-                Log.e(TEST, "WE_Current " + i + ": " + weCurrent)
-                Log.e(TEST, "AE_Current " + i + ": " + aeCurrent)
+                // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+                // Log.e(TEST, "TEMP " + i + ": " + temperature)
+                // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+                // Log.e(TEST, "WE_Current " + i + ": " + weCurrent)
+                // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+                // Log.e(TEST, "AE_Current " + i + ": " + aeCurrent)
 
                 val convertedTime = Instant.ofEpochMilli(dataTime)
                     .atZone(ZoneId.of("Asia/Seoul"))
@@ -400,16 +403,21 @@ class I10Device() : Protocol {
             val unixSecond = data[INDEX_UNIX_SECOND]
             val unixThird = data[INDEX_UNIX_THIRD]
             val unixFourth = data[INDEX_UNIX_FOURTH]
-            Log.d("IMPEDANCE", "unixFirst data : $unixFirst")
-            Log.d("IMPEDANCE", "unixSecond data : $unixSecond")
-            Log.d("IMPEDANCE", "unixThird data : $unixThird")
-            Log.d("IMPEDANCE", "unixFourth data : $unixFourth")
+            // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+            // Log.d("IMPEDANCE", "unixFirst data : $unixFirst")
+            // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+            // Log.d("IMPEDANCE", "unixSecond data : $unixSecond")
+            // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+            // Log.d("IMPEDANCE", "unixThird data : $unixThird")
+            // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+            // Log.d("IMPEDANCE", "unixFourth data : $unixFourth")
 
             val rawTime = (data[INDEX_UNIX_FIRST].toLong() and 0xFFL) or
                         ((data[INDEX_UNIX_SECOND].toLong() and 0xFFL) shl 8) or
                         ((data[INDEX_UNIX_THIRD].toLong() and 0xFFL) shl 16) or
                         ((data[INDEX_UNIX_FOURTH].toLong() and 0xFFL) shl 24)
-            Log.e("IMPEDANCE", "rawTime : $rawTime")
+            // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+            // Log.e("IMPEDANCE", "rawTime : $rawTime")
 
             val time = (rawTime + BASE_TIME) * 1000L
             val instant = Instant.ofEpochMilli(time)
@@ -421,11 +429,13 @@ class I10Device() : Protocol {
 
             val battery = ((data[BATTERY_START_SEQ].toInt() and 0xFF) shl 8) or
                     (data[BATTERY_END_SEQ].toInt() and 0xFF)
-            Log.e("IMPEDANCE", "a2rt Battery : $battery")
+            // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+            // Log.e("IMPEDANCE", "a2rt Battery : $battery")
 
             val vTemperature = ((data[INDEX_A2RT_TEMPERATURE_START].toInt() and 0xFF) shl 8) or
                     (data[INDEX_A2RT_TEMPERATURE_END].toInt() and 0xFF)
-            Log.e("IMPEDANCE", "a2rt temperature : $vTemperature")
+            // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+            // Log.e("IMPEDANCE", "a2rt temperature : $vTemperature")
             val temperature = (vTemperature / 100.0)
 
 
@@ -480,7 +490,8 @@ class I10Device() : Protocol {
                         (data[phaseFourth].toLong() and 0xFFL)
                         ).toInt().toLong()
 
-                Log.e("IMPEDANCE", "frequency : ${frequencyTypes[i]} | real : $real | imaginary : $imaginary | magnitude : $magnitude | phase : $phase")
+                // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+                // Log.e("IMPEDANCE", "frequency : ${frequencyTypes[i]} | real : $real | imaginary : $imaginary | magnitude : $magnitude | phase : $phase")
 
                 saveDataList.add(A2RTData(userDeviceId, frequencyTypes[i], time, temperature, real, imaginary, magnitude, phase))
             }

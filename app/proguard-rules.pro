@@ -149,3 +149,29 @@
 
 # Tasks API
 -keep class com.google.android.gms.tasks.** { *; }
+# ─────────────────────────────────────────────────────────────────────
+# 배포 빌드에서 android.util.Log 호출을 제거한다.
+#
+# 침투시험에서 비루팅 기기의 logcat 으로 토큰·이메일·시리얼·MAC·혈당·
+# 임피던스·센서 원시 측정값이 수집됐다. 호출 지점이 수십 곳이라 하나씩
+# 주석 처리하면 빠뜨리기 쉽고, 새로 추가되는 로그를 막지도 못한다.
+# 그래서 배포 빌드에서는 R8 이 Log 호출을 통째로 지우게 한다.
+#
+# -assumenosideeffects 는 "이 호출은 부작용이 없으니 지워도 된다"는 선언이다.
+# R8 이 호출문과 인자 생성 코드까지 함께 제거하므로, 찍을 문자열을 만드는
+# 비용도 사라진다. 최적화가 켜져 있어야 동작하며(proguard-android-optimize.txt),
+# release 에만 minify 가 걸려 있어 디버그 빌드의 로그는 그대로 남는다.
+#
+# 주의: 진단이 필요한 비민감 로그까지 함께 사라진다. 배포본에서 남겨야 하는
+# 로그가 생기면 Log 를 직접 부르지 말고 별도 래퍼를 만들어 그것만 예외로 둔다.
+# OkHttp 의 요청·응답 본문 로그는 Log 를 거치지 않으므로 RetrofitClient 의
+# loggingInterceptor() 에서 배포 빌드에 Level.NONE 을 주어 따로 막는다.
+-assumenosideeffects class android.util.Log {
+    public static *** v(...);
+    public static *** d(...);
+    public static *** i(...);
+    public static *** w(...);
+    public static *** e(...);
+    public static *** wtf(...);
+    public static *** println(...);
+}

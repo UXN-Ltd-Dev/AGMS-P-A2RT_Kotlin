@@ -331,9 +331,12 @@ class F23UTCDevice() : Protocol {
                 val weCurrent: Double = convertToCurrentDataDouble(data[nWHigh], data[nWMiddle], data[nWLow])
                 val aeCurrent: Double = convertToCurrentDataDouble(data[nAHigh], data[nAMiddle], data[nALow])
 
-                Log.e(TEST, "TEMP " + i + ": " + temperature)
-                Log.e(TEST, "WE_Current " + i + ": " + weCurrent)
-                Log.e(TEST, "AE_Current " + i + ": " + aeCurrent)
+                // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+                // Log.e(TEST, "TEMP " + i + ": " + temperature)
+                // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+                // Log.e(TEST, "WE_Current " + i + ": " + weCurrent)
+                // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
+                // Log.e(TEST, "AE_Current " + i + ": " + aeCurrent)
 
                 val convertedTime = Instant.ofEpochMilli(time)
                     .atZone(ZoneId.of("Asia/Seoul"))
