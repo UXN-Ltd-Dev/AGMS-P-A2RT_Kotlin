@@ -89,6 +89,8 @@ class AlwaysA2RTService() : Service() {
          */
         private const val STABILIZATION_CHECK_INTERVAL_MS = 60_000L
 
+        /** Python 이 실제 계산을 하는 최소 입력 개수. 미만이면 더미를 돌려준다. */
+        private const val MIN_PYTHON_INPUT_SIZE = 10
 
 
         private const val DEVICE_TYPE_F23UTC = 1105
@@ -971,10 +973,17 @@ class AlwaysA2RTService() : Service() {
                                 localDbRepository?.dataDao()?.getCalibrationList(userId).orEmpty()
 
 
-                            val pythonData = PythonManager3.instance.calculateGlucose(
-                                seperatedUserValueList,
-                                calibrationList
-                            )
+                            // Python 은 입력이 10개 미만이면 계산하지 않고 고정 더미(혈당 100 x 3)를
+                            // 돌려준다. 그 값을 저장하거나 화면에 띄우지 않도록 여기서 건너뛴다.
+                            val pythonData = if (seperatedUserValueList.size >= MIN_PYTHON_INPUT_SIZE) {
+                                PythonManager3.instance.calculateGlucose(
+                                    seperatedUserValueList,
+                                    calibrationList
+                                )
+                            } else {
+                                Log.d("PYTHON", "입력 ${seperatedUserValueList.size}개 (< $MIN_PYTHON_INPUT_SIZE). Skip glucose calculation.")
+                                null
+                            }
 
                             Log.d("PYTHON", "받아온 pythonData : ${pythonData?.glucoseList}")
 

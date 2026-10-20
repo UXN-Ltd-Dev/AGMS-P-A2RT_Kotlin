@@ -110,6 +110,12 @@ class BleManager(
         /** 끊긴 뒤 다시 걸기까지 두는 틈. */
         private const val RECONNECT_DELAY_MS = 3_000L
 
+        /** 본딩이 이 시간 안에 끝나지 않으면 끊고 다시 시도한다. */
+        private const val BOND_TIMEOUT_MS = 30_000L
+
+        /** 센서가 보내는 RTC 요청 명령. 본딩 전에도 처리한다. */
+        private const val CMD_RTC: Byte = 0x41
+
         private val CLIENT_CHARACTERISTIC_CONFIG_UUID: UUID =
             UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
     }
@@ -181,6 +187,16 @@ class BleManager(
      */
     @Volatile
     private var lastPacketAt: Long = 0L
+
+    /**
+     * 지금 연결에서 데이터(SEND/IMPEDANCE)를 처리해도 되는지.
+     *
+     * 연결될 때 false 로 두고, 본딩이 끝나거나 게스트로 판정되면 true 가 된다.
+     * RTC 는 이 값과 상관없이 처리한다 - 센서는 RTC 응답을 받아야 연결을 유지하므로,
+     * 막으면 사용자가 페어링 팝업을 누르기 전에 끊긴다.
+     */
+    @Volatile
+    private var isBondReady = false
 
 //    lateinit var bluetoothDevice: BluetoothDevice
 //    lateinit var bluetoothManager: BluetoothManager
@@ -511,7 +527,9 @@ class BleManager(
                 // 하나도 없으면 죽은 연결로 본다.
                 lastPacketAt = SystemClock.elapsedRealtime()
 
-                applyBondPolicy(gatt?.device)
+                // 데이터 처리는 본딩이 끝난 뒤에 연다. 통신(RTC)은 바로 시작한다.
+                isBondReady = false
+                applyBondPolicy(gatt)
 
 
                 // BleBridge에 상태 연결 완료 전송
@@ -726,6 +744,17 @@ class BleManager(
         val data = characteristic?.value
         if (data == null || data.isEmpty()) {
             Log.w(TEST, "빈 패킷이 왔다. 버린다.")
+            return
+        }
+
+        // TODO 임시: SEND 미수신 원인 확인용 원본 패킷 로그 (release 는 R8 이 지운다)
+        Log.d("RAW", "rx ${data.size}B : ${data.joinToString(" ") { "%02X".format(it) }}")
+
+        // 본딩 전에는 RTC 만 처리한다. SEND/IMPEDANCE 는 ACK 없이 버리면
+        // 센서가 들고 있다가 다시 보내므로, 본딩 뒤에 받으면 된다.
+        // 명령 자리(2)는 F23/F23UTC/I10 이 같다.
+        if (!isBondReady && (data.size <= 2 || data[2] != CMD_RTC)) {
+            Log.w("BOND", "본딩 전이라 데이터 패킷을 처리하지 않는다")
             return
         }
 
@@ -1314,21 +1343,28 @@ class BleManager(
 //    }
 
     /**
-     * 로그인한 계정에 따라 본딩 여부를 정한다.
+     * 로그인한 계정에 따라 본딩 여부를 정하고, **본딩이 끝나야 데이터 처리를 연다.**
      *
-     * 게스트 계정(GuestList)으로 로그인했을 때만 본딩하지 않는다. 그 밖에는 본딩한다.
+     * 통신 자체(MTU → 서비스 탐색 → CCCD)는 연결 콜백에서 바로 시작한다. 센서는
+     * RTC 응답이 없으면 10~16초 안에 연결을 끊어, 본딩을 기다리다가는 사용자가
+     * 페어링 팝업을 누르기 전에 끊겼다. 그래서 RTC 는 늘 처리하고, SEND/IMPEDANCE 만
+     * isBondReady 로 막는다 (onCharacteristicChanged 참고).
+     *
+     * 게스트 계정(GuestList)은 본딩하지 않으므로 바로 연다.
      * 로그인 전이라 이메일이 없으면 게스트가 아닌 것으로 보고 본딩한다 - BleManager 는
      * 로그인 뒤에 도는 것이 정상이라 이 경우는 드물다.
+     *
+     * 본딩에 실패하면 연결을 끊는다. 그대로 두면 데이터를 영영 받지 못하므로,
+     * 기존 끊김 콜백의 재연결 예약에 맡겨 다시 본딩을 시도하게 한다.
      *
      * 이미 있는 본딩은 지우지 않는다. 지우려면 공개 API 가 없어 리플렉션으로
      * removeBond 를 불러야 하는데, 연결된 상태에서 부르면 링크가 끊기고 사용자에게는
      * 영문 모를 "신호 소실" 알림이 뜬다. 그래서 만들지 않는 것까지만 한다.
      * 일반 계정으로 쓰다 게스트로 바꾸면 이전 본딩이 남는데, 그건 설정에서 지운다.
-     *
-     * 이메일은 DataStore 에서 읽어야 해 코루틴으로 넘긴다. 본딩은 원래 비동기로
-     * 진행되고 결과는 시스템 브로드캐스트로 오므로, 여기서 기다릴 것이 없다.
      */
-    private fun applyBondPolicy(device: BluetoothDevice?) {
+    @SuppressLint("MissingPermission")
+    private fun applyBondPolicy(gatt: BluetoothGatt?) {
+        val device = gatt?.device
         if (device == null) {
             Log.e("BOND", "본딩 판정 불가 - device 가 null")
             return
@@ -1340,24 +1376,74 @@ class BleManager(
 
             if (isGuest) {
                 // 계정(이메일)은 찍지 않는다 - 판정 결과만 남긴다 (CWE-200)
-                Log.d("BOND", "게스트 계정 - 본딩하지 않는다")
+                Log.d("BOND", "게스트 계정 - 본딩하지 않고 데이터 처리를 연다")
+            } else if (!waitForBond(gatt, device)) {
+                if (isCurrentGatt(gatt)) {
+                    Log.e("BOND", "본딩되지 않아 데이터를 받을 수 없다 - 연결을 끊는다")
+                    runCatching { gatt.disconnect() }
+                }
                 return@launch
             }
 
-            when (device.bondState) {
-                BluetoothDevice.BOND_BONDED ->
-                    Log.d("BOND", "이미 본딩되어 있다 - 그대로 둔다")
+            // 본딩을 기다리는 사이 연결이 바뀌었으면 새 연결의 값을 건드리지 않는다
+            if (!isCurrentGatt(gatt)) {
+                Log.w("BOND", "본딩 대기 중 연결이 바뀌었다 - 무시한다")
+                return@launch
+            }
 
-                BluetoothDevice.BOND_BONDING ->
-                    Log.d("BOND", "본딩이 진행 중이다")
+            isBondReady = true
+            Log.d("BOND", "데이터 처리를 연다")
+        }
+    }
 
-                else -> {
-                    val started = device.createBond()
-                    // 계정(이메일)은 찍지 않는다 - createBond() 결과만 남긴다 (CWE-200)
-                    Log.d("BOND", "본딩 시작 : $started")
-                }
+    /**
+     * 본딩될 때까지 기다린다. 본딩되면 true.
+     *
+     * createBond() 의 true 는 요청이 접수됐다는 뜻일 뿐이라, 실제 결과는
+     * bondState 가 바뀌는 것을 보고 판단한다. 리시버를 두지 않으려고 폴링한다.
+     * 백그라운드에서는 페어링 요청이 알림으로 떠 사용자가 늦게 누를 수 있어
+     * 넉넉히 기다린다.
+     */
+    @SuppressLint("MissingPermission")
+    private suspend fun waitForBond(gatt: BluetoothGatt, device: BluetoothDevice): Boolean {
+        when (device.bondState) {
+            BluetoothDevice.BOND_BONDED -> {
+                Log.d("BOND", "이미 본딩되어 있다")
+                return true
+            }
+
+            BluetoothDevice.BOND_BONDING ->
+                Log.d("BOND", "본딩이 진행 중이다")
+
+            else -> {
+                val started = device.createBond()
+                // 계정(이메일)은 찍지 않는다 - createBond() 결과만 남긴다 (CWE-200)
+                Log.d("BOND", "본딩 시작 : $started")
+                if (!started) return false
             }
         }
+
+        val startedAt = SystemClock.elapsedRealtime()
+        var sawBonding = false
+        while (SystemClock.elapsedRealtime() - startedAt < BOND_TIMEOUT_MS) {
+            // 기다리는 사이 끊겼으면 더 볼 것이 없다
+            if (!isCurrentGatt(gatt)) return false
+
+            when (device.bondState) {
+                BluetoothDevice.BOND_BONDED -> {
+                    Log.d("BOND", "본딩 완료 (${SystemClock.elapsedRealtime() - startedAt}ms)")
+                    return true
+                }
+                BluetoothDevice.BOND_BONDING -> sawBonding = true
+                BluetoothDevice.BOND_NONE -> if (sawBonding) {
+                    Log.e("BOND", "본딩 실패 - 거절되었거나 취소됨")
+                    return false
+                }
+            }
+            delay(500)
+        }
+        Log.e("BOND", "본딩 시간 초과 (${BOND_TIMEOUT_MS / 1000}초) - 현재 bondState=${device.bondState}")
+        return false
     }
 
 

@@ -51,6 +51,7 @@ class I10Device() : Protocol {
     val WE_END_SEQ = WE_MIDDLE_SEQ + 1 // 18
     val AE_START_SEQ = WE_END_SEQ + 1 // 19
     val AE_MIDDLE_SEQ = AE_START_SEQ + 1 // 20
+
     val AE_END_SEQ = AE_MIDDLE_SEQ + 1 // 21
 
     // IMPEDANCE
@@ -296,7 +297,7 @@ class I10Device() : Protocol {
                     (java.lang.Byte.toUnsignedLong(data[INDEX_UNIX_THIRD]) shl 16) or
                     (java.lang.Byte.toUnsignedLong(data[INDEX_UNIX_FOURTH]) shl 24)
 
-            Log.d(TEST, "rawTime : $rawTime" )
+//            Log.d(TEST, "rawTime : $rawTime" )
 
             val time =  (rawTime + BASE_TIME) * 1000 // sec -> milli
 
@@ -306,12 +307,12 @@ class I10Device() : Protocol {
             val kstTime = instant.atZone(koreaZoneId)
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
             val formattedString = kstTime.format(formatter)
-            Log.e(TEST, "변환된 한국 시간 time: " + formattedString)
+//            Log.e(TEST, "변환된 한국 시간 time: " + formattedString)
 
             var lastWeo1 = 0.0
             val startTime = time
             val lastTime = startTime + ((1000 * 10).toLong() * (nDataLength - 1))
-            Log.d("time", "lastTime : $lastTime")
+//            Log.d("time", "lastTime : $lastTime")
 
             val now = System.currentTimeMillis()
             // 타입 오차 허용값 = 10분
@@ -320,7 +321,7 @@ class I10Device() : Protocol {
 
             // time error check
             if (lastTime > checkTime) {
-                Log.e(TEST, "Time Check Error")
+//                Log.e(TEST, "Time Check Error")
                 return false
             }
 
@@ -331,10 +332,10 @@ class I10Device() : Protocol {
             val vBattery = (data[BATTERY_START_SEQ].toUByte().toInt() shl 8) or (data[BATTERY_END_SEQ].toUByte().toInt())
             val decimalFormat = DecimalFormat("#.00")
             val battery = decimalFormat.format(vBattery)
-            Log.d(TEST, "battery : $battery")
+//            Log.d(TEST, "battery : $battery")
 
             // tmp, weo1, weo2
-            Log.d(TEST, "nDataLength : $nDataLength")
+//            Log.d(TEST, "nDataLength : $nDataLength")
             for (i in 0 until nDataLength) {
                 val nTHigh: Int = 14 + i * step
                 val nTLow: Int = 15 + i * step
@@ -357,11 +358,11 @@ class I10Device() : Protocol {
                 val aeCurrent: Double = convertToCurrentDataDouble(data[nAHigh], data[nAMiddle], data[nALow])
 
                 // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
-                // Log.e(TEST, "TEMP " + i + ": " + temperature)
+//                 Log.e(TEST, "TEMP " + i + ": " + temperature)
                 // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
-                // Log.e(TEST, "WE_Current " + i + ": " + weCurrent)
+//                 Log.e(TEST, "WE_Current " + i + ": " + weCurrent)
                 // 민감정보 로그 - 주석 처리 (침투시험: 원시 측정값·임피던스·MAC 노출)
-                // Log.e(TEST, "AE_Current " + i + ": " + aeCurrent)
+//                 Log.e(TEST, "AE_Current " + i + ": " + aeCurrent)
 
                 val convertedTime = Instant.ofEpochMilli(dataTime)
                     .atZone(ZoneId.of("Asia/Seoul"))
@@ -425,7 +426,7 @@ class I10Device() : Protocol {
             val kstTime = instant.atZone(koreaZoneId)
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
             val formattedString = kstTime.format(formatter)
-            Log.e("IMPEDANCE", "변환된 한국 시간 time: " + formattedString)
+//            Log.e("IMPEDANCE", "변환된 한국 시간 time: " + formattedString)
 
             val battery = ((data[BATTERY_START_SEQ].toInt() and 0xFF) shl 8) or
                     (data[BATTERY_END_SEQ].toInt() and 0xFF)
@@ -498,7 +499,7 @@ class I10Device() : Protocol {
 
             CoroutineScope(Dispatchers.IO).launch {
                 db?.dataDao()?.insertA2RTDataList(saveDataList)
-                Log.e("IMPEDANCE", "======== IMPEDANCE DB INSERT 성공 =========")
+//                Log.e("IMPEDANCE", "======== IMPEDANCE DB INSERT 성공 =========")
             }
             return true
         } catch (e: Exception) {

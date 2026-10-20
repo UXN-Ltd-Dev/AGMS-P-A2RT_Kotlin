@@ -34,6 +34,7 @@ class AlwaysA2RTApplication : Application() {
         if (!Python.isStarted()) {
             Python.start(AndroidPlatform(this))
         }
+        silencePythonOutputInRelease()
 
 
         // db에 더미 저장
@@ -68,6 +69,24 @@ class AlwaysA2RTApplication : Application() {
             Log.d(TEST, "무결성 검증 통과")
         } else {
             Log.w(TEST, "무결성 검증 불일치 - 서명 지문이 다르다")
+        }
+    }
+
+    /**
+     * 릴리즈에서는 파이썬 print 가 logcat(python.stdout) 으로 나가지 않게 한다.
+     *
+     * Kotlin 의 Log 는 R8 규칙으로 지우지만 파이썬 출력은 Chaquopy 가 따로 logcat 에
+     * 쓰므로 여기서 막는다. 계산 스크립트가 측정값 목록을 통째로 찍는다.
+     * __stdout__ 까지 바꾸는 이유: 스크립트가 출력을 잠시 가로챈 뒤
+     * sys.stdout = sys.__stdout__ 로 되돌리기 때문이다.
+     */
+    private fun silencePythonOutputInRelease() {
+        if (BuildConfig.DEBUG) return
+        runCatching {
+            val python = Python.getInstance()
+            val sys = python.getModule("sys")
+            val devNull = python.builtins.callAttr("open", python.getModule("os")["devnull"], "w")
+            listOf("stdout", "stderr", "__stdout__", "__stderr__").forEach { sys[it] = devNull }
         }
     }
 
